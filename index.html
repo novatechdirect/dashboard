@@ -418,9 +418,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     margin:0;
     font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
     color:var(--ink);
-    background:
-      radial-gradient(1200px 400px at 50% -120px, #ffffff, rgba(255,255,255,0)) ,
-      var(--bg);
+    background: var(--bg);
     -webkit-font-smoothing:antialiased;
   }
 
@@ -734,6 +732,50 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .install-txt b{ color:var(--ink); font-size:13.5px; }
   @media (min-width:701px){ .install-card{ display:none !important; } }
 
+  /* --- v29: cost & margins --- */
+  .mg-pills{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .mg-pill{ font-size:12.5px; font-weight:700; padding:6px 13px; border-radius:999px; border:1px solid var(--line-strong); background:var(--paper); color:var(--muted); cursor:pointer; }
+  .mg-pill.on{ background:var(--accent-soft); border-color:#bcd3fb; color:var(--accent); }
+  .mg-pill.dashed{ border-style:dashed; font-weight:600; }
+  .mg-fee{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted); font-weight:600; margin-left:auto; white-space:nowrap; }
+  .mg-fee input{ width:64px; padding:6px 8px; text-align:right; font-size:13px; border-radius:8px; }
+  .mg-kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:18px; }
+  .mg-kpi{ background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:15px 17px; box-shadow:var(--shadow); }
+  .mg-kpi .lbl{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--faint); }
+  .mg-kpi .val{ font-size:22px; font-weight:700; margin-top:5px; font-variant-numeric:tabular-nums; }
+  .mg-kpi .sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .mg-row{ display:flex; align-items:center; gap:14px; padding:11px 0 3px; border-top:1px solid #f0f2f5; margin-top:9px; flex-wrap:wrap; }
+  .mg-stat{ display:flex; flex-direction:column; min-width:78px; }
+  .mg-stat .lbl{ font-size:10.5px; color:var(--faint); text-transform:uppercase; letter-spacing:.05em; font-weight:600; }
+  .mg-stat .val{ font-weight:700; font-size:14px; font-variant-numeric:tabular-nums; }
+  .mg-badge{ font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:999px; white-space:nowrap; }
+  .mg-good{ background:var(--ok-bg); color:var(--ok); } .mg-warn{ background:#fff2cc; color:#7a5c00; } .mg-bad{ background:#fdecea; color:#b42318; }
+  .mg-chip{ font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:999px; background:var(--soft); color:var(--muted); white-space:nowrap; }
+  .mg-chip.cur{ background:var(--accent-soft); color:var(--accent); }
+  .mg-panel{ background:var(--soft); border-radius:12px; padding:15px; margin:10px 0 4px; display:flex; gap:18px; flex-wrap:wrap; }
+  .mg-panel .col-items{ flex:1; min-width:280px; }
+  .mg-panel .col-sum{ width:250px; flex:0 0 auto; }
+  .mg-h{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--faint); margin:0 0 9px; }
+  .mg-item{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .mg-item input[type=text]{ flex:1; min-width:140px; padding:6px 9px; font-size:13px; border-radius:8px; }
+  .mg-item input[type=number]{ width:84px; padding:6px 8px; font-size:13px; text-align:right; border-radius:8px; }
+  .mg-sum-box{ background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .mg-sum-line{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin-top:5px; gap:10px; }
+  .mg-sum-line.strong{ font-size:13px; font-weight:700; color:var(--ink); }
+  .mg-sum-line.top{ margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
+  .mg-margin-big{ text-align:center; margin-top:11px; font-size:20px; font-weight:800; }
+  .mg-vrow{ display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:5px 0; border-bottom:1px solid #e9ecf0; }
+  .mg-actions{ margin-left:auto; display:flex; gap:6px; }
+  .mg-modal-bg{ position:fixed; inset:0; background:rgba(16,24,40,.45); z-index:50; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto; }
+  .mg-modal{ background:var(--paper); border-radius:16px; max-width:560px; width:100%; padding:22px; box-shadow:0 20px 60px rgba(16,24,40,.25); }
+  .mg-modal.wide{ max-width:860px; }
+  .mg-cmp-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .mg-cmp-col{ border:1px solid var(--line); border-radius:12px; padding:15px; }
+  .mg-bar{ position:fixed; bottom:0; left:0; right:0; background:var(--paper); border-top:1px solid var(--line); z-index:40; box-shadow:0 -2px 10px rgba(16,24,40,.07); }
+  .mg-bar-inner{ max-width:940px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; gap:12px; }
+  body.mg-comparing .controls{ padding-bottom:170px; }
+  @media(max-width:700px){ .mg-cmp-grid{ grid-template-columns:1fr; } .mg-fee{ margin-left:0; } .mg-panel .col-sum{ width:100%; } .mg-bar{ bottom:calc(53px + env(safe-area-inset-bottom)); } }
+
   /* ---------- THE LABEL (4 x 6) ---------- */
   .label{
     width:4in;
@@ -819,10 +861,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <a class="nav-item" href="#" id="navLabels">B2B Label Maker</a>
       <a class="nav-item" href="#" id="navInventory">Inventory</a>
       <a class="nav-item" href="#" id="navTimeclock">Timeclock</a>
+      <a class="nav-item" href="#" id="navMargins" style="display:none;">Margins</a>
     </div>
     <div class="nav-right">
       <span class="auth-chip" id="authChip" style="display:none;"></span>
-      <span class="version" id="version">v28</span>
+      <span class="version" id="version">v29</span>
     </div>
   </div>
 </nav>
@@ -843,6 +886,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   <button type="button" class="tab-btn" data-goto="timeclock">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     <span>Timeclock</span>
+  </button>
+  <button type="button" class="tab-btn" data-goto="margins" id="tabMargins" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="12"/><line x1="10.5" y1="20" x2="10.5" y2="5"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="21" y1="20" x2="21" y2="8"/></svg>
+    <span>Margins</span>
   </button>
 </nav>
 
@@ -895,6 +942,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <span class="tile-title">Timeclock</span>
           <span class="tile-desc">Weekly hours, bi-weekly pay</span>
           <span class="tile-status" id="tileTcStatus">&hellip;</span>
+        </span>
+        <span class="tile-arrow">&rsaquo;</span>
+      </a>
+      <a class="tile" href="#" data-goto="margins" id="tileMargins" style="display:none;">
+        <span class="tile-icon">&#128202;</span>
+        <span class="tile-body">
+          <span class="tile-title">Cost &amp; Margins <span class="badge b-ordered" style="margin-left:4px;">Admin</span></span>
+          <span class="tile-desc">Build costs, profit and margin by channel</span>
+          <span class="tile-status" id="tileMgStatus">&hellip;</span>
         </span>
         <span class="tile-arrow">&rsaquo;</span>
       </a>
@@ -1115,10 +1171,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <button class="primary" id="tcSaveBtn">Save week</button>
           <span class="muted-sm" id="tcSaveStatus"></span>
         </div>
+        <div class="builds-line" id="tcPayLine" style="display:none;margin-top:14px;"></div>
         <div class="inv-cat" style="margin-top:18px;">My recent weeks</div>
         <div class="table-wrap">
           <table class="hist-table">
-            <thead><tr><th>Week ending</th><th>Hours</th><th>Note</th></tr></thead>
+            <thead><tr><th>Week ending</th><th>Hours</th><th>Est. pay</th><th>Note</th></tr></thead>
             <tbody id="tcMineBody"></tbody>
           </table>
         </div>
@@ -1160,6 +1217,31 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <p class="muted-sm">Adding someone here puts them on the roster. To give them a login: Supabase &rarr; Authentication &rarr; Add user (same email, check Auto Confirm). When they first sign in, their account links up automatically.</p>
     </section>
   </div><!-- /toolTimeclock -->
+
+  <div id="toolMargins" style="display:none;">
+    <header class="app-header">
+      <div class="brand">
+        <div>
+          <h1>Cost &amp; Margins <span class="mobo-hint">(admin)</span></h1>
+          <p class="tagline">Build costs &middot; profit &middot; margin per channel</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="ghost btn-sm" id="mgCompareBtn">Compare</button>
+        <button class="primary btn-sm" id="mgAddBtn">+ Add build</button>
+      </div>
+    </header>
+    <section class="card">
+      <div class="mg-pills" id="mgChannelBar"></div>
+    </section>
+    <div class="mg-kpis" id="mgKpis"></div>
+    <div id="mgBody"><p class="muted-line">Loading&hellip;</p></div>
+    <div style="margin:22px 0 8px;display:flex;align-items:center;gap:12px;">
+      <div class="inv-cat" style="margin:0;">Custom one-off builds</div>
+      <button class="ghost btn-sm" id="mgAddCustomBtn">+ Custom build</button>
+    </div>
+    <div id="mgCustomBody"></div>
+  </div><!-- /toolMargins -->
 
   </div>
 </div>
@@ -1499,11 +1581,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       session = s;
       renderAuth();
       updateSaveEnabled();
-      if (s){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } }
+      if (s){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); }
     });
     renderAuth();
     updateSaveEnabled();
-    if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } }
+    if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); }
   }
 
   function renderAuth(){
@@ -1522,6 +1604,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       appView.style.display = 'none';
       document.getElementById('tabbar').classList.remove('on');
       document.body.classList.remove('authed');
+      var _nm = document.getElementById('navMargins'); if (_nm) _nm.style.display = 'none';
+      var _tm = document.getElementById('tileMargins'); if (_tm) _tm.style.display = 'none';
+      var _bm = document.getElementById('tabMargins'); if (_bm) _bm.style.display = 'none';
+      mgIsAdmin = false; mgInited = false;
+      var _mb = document.getElementById('mgBar'); if (_mb) _mb.remove();
+      var _mm = document.getElementById('mgModalBg'); if (_mm) _mm.remove();
     }
   }
 
@@ -1632,16 +1720,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let invLoaded = false;
   const navTimeclock = document.getElementById('navTimeclock');
   const toolTimeclock = document.getElementById('toolTimeclock');
+  const navMargins = document.getElementById('navMargins');
+  const toolMargins = document.getElementById('toolMargins');
   const navHome = document.getElementById('navHome');
   const toolHome = document.getElementById('toolHome');
   function showTool(which){
-    const views = { home: [navHome, toolHome], labels: [navLabels, toolLabels], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock] };
+    const views = { home: [navHome, toolHome], labels: [navLabels, toolLabels], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins] };
     Object.keys(views).forEach(function(k){
       views[k][0].classList.toggle('active', k === which);
       views[k][1].style.display = (k === which) ? '' : 'none';
     });
     if (which === 'inventory' && !invLoaded && SB && session){ invLoaded = true; loadInventory(); }
     if (which === 'timeclock' && SB && session){ tcOpen(); }
+    if (which === 'margins' && SB && session){ mgOpen(); }
     document.querySelectorAll('#tabbar .tab-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-goto') === which);
     });
@@ -1691,6 +1782,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   navLabels.addEventListener('click', function(e){ e.preventDefault(); showTool('labels'); });
   navInventory.addEventListener('click', function(e){ e.preventDefault(); showTool('inventory'); });
   navTimeclock.addEventListener('click', function(e){ e.preventDefault(); showTool('timeclock'); });
+  navMargins.addEventListener('click', function(e){ e.preventDefault(); showTool('margins'); });
 
   /* ================= INVENTORY ================= */
   const CATS = [
@@ -2146,8 +2238,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     tcFillWeekFields();
     const mine = tcHoursRows.filter(function(r){ return r.user_id === (tcMe.user_id || 'x'); }).slice(0, 12);
     document.getElementById('tcMineBody').innerHTML = mine.length ? mine.map(function(r){
-      return '<tr><td>' + fmtWeekLabel(r.week_ending) + '</td><td>' + (+r.hours) + '</td><td>' + esc(r.note||'') + '</td></tr>';
-    }).join('') : '<tr><td colspan="3" class="muted-sm">Nothing submitted yet.</td></tr>';
+      const payCell = (tcMe.hourly_rate != null) ? ('$' + ((+r.hours) * (+tcMe.hourly_rate)).toFixed(2)) : '\u2014';
+      return '<tr><td>' + fmtWeekLabel(r.week_ending) + '</td><td>' + (+r.hours) + '</td><td>' + payCell + '</td><td>' + esc(r.note||'') + '</td></tr>';
+    }).join('') : '<tr><td colspan="4" class="muted-sm">Nothing submitted yet.</td></tr>';
   }
   function tcFillWeekFields(){
     const wk = tcWeekEl.value;
@@ -2155,8 +2248,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     tcHoursEl.value = row ? (+row.hours) : '';
     tcNoteEl.value = row ? (row.note || '') : '';
     tcSaveStatus.textContent = row ? 'Already submitted \u2014 saving again updates it.' : '';
+    updateTcPay();
   }
   tcWeekEl.addEventListener('change', tcFillWeekFields);
+  function updateTcPay(){
+    const el = document.getElementById('tcPayLine');
+    if (!el) return;
+    const rate = (tcMe && tcMe.hourly_rate != null) ? +tcMe.hourly_rate : null;
+    if (rate == null){ el.style.display = ''; el.textContent = 'No hourly rate on file yet \u2014 ask the admin to add it to see your pay estimate.'; return; }
+    const hrs = parseFloat(tcHoursEl.value);
+    if (isNaN(hrs) || hrs <= 0){ el.style.display = 'none'; return; }
+    const other = shiftFriday(tcWeekEl.value, -7);
+    const oRow = tcHoursRows.find(function(r){ return tcMe && r.user_id === tcMe.user_id && r.week_ending === other; });
+    let html = 'This week: ' + hrs + ' hrs \u00d7 $' + rate.toFixed(2) + '/hr = <b>$' + (hrs * rate).toFixed(2) + '</b>';
+    if (oRow){ html += ' &nbsp;&middot;&nbsp; with last week (' + (+oRow.hours) + ' hrs): <b>$' + ((hrs + (+oRow.hours)) * rate).toFixed(2) + '</b>'; }
+    el.style.display = ''; el.innerHTML = html;
+  }
+  tcHoursEl.addEventListener('input', updateTcPay);
 
   document.getElementById('tcSaveBtn').addEventListener('click', async function(){
     if (!tcMe || !tcMe.user_id){ tcSaveStatus.textContent = 'Profile not linked yet \u2014 sign out and back in.'; return; }
@@ -2329,6 +2437,376 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
   });
   function fmtDate(v){ if(!v) return ''; const d=new Date(v); return isNaN(d.getTime())?'':d.toLocaleDateString(); }
+
+  /* ================= COST & MARGINS (v29, admin only) ================= */
+  let mgIsAdmin = false, mgInited = false;
+  let mgChannels = [], mgLines = [], mgBuilds = [], mgComps = [];
+  let mgChannelId = localStorage.getItem('mgChannel') || 'amazon';
+  let mgAmazonMode = localStorage.getItem('mgAmazonMode') || 'fbm';
+  let mgOpenBuild = null, mgViewBuild = null, mgOpenHist = {};
+  let mgCompare = false, mgSel = [];
+  const MG_TARGET = 20;
+  const MG_CATS = ['Gaming PCs', 'Desktop PCs (no GPU)', 'AI & Workstations'];
+
+  async function mgCheckAdmin(){
+    if (!SB || !session){ return; }
+    try {
+      const r = await SB.rpc('is_margin_admin');
+      mgIsAdmin = !r.error && r.data === true;
+    } catch(e){ mgIsAdmin = false; }
+    navMargins.style.display = mgIsAdmin ? '' : 'none';
+    document.getElementById('tileMargins').style.display = mgIsAdmin ? '' : 'none';
+    var tb = document.getElementById('tabMargins'); if (tb) tb.style.display = mgIsAdmin ? '' : 'none';
+    if (mgIsAdmin && !mgInited){ mgInited = true; await mgLoad(); }
+  }
+  async function mgOpen(){ if (!mgInited){ mgInited = true; await mgLoad(); } }
+  async function mgLoad(){
+    const res = await Promise.all([
+      SB.from('margin_channels').select('*').order('created_at'),
+      SB.from('product_lines').select('*').order('created_at'),
+      SB.from('builds').select('*').order('created_at'),
+      SB.from('build_components').select('*').order('position')
+    ]);
+    mgChannels = res[0].data || []; mgLines = res[1].data || [];
+    mgBuilds = res[2].data || []; mgComps = res[3].data || [];
+    if (!mgChannels.some(function(c){ return c.id === mgChannelId; })) mgChannelId = mgChannels.length ? mgChannels[0].id : 'amazon';
+    mgRenderAll();
+  }
+
+  function mgCh(){ return mgChannels.find(function(c){ return c.id === mgChannelId; }) || mgChannels[0] || { id: '', name: '', fee_pct: 0 }; }
+  function mgIsFba(){ return mgCh().id === 'amazon' && mgAmazonMode === 'fba'; }
+  function mgFeePct(){ const c = mgCh(); return mgIsFba() ? +(c.fba_fee_pct == null ? 13 : c.fba_fee_pct) : +(c.fee_pct || 0); }
+  function mgFbaShip(){ const c = mgCh(); return +(c.fba_ship == null ? 10 : c.fba_ship); }
+  function mgChName(){ const c = mgCh(); return c.name + (c.id === 'amazon' ? (mgIsFba() ? ' FBA' : ' FBM') : ''); }
+  function mgIsShip(n){ return /^ship/i.test((n || '').trim()); }
+  function mgItemCost(it){ return (mgIsFba() && mgIsShip(it.name)) ? mgFbaShip() : +(it.cost || 0); }
+  function mgItems(bid){ return mgComps.filter(function(c){ return c.build_id === bid; }); }
+  function mgLineBuilds(lid){ return mgBuilds.filter(function(b){ return b.line_id === lid; }); }
+  function mgFindBuild(id){ return mgBuilds.find(function(b){ return b.id === id; }); }
+  function mgLineOf(b){ return mgLines.find(function(l){ return l.id === b.line_id; }) || { name: '?' }; }
+  function mgCalc(b){
+    const price = +(b.sale_price || 0);
+    let comp = 0; mgItems(b.id).forEach(function(it){ comp += mgItemCost(it); });
+    const fee = price * mgFeePct() / 100, cost = comp + fee, profit = price - cost;
+    return { price: price, comp: comp, fee: fee, cost: cost, profit: profit, pct: price ? profit / price * 100 : 0 };
+  }
+  function mgMoney(n){ const r = Math.round(n * 100) / 100; return (r < 0 ? '-$' : '$') + Math.abs(r).toLocaleString('en-US', { minimumFractionDigits: r % 1 ? 2 : 0, maximumFractionDigits: 2 }); }
+  function mgBadge(pct){ return pct >= MG_TARGET ? 'mg-good' : pct >= MG_TARGET - 5 ? 'mg-warn' : 'mg-bad'; }
+  function mgPctColor(pct){ return pct >= MG_TARGET ? 'var(--ok)' : pct >= MG_TARGET - 5 ? '#7a5c00' : 'var(--bad)'; }
+  function mgCurrents(){
+    return mgLines.filter(function(l){ return l.category < 3; }).map(function(l){
+      const bs = mgLineBuilds(l.id); return { line: l, b: bs[bs.length - 1] };
+    }).filter(function(x){ return x.b; }).map(function(x){ return { line: x.line, b: x.b, c: mgCalc(x.b) }; });
+  }
+
+  function mgRenderAll(){
+    if (!mgIsAdmin) return;
+    mgRenderChannelBar(); mgRenderKpis(); mgRenderBody(); mgRenderCustom(); mgRenderTile(); mgRenderBar();
+    var cb = document.getElementById('mgCompareBtn');
+    if (cb){ cb.textContent = mgCompare ? 'Comparing\u2026' : 'Compare'; cb.classList.toggle('soft', mgCompare); cb.classList.toggle('ghost', !mgCompare); }
+  }
+
+  function mgRenderChannelBar(){
+    const bar = document.getElementById('mgChannelBar'); if (!bar) return;
+    const c = mgCh();
+    let x = '<span class="card-title" style="margin:0 2px 0 0;">Channel</span>';
+    x += mgChannels.map(function(ch){ return '<button class="mg-pill' + (ch.id === c.id ? ' on' : '') + '" data-mgch="' + esc(ch.id) + '">' + esc(ch.name) + ' &middot; ' + (+ch.fee_pct) + '%</button>'; }).join('');
+    x += '<button class="mg-pill dashed" data-mgaddch="1">+ Add channel</button>';
+    if (c.id === 'amazon'){
+      x += '<span style="display:inline-flex;border:1px solid var(--line-strong);border-radius:999px;overflow:hidden;">'
+        + '<button class="mg-pill" style="border:none;border-radius:0;' + (mgAmazonMode === 'fbm' ? 'background:var(--accent-soft);color:var(--accent);' : '') + '" data-mgmode="fbm" title="Fulfilled by merchant">FBM</button>'
+        + '<button class="mg-pill" style="border:none;border-radius:0;' + (mgAmazonMode === 'fba' ? 'background:var(--accent-soft);color:var(--accent);' : '') + '" data-mgmode="fba" title="Fulfilled by Amazon: higher fees, cheaper shipping">FBA</button></span>';
+    }
+    x += '<span class="mg-fee">' + esc(mgChName()) + ' fee <input type="number" min="0" max="50" step="0.1" id="mgFeeInput" value="' + mgFeePct() + '">%</span>';
+    if (mgIsFba()){ x += '<span class="mg-fee" style="margin-left:0;">Ship to FBA $ <input type="number" min="0" step="0.5" id="mgFbaShipInput" value="' + mgFbaShip() + '"></span>'; }
+    bar.innerHTML = x;
+  }
+
+  function mgRenderKpis(){
+    const el = document.getElementById('mgKpis'); if (!el) return;
+    const cur = mgCurrents();
+    const avg = cur.length ? cur.reduce(function(t, x){ return t + x.c.pct; }, 0) / cur.length : 0;
+    const sorted = cur.slice().sort(function(a, b){ return b.c.pct - a.c.pct; });
+    const best = sorted[0], worst = sorted[sorted.length - 1];
+    const below = cur.filter(function(x){ return x.c.pct < MG_TARGET; }).length;
+    function kpi(lbl, val, sub, color){ return '<div class="mg-kpi"><div class="lbl">' + lbl + '</div><div class="val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</div><div class="sub">' + sub + '</div></div>'; }
+    el.innerHTML = kpi('Active builds', cur.length, mgLines.filter(function(l){ return l.category < 3; }).length + ' product lines')
+      + kpi('Avg margin', avg.toFixed(1) + '%', 'on ' + esc(mgChName()) + ' (' + mgFeePct() + '% fee)', mgPctColor(avg))
+      + kpi('Best margin', best ? best.c.pct.toFixed(1) + '%' : '\u2014', best ? esc(best.line.name) : '', 'var(--ok)')
+      + kpi('Below ' + MG_TARGET + '% target', below, worst ? 'lowest: ' + esc(worst.line.name) + ' (' + worst.c.pct.toFixed(1) + '%)' : '', below ? 'var(--bad)' : 'var(--ok)');
+  }
+
+  function mgStat(lbl, val, style){ return '<span class="mg-stat"><span class="lbl">' + lbl + '</span><span class="val"' + (style ? ' style="' + style + '"' : '') + '>' + val + '</span></span>'; }
+  function mgSumBox(b, c, editable){
+    var fbaNote = (mgIsFba() && mgItems(b.id).some(function(i){ return mgIsShip(i.name); })) ? '<div style="font-size:11px;color:var(--warn);margin-top:6px;text-align:center;">Shipping counted at ' + mgMoney(mgFbaShip()) + ' (to FBA warehouse)</div>' : '';
+    return '<div class="mg-sum-box">'
+      + (editable
+        ? '<label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;">Sale price</label><input type="number" step="0.01" data-mgprice="' + b.id + '" value="' + (+b.sale_price) + '" style="width:100%;box-sizing:border-box;text-align:right;font-weight:700;padding:8px 10px;border-radius:8px;">'
+        : '<div class="mg-sum-line strong" style="margin-top:0;"><span>Sale price</span><span>' + mgMoney(c.price) + '</span></div>')
+      + '<div class="mg-sum-line"><span>' + esc(mgChName()) + ' fee (' + mgFeePct() + '%)</span><span>' + mgMoney(c.fee) + '</span></div>'
+      + '<div class="mg-sum-line"><span>Components</span><span>' + mgMoney(c.comp) + '</span></div>'
+      + '<div class="mg-sum-line strong top"><span>Total cost</span><span>' + mgMoney(c.cost) + '</span></div>'
+      + '<div class="mg-sum-line strong"><span>Profit</span><span style="color:' + (c.profit >= 0 ? 'var(--ok)' : 'var(--bad)') + ';">' + mgMoney(c.profit) + '</span></div>'
+      + '<div class="mg-margin-big" style="color:' + mgPctColor(c.pct) + ';">' + c.pct.toFixed(1) + '% <span style="font-size:11.5px;font-weight:600;color:var(--faint);">margin</span></div>'
+      + fbaNote + '</div>';
+  }
+  function mgViewPanel(b){
+    const c = mgCalc(b);
+    return '<div class="mg-panel"><div class="col-items"><p class="mg-h">Component breakdown</p>'
+      + mgItems(b.id).map(function(it){ var cst = mgItemCost(it); return '<div class="mg-vrow" style="color:' + (cst > 0 ? 'var(--ink)' : 'var(--faint)') + ';"><span>' + esc(it.name || '(unnamed)') + (mgIsFba() && mgIsShip(it.name) ? ' \u2192 FBA warehouse' : '') + '</span><span style="font-weight:600;">' + mgMoney(cst) + '</span></div>'; }).join('')
+      + '</div><div class="col-sum"><p class="mg-h">Summary</p>' + mgSumBox(b, c, false) + '</div></div>';
+  }
+  function mgEditPanel(b){
+    const c = mgCalc(b);
+    return '<div class="mg-panel"><div class="col-items"><p class="mg-h">Components</p>'
+      + mgItems(b.id).map(function(it){ return '<div class="mg-item"><input type="text" data-mgitem="' + it.id + '" data-f="name" value="' + esc(it.name || '') + '"><span style="color:var(--faint);font-size:13px;">$</span><input type="number" step="0.01" data-mgitem="' + it.id + '" data-f="cost" value="' + (+it.cost) + '"><button class="mini del-btn" data-mgrm="' + it.id + '" title="Remove">&times;</button></div>'; }).join('')
+      + '<button class="ghost btn-sm" data-mgadditem="' + b.id + '">+ Add component</button>'
+      + '</div><div class="col-sum"><p class="mg-h">Summary</p>' + mgSumBox(b, c, true)
+      + '<button class="ghost btn-sm danger" style="margin-top:9px;" data-mgdel="' + b.id + '">Delete build</button></div></div>';
+  }
+  function mgRowHtml(b, isCur){
+    const c = mgCalc(b);
+    return '<div class="mg-row">'
+      + (mgCompare ? '<input type="checkbox" class="mg-cmp-chk" data-mgsel="' + b.id + '"' + (mgSel.indexOf(b.id) >= 0 ? ' checked' : '') + '>' : '')
+      + '<span class="mg-chip' + (isCur ? ' cur' : '') + '">' + esc(b.quarter) + (isCur ? ' &middot; Current' : '') + '</span>'
+      + mgStat('Price', mgMoney(c.price)) + mgStat('Cost', mgMoney(c.cost)) + mgStat('Profit', mgMoney(c.profit), 'color:' + (c.profit >= 0 ? 'var(--ok)' : 'var(--bad)') + ';')
+      + '<span class="mg-badge ' + mgBadge(c.pct) + '">' + c.pct.toFixed(1) + '% margin</span>'
+      + '<span class="mg-actions"><button class="mini" data-mgview="' + b.id + '">' + (mgViewBuild === b.id ? 'Hide' : 'View') + '</button><button class="mini" data-mgedit="' + b.id + '">' + (mgOpenBuild === b.id ? 'Close' : 'Edit') + '</button></span>'
+      + '</div>'
+      + (mgViewBuild === b.id ? mgViewPanel(b) : '')
+      + (mgOpenBuild === b.id ? mgEditPanel(b) : '');
+  }
+  function mgLineCard(line){
+    const bs = mgLineBuilds(line.id);
+    const ordered = bs.slice().reverse();
+    const open = !!mgOpenHist[line.id];
+    const shown = open ? ordered : ordered.slice(0, 1);
+    return '<section class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+      + '<span style="font-weight:700;font-size:15.5px;">' + esc(line.name) + '</span>'
+      + (line.category === 3 ? '<span class="mg-chip">One-off</span>' : '')
+      + (bs.length > 1 ? '<button class="mini" style="margin-left:auto;" data-mghist="' + line.id + '">' + (open ? 'Hide history' : 'History (' + (bs.length - 1) + ')') + '</button>' : '')
+      + '</div>'
+      + shown.map(function(b){ return mgRowHtml(b, line.category !== 3 && b.id === ordered[0].id); }).join('')
+      + '</section>';
+  }
+  function mgRenderBody(){
+    const el = document.getElementById('mgBody'); if (!el) return;
+    let x = '';
+    MG_CATS.forEach(function(nm, ci){
+      const ls = mgLines.filter(function(l){ return l.category === ci; });
+      if (!ls.length) return;
+      x += '<div class="inv-cat" style="margin:20px 0 8px;">' + nm + '</div>' + ls.map(mgLineCard).join('');
+    });
+    el.innerHTML = x || '<p class="muted-line">No builds yet \u2014 run the seed script or add one.</p>';
+  }
+  function mgRenderCustom(){
+    const el = document.getElementById('mgCustomBody'); if (!el) return;
+    const ls = mgLines.filter(function(l){ return l.category === 3; });
+    el.innerHTML = ls.length ? ls.map(mgLineCard).join('') : '<div class="card" style="border-style:dashed;color:var(--muted);font-size:13px;box-shadow:none;">No custom builds yet. Price out a one-off customer request here \u2014 it stays separate from the mass-produced lineup and the stats above.</div>';
+  }
+  function mgRenderTile(){
+    const el = document.getElementById('tileMgStatus'); if (!el || !mgIsAdmin) return;
+    const cur = mgCurrents();
+    if (!cur.length){ el.textContent = 'No builds yet'; el.className = 'tile-status'; return; }
+    const avg = cur.reduce(function(t, x){ return t + x.c.pct; }, 0) / cur.length;
+    el.textContent = 'Avg margin ' + avg.toFixed(1) + '% on ' + mgChName() + ' \u00b7 ' + cur.length + ' builds';
+    el.className = 'tile-status ' + (avg >= MG_TARGET ? 'ok' : 'warn');
+  }
+  function mgRenderBar(){
+    var bar = document.getElementById('mgBar');
+    document.body.classList.toggle('mg-comparing', mgCompare);
+    if (!mgCompare){ if (bar) bar.remove(); return; }
+    if (!bar){ bar = document.createElement('div'); bar.id = 'mgBar'; bar.className = 'mg-bar'; document.body.appendChild(bar); }
+    bar.innerHTML = '<div class="mg-bar-inner"><span class="muted-sm" style="font-weight:600;">' + (mgSel.length === 2 ? 'Ready \u2014 2 builds selected' : 'Select 2 builds to compare \u00b7 ' + mgSel.length + ' selected') + '</span><button class="primary btn-sm" style="margin-left:auto;" id="mgDoCompare"' + (mgSel.length === 2 ? '' : ' disabled') + '>Compare</button><button class="ghost btn-sm" id="mgCancelCompare">Cancel</button></div>';
+    bar.querySelector('#mgDoCompare').addEventListener('click', mgShowCompare);
+    bar.querySelector('#mgCancelCompare').addEventListener('click', function(){ mgCompare = false; mgSel = []; mgRenderAll(); });
+  }
+
+  function mgModal(html, wide){
+    mgCloseModal();
+    var bg = document.createElement('div'); bg.id = 'mgModalBg'; bg.className = 'mg-modal-bg';
+    bg.innerHTML = '<div class="mg-modal' + (wide ? ' wide' : '') + '">' + html + '</div>';
+    bg.addEventListener('click', function(e){ if (e.target === bg) mgCloseModal(); });
+    document.body.appendChild(bg);
+    var xBtn = bg.querySelector('#mgModalClose'); if (xBtn) xBtn.addEventListener('click', mgCloseModal);
+    return bg;
+  }
+  function mgCloseModal(){ var m = document.getElementById('mgModalBg'); if (m) m.remove(); }
+  function mgModalHead(title){ return '<div style="display:flex;align-items:center;margin-bottom:14px;"><h2 class="login-title" style="margin:0;">' + title + '</h2><button class="mini" style="margin-left:auto;" id="mgModalClose">&times;</button></div>'; }
+
+  function mgShowCompare(){
+    if (mgSel.length !== 2) return;
+    var cols = mgSel.map(function(id){ var b = mgFindBuild(id); return { b: b, l: mgLineOf(b), c: mgCalc(b) }; });
+    function colHtml(x){
+      function line(lbl, val, style){ return '<div class="mg-sum-line"><span>' + lbl + '</span><b style="font-variant-numeric:tabular-nums;' + (style || '') + '">' + val + '</b></div>'; }
+      return '<div class="mg-cmp-col"><div style="font-weight:700;">' + esc(x.l.name) + '</div><div class="muted-sm" style="margin:2px 0 10px;">' + esc(x.b.quarter) + ' &middot; ' + esc(mgChName()) + '</div>'
+        + line('Sale price', mgMoney(x.c.price)) + line('Channel fee', mgMoney(x.c.fee)) + line('Components', mgMoney(x.c.comp)) + line('Total cost', mgMoney(x.c.cost)) + line('Profit', mgMoney(x.c.profit), 'color:' + (x.c.profit >= 0 ? 'var(--ok)' : 'var(--bad)') + ';')
+        + '<div style="margin-top:10px;"><span class="mg-badge ' + mgBadge(x.c.pct) + '">' + x.c.pct.toFixed(1) + '% margin</span></div>'
+        + '<p class="mg-h" style="margin-top:14px;">Components</p>'
+        + mgItems(x.b.id).filter(function(i){ return +i.cost > 0 || mgIsShip(i.name); }).map(function(i){ return '<div class="mg-vrow" style="font-size:12px;color:var(--muted);"><span>' + esc(i.name) + '</span><span style="color:var(--ink);font-weight:600;">' + mgMoney(mgItemCost(i)) + '</span></div>'; }).join('')
+        + '</div>';
+    }
+    var a = cols[0].c, b2 = cols[1].c;
+    function d(lbl, va, vb, lower, isPct){
+      var diff = vb - va; var good = lower ? diff < 0 : diff > 0;
+      var col = diff === 0 ? 'var(--muted)' : good ? 'var(--ok)' : 'var(--bad)';
+      return '<span class="muted-sm" style="font-weight:600;">' + lbl + ': <b style="color:' + col + ';">' + (diff >= 0 ? '+' : '') + (isPct ? diff.toFixed(1) + ' pts' : mgMoney(diff)) + '</b></span>';
+    }
+    mgModal(mgModalHead('Compare builds')
+      + '<div class="mg-cmp-grid">' + colHtml(cols[0]) + colHtml(cols[1]) + '</div>'
+      + '<div style="margin-top:14px;background:var(--soft);border-radius:12px;padding:12px 15px;display:flex;gap:22px;flex-wrap:wrap;">'
+      + d('\u0394 Price', a.price, b2.price, false) + d('\u0394 Cost', a.cost, b2.cost, true) + d('\u0394 Profit', a.profit, b2.profit, false) + d('\u0394 Margin', a.pct, b2.pct, false, true) + '</div>', true);
+  }
+
+  function mgShowAdd(){
+    var opts = mgLines.filter(function(l){ return l.category < 3; }).map(function(l){ return '<option value="' + l.id + '">' + esc(l.name) + '</option>'; }).join('');
+    var bg = mgModal(mgModalHead('Add build')
+      + '<div class="field"><label>Product line</label><select id="mgAbLine" class="spec-select">' + opts + '<option value="__new">+ New line\u2026</option></select></div>'
+      + '<div id="mgAbNewWrap" style="display:none;margin-top:12px;"><div class="field"><label>New line name</label><input id="mgAbName" type="text" placeholder="e.g. RTX 5070 Gaming PC"></div><div class="field" style="margin-top:10px;"><label>Category</label><select id="mgAbCat" class="spec-select"><option value="0">Gaming PCs</option><option value="1">Desktop PCs (no GPU)</option><option value="2">AI &amp; Workstations</option></select></div></div>'
+      + '<div style="display:flex;gap:12px;margin-top:12px;"><div class="field" style="flex:1;"><label>Quarter</label><input id="mgAbQ" type="text" value="Q3 2026"></div><div class="field" style="flex:1;"><label>Sale price ($)</label><input id="mgAbPrice" type="number" step="0.01"></div></div>'
+      + '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:12px;cursor:pointer;"><input type="checkbox" id="mgAbCopy" checked> Copy components from latest build of this line</label>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button class="ghost btn-sm" id="mgAbCancel">Cancel</button><button class="primary btn-sm" id="mgAbCreate">Create build</button></div>');
+    bg.querySelector('#mgAbLine').addEventListener('change', function(){ bg.querySelector('#mgAbNewWrap').style.display = this.value === '__new' ? '' : 'none'; });
+    bg.querySelector('#mgAbCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#mgAbCreate').addEventListener('click', mgCreateBuild);
+  }
+  async function mgCreateBuild(){
+    var bg = document.getElementById('mgModalBg');
+    var lineSel = bg.querySelector('#mgAbLine').value;
+    var q = bg.querySelector('#mgAbQ').value.trim();
+    var price = parseFloat(bg.querySelector('#mgAbPrice').value);
+    if (!q || isNaN(price) || price <= 0){ alert('Enter a quarter and a sale price.'); return; }
+    var line = null;
+    if (lineSel === '__new'){
+      var nm = bg.querySelector('#mgAbName').value.trim();
+      if (!nm){ alert('Enter the new line name.'); return; }
+      var cat = parseInt(bg.querySelector('#mgAbCat').value, 10) || 0;
+      var rl = await SB.from('product_lines').insert({ name: nm, category: cat }).select().single();
+      if (rl.error){ alert('Failed: ' + rl.error.message); return; }
+      line = rl.data; mgLines.push(line);
+    } else {
+      line = mgLines.find(function(l){ return l.id === lineSel; });
+      if (!line){ alert('Pick a product line.'); return; }
+    }
+    var rb = await SB.from('builds').insert({ line_id: line.id, quarter: q, sale_price: price }).select().single();
+    if (rb.error){ alert('Failed: ' + rb.error.message); return; }
+    mgBuilds.push(rb.data);
+    var items = [];
+    var prev = mgLineBuilds(line.id).filter(function(b){ return b.id !== rb.data.id; });
+    if (bg.querySelector('#mgAbCopy').checked && prev.length){
+      mgItems(prev[prev.length - 1].id).forEach(function(it, i){ items.push({ build_id: rb.data.id, name: it.name, cost: +it.cost, position: i }); });
+    } else {
+      ['Case & fans', 'GPU', 'CPU', 'Motherboard', 'RAM', 'SSD', 'PSU', 'CPU cooler', 'Shipping', 'China ship'].forEach(function(n, i){ items.push({ build_id: rb.data.id, name: n, cost: 0, position: i }); });
+    }
+    var rc = await SB.from('build_components').insert(items).select();
+    if (rc.data) mgComps = mgComps.concat(rc.data);
+    mgCloseModal(); mgOpenBuild = rb.data.id; mgViewBuild = null; mgRenderAll();
+  }
+
+  function mgShowAddCustom(){
+    var opts = '<option value="">Blank list</option>' + mgLines.filter(function(l){ return l.category < 3; }).map(function(l){ return '<option value="' + l.id + '">Copy: ' + esc(l.name) + '</option>'; }).join('');
+    var defLabel = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    var bg = mgModal(mgModalHead('New custom build')
+      + '<div class="field"><label>Build name</label><input id="mgCuName" type="text" placeholder="e.g. John D. \u2014 dual-GPU render rig"></div>'
+      + '<div style="display:flex;gap:12px;margin-top:12px;"><div class="field" style="flex:1;"><label>Date / label</label><input id="mgCuQ" type="text" value="' + defLabel + '"></div><div class="field" style="flex:1;"><label>Quoted price ($)</label><input id="mgCuPrice" type="number" step="0.01"></div></div>'
+      + '<div class="field" style="margin-top:12px;"><label>Start components from</label><select id="mgCuBase" class="spec-select">' + opts + '</select></div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button class="ghost btn-sm" id="mgCuCancel">Cancel</button><button class="primary btn-sm" id="mgCuCreate">Create custom build</button></div>');
+    bg.querySelector('#mgCuCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#mgCuCreate').addEventListener('click', mgCreateCustom);
+  }
+  async function mgCreateCustom(){
+    var bg = document.getElementById('mgModalBg');
+    var nm = bg.querySelector('#mgCuName').value.trim();
+    var q = bg.querySelector('#mgCuQ').value.trim() || 'One-off';
+    var price = parseFloat(bg.querySelector('#mgCuPrice').value);
+    if (!nm || isNaN(price) || price <= 0){ alert('Enter a name and quoted price.'); return; }
+    var rl = await SB.from('product_lines').insert({ name: nm, category: 3 }).select().single();
+    if (rl.error){ alert('Failed: ' + rl.error.message); return; }
+    mgLines.push(rl.data);
+    var rb = await SB.from('builds').insert({ line_id: rl.data.id, quarter: q, sale_price: price }).select().single();
+    if (rb.error){ alert('Failed: ' + rb.error.message); return; }
+    mgBuilds.push(rb.data);
+    var baseId = bg.querySelector('#mgCuBase').value, items = [];
+    if (baseId){
+      var bs = mgLineBuilds(baseId);
+      if (bs.length){ mgItems(bs[bs.length - 1].id).forEach(function(it, i){ items.push({ build_id: rb.data.id, name: it.name, cost: +it.cost, position: i }); }); }
+    }
+    if (!items.length){ ['Case & fans', 'GPU', 'CPU', 'Motherboard', 'RAM', 'SSD', 'PSU', 'CPU cooler', 'Shipping'].forEach(function(n, i){ items.push({ build_id: rb.data.id, name: n, cost: 0, position: i }); }); }
+    var rc = await SB.from('build_components').insert(items).select();
+    if (rc.data) mgComps = mgComps.concat(rc.data);
+    mgCloseModal(); mgOpenBuild = rb.data.id; mgViewBuild = null; mgRenderAll();
+  }
+
+  toolMargins.addEventListener('click', async function(e){
+    var t;
+    if (t = e.target.closest('[data-mgch]')){ mgChannelId = t.getAttribute('data-mgch'); localStorage.setItem('mgChannel', mgChannelId); mgRenderAll(); return; }
+    if (t = e.target.closest('[data-mgmode]')){ mgAmazonMode = t.getAttribute('data-mgmode'); localStorage.setItem('mgAmazonMode', mgAmazonMode); mgRenderAll(); return; }
+    if (t = e.target.closest('[data-mgaddch]')){
+      var nm = prompt('Channel name (e.g. eBay):'); if (!nm || !nm.trim()) return;
+      var fee = parseFloat(prompt('Fee % for ' + nm.trim() + ':', '8')); if (isNaN(fee)) fee = 0;
+      var id = nm.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+      var r = await SB.from('margin_channels').insert({ id: id, name: nm.trim(), fee_pct: fee }).select().single();
+      if (r.error){ alert('Failed: ' + r.error.message); return; }
+      mgChannels.push(r.data); mgChannelId = id; localStorage.setItem('mgChannel', id); mgRenderAll(); return;
+    }
+    if (t = e.target.closest('[data-mghist]')){ var lid = t.getAttribute('data-mghist'); mgOpenHist[lid] = !mgOpenHist[lid]; mgRenderAll(); return; }
+    if (t = e.target.closest('[data-mgview]')){ var v = t.getAttribute('data-mgview'); mgViewBuild = (mgViewBuild === v ? null : v); mgOpenBuild = null; mgRenderAll(); return; }
+    if (t = e.target.closest('[data-mgedit]')){ var ed = t.getAttribute('data-mgedit'); mgOpenBuild = (mgOpenBuild === ed ? null : ed); mgViewBuild = null; mgRenderAll(); return; }
+    if (t = e.target.closest('[data-mgrm]')){
+      var cid = t.getAttribute('data-mgrm');
+      await SB.from('build_components').delete().eq('id', cid);
+      mgComps = mgComps.filter(function(c){ return String(c.id) !== String(cid); }); mgRenderAll(); return;
+    }
+    if (t = e.target.closest('[data-mgadditem]')){
+      var bid = t.getAttribute('data-mgadditem');
+      var r2 = await SB.from('build_components').insert({ build_id: bid, name: '', cost: 0, position: mgItems(bid).length }).select().single();
+      if (r2.data) mgComps.push(r2.data); mgRenderAll(); return;
+    }
+    if (t = e.target.closest('[data-mgdel]')){
+      var did = t.getAttribute('data-mgdel');
+      var b = mgFindBuild(did), l = mgLineOf(b);
+      if (!confirm('Delete ' + l.name + ' ' + b.quarter + '?')) return;
+      await SB.from('builds').delete().eq('id', did);
+      mgBuilds = mgBuilds.filter(function(x){ return x.id !== did; });
+      mgComps = mgComps.filter(function(c){ return c.build_id !== did; });
+      if (!mgLineBuilds(l.id).length){ await SB.from('product_lines').delete().eq('id', l.id); mgLines = mgLines.filter(function(x){ return x.id !== l.id; }); }
+      mgOpenBuild = null; mgViewBuild = null; mgSel = mgSel.filter(function(x){ return x !== did; }); mgRenderAll(); return;
+    }
+  });
+  toolMargins.addEventListener('change', async function(e){
+    var el = e.target;
+    if (el.id === 'mgFeeInput'){
+      var v = parseFloat(el.value) || 0; var c = mgCh();
+      if (mgIsFba()){ c.fba_fee_pct = v; await SB.from('margin_channels').update({ fba_fee_pct: v }).eq('id', c.id); }
+      else { c.fee_pct = v; await SB.from('margin_channels').update({ fee_pct: v }).eq('id', c.id); }
+      mgRenderAll(); return;
+    }
+    if (el.id === 'mgFbaShipInput'){
+      var v2 = parseFloat(el.value) || 0; var c2 = mgCh();
+      c2.fba_ship = v2; await SB.from('margin_channels').update({ fba_ship: v2 }).eq('id', c2.id); mgRenderAll(); return;
+    }
+    if (el.hasAttribute('data-mgprice')){
+      var bid = el.getAttribute('data-mgprice'); var b = mgFindBuild(bid); if (!b) return;
+      b.sale_price = parseFloat(el.value) || 0;
+      await SB.from('builds').update({ sale_price: b.sale_price }).eq('id', bid); mgRenderAll(); return;
+    }
+    if (el.hasAttribute('data-mgitem')){
+      var cid = el.getAttribute('data-mgitem'), f = el.getAttribute('data-f');
+      var it = mgComps.find(function(c){ return String(c.id) === String(cid); }); if (!it) return;
+      if (f === 'name'){ it.name = el.value; await SB.from('build_components').update({ name: it.name }).eq('id', cid); }
+      else { it.cost = parseFloat(el.value) || 0; await SB.from('build_components').update({ cost: it.cost }).eq('id', cid); }
+      mgRenderAll(); return;
+    }
+    if (el.classList.contains('mg-cmp-chk')){
+      var sid = el.getAttribute('data-mgsel');
+      mgSel = mgSel.filter(function(x){ return x !== sid; });
+      if (el.checked){ mgSel.push(sid); if (mgSel.length > 2) mgSel = mgSel.slice(-2); }
+      mgRenderAll(); return;
+    }
+  });
+  document.getElementById('mgAddBtn').addEventListener('click', mgShowAdd);
+  document.getElementById('mgAddCustomBtn').addEventListener('click', mgShowAddCustom);
+  document.getElementById('mgCompareBtn').addEventListener('click', function(){ mgCompare = !mgCompare; mgSel = []; mgRenderAll(); });
 
   /* ---- home tiles status ---- */
   function renderHomeStatus(){
