@@ -590,10 +590,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* --- v7: top nav + inline status --- */
   .topnav{ background:var(--paper); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:20; box-shadow:0 1px 2px rgba(16,24,40,.04); }
   .nav-inner{ max-width:940px; margin:0 auto; padding:0 20px; height:58px; display:flex; align-items:center; gap:18px; }
-  .nav-menu{ min-width:0; }
-  @media (max-width:1180px){ .nav-inner{ gap:12px; } .nav-item{ padding:7px 9px; } .chip-email{ display:none; } }
-  @media (max-width:1000px){ .version{ display:none; } }
-  @media (max-width:860px) and (min-width:701px){ .nav-menu{ overflow-x:auto; scrollbar-width:none; } .nav-menu::-webkit-scrollbar{ display:none; } }
+
   .nav-brand{ display:flex; align-items:center; text-decoration:none; }
   .nav-logo{ height:26px; width:auto; display:block; }
   .nav-wordmark{ font-weight:800; font-size:20px; letter-spacing:.5px; background:linear-gradient(90deg,#ff2e97,#8a2be2,#2563eb,#22d3ee); -webkit-background-clip:text; background-clip:text; color:transparent; }
@@ -601,7 +598,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .nav-item{ font-size:13px; font-weight:600; color:var(--muted); text-decoration:none; padding:7px 12px; border-radius:8px; white-space:nowrap; }
   .nav-item:hover{ background:var(--soft); color:var(--ink); }
   .nav-item.active{ background:var(--accent-soft); color:var(--accent); }
-  .nav-right{ display:flex; align-items:center; gap:10px; margin-left:auto; }
+  .nav-right{ display:flex; align-items:center; gap:10px; margin-left:auto; flex:0 0 auto; }
+  /* v29.2: keep the item row from sliding under the auth pill */
+  .nav-menu{ flex:1 1 auto; min-width:0; overflow-x:auto; scrollbar-width:none; }
+  .nav-menu::-webkit-scrollbar{ display:none; }
+  @media (max-width:1240px){ .chip-email{ display:none; } }
+  @media (max-width:1180px){ .nav-inner{ gap:12px; } .nav-item{ padding:7px 9px; } }
+  @media (max-width:1040px){ .version{ display:none; } }
   .status-select{ border:1px solid transparent; border-radius:999px; padding:3px 10px; font-size:11.5px; font-weight:600; cursor:pointer; -webkit-appearance:none; appearance:none; }
 
   /* --- v8: full-site login gate --- */
@@ -901,7 +904,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     </div>
     <div class="nav-right">
       <span class="auth-chip" id="authChip" style="display:none;"></span>
-      <span class="version" id="version">v29.1</span>
+      <span class="version" id="version">v29.2</span>
     </div>
   </div>
 </nav>
@@ -2547,7 +2550,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const c = mgCh();
     var row1 = '<span class="card-title">Channel</span>'
       + mgChannels.map(function(ch){ return '<button class="mg-pill' + (ch.id === c.id ? ' on' : '') + '" data-mgch="' + esc(ch.id) + '">' + esc(ch.name) + ' &middot; ' + (+ch.fee_pct) + '%</button>'; }).join('')
-      + '<button class="mg-pill dashed" data-mgaddch="1">+ Add channel</button>';
+      + '<button class="mg-pill dashed" data-mgaddch="1" title="Add channel" aria-label="Add channel" style="padding:6px 12px;">+</button>';
     var row2 = '';
     if (c.id === 'amazon'){
       row2 += '<span class="mg-seg">'
