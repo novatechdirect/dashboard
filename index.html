@@ -1533,7 +1533,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <span class="nav-wordmark" id="logoText" style="display:none;">NOVATECH</span>
     </a>
     <div class="nav-menu">
-      <a class="nav-item active" href="#" id="navOrders">Orders</a>
+      <a class="nav-item active" href="#" id="navHome">Home</a>
+      <a class="nav-item" href="#" id="navOrders">Orders</a>
       <a class="nav-item" href="#" id="navInventory">Inventory</a>
       <a class="nav-item" href="#" id="navTimeclock">Timeclock</a>
       <a class="nav-item" href="#" id="navMargins" style="display:none;">Margins</a>
@@ -1551,7 +1552,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 </nav>
 
 <nav class="tabbar" id="tabbar">
-  <button type="button" class="tab-btn active" data-goto="orders">
+  <button type="button" class="tab-btn active" data-goto="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </button>
+  <button type="button" class="tab-btn" data-goto="orders">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg>
     <span>Orders</span>
   </button>
@@ -1566,10 +1571,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   <button type="button" class="tab-btn" data-goto="margins" id="tabMargins" style="display:none;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="12"/><line x1="10.5" y1="20" x2="10.5" y2="5"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="21" y1="20" x2="21" y2="8"/></svg>
     <span>Margins</span>
-  </button>
-  <button type="button" class="tab-btn" data-goto="admin" id="tabAdmin" style="display:none;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2" fill="var(--paper)"/><circle cx="15" cy="12" r="2" fill="var(--paper)"/><circle cx="8" cy="17" r="2" fill="var(--paper)"/></svg>
-    <span>Admin</span>
   </button>
 </nav>
 
@@ -1588,14 +1589,81 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   <div id="appView" style="display:none;">
 
-  <div id="toolOrders">
+  <div id="toolHome">
+    <header class="app-header">
+      <div class="brand">
+        <div>
+          <h1 id="homeGreet">Welcome</h1>
+          <p class="tagline">Novatech tools</p>
+        </div>
+      </div>
+    </header>
+    <div class="tile-grid" id="tileGrid">
+      <a class="tile" href="#" data-goto="orders">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg></span>
+        <span class="tile-body">
+          <span class="tile-title">B2B Orders</span>
+          <span class="tile-desc">Invoices, batches, labels and tracking</span>
+          <span class="tile-status" id="tileOrdStatus"><span class="ts-lbl">Loading&hellip;</span></span>
+        </span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+      <a class="tile" href="#" data-goto="inventory">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
+        <span class="tile-body">
+          <span class="tile-title">Inventory</span>
+          <span class="tile-desc">Parts on hand, low stock, activity</span>
+          <span class="tile-status" id="tileInvStatus"><span class="ts-lbl">Loading&hellip;</span></span>
+        </span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+      <a class="tile" href="#" data-goto="timeclock">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3.5 2"/></svg></span>
+        <span class="tile-body">
+          <span class="tile-title">Timeclock</span>
+          <span class="tile-desc">Weekly hours, bi-weekly pay</span>
+          <span class="tile-status" id="tileTcStatus"><span class="ts-lbl">Loading&hellip;</span></span>
+        </span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+      <a class="tile" href="#" data-goto="margins" id="tileMargins" style="display:none;">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M9.3 20V7M14.7 20v-6M20 20V4"/></svg></span>
+        <span class="tile-body">
+          <span class="tile-title">Cost &amp; Margins <span class="tile-admin">Admin</span></span>
+          <span class="tile-desc">Build costs, profit and margin by channel</span>
+          <span class="tile-status" id="tileMgStatus"><span class="ts-lbl">Loading&hellip;</span></span>
+        </span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+      <a class="tile" href="#" data-goto="admin" id="tileAdmin" style="display:none;">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.2" fill="var(--paper)"/><circle cx="15" cy="12" r="2.2" fill="var(--paper)"/><circle cx="8" cy="17" r="2.2" fill="var(--paper)"/></svg></span>
+        <span class="tile-body">
+          <span class="tile-title">Admin <span class="tile-admin">Admin</span></span>
+          <span class="tile-desc">Customers, configs, destinations, people</span>
+          <span class="tile-status" id="tileAdmStatus"><span class="ts-lbl">Manage the shop</span></span>
+        </span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+    </div>
+    <div class="install-card" id="installCard" style="display:none;">
+      <div class="install-txt">
+        <b>Put this on your home screen</b>
+        <span id="installHowIos" style="display:none;">In Safari: tap the Share button (the square with the arrow), then &ldquo;Add to Home Screen&rdquo;.</span>
+        <span id="installHowAndroid" style="display:none;">In Chrome: tap the &#8942; menu, then &ldquo;Add to Home screen&rdquo;.</span>
+      </div>
+      <button class="primary btn-sm" id="installBtn" style="display:none;">Install</button>
+      <button class="ghost btn-sm" id="installDismiss">Not now</button>
+    </div>
+  </div><!-- /toolHome -->
+
+  <div id="toolOrders" style="display:none;">
 
     <div id="ordListPane">
       <header class="app-header">
         <div class="brand">
           <div>
-            <h1 id="homeGreet">Welcome</h1>
-            <p class="tagline">B2B orders</p>
+            <h1>B2B Orders</h1>
+            <p class="tagline">Invoices, batches and shipments</p>
           </div>
         </div>
       </header>
@@ -1674,45 +1742,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         </div>
       </details>
 
-      <h2 class="ord-tools-h">Tools</h2>
-    <div class="tile-grid ord-tools" id="tileGrid">
-      <a class="tile" href="#" data-goto="inventory">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Inventory</span>
-          <span class="tile-desc">Parts on hand, low stock, activity</span>
-          <span class="tile-status" id="tileInvStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
-      </a>
-      <a class="tile" href="#" data-goto="timeclock">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3.5 2"/></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Timeclock</span>
-          <span class="tile-desc">Weekly hours, bi-weekly pay</span>
-          <span class="tile-status" id="tileTcStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
-      </a>
-      <a class="tile" href="#" data-goto="margins" id="tileMargins" style="display:none;">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M9.3 20V7M14.7 20v-6M20 20V4"/></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Cost &amp; Margins <span class="tile-admin">Admin</span></span>
-          <span class="tile-desc">Build costs, profit and margin by channel</span>
-          <span class="tile-status" id="tileMgStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
-      </a>
-    </div>
-    <div class="install-card" id="installCard" style="display:none;">
-      <div class="install-txt">
-        <b>Put this on your home screen</b>
-        <span id="installHowIos" style="display:none;">In Safari: tap the Share button (the square with the arrow), then &ldquo;Add to Home Screen&rdquo;.</span>
-        <span id="installHowAndroid" style="display:none;">In Chrome: tap the &#8942; menu, then &ldquo;Add to Home screen&rdquo;.</span>
-      </div>
-      <button class="primary btn-sm" id="installBtn" style="display:none;">Install</button>
-      <button class="ghost btn-sm" id="installDismiss">Not now</button>
-    </div>
     </div><!-- /ordListPane -->
 
     <div id="ordDetailPane" style="display:none;">
@@ -2338,7 +2367,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var _bm = document.getElementById('tabMargins'); if (_bm) _bm.style.display = 'none';
       mgIsAdmin = false; mgInited = false;
       var _na = document.getElementById('navAdmin'); if (_na) _na.style.display = 'none';
-      var _ba = document.getElementById('tabAdmin'); if (_ba) _ba.style.display = 'none';
+      var _ta = document.getElementById('tileAdmin'); if (_ta) _ta.style.display = 'none';
       ordPerm = { view:false, manage:false, admin:false };
       ordInited = false; admInited = false; ordCurrentId = null;
       var _mb = document.getElementById('mgBar'); if (_mb) _mb.remove();
@@ -2457,6 +2486,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   const toolTimeclock = document.getElementById('toolTimeclock');
   const navMargins = document.getElementById('navMargins');
   const toolMargins = document.getElementById('toolMargins');
+  const navHome = document.getElementById('navHome');
+  const toolHome = document.getElementById('toolHome');
   const navOrders = document.getElementById('navOrders');
   const toolOrders = document.getElementById('toolOrders');
   const navAdmin = document.getElementById('navAdmin');
@@ -2466,8 +2497,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let ordInited = false, admInited = false, ordCurrentId = null;
   let ordPerm = { view:false, manage:false, admin:false };
   function showTool(which){
-    const views = { orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], admin: [navAdmin, toolAdmin] };
-    if (!views[which]) which = 'orders';
+    const views = { home: [navHome, toolHome], orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], admin: [navAdmin, toolAdmin] };
+    if (!views[which]) which = 'home';
     Object.keys(views).forEach(function(k){
       views[k][0].classList.toggle('active', k === which);
       views[k][1].style.display = (k === which) ? '' : 'none';
@@ -2481,31 +2512,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       b.classList.toggle('active', b.getAttribute('data-goto') === which);
     });
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
-    if (which !== 'orders' || !ordCurrentId) ordSetHash(which === 'orders' ? '' : which);
   }
+  navHome.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
   navOrders.addEventListener('click', function(e){ e.preventDefault(); ordCurrentId = null; ordShowList(); showTool('orders'); });
   navAdmin.addEventListener('click', function(e){ e.preventDefault(); showTool('admin'); });
 
-  /* ---- hash routing: #inventory, #timeclock, #margins, #admin, #order/<uuid> ---- */
-  let ordHashLock = false;
-  function ordSetHash(h){
-    const want = h ? '#' + h : '';
-    if (location.hash === want) return;
-    ordHashLock = true;
-    if (want) location.hash = want;
-    else history.replaceState(null, '', location.pathname + location.search);
-    setTimeout(function(){ ordHashLock = false; }, 0);
-  }
-  function ordApplyHash(){
-    if (ordHashLock) return;
-    const h = (location.hash || '').replace(/^#/, '');
-    if (!h || h === 'orders'){ ordCurrentId = null; ordShowList(); showTool('orders'); return; }
-    const m = h.match(/^order\/([0-9a-fA-F-]{36})$/);
-    if (m){ showTool('orders'); ordOpenOrder(m[1]); return; }
-    if (['inventory','timeclock','margins','admin'].indexOf(h) >= 0){ showTool(h); return; }
-    ordCurrentId = null; ordShowList(); showTool('orders');
-  }
-  window.addEventListener('hashchange', ordApplyHash);
   document.getElementById('tabbar').addEventListener('click', function(e){
     const b = e.target.closest('.tab-btn');
     if (b) showTool(b.getAttribute('data-goto'));
@@ -3792,6 +3803,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
            (label ? '<span class="ts-lbl">' + esc(label) + '</span>' : '');
   }
   function renderHomeStatus(){
+    const to = document.getElementById('tileOrdStatus');
+    if (to){
+      if (!ordInited){ to.innerHTML = '<span class="ts-lbl">Loading\u2026</span>'; to.className = 'tile-status'; }
+      else if (!ordOrders.length){ to.innerHTML = '<span class="ts-lbl">No orders yet</span>'; to.className = 'tile-status'; }
+      else {
+        var open = 0, ready = 0;
+        ordOrders.forEach(function(o){
+          var k = ordStatus(ordStats(o)).key;
+          if (k !== 'complete') open++;
+          if (k === 'ready') ready++;
+        });
+        to.innerHTML = open
+          ? tileStat(open + ' open order' + (open === 1 ? '' : 's'), ready ? ready + ' ready to ship' : 'in progress')
+          : tileStat('All complete', ordOrders.length + ' order' + (ordOrders.length === 1 ? '' : 's'));
+        to.className = 'tile-status ' + (open ? (ready ? 'warn' : '') : 'ok');
+      }
+    }
     const tl = document.getElementById('tileLabelStatus');
     const ti = document.getElementById('tileInvStatus');
     const tt = document.getElementById('tileTcStatus');
@@ -4178,16 +4206,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ordPerm.manage = !!(r.can_manage_orders) || ordPerm.admin;
     ordPerm.view   = !!(r.can_view_orders)   || ordPerm.manage;
     const na = document.getElementById('navAdmin');
-    const ba = document.getElementById('tabAdmin');
+    const ta = document.getElementById('tileAdmin');
     if (na) na.style.display = ordPerm.admin ? '' : 'none';
-    if (ba) ba.style.display = ordPerm.admin ? '' : 'none';
+    if (ta) ta.style.display = ordPerm.admin ? '' : 'none';
     const nb = document.getElementById('ordNewBtn');
     if (nb) nb.style.display = ordPerm.manage ? '' : 'none';
   }
 
   async function ordBoot(){
     await ordOpen();
-    ordApplyHash();
   }
 
   async function ordOpen(){
@@ -4233,6 +4260,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     ordLoading = false;
     ordRenderList();
+    renderHomeStatus();
   }
 
   function ordOrdered(oid){
@@ -4318,7 +4346,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   async function ordOpenOrder(id){
     ordCurrentId = id;
     ordShowDetail();
-    ordSetHash('order/' + id);
     document.getElementById('ordCrumb').textContent = '';
     ordDetailBody.innerHTML = '<div class="skel-card"><div class="skel skel-line" style="width:38%"></div><div class="skel skel-line"></div></div>';
     if (!ordInited){ ordInited = true; await ordLoadPerms(); await ordLoadAll(); }
@@ -4425,7 +4452,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (r && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); ordOpenOrder(r.getAttribute('data-ordid')); }
   });
   document.getElementById('ordBackBtn').addEventListener('click', function(){
-    ordCurrentId = null; ordShowList(); ordSetHash(''); ordRenderList();
+    ordCurrentId = null; ordShowList(); ordRenderList();
   });
   document.getElementById('ordChips').addEventListener('click', function(e){
     const b = e.target.closest('[data-ordfilter]');
@@ -4469,9 +4496,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       out.innerHTML = '<b>' + esc(u.serial) + '</b><br>' +
         'Invoice ' + esc(o ? o.invoice_no : '\u2014') + ' \u00b7 status ' + esc(u.unit_status || 'built') +
         (b ? '<br>Batch ' + b.batch_no : '') +
-        '<br><a href="#order/' + esc(u.order_id) + '" id="ordSerialGoto">Open the order</a>';
+        '<br><button class="mini" id="ordSerialGoto" type="button">Open the order</button>';
       const g = out.querySelector('#ordSerialGoto');
-      if (g) g.addEventListener('click', function(){ mgCloseModal(); });
+      if (g) g.addEventListener('click', function(){ mgCloseModal(); showTool('orders'); ordOpenOrder(u.order_id); });
     });
   });
 
