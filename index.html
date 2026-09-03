@@ -1616,6 +1616,37 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-trk-none{ color:var(--faint); }
   .ord-trk-hint{ color:var(--faint); font-family:var(--font-ui); font-size:11.5px; }
 
+  /* ---- config name with spec popover ---- */
+  .ord-cfg{
+    border-bottom:1px dotted var(--line-strong); cursor:help;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .ord-cfg:hover{ border-bottom-color:var(--accent); color:var(--accent); }
+  .ord-cfg:focus-visible{ outline:none; box-shadow:var(--ring); border-radius:3px; }
+  .ord-cfg-pop{
+    display:none; position:fixed; z-index:120; max-width:290px;
+    background:var(--paper); color:var(--ink);
+    border:1px solid var(--line-strong); border-radius:var(--r-md);
+    box-shadow:var(--e3); padding:var(--s3) var(--s4);
+  }
+  .ord-cfg-pop-h{
+    font-weight:700; font-size:13px; letter-spacing:-0.01em;
+    padding-bottom:var(--s2); margin-bottom:var(--s2); border-bottom:1px solid var(--line);
+  }
+  .ord-cfg-pop dl{ margin:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:3px var(--s3); }
+  .ord-cfg-pop dt{
+    font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--faint); align-self:center;
+  }
+  .ord-cfg-pop dd{ margin:0; font-size:12.5px; font-family:var(--font-num); font-variant-numeric:tabular-nums; }
+  .ord-cfg-pop-none{ margin:0; font-size:12.5px; color:var(--muted); }
+  .ord-ln{ margin-bottom:var(--s2); }
+  .ord-ln .ord-ln-row{ margin-bottom:0; }
+  .ord-ln-spec{
+    font-size:11.5px; color:var(--muted); font-family:var(--font-num);
+    padding:var(--s1) 0 var(--s2) 2px;
+  }
+
 </style>
 </head>
 <body>
@@ -4500,7 +4531,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const made = madeBy[l.config_id] || 0;
       const left = Math.max(0, (+l.qty_ordered || 0) - made);
       return '<div class="ord-line">' +
-        '<div><div class="ord-line-n">' + esc(cfgName[l.config_id] || 'Unknown config') + '</div>' +
+        '<div><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') + '</div>' +
           '<div class="ord-line-q">' + ordNum(made) + ' / ' + ordNum(l.qty_ordered) + ' built' +
           (left ? ' \u00b7 ' + ordNum(left) + ' to go' : ' \u00b7 complete') + '</div></div>' +
         (ordPerm.manage && left
@@ -4674,10 +4705,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     function drawLines(){
       linesEl.innerHTML = lines.map(function(l, i){
-        return '<div class="ord-ln-row" data-i="' + i + '">' +
-          '<select data-ln="config">' + ordConfigOptions(custEl.value, l.config_id) + '</select>' +
-          '<input type="number" min="1" step="1" placeholder="Qty" data-ln="qty" value="' + esc(l.qty) + '">' +
-          '<button class="ghost mini" data-ln="del" type="button" title="Remove line">&times;</button>' +
+        /* A <select> cannot carry a popover, so the chosen config's specs are
+           spelled out underneath instead. */
+        const cfg = l.config_id ? ordCfgById(l.config_id) : null;
+        const spec = cfg ? ordCfgSpecLines(cfg).join('  \u00b7  ') : '';
+        return '<div class="ord-ln" data-i="' + i + '">' +
+          '<div class="ord-ln-row" data-i="' + i + '">' +
+            '<select data-ln="config">' + ordConfigOptions(custEl.value, l.config_id) + '</select>' +
+            '<input type="number" min="1" step="1" placeholder="Qty" data-ln="qty" value="' + esc(l.qty) + '">' +
+            '<button class="ghost mini" data-ln="del" type="button" title="Remove line">&times;</button>' +
+          '</div>' +
+          (cfg ? '<div class="ord-ln-spec">' + (spec ? esc(spec) : 'No specs recorded on this config.') + '</div>' : '') +
         '</div>';
       }).join('');
     }
@@ -4709,6 +4747,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           return;
         }
         lines[i].config_id = e.target.value;
+        drawLines();
       }
     });
     linesEl.addEventListener('click', function(e){
@@ -4930,7 +4969,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         return '<tr data-uid="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' class="sel"' : '') + '>' +
           '<td class="chk-col"><input type="checkbox" data-upick="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' checked' : '') + '></td>' +
           '<td class="ord-mono">' + esc(u.serial) + '</td>' +
-          '<td>' + esc(cfgs[u.config_id] || '\u2014') + '</td>' +
+          '<td>' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
           '<td>' + esc(fmtDate(u.generated_at || u.created_at)) + '</td>' +
         '</tr>';
       }).join('') +
@@ -5251,7 +5290,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '</tr></thead><tbody>' +
           units.map(function(u){
             return '<tr><td class="ord-mono">' + esc(u.serial) + '</td>' +
-              '<td>' + esc(cfgs[u.config_id] || '\u2014') + '</td>' +
+              '<td>' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
               '<td class="ord-mono">' + ordTrackHtml(b.carrier, perUnit[u.id] ? [perUnit[u.id]] : batchWide) + '</td></tr>';
           }).join('') +
           '</tbody></table></div>' +
@@ -5551,6 +5590,76 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       }
     });
   }
+
+
+  /* ================= CONFIG SPEC POPOVER =================
+     Config names appear in tables, cards and modals. A popover anchored inside
+     a scrolling .table-wrap would get clipped, so there is one shared element
+     on <body> positioned with fixed coordinates instead. Shows on hover, on
+     keyboard focus, and on tap. */
+  function ordCfgLabel(cfgId, fallback){
+    const cfg = ordCfgById(cfgId);
+    if (!cfg) return esc(fallback || '\u2014');
+    return '<span class="ord-cfg" data-cfgid="' + esc(cfg.id) + '" tabindex="0" role="button" ' +
+           'aria-label="' + esc(cfg.name) + ' \u2014 show specs">' + esc(cfg.name) + '</span>';
+  }
+
+  let ordPopEl = null, ordPopFor = null;
+  function ordCfgPopHide(){
+    if (ordPopEl) ordPopEl.style.display = 'none';
+    ordPopFor = null;
+  }
+  function ordCfgPopShow(anchor){
+    const cfg = ordCfgById(anchor.getAttribute('data-cfgid'));
+    if (!cfg) return;
+    if (!ordPopEl){
+      ordPopEl = document.createElement('div');
+      ordPopEl.id = 'ordCfgPop';
+      ordPopEl.className = 'ord-cfg-pop';
+      document.body.appendChild(ordPopEl);
+    }
+    const lines = ordCfgSpecLines(cfg);
+    ordPopEl.innerHTML =
+      '<div class="ord-cfg-pop-h">' + esc(cfg.name) + '</div>' +
+      (lines.length
+        ? '<dl>' + lines.map(function(l){
+            const i = l.indexOf(': ');
+            return '<dt>' + esc(l.slice(0, i)) + '</dt><dd>' + esc(l.slice(i + 2)) + '</dd>';
+          }).join('') + '</dl>'
+        : '<p class="ord-cfg-pop-none">No specs recorded.</p>');
+    ordPopEl.style.display = 'block';
+    ordPopFor = anchor;
+
+    const r = anchor.getBoundingClientRect();
+    const pw = ordPopEl.offsetWidth, ph = ordPopEl.offsetHeight;
+    let left = r.left;
+    if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
+    if (left < 12) left = 12;
+    let top = r.bottom + 6;
+    if (top + ph > window.innerHeight - 12) top = Math.max(12, r.top - ph - 6);
+    ordPopEl.style.left = Math.round(left) + 'px';
+    ordPopEl.style.top  = Math.round(top) + 'px';
+  }
+  document.addEventListener('mouseover', function(e){
+    const a = e.target.closest && e.target.closest('.ord-cfg');
+    if (a && a !== ordPopFor) ordCfgPopShow(a);
+  });
+  document.addEventListener('mouseout', function(e){
+    const a = e.target.closest && e.target.closest('.ord-cfg');
+    if (a && a === ordPopFor && !(e.relatedTarget && a.contains(e.relatedTarget))) ordCfgPopHide();
+  });
+  document.addEventListener('focusin', function(e){
+    const a = e.target.closest && e.target.closest('.ord-cfg');
+    if (a) ordCfgPopShow(a); else if (ordPopFor) ordCfgPopHide();
+  });
+  document.addEventListener('click', function(e){
+    const a = e.target.closest && e.target.closest('.ord-cfg');
+    if (a){ e.preventDefault(); if (a === ordPopFor) ordCfgPopHide(); else ordCfgPopShow(a); return; }
+    if (ordPopFor) ordCfgPopHide();
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') ordCfgPopHide(); });
+  window.addEventListener('scroll', ordCfgPopHide, true);
+  window.addEventListener('resize', ordCfgPopHide);
 
   /* ---- admin placeholder (built out in a later step) ---- */
   async function admOpen(){
