@@ -1402,6 +1402,126 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     .label:last-child{ page-break-after:auto; break-after:auto; }
   }
+  /* ============================ B2B ORDERS ============================ */
+  .ord-bar{ display:flex; gap:var(--s3); align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:var(--s3); }
+  .ord-bar-l{ display:flex; gap:var(--s2); align-items:center; flex:1 1 320px; min-width:0; }
+  .ord-bar-r{ display:flex; gap:var(--s2); align-items:center; }
+  .ord-bar-l input[type="text"]{
+    flex:1 1 auto; min-width:0; height:38px; padding:0 var(--s3);
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink); font:inherit; font-size:13px;
+    transition:border-color var(--t), box-shadow var(--t);
+  }
+  .ord-bar-l input[type="text"]:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  .ord-chips{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
+
+  .ord-row{
+    display:grid; grid-template-columns:minmax(0,1fr) 220px 128px 40px;
+    gap:var(--s4); align-items:center;
+    padding:var(--s4); border:1px solid var(--line); border-radius:var(--r-md);
+    background:var(--paper); margin-bottom:var(--s3); cursor:pointer;
+    transition:border-color var(--t), box-shadow var(--t), transform var(--t);
+  }
+  .ord-row:hover{ border-color:var(--line-strong); box-shadow:var(--e1); }
+  .ord-row:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .ord-inv{ font-weight:700; font-size:15px; letter-spacing:-0.01em; display:flex; align-items:center; gap:var(--s2); }
+  .ord-inv .ord-no{ font-family:var(--font-num); }
+  .ord-sub{ color:var(--muted); font-size:12.5px; margin-top:3px; }
+  .ord-sub .sep{ opacity:.45; margin:0 6px; }
+  .ord-due{ font-family:var(--font-num); }
+  .ord-due.late{ color:var(--bad); font-weight:650; }
+
+  .ord-prog-wrap{ min-width:0; }
+  .ord-prog{ height:7px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; display:flex; }
+  .ord-prog i{ display:block; height:100%; transition:width var(--t-slow); }
+  .ord-prog i.shipped{ background:var(--ok); }
+  .ord-prog i.assigned{ background:var(--accent); }
+  .ord-prog i.built{ background:var(--line-strong); }
+  .ord-prog-lbl{ font-family:var(--font-num); font-size:11.5px; color:var(--muted); margin-top:5px; letter-spacing:-0.01em; }
+
+  .ord-chip{
+    display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+    font-size:11.5px; font-weight:700; letter-spacing:.02em;
+    padding:4px 9px; border-radius:var(--r-pill); border:1px solid transparent;
+  }
+  .ord-chip::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .ord-chip.neutral{ color:var(--muted);  background:var(--soft);      border-color:var(--line); }
+  .ord-chip.info{    color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line); }
+  .ord-chip.warn{    color:var(--warn);   background:var(--warn-bg);   border-color:var(--warn-line); }
+  .ord-chip.ok{      color:var(--ok);     background:var(--ok-bg);     border-color:var(--ok-line); }
+  .ord-arrow{ color:var(--faint); display:flex; justify-content:flex-end; }
+  .ord-arrow svg{ width:18px; height:18px; }
+
+  /* legacy archive */
+  .ord-legacy{ padding:0; }
+  .ord-legacy-sum{
+    list-style:none; cursor:pointer; padding:var(--s4) var(--s5);
+    display:flex; align-items:center; gap:var(--s2);
+    font-weight:650; font-size:14px; color:var(--ink);
+  }
+  .ord-legacy-sum::-webkit-details-marker{ display:none; }
+  .ord-legacy-sum::before{
+    content:""; width:0; height:0; margin-right:2px;
+    border-left:5px solid var(--faint); border-top:4px solid transparent; border-bottom:4px solid transparent;
+    transition:transform var(--t);
+  }
+  .ord-legacy[open] .ord-legacy-sum::before{ transform:rotate(90deg); }
+  .ord-legacy-cnt{ font-family:var(--font-num); font-size:12px; color:var(--muted); font-weight:600; }
+  .ord-legacy-note{ font-size:11px; font-weight:650; color:var(--faint); letter-spacing:.04em; text-transform:uppercase; margin-left:var(--s2); }
+  .ord-legacy-body{ padding:0 var(--s5) var(--s5); }
+  .ord-legacy-body #historyCard{ border:0; box-shadow:none; padding:0; background:transparent; }
+
+  .ord-tools-h{
+    font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--faint); margin:var(--s6) 0 var(--s3);
+  }
+
+  /* detail pane */
+  .ord-back-row{ display:flex; align-items:center; gap:var(--s3); margin-bottom:var(--s4); }
+  .ord-crumb{ font-family:var(--font-num); font-size:12.5px; color:var(--muted); }
+  .ord-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; margin-bottom:var(--s5); }
+  .ord-head h1{ margin:0; font-size:26px; letter-spacing:-0.025em; }
+  .ord-head h1 .ord-no{ font-family:var(--font-num); }
+  .ord-head-meta{ color:var(--muted); font-size:13px; margin-top:var(--s2); }
+
+  .ord-sum{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s3); margin-bottom:var(--s5); }
+  .ord-sum-c{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); }
+  .ord-sum-v{ font-family:var(--font-num); font-size:24px; font-weight:600; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
+  .ord-sum-l{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); }
+  .ord-sum-c.is-ok  .ord-sum-v{ color:var(--ok); }
+  .ord-sum-c.is-rem .ord-sum-v{ color:var(--warn); }
+
+  .ord-line{ display:flex; align-items:center; justify-content:space-between; gap:var(--s4); padding:var(--s3) 0; border-bottom:1px solid var(--line); }
+  .ord-line:last-child{ border-bottom:0; }
+  .ord-line-n{ font-weight:650; font-size:13.5px; }
+  .ord-line-q{ font-family:var(--font-num); font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+
+  /* new-order modal line editor */
+  .ord-ln-row{ display:grid; grid-template-columns:minmax(0,1fr) 104px 36px; gap:var(--s2); align-items:center; margin-bottom:var(--s2); }
+  .ord-ln-row select, .ord-ln-row input{
+    width:100%; height:38px; padding:0 var(--s3); font:inherit; font-size:13px;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  .ord-ln-row input{ font-family:var(--font-num); text-align:right; font-variant-numeric:tabular-nums; }
+  .ord-ln-row select:focus, .ord-ln-row input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  .ord-cfg-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s3); }
+
+  @media (max-width:860px){
+    .ord-sum{ grid-template-columns:repeat(3,1fr); }
+  }
+  @media (max-width:700px){
+    .ord-row{ grid-template-columns:1fr auto; gap:var(--s3) var(--s4); padding:var(--s3); }
+    .ord-row .ord-prog-wrap{ grid-column:1 / -1; }
+    .ord-row .ord-arrow{ display:none; }
+    .ord-sum{ grid-template-columns:repeat(2,1fr); gap:var(--s2); }
+    .ord-sum-v{ font-size:20px; }
+    .ord-legacy-sum{ padding:var(--s3) var(--s4); }
+    .ord-legacy-body{ padding:0 var(--s4) var(--s4); }
+    .ord-cfg-grid{ grid-template-columns:1fr; }
+    .ord-head h1{ font-size:21px; }
+  }
+
 </style>
 </head>
 <body>
@@ -1413,11 +1533,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <span class="nav-wordmark" id="logoText" style="display:none;">NOVATECH</span>
     </a>
     <div class="nav-menu">
-      <a class="nav-item active" href="#" id="navHome">Home</a>
-      <a class="nav-item" href="#" id="navLabels">Labels</a>
+      <a class="nav-item active" href="#" id="navOrders">Orders</a>
       <a class="nav-item" href="#" id="navInventory">Inventory</a>
       <a class="nav-item" href="#" id="navTimeclock">Timeclock</a>
       <a class="nav-item" href="#" id="navMargins" style="display:none;">Margins</a>
+      <a class="nav-item" href="#" id="navAdmin" style="display:none;">Admin</a>
     </div>
     <div class="nav-right">
       <span class="auth-chip" id="authChip" style="display:none;"></span>
@@ -1425,19 +1545,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
       </button>
-      <span class="version" id="version">v2.1.0</span>
+      <span class="version" id="version">v2.2.0</span>
     </div>
   </div>
 </nav>
 
 <nav class="tabbar" id="tabbar">
-  <button type="button" class="tab-btn active" data-goto="home">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Home</span>
-  </button>
-  <button type="button" class="tab-btn" data-goto="labels">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-    <span>Labels</span>
+  <button type="button" class="tab-btn active" data-goto="orders">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg>
+    <span>Orders</span>
   </button>
   <button type="button" class="tab-btn" data-goto="inventory">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
@@ -1450,6 +1566,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   <button type="button" class="tab-btn" data-goto="margins" id="tabMargins" style="display:none;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="12"/><line x1="10.5" y1="20" x2="10.5" y2="5"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="21" y1="20" x2="21" y2="8"/></svg>
     <span>Margins</span>
+  </button>
+  <button type="button" class="tab-btn" data-goto="admin" id="tabAdmin" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2" fill="var(--paper)"/><circle cx="15" cy="12" r="2" fill="var(--paper)"/><circle cx="8" cy="17" r="2" fill="var(--paper)"/></svg>
+    <span>Admin</span>
   </button>
 </nav>
 
@@ -1468,25 +1588,94 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   <div id="appView" style="display:none;">
 
-  <div id="toolHome">
-    <header class="app-header">
-      <div class="brand">
-        <div>
-          <h1 id="homeGreet">Welcome</h1>
-          <p class="tagline">Novatech tools</p>
+  <div id="toolOrders">
+
+    <div id="ordListPane">
+      <header class="app-header">
+        <div class="brand">
+          <div>
+            <h1 id="homeGreet">Welcome</h1>
+            <p class="tagline">B2B orders</p>
+          </div>
+        </div>
+      </header>
+
+      <section class="card">
+        <div class="ord-bar">
+          <div class="ord-bar-l">
+            <input id="ordSearch" type="text" placeholder="Search invoice, PO or customer">
+            <button class="ghost btn-sm" id="ordSerialBtn" title="Find which order a serial belongs to">Find a serial</button>
+          </div>
+          <div class="ord-bar-r">
+            <button class="ghost btn-sm" id="ordRefresh">Refresh</button>
+            <button class="primary btn-sm" id="ordNewBtn" style="display:none;">New order</button>
+          </div>
+        </div>
+        <div class="ord-chips" id="ordChips">
+          <button type="button" class="mg-pill on" data-ordfilter="">All</button>
+          <button type="button" class="mg-pill" data-ordfilter="building">Building</button>
+          <button type="button" class="mg-pill" data-ordfilter="ready">Ready to ship</button>
+          <button type="button" class="mg-pill" data-ordfilter="partial">Partially shipped</button>
+          <button type="button" class="mg-pill" data-ordfilter="complete">Complete</button>
+        </div>
+        <div id="ordListBody"></div>
+      </section>
+
+      <details class="card ord-legacy" id="ordLegacy">
+        <summary class="ord-legacy-sum">
+          <span>Legacy units</span>
+          <span class="ord-legacy-cnt" id="ordLegacyCnt"></span>
+        </summary>
+        <div class="ord-legacy-body">
+          <p class="muted-sm">Units logged before invoices existed. Read-only history.</p>
+  <section class="card" id="historyCard">
+    <h2 class="card-title">Legacy units <span class="ord-legacy-note">pre-invoice</span></h2>
+    <div id="historyBody">
+      <div class="hist-toolbar">
+        <input id="histSearch" type="text" placeholder="Filter by serial, customer, or reference">
+        <label class="date-lbl">From <input id="histFrom" type="date"></label>
+        <label class="date-lbl">To <input id="histTo" type="date"></label>
+      </div>
+      <div class="hist-actions">
+        <div class="hist-actions-left">
+          <select class="sel-sm" id="histBulkStatus" disabled title="Set status for selected rows">
+            <option value="">Set status&hellip;</option>
+            <option value="ordered">Ordered</option>
+            <option value="backordered">Backordered</option>
+            <option value="building">Building</option>
+            <option value="shipped">Shipped</option>
+            <option value="warranty">Warranty</option>
+            <option value="returned">Returned</option>
+          </select>
+          <button class="ghost danger btn-sm" id="histDelSel" disabled>Delete selected</button>
+        </div>
+        <div class="hist-actions-right">
+          <button class="ghost btn-sm" id="histRefresh">Refresh</button>
+          <button class="ghost btn-sm" id="histCsv">Export CSV</button>
         </div>
       </div>
-    </header>
-    <div class="tile-grid" id="tileGrid">
-      <a class="tile" href="#" data-goto="labels">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.6l-7 7a2 2 0 0 1-2.8 0l-7.4-7.4A2 2 0 0 1 3 11.8V4a1 1 0 0 1 1-1h7.8a2 2 0 0 1 1.4.6l7.4 7.4a2 2 0 0 1 0 2.6z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Labels</span>
-          <span class="tile-desc">Box + Dymo labels, NT serials, order log</span>
-          <span class="tile-status" id="tileLabelStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
-      </a>
+      <div class="table-wrap">
+        <table class="hist-table">
+          <thead><tr>
+            <th class="chk-col"><input type="checkbox" id="histSelectAll" title="Select all (filtered)"></th>
+            <th>Date</th><th>Customer</th><th>Order #</th><th>Serial</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+      <div class="hist-pager" id="histPager">
+        <button class="ghost" id="histPrev">Prev</button>
+        <span id="histPageInfo"></span>
+        <button class="ghost" id="histNext">Next</button>
+      </div>
+      <div class="hist-note" id="histNote"></div>
+    </div>
+  </section>
+        </div>
+      </details>
+
+      <h2 class="ord-tools-h">Tools</h2>
+    <div class="tile-grid ord-tools" id="tileGrid">
       <a class="tile" href="#" data-goto="inventory">
         <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
         <span class="tile-body">
@@ -1524,7 +1713,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <button class="primary btn-sm" id="installBtn" style="display:none;">Install</button>
       <button class="ghost btn-sm" id="installDismiss">Not now</button>
     </div>
-  </div><!-- /toolHome -->
+    </div><!-- /ordListPane -->
+
+    <div id="ordDetailPane" style="display:none;">
+      <div class="ord-back-row">
+        <button class="ghost btn-sm" id="ordBackBtn">&larr; All orders</button>
+        <span class="ord-crumb" id="ordCrumb"></span>
+      </div>
+      <div id="ordDetailBody"></div>
+    </div><!-- /ordDetailPane -->
+
+  </div><!-- /toolOrders -->
+
+  <div id="toolAdmin" style="display:none;">
+    <header class="app-header">
+      <div class="brand">
+        <div>
+          <h1>Admin</h1>
+          <p class="tagline">Customers, configs, destinations, people</p>
+        </div>
+      </div>
+    </header>
+    <section class="card"><div id="admBody"></div></section>
+  </div><!-- /toolAdmin -->
+
 
   <div id="toolLabels" style="display:none;">
   <header class="app-header">
@@ -1610,49 +1822,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     </div>
   </section>
 
-  <section class="card" id="historyCard">
-    <h2 class="card-title">Order history</h2>
-    <div id="historyBody">
-      <div class="hist-toolbar">
-        <input id="histSearch" type="text" placeholder="Filter by serial, customer, or order #">
-        <label class="date-lbl">From <input id="histFrom" type="date"></label>
-        <label class="date-lbl">To <input id="histTo" type="date"></label>
-      </div>
-      <div class="hist-actions">
-        <div class="hist-actions-left">
-          <select class="sel-sm" id="histBulkStatus" disabled title="Set status for selected rows">
-            <option value="">Set status&hellip;</option>
-            <option value="ordered">Ordered</option>
-            <option value="backordered">Backordered</option>
-            <option value="building">Building</option>
-            <option value="shipped">Shipped</option>
-            <option value="warranty">Warranty</option>
-            <option value="returned">Returned</option>
-          </select>
-          <button class="ghost danger btn-sm" id="histDelSel" disabled>Delete selected</button>
-        </div>
-        <div class="hist-actions-right">
-          <button class="ghost btn-sm" id="histRefresh">Refresh</button>
-          <button class="ghost btn-sm" id="histCsv">Export CSV</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table class="hist-table">
-          <thead><tr>
-            <th class="chk-col"><input type="checkbox" id="histSelectAll" title="Select all (filtered)"></th>
-            <th>Date</th><th>Customer</th><th>Order #</th><th>Serial</th><th>Status</th><th></th>
-          </tr></thead>
-          <tbody id="histBody"></tbody>
-        </table>
-      </div>
-      <div class="hist-pager" id="histPager">
-        <button class="ghost" id="histPrev">Prev</button>
-        <span id="histPageInfo"></span>
-        <button class="ghost" id="histNext">Next</button>
-      </div>
-      <div class="hist-note" id="histNote"></div>
-    </div>
-  </section>
   </div><!-- /toolLabels -->
 
   <div id="toolInventory" style="display:none;">
@@ -2141,11 +2310,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       session = s;
       renderAuth();
       updateSaveEnabled();
-      if (s){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); }
+      if (s){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
     });
     renderAuth();
     updateSaveEnabled();
-    if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); }
+    if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
   }
 
   function renderAuth(){
@@ -2168,6 +2337,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var _tm = document.getElementById('tileMargins'); if (_tm) _tm.style.display = 'none';
       var _bm = document.getElementById('tabMargins'); if (_bm) _bm.style.display = 'none';
       mgIsAdmin = false; mgInited = false;
+      var _na = document.getElementById('navAdmin'); if (_na) _na.style.display = 'none';
+      var _ba = document.getElementById('tabAdmin'); if (_ba) _ba.style.display = 'none';
+      ordPerm = { view:false, manage:false, admin:false };
+      ordInited = false; admInited = false; ordCurrentId = null;
       var _mb = document.getElementById('mgBar'); if (_mb) _mb.remove();
       var _mm = document.getElementById('mgModalBg'); if (_mm) _mm.remove();
     }
@@ -2260,10 +2433,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const { data, error } = await SB
       .from('pc_log')
       .select('*')
+      .is('order_id', null)
       .order('created_at', { ascending: false })
       .limit(1000);
     if (error){ histNote.textContent = 'Could not load history: ' + (error.message || 'error'); return; }
     historyRows = data || [];
+    const _lc = document.getElementById('ordLegacyCnt');
+    if (_lc) _lc.textContent = historyRows.length ? (historyRows.length + ' unit' + (historyRows.length===1?'':'s')) : '';
     selectedIds.clear();
     histPage = 0;
     histNote.textContent = '';
@@ -2273,7 +2449,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function esc(v){ return (v==null?'':String(v)).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
 
   /* ================= VIEW SWITCHING ================= */
-  const navLabels = document.getElementById('navLabels');
   const navInventory = document.getElementById('navInventory');
   const toolLabels = document.getElementById('toolLabels');
   const toolInventory = document.getElementById('toolInventory');
@@ -2282,10 +2457,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   const toolTimeclock = document.getElementById('toolTimeclock');
   const navMargins = document.getElementById('navMargins');
   const toolMargins = document.getElementById('toolMargins');
-  const navHome = document.getElementById('navHome');
-  const toolHome = document.getElementById('toolHome');
+  const navOrders = document.getElementById('navOrders');
+  const toolOrders = document.getElementById('toolOrders');
+  const navAdmin = document.getElementById('navAdmin');
+  const toolAdmin = document.getElementById('toolAdmin');
+  /* declared here, not in the orders module below, so showTool() and
+     renderAuth() can touch them no matter when they first run */
+  let ordInited = false, admInited = false, ordCurrentId = null;
+  let ordPerm = { view:false, manage:false, admin:false };
   function showTool(which){
-    const views = { home: [navHome, toolHome], labels: [navLabels, toolLabels], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins] };
+    const views = { orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], admin: [navAdmin, toolAdmin] };
+    if (!views[which]) which = 'orders';
     Object.keys(views).forEach(function(k){
       views[k][0].classList.toggle('active', k === which);
       views[k][1].style.display = (k === which) ? '' : 'none';
@@ -2293,12 +2475,37 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (which === 'inventory' && !invLoaded && SB && session){ invLoaded = true; loadInventory(); }
     if (which === 'timeclock' && SB && session){ tcOpen(); }
     if (which === 'margins' && SB && session){ mgOpen(); }
+    if (which === 'orders' && SB && session){ ordOpen(); }
+    if (which === 'admin' && SB && session){ admOpen(); }
     document.querySelectorAll('#tabbar .tab-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-goto') === which);
     });
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
+    if (which !== 'orders' || !ordCurrentId) ordSetHash(which === 'orders' ? '' : which);
   }
-  navHome.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
+  navOrders.addEventListener('click', function(e){ e.preventDefault(); ordCurrentId = null; ordShowList(); showTool('orders'); });
+  navAdmin.addEventListener('click', function(e){ e.preventDefault(); showTool('admin'); });
+
+  /* ---- hash routing: #inventory, #timeclock, #margins, #admin, #order/<uuid> ---- */
+  let ordHashLock = false;
+  function ordSetHash(h){
+    const want = h ? '#' + h : '';
+    if (location.hash === want) return;
+    ordHashLock = true;
+    if (want) location.hash = want;
+    else history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(function(){ ordHashLock = false; }, 0);
+  }
+  function ordApplyHash(){
+    if (ordHashLock) return;
+    const h = (location.hash || '').replace(/^#/, '');
+    if (!h || h === 'orders'){ ordCurrentId = null; ordShowList(); showTool('orders'); return; }
+    const m = h.match(/^order\/([0-9a-fA-F-]{36})$/);
+    if (m){ showTool('orders'); ordOpenOrder(m[1]); return; }
+    if (['inventory','timeclock','margins','admin'].indexOf(h) >= 0){ showTool(h); return; }
+    ordCurrentId = null; ordShowList(); showTool('orders');
+  }
+  window.addEventListener('hashchange', ordApplyHash);
   document.getElementById('tabbar').addEventListener('click', function(e){
     const b = e.target.closest('.tab-btn');
     if (b) showTool(b.getAttribute('data-goto'));
@@ -2339,7 +2546,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const t = e.target.closest('.tile');
     if (t){ e.preventDefault(); showTool(t.getAttribute('data-goto')); }
   });
-  navLabels.addEventListener('click', function(e){ e.preventDefault(); showTool('labels'); });
   navInventory.addEventListener('click', function(e){ e.preventDefault(); showTool('inventory'); });
   navTimeclock.addEventListener('click', function(e){ e.preventDefault(); showTool('timeclock'); });
   navMargins.addEventListener('click', function(e){ e.preventDefault(); showTool('margins'); });
@@ -3941,6 +4147,509 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     genSerialsBtn.textContent = label;
     countEl.innerHTML = `Added <b>${count}</b> serial${count===1?'':'s'} (${gen[0]} – ${gen[gen.length-1]}). Now click “Generate labels”.`;
   }
+
+  /* ==================================================================
+     B2B ORDERS  (ord*)  — orders list, new order, order detail shell
+     ================================================================== */
+
+  let ordLoading = false;
+  let ordCustomers = [], ordConfigs = [], ordLocations = [], ordOrders = [];
+  let ordCounts = {};                 // order_id -> {built, assigned, shipped}
+  let ordUnits = [], ordBatches = [], ordTracking = [], ordLines = [];
+  let ordFilter = '', ordQuery = '';
+
+  const ordListPane   = document.getElementById('ordListPane');
+  const ordDetailPane = document.getElementById('ordDetailPane');
+  const ordListBody   = document.getElementById('ordListBody');
+  const ordDetailBody = document.getElementById('ordDetailBody');
+
+  function ordNum(n){ return (n === null || n === undefined || n === '') ? '\u2014' : Number(n).toLocaleString(); }
+
+  async function ordLoadPerms(){
+    ordPerm = { view:false, manage:false, admin:false };
+    if (!SB || !session || !session.user) return;
+    const { data, error } = await SB.from('staff')
+      .select('can_view_orders,can_manage_orders,can_admin_orders,is_admin,active')
+      .eq('user_id', session.user.id).limit(1);
+    if (error || !data || !data.length) return;
+    const r = data[0];
+    if (!r.active) return;
+    ordPerm.admin  = !!(r.can_admin_orders || r.is_admin);
+    ordPerm.manage = !!(r.can_manage_orders) || ordPerm.admin;
+    ordPerm.view   = !!(r.can_view_orders)   || ordPerm.manage;
+    const na = document.getElementById('navAdmin');
+    const ba = document.getElementById('tabAdmin');
+    if (na) na.style.display = ordPerm.admin ? '' : 'none';
+    if (ba) ba.style.display = ordPerm.admin ? '' : 'none';
+    const nb = document.getElementById('ordNewBtn');
+    if (nb) nb.style.display = ordPerm.manage ? '' : 'none';
+  }
+
+  async function ordBoot(){
+    await ordOpen();
+    ordApplyHash();
+  }
+
+  async function ordOpen(){
+    if (ordInited) return;
+    ordInited = true;
+    await ordLoadPerms();
+    await ordLoadAll();
+  }
+
+  async function ordLoadAll(){
+    if (!SB || !session || ordLoading) return;
+    ordLoading = true;
+    ordListBody.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:62%"></div></div>'.repeat(3);
+    try {
+      const [cu, cf, lo, or_, un] = await Promise.all([
+        SB.from('customers').select('*').eq('active', true).order('name'),
+        SB.from('configs').select('*').order('name'),
+        SB.from('ship_to_locations').select('*').eq('active', true).order('store_name'),
+        SB.from('orders').select('*').eq('archived', false).order('created_at', { ascending:false }),
+        SB.from('pc_log').select('order_id,unit_status').not('order_id', 'is', null).limit(20000)
+      ]);
+      if (or_.error) throw or_.error;
+      ordCustomers = cu.data || [];
+      ordConfigs   = cf.data || [];
+      ordLocations = lo.data || [];
+      ordOrders    = or_.data || [];
+      ordCounts = {};
+      (un.data || []).forEach(function(u){
+        const c = ordCounts[u.order_id] || (ordCounts[u.order_id] = { built:0, assigned:0, shipped:0 });
+        if (u.unit_status === 'shipped') c.shipped++;
+        else if (u.unit_status === 'assigned') c.assigned++;
+        else c.built++;
+      });
+      const ids = ordOrders.map(function(o){ return o.id; });
+      if (ids.length){
+        const ln = await SB.from('order_lines').select('*').in('order_id', ids).order('position');
+        ordLines = ln.data || [];
+      } else ordLines = [];
+    } catch(e){
+      ordListBody.innerHTML = '<div class="empty"><div class="empty-ico">!</div><p>Could not load orders.</p>' +
+        '<p class="muted-sm">' + esc(e.message || String(e)) + '</p></div>';
+      ordLoading = false; return;
+    }
+    ordLoading = false;
+    ordRenderList();
+  }
+
+  function ordOrdered(oid){
+    return ordLines.filter(function(l){ return l.order_id === oid; })
+                   .reduce(function(a, l){ return a + (+l.qty_ordered || 0); }, 0);
+  }
+  function ordStats(o){
+    const c = ordCounts[o.id] || { built:0, assigned:0, shipped:0 };
+    const ordered = ordOrdered(o.id);
+    const made = c.built + c.assigned + c.shipped;
+    return { ordered:ordered, built:c.built, assigned:c.assigned, shipped:c.shipped,
+             made:made, remaining:Math.max(0, ordered - made) };
+  }
+  function ordStatus(st){
+    if (st.made === 0) return { key:'building', cls:'neutral', label:'Not started' };
+    if (st.shipped > 0 && st.ordered > 0 && st.shipped >= st.ordered) return { key:'complete', cls:'ok', label:'Complete' };
+    if (st.shipped > 0) return { key:'partial', cls:'info', label:'Partially shipped' };
+    if (st.remaining === 0) return { key:'ready', cls:'warn', label:'Ready to ship' };
+    return { key:'building', cls:'neutral', label:'Building' };
+  }
+
+  function ordRenderList(){
+    const cust = {}; ordCustomers.forEach(function(c){ cust[c.id] = c.name; });
+    const q = ordQuery.trim().toLowerCase();
+    const rows = ordOrders.filter(function(o){
+      const st = ordStatus(ordStats(o));
+      if (ordFilter && st.key !== ordFilter) return false;
+      if (!q) return true;
+      return (o.invoice_no || '').toLowerCase().indexOf(q) >= 0
+          || (o.po_number || '').toLowerCase().indexOf(q) >= 0
+          || (cust[o.customer_id] || '').toLowerCase().indexOf(q) >= 0;
+    });
+
+    if (!rows.length){
+      ordListBody.innerHTML = '<div class="empty">' +
+        '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg></div>' +
+        '<p>' + (ordOrders.length ? 'No orders match that filter.' : 'No orders yet.') + '</p>' +
+        (ordPerm.manage && !ordOrders.length
+          ? '<p class="muted-sm">Create one to start generating units and building batches.</p>'
+          : '') + '</div>';
+      return;
+    }
+
+    const today = fmtYMD(new Date());
+    ordListBody.innerHTML = rows.map(function(o){
+      const st = ordStats(o), sc = ordStatus(st);
+      const pct = function(n){ return st.ordered ? Math.min(100, (n / st.ordered) * 100) : 0; };
+      const late = o.due_date && o.due_date < today && sc.key !== 'complete';
+      return '<div class="ord-row" role="button" tabindex="0" data-ordid="' + esc(o.id) + '">' +
+        '<div>' +
+          '<div class="ord-inv"><span class="ord-no">' + esc(o.invoice_no) + '</span>' +
+            '<span class="ord-chip ' + sc.cls + '">' + sc.label + '</span></div>' +
+          '<div class="ord-sub">' + esc(cust[o.customer_id] || 'Unknown customer') +
+            (o.po_number ? '<span class="sep">\u00b7</span>PO ' + esc(o.po_number) : '') +
+            (o.due_date ? '<span class="sep">\u00b7</span><span class="ord-due' + (late ? ' late' : '') + '">due ' + esc(fmtDate(o.due_date)) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="ord-prog-wrap">' +
+          '<div class="ord-prog">' +
+            '<i class="shipped"  style="width:' + pct(st.shipped) + '%"></i>' +
+            '<i class="assigned" style="width:' + pct(st.assigned) + '%"></i>' +
+            '<i class="built"    style="width:' + pct(st.built) + '%"></i>' +
+          '</div>' +
+          '<div class="ord-prog-lbl">' + ordNum(st.made) + ' / ' + ordNum(st.ordered) + ' built' +
+            (st.shipped ? ' \u00b7 ' + ordNum(st.shipped) + ' shipped' : '') + '</div>' +
+        '</div>' +
+        '<div class="ord-prog-lbl">' + ordNum(st.remaining) + ' to build</div>' +
+        '<div class="ord-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ---- panes ---- */
+  function ordShowList(){
+    ordDetailPane.style.display = 'none';
+    ordListPane.style.display = '';
+  }
+  function ordShowDetail(){
+    ordListPane.style.display = 'none';
+    ordDetailPane.style.display = '';
+  }
+
+  async function ordOpenOrder(id){
+    ordCurrentId = id;
+    ordShowDetail();
+    ordSetHash('order/' + id);
+    document.getElementById('ordCrumb').textContent = '';
+    ordDetailBody.innerHTML = '<div class="skel-card"><div class="skel skel-line" style="width:38%"></div><div class="skel skel-line"></div></div>';
+    if (!ordInited){ ordInited = true; await ordLoadPerms(); await ordLoadAll(); }
+    let o = ordOrders.find(function(x){ return x.id === id; });
+    if (!o){
+      const r = await SB.from('orders').select('*').eq('id', id).limit(1);
+      o = (r.data || [])[0];
+      if (!o){
+        ordDetailBody.innerHTML = '<div class="empty"><div class="empty-ico">?</div><p>That order could not be found.</p>' +
+          '<p class="muted-sm">It may have been deleted, or belong to a customer you cannot see.</p></div>';
+        return;
+      }
+      ordOrders.unshift(o);
+    }
+    const [un, ba, ln] = await Promise.all([
+      SB.from('pc_log').select('*').eq('order_id', id).order('serial'),
+      SB.from('batches').select('*').eq('order_id', id).order('batch_no'),
+      SB.from('order_lines').select('*').eq('order_id', id).order('position')
+    ]);
+    ordUnits   = un.data || [];
+    ordBatches = ba.data || [];
+    const mine = ln.data || [];
+    ordLines = ordLines.filter(function(l){ return l.order_id !== id; }).concat(mine);
+    if (ordBatches.length){
+      const tr = await SB.from('batch_tracking').select('*').in('batch_id', ordBatches.map(function(b){ return b.id; }));
+      ordTracking = tr.data || [];
+    } else ordTracking = [];
+    ordCounts[id] = { built:0, assigned:0, shipped:0 };
+    ordUnits.forEach(function(u){
+      if (u.unit_status === 'shipped') ordCounts[id].shipped++;
+      else if (u.unit_status === 'assigned') ordCounts[id].assigned++;
+      else ordCounts[id].built++;
+    });
+    ordRenderDetail(o);
+  }
+
+  function ordRenderDetail(o){
+    const cust = ordCustomers.find(function(c){ return c.id === o.customer_id; });
+    const st = ordStats(o), sc = ordStatus(st);
+    const cfgName = {}; ordConfigs.forEach(function(c){ cfgName[c.id] = c.name; });
+    const madeBy = {};
+    ordUnits.forEach(function(u){ madeBy[u.config_id] = (madeBy[u.config_id] || 0) + 1; });
+
+    document.getElementById('ordCrumb').textContent = (cust ? cust.name + ' \u00b7 ' : '') + 'Invoice ' + o.invoice_no;
+
+    const lines = ordLines.filter(function(l){ return l.order_id === o.id; });
+    const lineHtml = lines.length ? lines.map(function(l){
+      const made = madeBy[l.config_id] || 0;
+      return '<div class="ord-line">' +
+        '<div><div class="ord-line-n">' + esc(cfgName[l.config_id] || 'Unknown config') + '</div></div>' +
+        '<div class="ord-line-q">' + ordNum(made) + ' / ' + ordNum(l.qty_ordered) + ' built</div>' +
+      '</div>';
+    }).join('') : '<p class="muted-sm">No line items on this order.</p>';
+
+    ordDetailBody.innerHTML =
+      '<div class="ord-head">' +
+        '<div>' +
+          '<h1>Invoice <span class="ord-no">' + esc(o.invoice_no) + '</span></h1>' +
+          '<div class="ord-head-meta">' + esc(cust ? cust.name : 'Unknown customer') +
+            (o.po_number ? ' \u00b7 PO ' + esc(o.po_number) : '') +
+            (o.due_date ? ' \u00b7 due ' + esc(fmtDate(o.due_date)) : '') + '</div>' +
+        '</div>' +
+        '<span class="ord-chip ' + sc.cls + '">' + sc.label + '</span>' +
+      '</div>' +
+
+      '<div class="ord-sum">' +
+        '<div class="ord-sum-c"><div class="ord-sum-v">' + ordNum(st.ordered) + '</div><div class="ord-sum-l">Ordered</div></div>' +
+        '<div class="ord-sum-c"><div class="ord-sum-v">' + ordNum(st.built) + '</div><div class="ord-sum-l">In pool</div></div>' +
+        '<div class="ord-sum-c"><div class="ord-sum-v">' + ordNum(st.assigned) + '</div><div class="ord-sum-l">Assigned</div></div>' +
+        '<div class="ord-sum-c is-ok"><div class="ord-sum-v">' + ordNum(st.shipped) + '</div><div class="ord-sum-l">Shipped</div></div>' +
+        '<div class="ord-sum-c is-rem"><div class="ord-sum-v">' + ordNum(st.remaining) + '</div><div class="ord-sum-l">To build</div></div>' +
+      '</div>' +
+
+      '<section class="card"><h2 class="card-title">Line items</h2>' + lineHtml + '</section>' +
+
+      '<section class="card"><h2 class="card-title">Unit pool</h2>' +
+        '<p class="muted-sm">' + ordNum(st.built) + ' unit' + (st.built === 1 ? '' : 's') +
+        ' generated and not yet in a batch. Generating units and building batches arrives in the next update.</p>' +
+      '</section>' +
+
+      '<section class="card"><h2 class="card-title">Batches</h2>' +
+        (ordBatches.length
+          ? ordBatches.map(function(b){
+              const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
+              const n = ordUnits.filter(function(u){ return u.batch_id === b.id; }).length;
+              const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; }).length;
+              return '<div class="ord-line">' +
+                '<div><div class="ord-line-n">Batch ' + b.batch_no + ' \u2014 ' + esc(loc ? loc.store_name : 'No destination') + '</div>' +
+                '<div class="ord-sub">' + ordNum(n) + ' units \u00b7 ' + ordNum(tk) + ' tracking</div></div>' +
+                '<span class="ord-chip ' + (b.status === 'shipped' ? 'ok' : 'neutral') + '">' + esc(b.status) + '</span>' +
+              '</div>';
+            }).join('')
+          : '<p class="muted-sm">No batches yet.</p>') +
+      '</section>';
+  }
+
+  /* ---- list interactions ---- */
+  ordListBody.addEventListener('click', function(e){
+    const r = e.target.closest('.ord-row');
+    if (r) ordOpenOrder(r.getAttribute('data-ordid'));
+  });
+  ordListBody.addEventListener('keydown', function(e){
+    const r = e.target.closest('.ord-row');
+    if (r && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); ordOpenOrder(r.getAttribute('data-ordid')); }
+  });
+  document.getElementById('ordBackBtn').addEventListener('click', function(){
+    ordCurrentId = null; ordShowList(); ordSetHash(''); ordRenderList();
+  });
+  document.getElementById('ordChips').addEventListener('click', function(e){
+    const b = e.target.closest('[data-ordfilter]');
+    if (!b) return;
+    ordFilter = b.getAttribute('data-ordfilter');
+    this.querySelectorAll('.mg-pill').forEach(function(x){ x.classList.toggle('on', x === b); });
+    ordRenderList();
+  });
+  document.getElementById('ordSearch').addEventListener('input', function(){
+    ordQuery = this.value; ordRenderList();
+  });
+  document.getElementById('ordRefresh').addEventListener('click', function(){
+    if (ordCurrentId) ordOpenOrder(ordCurrentId); else ordLoadAll();
+  });
+
+  /* ---- serial lookup ---- */
+  document.getElementById('ordSerialBtn').addEventListener('click', function(){
+    const bg = mgModal(
+      mgModalHead('Find a serial', 'Paste or scan a serial number') +
+      '<div class="mg-modal-body"><div class="field"><label for="ordSerialIn">Serial</label>' +
+      '<input id="ordSerialIn" type="text" placeholder="NT26000175" autocomplete="off" spellcheck="false"></div>' +
+      '<div id="ordSerialOut" class="muted-sm" style="margin-top:var(--s3);"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordSerialCancel">Close</button>' +
+      '<button class="primary" id="ordSerialGo" data-primary>Look up</button></div>');
+    bg.querySelector('#ordSerialCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordSerialGo').addEventListener('click', async function(){
+      const v = bg.querySelector('#ordSerialIn').value.trim();
+      const out = bg.querySelector('#ordSerialOut');
+      if (!v){ out.textContent = 'Enter a serial number.'; return; }
+      out.textContent = 'Searching\u2026';
+      const r = await SB.from('pc_log').select('*').eq('serial', v).limit(1);
+      const u = (r.data || [])[0];
+      if (!u){ out.textContent = 'No unit found with that serial.'; return; }
+      if (!u.order_id){
+        out.innerHTML = '<b>' + esc(u.serial) + '</b> is a legacy unit \u2014 logged before invoices existed.' +
+          (u.order_no ? '<br>Reference: ' + esc(u.order_no) : '');
+        return;
+      }
+      const o = ordOrders.find(function(x){ return x.id === u.order_id; });
+      const b = u.batch_id ? ordBatches.find(function(x){ return x.id === u.batch_id; }) : null;
+      out.innerHTML = '<b>' + esc(u.serial) + '</b><br>' +
+        'Invoice ' + esc(o ? o.invoice_no : '\u2014') + ' \u00b7 status ' + esc(u.unit_status || 'built') +
+        (b ? '<br>Batch ' + b.batch_no : '') +
+        '<br><a href="#order/' + esc(u.order_id) + '" id="ordSerialGoto">Open the order</a>';
+      const g = out.querySelector('#ordSerialGoto');
+      if (g) g.addEventListener('click', function(){ mgCloseModal(); });
+    });
+  });
+
+  /* ---- new order ---- */
+  document.getElementById('ordNewBtn').addEventListener('click', function(){
+    if (!ordPerm.manage){ toast('You do not have permission to create orders.', 'bad'); return; }
+    ordNewOrderModal();
+  });
+
+  function ordConfigOptions(customerId, sel){
+    const list = ordConfigs.filter(function(c){ return c.customer_id === customerId && c.active !== false; });
+    return '<option value="">Select a config\u2026</option>' +
+      list.map(function(c){ return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') +
+      '<option value="__new">+ New config\u2026</option>';
+  }
+
+  function ordNewOrderModal(){
+    const custOpts = ordCustomers.map(function(c){ return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>'; }).join('');
+    const bg = mgModal(
+      mgModalHead('New order', 'The invoice number comes from your accounting system') +
+      '<div class="mg-modal-body">' +
+        '<div class="ord-cfg-grid">' +
+          '<div class="field"><label for="ordNCust">Customer</label><select id="ordNCust">' + custOpts + '</select></div>' +
+          '<div class="field"><label for="ordNInv">Invoice #</label><input id="ordNInv" type="text" placeholder="1042" autocomplete="off"></div>' +
+          '<div class="field"><label for="ordNPo">PO number <span class="muted-sm">optional</span></label><input id="ordNPo" type="text" autocomplete="off"></div>' +
+          '<div class="field"><label for="ordNDue">Due date</label><input id="ordNDue" type="date"></div>' +
+        '</div>' +
+        '<div class="field" style="margin-top:var(--s3);"><label for="ordNNotes">Notes <span class="muted-sm">optional</span></label><input id="ordNNotes" type="text" autocomplete="off"></div>' +
+        '<h3 class="ord-tools-h" style="margin-top:var(--s5);">Line items</h3>' +
+        '<div id="ordNLines"></div>' +
+        '<button class="ghost btn-sm" id="ordNAddLine" type="button">+ Add line</button>' +
+        '<div class="err" id="ordNErr" style="margin-top:var(--s3);"></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordNCancel">Cancel</button>' +
+      '<button class="primary" id="ordNSave" data-primary>Create order</button></div>', true);
+
+    const custEl = bg.querySelector('#ordNCust');
+    const linesEl = bg.querySelector('#ordNLines');
+    let lines = [{ config_id:'', qty:'' }];
+
+    function drawLines(){
+      linesEl.innerHTML = lines.map(function(l, i){
+        return '<div class="ord-ln-row" data-i="' + i + '">' +
+          '<select data-ln="config">' + ordConfigOptions(custEl.value, l.config_id) + '</select>' +
+          '<input type="number" min="1" step="1" placeholder="Qty" data-ln="qty" value="' + esc(l.qty) + '">' +
+          '<button class="ghost mini" data-ln="del" type="button" title="Remove line">&times;</button>' +
+        '</div>';
+      }).join('');
+    }
+    drawLines();
+
+    custEl.addEventListener('change', function(){ lines.forEach(function(l){ l.config_id = ''; }); drawLines(); });
+    bg.querySelector('#ordNAddLine').addEventListener('click', function(){ lines.push({ config_id:'', qty:'' }); drawLines(); });
+
+    linesEl.addEventListener('change', async function(e){
+      const row = e.target.closest('.ord-ln-row'); if (!row) return;
+      const i = +row.getAttribute('data-i');
+      const what = e.target.getAttribute('data-ln');
+      if (what === 'qty') lines[i].qty = e.target.value;
+      if (what === 'config'){
+        if (e.target.value === '__new'){
+          e.target.value = lines[i].config_id || '';
+          const made = await ordNewConfigModal(custEl.value);
+          if (made){ lines[i].config_id = made.id; drawLines(); }
+        } else lines[i].config_id = e.target.value;
+      }
+    });
+    linesEl.addEventListener('click', function(e){
+      if (e.target.getAttribute('data-ln') !== 'del') return;
+      const i = +e.target.closest('.ord-ln-row').getAttribute('data-i');
+      lines.splice(i, 1);
+      if (!lines.length) lines = [{ config_id:'', qty:'' }];
+      drawLines();
+    });
+
+    bg.querySelector('#ordNCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordNSave').addEventListener('click', async function(){
+      const err = bg.querySelector('#ordNErr');
+      const btn = this;
+      const customer_id = custEl.value;
+      const invoice_no = bg.querySelector('#ordNInv').value.trim();
+      const good = lines.filter(function(l){ return l.config_id && +l.qty > 0; });
+      err.textContent = '';
+      if (!customer_id){ err.textContent = 'Pick a customer.'; return; }
+      if (!invoice_no){ err.textContent = 'An invoice number is required.'; return; }
+      if (!good.length){ err.textContent = 'Add at least one line item with a config and a quantity.'; return; }
+
+      btn.disabled = true; btn.textContent = 'Creating\u2026';
+      const ins = await SB.from('orders').insert({
+        customer_id: customer_id,
+        invoice_no: invoice_no,
+        po_number: bg.querySelector('#ordNPo').value.trim() || null,
+        due_date: bg.querySelector('#ordNDue').value || null,
+        notes: bg.querySelector('#ordNNotes').value.trim() || null,
+        created_by: session.user.id
+      }).select().limit(1);
+
+      if (ins.error){
+        btn.disabled = false; btn.textContent = 'Create order';
+        err.textContent = /duplicate|unique/i.test(ins.error.message || '')
+          ? 'Invoice ' + invoice_no + ' already exists for that customer.'
+          : (ins.error.message || 'Could not create the order.');
+        return;
+      }
+      const order = ins.data[0];
+      const lr = await SB.from('order_lines').insert(good.map(function(l, i){
+        return { order_id: order.id, config_id: l.config_id, qty_ordered: +l.qty, position: i };
+      }));
+      if (lr.error){
+        btn.disabled = false; btn.textContent = 'Create order';
+        err.textContent = 'Order created but the line items failed: ' + (lr.error.message || 'error');
+        return;
+      }
+      mgCloseModal();
+      toast('Invoice ' + invoice_no + ' created', 'ok');
+      ordOrders.unshift(order);
+      await ordOpenOrder(order.id);
+    });
+  }
+
+  function ordNewConfigModal(customerId){
+    return new Promise(function(resolve){
+      if (!customerId){ toast('Pick a customer first.', 'warn'); resolve(null); return; }
+      const bg = mgModal(
+        mgModalHead('New config', 'A named build spec for this customer') +
+        '<div class="mg-modal-body">' +
+          '<div class="field"><label for="ordCfgName">Name</label><input id="ordCfgName" type="text" placeholder="LP-Gaming-A" autocomplete="off"></div>' +
+          '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
+            '<div class="field"><label for="ordCfgCase">Case</label><input id="ordCfgCase" type="text" autocomplete="off"></div>' +
+            '<div class="field"><label for="ordCfgCpu">CPU</label><input id="ordCfgCpu" type="text" autocomplete="off"></div>' +
+            '<div class="field"><label for="ordCfgGpu">GPU</label><input id="ordCfgGpu" type="text" autocomplete="off"></div>' +
+            '<div class="field"><label for="ordCfgRam">RAM</label><input id="ordCfgRam" type="text" autocomplete="off"></div>' +
+            '<div class="field"><label for="ordCfgSto">Storage</label><input id="ordCfgSto" type="text" autocomplete="off"></div>' +
+          '</div>' +
+          '<div class="err" id="ordCfgErr" style="margin-top:var(--s3);"></div>' +
+        '</div>' +
+        '<div class="mg-modal-foot"><button class="ghost" id="ordCfgCancel">Cancel</button>' +
+        '<button class="primary" id="ordCfgSave" data-primary>Save config</button></div>', true);
+
+      let done = false;
+      bg.querySelector('#ordCfgCancel').addEventListener('click', function(){ mgCloseModal(); if (!done){ done = true; resolve(null); } });
+      bg.querySelector('#ordCfgSave').addEventListener('click', async function(){
+        const err = bg.querySelector('#ordCfgErr');
+        const name = bg.querySelector('#ordCfgName').value.trim();
+        if (!name){ err.textContent = 'Give the config a name.'; return; }
+        this.disabled = true; this.textContent = 'Saving\u2026';
+        const r = await SB.from('configs').insert({
+          customer_id: customerId, name: name,
+          pc_case: bg.querySelector('#ordCfgCase').value.trim() || null,
+          cpu:     bg.querySelector('#ordCfgCpu').value.trim() || null,
+          gpu:     bg.querySelector('#ordCfgGpu').value.trim() || null,
+          ram:     bg.querySelector('#ordCfgRam').value.trim() || null,
+          storage: bg.querySelector('#ordCfgSto').value.trim() || null
+        }).select().limit(1);
+        if (r.error){
+          this.disabled = false; this.textContent = 'Save config';
+          err.textContent = /duplicate|unique/i.test(r.error.message || '')
+            ? 'A config called "' + name + '" already exists for this customer.'
+            : (r.error.message || 'Could not save.');
+          return;
+        }
+        ordConfigs.push(r.data[0]);
+        mgCloseModal();
+        toast('Config "' + name + '" saved', 'ok');
+        done = true; resolve(r.data[0]);
+      });
+    });
+  }
+
+  /* ---- admin placeholder (built out in a later step) ---- */
+  async function admOpen(){
+    if (admInited) return;
+    admInited = true;
+    document.getElementById('admBody').innerHTML =
+      '<div class="empty"><div class="empty-ico">\u2699</div><p>Admin tools arrive in the next update.</p>' +
+      '<p class="muted-sm">Customers, configs, destinations, employee permissions and customer logins.</p></div>';
+  }
+
 })();
 </script>
 </body>
