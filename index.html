@@ -1647,6 +1647,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     padding:var(--s1) 0 var(--s2) 2px;
   }
 
+  /* ---- admin ---- */
+  .adm-tabs{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
+  .adm-bar{ display:flex; gap:var(--s3); align-items:center; flex-wrap:wrap; margin-bottom:var(--s3); }
+  .adm-bar .muted-sm{ flex:1 1 240px; }
+  .adm-act{ white-space:nowrap; text-align:right; }
+  .adm-act button{ margin-left:var(--s1); }
+  .adm-spec{ white-space:normal; color:var(--muted); font-size:12px; max-width:340px; }
+  .adm-chk{ text-align:center; }
+  .adm-chk input{ width:16px; height:16px; cursor:pointer; }
+  .adm-chk input:disabled{ cursor:not-allowed; opacity:.45; }
+  .adm-people th{ font-size:10.5px; }
+  .adm-self{ background:var(--accent-soft); }
+  .adm-you{
+    font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--accent); border:1px solid var(--accent-line); border-radius:var(--r-pill);
+    padding:1px 6px; margin-left:var(--s1);
+  }
+  @media (max-width:700px){
+    .adm-act{ text-align:left; }
+    .adm-spec{ max-width:none; }
+  }
+
 </style>
 </head>
 <body>
@@ -5661,14 +5683,498 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   window.addEventListener('scroll', ordCfgPopHide, true);
   window.addEventListener('resize', ordCfgPopHide);
 
-  /* ---- admin placeholder (built out in a later step) ---- */
+
+  /* ================= ADMIN ================= */
+  let admTab = 'customers', admStaff = [], admLogins = [], admSeqs = [], admCustFilter = '';
+
   async function admOpen(){
-    if (admInited) return;
-    admInited = true;
-    document.getElementById('admBody').innerHTML =
-      '<div class="empty"><div class="empty-ico">\u2699</div><p>Admin tools arrive in the next update.</p>' +
-      '<p class="muted-sm">Customers, configs, destinations, employee permissions and customer logins.</p></div>';
+    if (!ordPerm.admin) return;
+    if (!ordInited) await ordOpen();
+    if (!admInited){ admInited = true; }
+    await admLoad();
   }
+  async function admLoad(){
+    const host = document.getElementById('admBody');
+    host.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:60%"></div></div>';
+    try {
+      const [st, cu, sq] = await Promise.all([
+        SB.from('staff').select('*').order('name'),
+        SB.from('customer_users').select('*'),
+        SB.from('serial_sequences').select('*')
+      ]);
+      if (st.error) throw st.error;
+      admStaff = st.data || []; admLogins = cu.data || []; admSeqs = sq.data || [];
+    } catch(e){
+      host.innerHTML = '<div class="empty"><div class="empty-ico">!</div><p>Could not load admin data.</p>' +
+        '<p class="muted-sm">' + esc(e.message || e) + '</p></div>';
+      return;
+    }
+    admRender();
+  }
+
+  function admRender(){
+    const host = document.getElementById('admBody');
+    const tabs = [['customers','Customers'],['configs','Configs'],['dests','Destinations'],
+                  ['people','People'],['logins','Customer logins']];
+    host.innerHTML =
+      '<div class="adm-tabs">' + tabs.map(function(t){
+        return '<button type="button" class="mg-pill' + (admTab === t[0] ? ' on' : '') + '" data-admtab="' + t[0] + '">' + t[1] + '</button>';
+      }).join('') + '</div><div id="admPane"></div>';
+    admRenderPane();
+  }
+
+  function admCustSelect(id, sel, allLabel){
+    return '<select id="' + id + '" class="sel-sm">' +
+      (allLabel ? '<option value="">' + allLabel + '</option>' : '') +
+      ordCustomers.map(function(c){
+        return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name) + '</option>';
+      }).join('') + '</select>';
+  }
+
+  function admRenderPane(){
+    const p = document.getElementById('admPane');
+    if (admTab === 'customers') return admPaneCustomers(p);
+    if (admTab === 'configs')   return admPaneConfigs(p);
+    if (admTab === 'dests')     return admPaneDests(p);
+    if (admTab === 'people')    return admPanePeople(p);
+    if (admTab === 'logins')    return admPaneLogins(p);
+  }
+
+  /* ---- customers + serial sequences ---- */
+  function admPaneCustomers(p){
+    p.innerHTML =
+      '<div class="adm-bar"><button class="primary btn-sm" id="admAddCust" type="button">Add customer</button></div>' +
+      '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+        '<th>Customer</th><th>Code</th><th>Next serial</th><th>Active</th><th></th>' +
+      '</tr></thead><tbody>' +
+      ordCustomers.map(function(c){
+        const q = admSeqs.find(function(s){ return s.customer_id === c.id; });
+        const next = q
+          ? q.prefix + (q.use_year ? (q.year_2 || '') : '') + String((q.current_value || 0) + 1).padStart(q.pad || 6, '0')
+          : '<span class="ord-trk-none">no sequence</span>';
+        return '<tr><td><b>' + esc(c.name) + '</b></td>' +
+          '<td>' + esc(c.code || '\u2014') + '</td>' +
+          '<td class="ord-mono">' + next + '</td>' +
+          '<td>' + (c.active ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Off</span>') + '</td>' +
+          '<td class="adm-act">' +
+            (q ? '<button class="ghost mini" data-admseq="' + esc(c.id) + '" type="button">Serial counter</button>' : '') +
+          '</td></tr>';
+      }).join('') +
+      '</tbody></table></div>' +
+      '<p class="muted-sm">A customer with no sequence cannot have units generated. Add one when you create the customer.</p>';
+  }
+
+  /* ---- configs ---- */
+  function admPaneConfigs(p){
+    const list = ordConfigs.filter(function(c){ return !admCustFilter || c.customer_id === admCustFilter; });
+    const custName = {}; ordCustomers.forEach(function(c){ custName[c.id] = c.name; });
+    p.innerHTML =
+      '<div class="adm-bar">' + admCustSelect('admCfgCust', admCustFilter, 'All customers') + '</div>' +
+      (list.length
+        ? '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+            '<th>Name</th><th>Customer</th><th>Specs</th><th>Status</th><th></th></tr></thead><tbody>' +
+          list.map(function(c){
+            return '<tr><td><b>' + esc(c.name) + '</b></td>' +
+              '<td>' + esc(custName[c.customer_id] || '\u2014') + '</td>' +
+              '<td class="adm-spec">' + esc(ordCfgSpecLines(c).join('  \u00b7  ') || 'none') + '</td>' +
+              '<td>' + (c.active === false ? '<span class="ord-chip neutral">Archived</span>' : '<span class="ord-chip ok">Active</span>') + '</td>' +
+              '<td class="adm-act">' +
+                '<button class="ghost mini" data-admcfgedit="' + esc(c.id) + '" type="button">Edit</button>' +
+                '<button class="ghost mini" data-admcfgarch="' + esc(c.id) + '" type="button">' +
+                  (c.active === false ? 'Restore' : 'Archive') + '</button>' +
+              '</td></tr>';
+          }).join('') + '</tbody></table></div>'
+        : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No configs yet.</p>' +
+          '<p class="muted-sm">Configs are created from the line items on a new order.</p></div>');
+  }
+
+  /* ---- destinations ---- */
+  function admPaneDests(p){
+    const list = ordLocations.filter(function(l){ return !admCustFilter || l.customer_id === admCustFilter; });
+    p.innerHTML =
+      '<div class="adm-bar">' + admCustSelect('admDstCust', admCustFilter, 'All customers') +
+        '<span class="muted-sm">Destinations save themselves when you type a new one on a batch, so duplicates creep in. Merge them here.</span>' +
+      '</div>' +
+      (list.length
+        ? '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+            '<th>Store</th><th>Address</th><th>Batches</th><th>Status</th><th></th></tr></thead><tbody>' +
+          list.map(function(l){
+            const used = ordBatches.filter(function(b){ return b.location_id === l.id; }).length;
+            return '<tr><td><b>' + esc(ordLocLabel(l)) + '</b></td>' +
+              '<td class="adm-spec">' + esc(ordLocAddress(l) || '\u2014') + '</td>' +
+              '<td class="ord-mono">' + used + '</td>' +
+              '<td>' + (l.active === false ? '<span class="ord-chip neutral">Archived</span>' : '<span class="ord-chip ok">Active</span>') + '</td>' +
+              '<td class="adm-act">' +
+                '<button class="ghost mini" data-admdstedit="' + esc(l.id) + '" type="button">Edit</button>' +
+                '<button class="ghost mini" data-admdstmerge="' + esc(l.id) + '" type="button">Merge</button>' +
+                '<button class="ghost mini" data-admdstarch="' + esc(l.id) + '" type="button">' +
+                  (l.active === false ? 'Restore' : 'Archive') + '</button>' +
+              '</td></tr>';
+          }).join('') + '</tbody></table></div>'
+        : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No destinations yet.</p></div>');
+  }
+
+  /* ---- people ---- */
+  function admPanePeople(p){
+    const me = session && session.user ? session.user.id : null;
+    p.innerHTML =
+      '<p class="muted-sm">Employee logins are created in the Supabase dashboard. This is where you set what each person can reach.</p>' +
+      '<div class="table-wrap"><table class="hist-table adm-people"><thead><tr>' +
+        '<th>Name</th><th>Email</th><th title="Timeclock admin">TC&nbsp;admin</th>' +
+        '<th>View orders</th><th>Manage orders</th><th>Order admin</th><th>Margins</th><th>Active</th>' +
+      '</tr></thead><tbody>' +
+      admStaff.map(function(e){
+        const self = me && e.user_id === me;
+        function box(field, on, lock){
+          return '<td class="adm-chk"><input type="checkbox" data-admperm="' + esc(e.id) + '" data-field="' + field + '"' +
+            (on ? ' checked' : '') + (lock ? ' disabled title="You cannot change this on your own account"' : '') + '></td>';
+        }
+        return '<tr' + (self ? ' class="adm-self"' : '') + '>' +
+          '<td><b>' + esc(e.name || '\u2014') + '</b>' + (self ? ' <span class="adm-you">you</span>' : '') + '</td>' +
+          '<td class="adm-spec">' + esc(e.email) + '</td>' +
+          box('is_admin', e.is_admin, self) +
+          box('can_view_orders', e.can_view_orders, false) +
+          box('can_manage_orders', e.can_manage_orders, false) +
+          box('can_admin_orders', e.can_admin_orders, self) +
+          box('can_view_margins', e.can_view_margins, false) +
+          box('active', e.active, self) +
+        '</tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+
+  /* ---- customer portal logins ---- */
+  function admPaneLogins(p){
+    const custName = {}; ordCustomers.forEach(function(c){ custName[c.id] = c.name; });
+    p.innerHTML =
+      '<div class="adm-bar"><button class="primary btn-sm" id="admAddLogin" type="button">Add a customer login</button></div>' +
+      '<p class="muted-sm">Create the login itself in the Supabase dashboard first (Authentication \u2192 Add user), ' +
+      'then map that email to a customer here. A mapped login can read that customer\u2019s orders and nothing else.</p>' +
+      (admLogins.length
+        ? '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+            '<th>Email</th><th>Customer</th><th>Status</th><th></th></tr></thead><tbody>' +
+          admLogins.map(function(u){
+            return '<tr><td class="adm-spec">' + esc(u.email || u.user_id) + '</td>' +
+              '<td>' + esc(custName[u.customer_id] || '\u2014') + '</td>' +
+              '<td>' + (u.active ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Off</span>') + '</td>' +
+              '<td class="adm-act">' +
+                '<button class="ghost mini" data-admlogtog="' + esc(u.id) + '" type="button">' + (u.active ? 'Disable' : 'Enable') + '</button>' +
+                '<button class="ghost mini danger" data-admlogdel="' + esc(u.id) + '" type="button">Remove</button>' +
+              '</td></tr>';
+          }).join('') + '</tbody></table></div>'
+        : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No customer logins yet.</p></div>');
+  }
+
+  /* ---- admin actions ---- */
+  document.getElementById('admBody').addEventListener('click', async function(e){
+    const t = e.target.closest('[data-admtab]');
+    if (t){ admTab = t.getAttribute('data-admtab'); admRender(); return; }
+
+    if (e.target.id === 'admAddCust'){ admCustomerModal(); return; }
+    if (e.target.id === 'admAddLogin'){ admLoginModal(); return; }
+
+    const sq = e.target.closest('[data-admseq]');
+    if (sq){ admSeqModal(sq.getAttribute('data-admseq')); return; }
+
+    const ce = e.target.closest('[data-admcfgedit]');
+    if (ce){ admConfigModal(ordCfgById(ce.getAttribute('data-admcfgedit'))); return; }
+
+    const ca = e.target.closest('[data-admcfgarch]');
+    if (ca){
+      const c = ordCfgById(ca.getAttribute('data-admcfgarch'));
+      const on = c.active === false;
+      const r = await SB.from('configs').update({ active: on }).eq('id', c.id);
+      if (r.error){ toast(r.error.message, 'bad'); return; }
+      c.active = on; admRenderPane();
+      toast('Config ' + (on ? 'restored' : 'archived'), 'ok');
+      return;
+    }
+
+    const de = e.target.closest('[data-admdstedit]');
+    if (de){ admDestModal(ordLocations.find(function(l){ return l.id === de.getAttribute('data-admdstedit'); })); return; }
+
+    const dm = e.target.closest('[data-admdstmerge]');
+    if (dm){ admMergeModal(ordLocations.find(function(l){ return l.id === dm.getAttribute('data-admdstmerge'); })); return; }
+
+    const da = e.target.closest('[data-admdstarch]');
+    if (da){
+      const l = ordLocations.find(function(x){ return x.id === da.getAttribute('data-admdstarch'); });
+      const on = l.active === false;
+      const r = await SB.from('ship_to_locations').update({ active: on }).eq('id', l.id);
+      if (r.error){ toast(r.error.message, 'bad'); return; }
+      l.active = on; admRenderPane();
+      return;
+    }
+
+    const lt = e.target.closest('[data-admlogtog]');
+    if (lt){
+      const u = admLogins.find(function(x){ return x.id === lt.getAttribute('data-admlogtog'); });
+      const r = await SB.from('customer_users').update({ active: !u.active }).eq('id', u.id);
+      if (r.error){ toast(r.error.message, 'bad'); return; }
+      u.active = !u.active; admRenderPane();
+      toast('Login ' + (u.active ? 'enabled' : 'disabled'), 'ok');
+      return;
+    }
+
+    const ld = e.target.closest('[data-admlogdel]');
+    if (ld){
+      const u = admLogins.find(function(x){ return x.id === ld.getAttribute('data-admlogdel'); });
+      const r = await SB.from('customer_users').delete().eq('id', u.id);
+      if (r.error){ toast(r.error.message, 'bad'); return; }
+      admLogins = admLogins.filter(function(x){ return x.id !== u.id; });
+      admRenderPane();
+      toast('Access removed. The login still exists in Supabase.', 'ok', 6000);
+      return;
+    }
+  });
+
+  document.getElementById('admBody').addEventListener('change', async function(e){
+    if (e.target.id === 'admCfgCust' || e.target.id === 'admDstCust'){
+      admCustFilter = e.target.value; admRenderPane(); return;
+    }
+    const pb = e.target.closest('[data-admperm]');
+    if (pb){
+      const row = admStaff.find(function(x){ return String(x.id) === pb.getAttribute('data-admperm'); });
+      const field = pb.getAttribute('data-field');
+      const val = pb.checked;
+      const patch = {}; patch[field] = val;
+      const r = await SB.from('staff').update(patch).eq('id', row.id);
+      if (r.error){ pb.checked = !val; toast(r.error.message || 'Could not save.', 'bad'); return; }
+      row[field] = val;
+      toast(esc(row.name || row.email) + ' \u00b7 ' + field.replace(/_/g, ' ') + (val ? ' on' : ' off'), 'ok', 3000);
+      return;
+    }
+  });
+
+  /* ---- admin modals ---- */
+  function admCustomerModal(){
+    const bg = mgModal(
+      mgModalHead('Add a customer', 'Each customer gets its own serial sequence') +
+      '<div class="mg-modal-body"><div class="ord-cfg-grid">' +
+        '<div class="field"><label for="admCName">Name</label><input id="admCName" type="text" autocomplete="off"></div>' +
+        '<div class="field"><label for="admCCode">Short code</label><input id="admCCode" type="text" placeholder="LP" autocomplete="off"></div>' +
+        '<div class="field"><label for="admCPrefix">Serial prefix</label><input id="admCPrefix" type="text" value="NT" autocomplete="off"></div>' +
+        '<div class="field"><label for="admCPad">Digits</label><input id="admCPad" type="number" min="3" max="10" value="6"></div>' +
+      '</div>' +
+      '<label class="ord-check"><input type="checkbox" id="admCYear" checked> Include a 2-digit year that rolls over in January</label>' +
+      '<p class="muted-sm">Leopard\u2019s serials look like NT26000175: prefix, year, then the counter.</p>' +
+      '<div class="err" id="admCErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admCCancel">Cancel</button>' +
+      '<button class="primary" id="admCSave" data-primary>Add customer</button></div>', true);
+    bg.querySelector('#admCCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admCSave').addEventListener('click', async function(){
+      const err = bg.querySelector('#admCErr');
+      const name = bg.querySelector('#admCName').value.trim();
+      if (!name){ err.textContent = 'Give the customer a name.'; return; }
+      this.disabled = true; this.textContent = 'Saving\u2026';
+      const c = await SB.from('customers').insert({
+        name: name, code: bg.querySelector('#admCCode').value.trim().toUpperCase() || null
+      }).select().limit(1);
+      if (c.error){
+        this.disabled = false; this.textContent = 'Add customer';
+        err.textContent = /duplicate|unique/i.test(c.error.message || '') ? 'That short code is already taken.' : c.error.message;
+        return;
+      }
+      const cust = c.data[0];
+      const q = await SB.from('serial_sequences').insert({
+        customer_id: cust.id,
+        prefix: bg.querySelector('#admCPrefix').value.trim() || 'NT',
+        use_year: bg.querySelector('#admCYear').checked,
+        pad: parseInt(bg.querySelector('#admCPad').value, 10) || 6,
+        year_2: bg.querySelector('#admCYear').checked ? String(new Date().getFullYear()).slice(2) : null,
+        current_value: 0
+      }).select().limit(1);
+      if (q.error){ toast('Customer added, but the serial sequence failed: ' + q.error.message, 'warn', 8000); }
+      else admSeqs.push(q.data[0]);
+      ordCustomers.push(cust);
+      mgCloseModal(); toast('Customer "' + name + '" added', 'ok');
+      admRenderPane();
+    });
+  }
+
+  function admSeqModal(customerId){
+    const q = admSeqs.find(function(s){ return s.customer_id === customerId; });
+    const c = ordCustomers.find(function(x){ return x.id === customerId; });
+    if (!q) return;
+    const bg = mgModal(
+      mgModalHead('Serial counter \u00b7 ' + esc(c.name), '') +
+      '<div class="mg-modal-body">' +
+        '<p class="muted-sm">Last issued: <span class="ord-mono">' + esc(q.prefix + (q.year_2 || '') +
+          String(q.current_value).padStart(q.pad, '0')) + '</span></p>' +
+        '<div class="field"><label for="admQVal">Counter</label><input id="admQVal" type="number" min="0" value="' + q.current_value + '"></div>' +
+        '<p class="ord-warnline">Lowering this will reissue serial numbers that already exist. Only ever raise it, ' +
+        'or lower it after deleting the units that used those numbers.</p>' +
+        '<div class="err" id="admQErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admQCancel">Cancel</button>' +
+      '<button class="primary" id="admQSave" data-primary>Save</button></div>');
+    bg.querySelector('#admQCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admQSave').addEventListener('click', async function(){
+      const v = parseInt(bg.querySelector('#admQVal').value, 10);
+      if (isNaN(v) || v < 0){ bg.querySelector('#admQErr').textContent = 'Enter a whole number.'; return; }
+      const r = await SB.from('serial_sequences').update({ current_value: v }).eq('id', q.id);
+      if (r.error){ bg.querySelector('#admQErr').textContent = r.error.message; return; }
+      q.current_value = v; mgCloseModal(); toast('Counter updated', 'ok'); admRenderPane();
+    });
+  }
+
+  function admConfigModal(cfg){
+    if (!cfg) return;
+    const bg = mgModal(
+      mgModalHead('Edit ' + esc(cfg.name), 'Parts come from inventory so stock deducts correctly') +
+      '<div class="mg-modal-body">' +
+        '<div class="field"><label for="admFName">Name</label><input id="admFName" type="text" value="' + esc(cfg.name) + '" autocomplete="off"></div>' +
+        '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
+          '<div class="field"><label for="admFCase">Case</label><select id="admFCase">' + ordCatOptions('cases', cfg.pc_case) + '</select></div>' +
+          '<div class="field"><label for="admFCpu">CPU</label><select id="admFCpu">' + ordCatOptions('cpus', cfg.cpu) + '</select></div>' +
+          '<div class="field"><label for="admFGpu">GPU</label><select id="admFGpu">' + ordCatOptions('gpus', cfg.gpu) + '</select></div>' +
+          '<div class="field"><label for="admFSto">Storage</label><select id="admFSto">' + ordCatOptions('storage', cfg.storage) + '</select></div>' +
+          '<div class="field"><label for="admFRam">RAM</label><div class="ord-ram-row">' +
+            '<select id="admFSticks">' + [1,2,4].map(function(n){
+              return '<option value="' + n + '"' + ((cfg.ram_sticks || 1) === n ? ' selected' : '') + '>' + n + 'x</option>'; }).join('') + '</select>' +
+            '<select id="admFRamN">' + ordCatOptions('ram', cfg.ram) + '</select>' +
+          '</div></div>' +
+        '</div>' +
+        '<p class="muted-sm">Editing a config does not change units already generated \u2014 they keep the specs printed on their labels.</p>' +
+        '<div class="err" id="admFErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admFCancel">Cancel</button>' +
+      '<button class="primary" id="admFSave" data-primary>Save config</button></div>', true);
+    bg.querySelector('#admFCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admFSave').addEventListener('click', async function(){
+      const name = bg.querySelector('#admFName').value.trim();
+      if (!name){ bg.querySelector('#admFErr').textContent = 'Give the config a name.'; return; }
+      this.disabled = true; this.textContent = 'Saving\u2026';
+      const patch = {
+        name: name,
+        pc_case: bg.querySelector('#admFCase').value || null,
+        cpu: bg.querySelector('#admFCpu').value || null,
+        gpu: bg.querySelector('#admFGpu').value || null,
+        ram: bg.querySelector('#admFRamN').value || null,
+        ram_sticks: parseInt(bg.querySelector('#admFSticks').value, 10) || 1,
+        storage: bg.querySelector('#admFSto').value || null
+      };
+      const r = await SB.from('configs').update(patch).eq('id', cfg.id);
+      if (r.error){
+        this.disabled = false; this.textContent = 'Save config';
+        bg.querySelector('#admFErr').textContent = r.error.message; return;
+      }
+      Object.assign(cfg, patch);
+      mgCloseModal(); toast('Config saved', 'ok'); admRenderPane();
+    });
+  }
+
+  function admDestModal(loc){
+    if (!loc) return;
+    const f = function(id, label, val, extra){
+      return '<div class="field"><label for="' + id + '">' + label + '</label>' +
+        '<input id="' + id + '" type="text" value="' + esc(val || '') + '" autocomplete="off"' + (extra || '') + '></div>';
+    };
+    const bg = mgModal(
+      mgModalHead('Edit destination', esc(ordLocLabel(loc))) +
+      '<div class="mg-modal-body"><div class="ord-cfg-grid">' +
+        f('admLStore','Store name',loc.store_name) + f('admLNum','Store number',loc.store_number) +
+        f('admLA1','Address',loc.address1) + f('admLA2','Address line 2',loc.address2) +
+        f('admLCity','City',loc.city) + f('admLState','State',loc.state,' maxlength="2"') +
+        f('admLZip','ZIP',loc.zip) + f('admLPhone','Phone',loc.phone) +
+      '</div><div class="err" id="admLErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admLCancel">Cancel</button>' +
+      '<button class="primary" id="admLSave" data-primary>Save</button></div>', true);
+    bg.querySelector('#admLCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admLSave').addEventListener('click', async function(){
+      const store = bg.querySelector('#admLStore').value.trim();
+      if (!store){ bg.querySelector('#admLErr').textContent = 'A store name is required.'; return; }
+      const patch = {
+        store_name: store,
+        store_number: bg.querySelector('#admLNum').value.trim() || null,
+        address1: bg.querySelector('#admLA1').value.trim() || null,
+        address2: bg.querySelector('#admLA2').value.trim() || null,
+        city: bg.querySelector('#admLCity').value.trim() || null,
+        state: bg.querySelector('#admLState').value.trim().toUpperCase() || null,
+        zip: bg.querySelector('#admLZip').value.trim() || null,
+        phone: bg.querySelector('#admLPhone').value.trim() || null
+      };
+      const r = await SB.from('ship_to_locations').update(patch).eq('id', loc.id);
+      if (r.error){ bg.querySelector('#admLErr').textContent = r.error.message; return; }
+      Object.assign(loc, patch);
+      mgCloseModal(); toast('Destination saved', 'ok'); admRenderPane();
+    });
+  }
+
+  function admMergeModal(dupe){
+    if (!dupe) return;
+    const others = ordLocations.filter(function(l){
+      return l.id !== dupe.id && l.customer_id === dupe.customer_id;
+    });
+    if (!others.length){ toast('There is nothing else to merge this into.', 'warn'); return; }
+    const used = ordBatches.filter(function(b){ return b.location_id === dupe.id; }).length;
+    const bg = mgModal(
+      mgModalHead('Merge "' + esc(ordLocLabel(dupe)) + '" into another', '') +
+      '<div class="mg-modal-body">' +
+        '<p>Every batch pointing at this destination moves to the one you pick, then this entry is archived.</p>' +
+        '<div class="field"><label for="admMTo">Keep this one</label><select id="admMTo">' +
+          others.map(function(l){ return '<option value="' + esc(l.id) + '">' + esc(ordLocLabel(l)) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<p class="muted-sm">' + used + ' batch' + (used === 1 ? '' : 'es') + ' will be repointed.</p>' +
+        '<div class="err" id="admMErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admMCancel">Cancel</button>' +
+      '<button class="primary" id="admMGo" data-primary>Merge</button></div>');
+    bg.querySelector('#admMCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admMGo').addEventListener('click', async function(){
+      const keep = bg.querySelector('#admMTo').value;
+      this.disabled = true; this.textContent = 'Merging\u2026';
+      const u = await SB.from('batches').update({ location_id: keep }).eq('location_id', dupe.id);
+      if (u.error){
+        this.disabled = false; this.textContent = 'Merge';
+        bg.querySelector('#admMErr').textContent = u.error.message; return;
+      }
+      await SB.from('ship_to_locations').update({ active: false }).eq('id', dupe.id);
+      dupe.active = false;
+      ordBatches.forEach(function(b){ if (b.location_id === dupe.id) b.location_id = keep; });
+      mgCloseModal(); toast('Merged and archived', 'ok'); admRenderPane();
+    });
+  }
+
+  function admLoginModal(){
+    const bg = mgModal(
+      mgModalHead('Add a customer login', 'The login must already exist in Supabase') +
+      '<div class="mg-modal-body">' +
+        '<div class="field"><label for="admGEmail">Email</label><input id="admGEmail" type="email" autocomplete="off" placeholder="ap@leopardmobility.com"></div>' +
+        '<div class="field" style="margin-top:var(--s3);"><label for="admGCust">Customer</label>' + admCustSelect('admGCust', '', '') + '</div>' +
+        '<p class="muted-sm">In Supabase: Authentication \u2192 Users \u2192 Add user, with a password you send them. ' +
+        'Then map that address here.</p>' +
+        '<div class="err" id="admGErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admGCancel">Cancel</button>' +
+      '<button class="primary" id="admGSave" data-primary>Grant access</button></div>');
+    bg.querySelector('#admGCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admGSave').addEventListener('click', async function(){
+      const err = bg.querySelector('#admGErr');
+      const email = bg.querySelector('#admGEmail').value.trim();
+      const cust = bg.querySelector('#admGCust').value;
+      if (!email || !cust){ err.textContent = 'Enter an email and pick a customer.'; return; }
+      this.disabled = true; this.textContent = 'Checking\u2026';
+      const look = await SB.rpc('find_user_by_email', { p_email: email });
+      if (look.error){
+        this.disabled = false; this.textContent = 'Grant access';
+        err.textContent = look.error.message; return;
+      }
+      if (!look.data){
+        this.disabled = false; this.textContent = 'Grant access';
+        err.textContent = 'No Supabase login exists for ' + email + '. Create it first, then come back.';
+        return;
+      }
+      const ins = await SB.from('customer_users').insert({
+        user_id: look.data, customer_id: cust, email: email, active: true
+      }).select().limit(1);
+      if (ins.error){
+        this.disabled = false; this.textContent = 'Grant access';
+        err.textContent = /duplicate|unique/i.test(ins.error.message || '')
+          ? 'That login is already mapped to a customer.' : ins.error.message;
+        return;
+      }
+      admLogins.push(ins.data[0]);
+      mgCloseModal(); toast('Access granted to ' + email, 'ok', 5000); admRenderPane();
+    });
+  }
+
 
 })();
 </script>
