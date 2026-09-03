@@ -1736,6 +1736,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   <div id="appView" style="display:none;">
 
+  <div id="customerGate" style="display:none;">
+    <div class="login-card">
+      <h2 class="login-title">This is the staff dashboard</h2>
+      <p class="muted-line">Your login is set up for the <b>customer order portal</b>, which is a different page.</p>
+      <p class="muted-line" style="margin-top:var(--s3);">
+        <a class="primary btn-sm" id="gateGo" href="portal.html">Go to the order portal</a>
+      </p>
+      <p class="muted-sm" style="margin-top:var(--s4);">
+        Signed in as <span id="gateWho"></span> &middot; <a href="#" id="gateOut">sign out</a>
+      </p>
+    </div>
+  </div>
+
   <div id="toolHome">
     <header class="app-header">
       <div class="brand">
@@ -2509,6 +2522,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       appView.style.display = 'none';
       document.getElementById('tabbar').classList.remove('on');
       document.body.classList.remove('authed');
+      var _cg = document.getElementById('customerGate'); if (_cg) _cg.style.display = 'none';
       var _nm = document.getElementById('navMargins'); if (_nm) _nm.style.display = 'none';
       var _tm = document.getElementById('tileMargins'); if (_tm) _tm.style.display = 'none';
       var _bm = document.getElementById('tabMargins'); if (_bm) _bm.style.display = 'none';
@@ -4355,7 +4369,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const { data, error } = await SB.from('staff')
       .select('can_view_orders,can_manage_orders,can_admin_orders,is_admin,active')
       .eq('user_id', session.user.id).limit(1);
-    if (error || !data || !data.length) return;
+    if (error || !data || !data.length){
+      /* Not on the staff roster. If they are a mapped customer login, this is
+         the wrong page for them — say so plainly instead of showing an admin
+         shell that RLS has emptied out. */
+      await ordCheckCustomerLogin();
+      return;
+    }
     const r = data[0];
     if (!r.active) return;
     ordPerm.admin  = !!(r.can_admin_orders || r.is_admin);
@@ -4371,6 +4391,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   async function ordBoot(){
     await ordOpen();
+  }
+
+  async function ordCheckCustomerLogin(){
+    try {
+      const cu = await SB.from('customer_users').select('id,email,active')
+        .eq('user_id', session.user.id).limit(1);
+      if (cu.error || !cu.data || !cu.data.length || !cu.data[0].active) return;
+      const gate = document.getElementById('customerGate');
+      const who  = document.getElementById('gateWho');
+      if (who) who.textContent = session.user.email || '';
+      if (gate){
+        appView.style.display = 'none';
+        document.getElementById('tabbar').classList.remove('on');
+        gate.style.display = '';
+        const out = document.getElementById('gateOut');
+        if (out) out.addEventListener('click', function(e){ e.preventDefault(); SB.auth.signOut(); });
+      }
+    } catch(e){ /* leave the app as it is */ }
   }
 
   async function ordOpen(){

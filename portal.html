@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NovaTech &middot; Order Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --font-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --font-num:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --ink:#1a1d23; --muted:#697077; --faint:#9aa1ab;
+    --bg:#eceff3; --paper:#fff; --soft:#f6f8fa;
+    --line:#e6e8ec; --line-strong:#d5d9df;
+    --accent:#2563eb; --accent-hover:#1d4ed8; --accent-soft:#eef4ff; --accent-line:#c9dbff;
+    --ok:#15803d; --ok-bg:#e7f6ec; --ok-line:#bfe4cc;
+    --warn:#9a6700; --warn-bg:#fff6e0; --warn-line:#f0dca8;
+    --e1:0 1px 2px rgba(16,24,40,.05);
+    --e2:0 1px 2px rgba(16,24,40,.04), 0 4px 12px rgba(16,24,40,.06);
+    --ring:0 0 0 1px var(--accent), 0 0 0 4px var(--accent-soft);
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+    --t:160ms cubic-bezier(.2,.6,.2,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      color-scheme:dark;
+      --ink:#e8ecf2; --muted:#9aa5b4; --faint:#6c7787;
+      --bg:#0e1116; --paper:#161b22; --soft:#1c222b;
+      --line:#252c36; --line-strong:#374250;
+      --accent:#6f9bff; --accent-hover:#8bb0ff; --accent-soft:#182338; --accent-line:#2c3f63;
+      --ok:#5ec98a; --ok-bg:#122319; --ok-line:#23432f;
+      --warn:#e0b256; --warn-bg:#241d0e; --warn-line:#463722;
+    }
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-ui); font-size:14px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding-env:0;
+  }
+  .wrap{ max-width:1040px; margin:0 auto; padding:var(--s5) var(--s4) var(--s6); }
+  header.top{
+    display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
+    padding:var(--s3) var(--s4); background:var(--paper); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:10; flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:var(--s3); }
+  .brand img{ height:26px; width:auto; }
+  .brand b{ font-size:15px; letter-spacing:-0.01em; }
+  .brand span{ color:var(--faint); font-size:12px; }
+  .who{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:var(--s3); }
+  a{ color:var(--accent); }
+  button{ font:inherit; }
+  .btn{
+    border:1px solid var(--line-strong); background:var(--paper); color:var(--ink);
+    border-radius:var(--r-sm); padding:7px 13px; font-size:13px; font-weight:600; cursor:pointer;
+    transition:border-color var(--t), background var(--t);
+  }
+  .btn:hover{ border-color:var(--muted); }
+  .btn:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover{ background:var(--accent-hover); }
+  .card{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-lg); padding:var(--s5); margin-bottom:var(--s4); box-shadow:var(--e1); }
+  h1{ font-size:24px; letter-spacing:-0.025em; margin:0 0 var(--s2); }
+  h2{ font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s3); }
+  .mono{ font-family:var(--font-num); font-variant-numeric:tabular-nums; }
+  .muted{ color:var(--muted); font-size:12.5px; }
+
+  /* login */
+  .login{ max-width:380px; margin:12vh auto; }
+  .login .card{ padding:var(--s6); }
+  .field{ margin-bottom:var(--s3); }
+  .field label{ display:block; font-size:12px; font-weight:650; color:var(--muted); margin-bottom:var(--s1); }
+  .field input{
+    width:100%; height:42px; padding:0 var(--s3); font:inherit; font-size:14px;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  .field input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  .err{ color:#b42318; font-size:12.5px; min-height:1.2em; margin-top:var(--s2); }
+
+  /* order list */
+  .orow{
+    display:grid; grid-template-columns:minmax(0,1fr) 200px 120px; gap:var(--s4);
+    align-items:center; padding:var(--s4); border:1px solid var(--line);
+    border-radius:var(--r-md); background:var(--paper); margin-bottom:var(--s3);
+    cursor:pointer; transition:border-color var(--t), box-shadow var(--t);
+  }
+  .orow:hover{ border-color:var(--line-strong); box-shadow:var(--e1); }
+  .orow:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .inv{ font-weight:700; font-size:15px; display:flex; align-items:center; gap:var(--s2); }
+  .sub{ color:var(--muted); font-size:12.5px; margin-top:3px; }
+  .chip{
+    display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+    font-size:11.5px; font-weight:700; letter-spacing:.02em;
+    padding:4px 9px; border-radius:var(--r-pill); border:1px solid transparent;
+  }
+  .chip::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .chip.n{ color:var(--muted); background:var(--soft); border-color:var(--line); }
+  .chip.i{ color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line); }
+  .chip.w{ color:var(--warn); background:var(--warn-bg); border-color:var(--warn-line); }
+  .chip.k{ color:var(--ok); background:var(--ok-bg); border-color:var(--ok-line); }
+  .bar{ height:7px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; display:flex; }
+  .bar i{ display:block; height:100%; }
+  .bar i.s{ background:var(--ok); } .bar i.a{ background:var(--accent); } .bar i.b{ background:var(--line-strong); }
+  .barlbl{ font-family:var(--font-num); font-size:11.5px; color:var(--muted); margin-top:5px; }
+
+  /* detail */
+  .sum{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3); margin-bottom:var(--s4); }
+  .sumc{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); }
+  .sumv{ font-family:var(--font-num); font-size:24px; font-weight:600; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
+  .suml{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); }
+  .batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; }
+  .bhead{ display:grid; grid-template-columns:110px minmax(0,1fr) 150px auto; gap:var(--s3); align-items:center; padding:var(--s3) var(--s4); background:var(--paper); }
+  .bbody{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line); background:var(--soft); }
+  table{ width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; }
+  th{ text-align:left; padding:8px 10px; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); border-bottom:1px solid var(--line); }
+  td{ padding:9px 10px; border-bottom:1px solid var(--line); }
+  tr:last-child td{ border-bottom:0; }
+  .twrap{ overflow-x:auto; }
+  .cfg{ border-bottom:1px dotted var(--line-strong); cursor:help; }
+  .cfg:hover{ color:var(--accent); border-bottom-color:var(--accent); }
+  .pop{
+    display:none; position:fixed; z-index:120; max-width:290px; background:var(--paper);
+    border:1px solid var(--line-strong); border-radius:var(--r-md); box-shadow:var(--e2); padding:var(--s3) var(--s4);
+  }
+  .pop h3{ margin:0 0 var(--s2); padding-bottom:var(--s2); border-bottom:1px solid var(--line); font-size:13px; }
+  .pop dl{ margin:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:3px var(--s3); }
+  .pop dt{ font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  .pop dd{ margin:0; font-size:12.5px; font-family:var(--font-num); }
+  .empty{ text-align:center; padding:var(--s6) var(--s4); color:var(--muted); }
+  .back{ margin-bottom:var(--s4); }
+  .toolbar{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
+  .searchbox{ flex:1 1 240px; height:38px; padding:0 var(--s3); font:inherit; font-size:13px;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm); background:var(--paper); color:var(--ink); }
+  .searchbox:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+
+  @media (max-width:760px){
+    .orow{ grid-template-columns:1fr; gap:var(--s2); }
+    .sum{ grid-template-columns:repeat(2,1fr); }
+    .bhead{ grid-template-columns:1fr; }
+  }
+  @media print{
+    header.top, .toolbar, .back, .btn{ display:none !important; }
+    body{ background:#fff; }
+    .card, .batch{ box-shadow:none; border-color:#ccc; break-inside:avoid; }
+    .bbody{ display:block !important; background:#fff; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top" id="topbar" style="display:none;">
+  <div class="brand">
+    <img src="logo.png" alt="" onerror="this.style.display='none'">
+    <div><b>Order Portal</b><br><span id="custName"></span></div>
+  </div>
+  <div class="who">
+    <span id="whoEmail"></span>
+    <button class="btn" id="signOut" type="button">Sign out</button>
+  </div>
+</header>
+
+<div id="loginView" class="login">
+  <div class="card">
+    <h1>Order Portal</h1>
+    <p class="muted" style="margin-top:0;">Sign in to see your orders, shipments and serial numbers.</p>
+    <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="username"></div>
+    <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div>
+    <button class="btn primary" id="go" type="button" style="width:100%; height:42px;">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none;">
+  <div id="listView"></div>
+  <div id="detailView" style="display:none;"></div>
+</div>
+
+<div class="pop" id="pop"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+  const SUPABASE_URL = 'https://vajrnbniwkvnkkkigeit.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_mF1sD8UO4CHuyCgPTLZsXQ_CilDLz3y';
+  const SB = (window.supabase && window.supabase.createClient)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true } })
+    : null;
+
+  const $ = function(id){ return document.getElementById(id); };
+  function esc(v){ return (v==null?'':String(v)).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function num(n){ return (n==null||n==='') ? '\u2014' : Number(n).toLocaleString(); }
+  function fmtDate(v){
+    if (!v) return '';
+    const d = new Date(String(v).length <= 10 ? v + 'T12:00:00' : v);
+    return isNaN(d) ? String(v) : d.toLocaleDateString();
+  }
+
+  let session = null, me = null, customer = null;
+  let orders = [], lines = [], configs = [], batches = [], tracking = [], units = [], locations = [];
+  let currentId = null, query = '';
+
+  /* ---------- auth ---------- */
+  async function init(){
+    if (!SB){ $('loginErr').textContent = 'Could not load the sign-in library. Check your connection and refresh.'; return; }
+    const { data } = await SB.auth.getSession();
+    session = data.session;
+    SB.auth.onAuthStateChange(function(_e, s){ session = s; render(); });
+    render();
+  }
+  async function render(){
+    if (!session){
+      $('loginView').style.display = '';
+      $('app').style.display = 'none';
+      $('topbar').style.display = 'none';
+      return;
+    }
+    $('loginView').style.display = 'none';
+    $('whoEmail').textContent = session.user.email || '';
+    const cu = await SB.from('customer_users').select('*').eq('user_id', session.user.id).limit(1);
+    me = (cu.data || [])[0];
+    if (!me || !me.active){
+      $('app').style.display = '';
+      $('topbar').style.display = '';
+      $('custName').textContent = '';
+      $('listView').innerHTML = '<div class="card"><h1>Not set up yet</h1>' +
+        '<p class="muted">This login is not linked to a customer account. Ask your NovaTech contact to enable it.</p></div>';
+      $('detailView').style.display = 'none';
+      return;
+    }
+    $('app').style.display = '';
+    $('topbar').style.display = '';
+    await load();
+  }
+  $('go').addEventListener('click', signIn);
+  $('pw').addEventListener('keydown', function(e){ if (e.key === 'Enter') signIn(); });
+  $('em').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('pw').focus(); });
+  async function signIn(){
+    const err = $('loginErr'); err.textContent = '';
+    const btn = $('go'); btn.disabled = true; btn.textContent = 'Signing in\u2026';
+    const r = await SB.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
+    btn.disabled = false; btn.textContent = 'Sign in';
+    if (r.error) err.textContent = r.error.message || 'Could not sign in.';
+  }
+  $('signOut').addEventListener('click', function(){ SB.auth.signOut(); });
+
+  /* ---------- data ---------- */
+  async function load(){
+    $('listView').innerHTML = '<div class="card"><p class="muted">Loading your orders\u2026</p></div>';
+    const [c, o, cf, lo] = await Promise.all([
+      SB.from('customers').select('*').eq('id', me.customer_id).limit(1),
+      SB.from('orders').select('*').eq('customer_id', me.customer_id).eq('archived', false).order('created_at', { ascending:false }),
+      SB.from('configs').select('*').eq('customer_id', me.customer_id),
+      SB.from('ship_to_locations').select('*').eq('customer_id', me.customer_id)
+    ]);
+    customer = (c.data || [])[0];
+    orders = o.data || [];
+    configs = cf.data || [];
+    locations = lo.data || [];
+    $('custName').textContent = customer ? customer.name : '';
+    const ids = orders.map(function(x){ return x.id; });
+    if (ids.length){
+      const [ln, ba, un] = await Promise.all([
+        SB.from('order_lines').select('*').in('order_id', ids).order('position'),
+        SB.from('batches').select('*').in('order_id', ids).order('batch_no'),
+        SB.from('pc_log').select('id,serial,order_id,batch_id,config_id,unit_status').in('order_id', ids).order('serial')
+      ]);
+      lines = ln.data || []; batches = ba.data || []; units = un.data || [];
+      const bids = batches.map(function(b){ return b.id; });
+      if (bids.length){
+        const tr = await SB.from('batch_tracking').select('*').in('batch_id', bids);
+        tracking = tr.data || [];
+      } else tracking = [];
+    } else { lines = []; batches = []; units = []; tracking = []; }
+    renderList();
+  }
+
+  /* ---------- helpers ---------- */
+  function cfgById(id){ return configs.find(function(c){ return c.id === id; }); }
+  function specLines(cfg){
+    if (!cfg) return [];
+    const sticks = cfg.ram_sticks || 1;
+    const ramBase = String(cfg.ram || '').replace(/^ram\s+/i, '').trim();
+    const caseN = String(cfg.pc_case || '').replace(/\s*\bcases?\b\s*/ig, ' ').replace(/\s+/g, ' ').trim();
+    return [['Case', caseN], ['CPU', (cfg.cpu||'').trim()], ['GPU', (cfg.gpu||'').trim()],
+            ['RAM', ramBase ? ((sticks > 1 ? sticks + 'x ' : '') + ramBase) : ''],
+            ['Storage', (cfg.storage||'').trim()]]
+      .filter(function(p){ return p[1]; });
+  }
+  function stats(o){
+    const mine = units.filter(function(u){ return u.order_id === o.id; });
+    const ordered = lines.filter(function(l){ return l.order_id === o.id; })
+      .reduce(function(a,l){ return a + (+l.qty_ordered||0); }, 0);
+    let b=0,a=0,s=0;
+    mine.forEach(function(u){
+      if (u.unit_status === 'shipped') s++; else if (u.unit_status === 'assigned') a++; else b++;
+    });
+    return { ordered:ordered, built:b, assigned:a, shipped:s, made:b+a+s, remaining:Math.max(0, ordered-(b+a+s)) };
+  }
+  function statusOf(st){
+    if (st.made === 0) return { c:'n', l:'Not started' };
+    if (st.shipped > 0 && st.ordered > 0 && st.shipped >= st.ordered) return { c:'k', l:'Complete' };
+    if (st.shipped > 0) return { c:'i', l:'Partially shipped' };
+    if (st.remaining === 0) return { c:'w', l:'Ready to ship' };
+    return { c:'n', l:'In production' };
+  }
+  function trackUrl(carrier, n){
+    const e = encodeURIComponent(String(n||'').trim());
+    if (!e) return '';
+    switch (String(carrier||'').trim().toLowerCase()){
+      case 'ups':   return 'https://www.ups.com/track?loc=en_US&requester=QUIC&tracknum=' + e;
+      case 'fedex': return 'https://www.fedex.com/fedextrack/?trknbr=' + e;
+      case 'usps':  return 'https://tools.usps.com/go/TrackConfirmAction?tLabels=' + e;
+      default: return '';
+    }
+  }
+  function trackHtml(carrier, nums){
+    const list = (Array.isArray(nums) ? nums : [nums]).filter(Boolean);
+    if (!list.length) return '<span class="muted">\u2014</span>';
+    return list.map(function(n){
+      const u = trackUrl(carrier, n);
+      return u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(n) + '</a>' : esc(n);
+    }).join(', ');
+  }
+  /* the destination lives on ship_to_locations, not on the batch */
+  function locOf(b){ return b && b.location_id ? locations.find(function(l){ return l.id === b.location_id; }) : null; }
+  function locName(b){
+    const l = locOf(b);
+    if (!l) return 'Destination to be confirmed';
+    return l.store_name + (l.store_number ? ' #' + l.store_number : '');
+  }
+  function locLine(b){
+    const l = locOf(b);
+    if (!l) return '';
+    return [l.address1, l.address2, [l.city, l.state].filter(Boolean).join(', '), l.zip].filter(Boolean).join(' \u00b7 ');
+  }
+
+  /* ---------- list ---------- */
+  function renderList(){
+    $('detailView').style.display = 'none';
+    $('listView').style.display = '';
+    const q = query.trim().toLowerCase();
+    const rows = orders.filter(function(o){
+      return !q || (o.invoice_no||'').toLowerCase().indexOf(q) >= 0 || (o.po_number||'').toLowerCase().indexOf(q) >= 0;
+    });
+    $('listView').innerHTML =
+      '<h1>Your orders</h1>' +
+      '<div class="toolbar">' +
+        '<input class="searchbox" id="q" type="text" placeholder="Search invoice or PO" value="' + esc(query) + '">' +
+        '<button class="btn" id="lookup" type="button">Find a serial</button>' +
+      '</div>' +
+      (rows.length ? rows.map(function(o){
+        const st = stats(o), s = statusOf(st);
+        const pct = function(n){ return st.ordered ? Math.min(100, n/st.ordered*100) : 0; };
+        return '<div class="orow" role="button" tabindex="0" data-id="' + esc(o.id) + '">' +
+          '<div><div class="inv"><span class="mono">' + esc(o.invoice_no) + '</span>' +
+            '<span class="chip ' + s.c + '">' + s.l + '</span></div>' +
+            '<div class="sub">' + (o.po_number ? 'PO ' + esc(o.po_number) + ' &middot; ' : '') +
+            (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : 'no due date') + '</div></div>' +
+          '<div><div class="bar">' +
+            '<i class="s" style="width:' + pct(st.shipped) + '%"></i>' +
+            '<i class="a" style="width:' + pct(st.assigned) + '%"></i>' +
+            '<i class="b" style="width:' + pct(st.built) + '%"></i>' +
+          '</div><div class="barlbl">' + num(st.shipped) + ' of ' + num(st.ordered) + ' shipped</div></div>' +
+          '<div class="barlbl">' + num(st.made) + ' built</div>' +
+        '</div>';
+      }).join('')
+      : '<div class="card"><div class="empty"><p>' +
+        (orders.length ? 'No orders match that search.' : 'No orders yet.') + '</p></div></div>');
+    const qi = $('q');
+    if (qi) qi.addEventListener('input', function(){ query = this.value; renderList(); $('q').focus(); });
+    const lk = $('lookup');
+    if (lk) lk.addEventListener('click', serialLookup);
+  }
+
+  /* ---------- detail ---------- */
+  function openOrder(id){
+    currentId = id;
+    const o = orders.find(function(x){ return x.id === id; });
+    if (!o) return;
+    const st = stats(o), s = statusOf(st);
+    const mine = batches.filter(function(b){ return b.order_id === id; });
+    const cfgName = {}; configs.forEach(function(c){ cfgName[c.id] = c.name; });
+
+    $('listView').style.display = 'none';
+    $('detailView').style.display = '';
+    $('detailView').innerHTML =
+      '<div class="back"><button class="btn" id="back" type="button">&larr; All orders</button>' +
+      ' <button class="btn" id="csv" type="button">Download CSV</button>' +
+      ' <button class="btn" id="prt" type="button">Print</button></div>' +
+      '<h1>Invoice <span class="mono">' + esc(o.invoice_no) + '</span> <span class="chip ' + s.c + '">' + s.l + '</span></h1>' +
+      '<p class="muted">' + (o.po_number ? 'PO ' + esc(o.po_number) + ' &middot; ' : '') +
+        (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : '') + '</p>' +
+      '<div class="sum">' +
+        '<div class="sumc"><div class="sumv">' + num(st.ordered) + '</div><div class="suml">Ordered</div></div>' +
+        '<div class="sumc"><div class="sumv">' + num(st.made) + '</div><div class="suml">Built</div></div>' +
+        '<div class="sumc"><div class="sumv">' + num(st.shipped) + '</div><div class="suml">Shipped</div></div>' +
+        '<div class="sumc"><div class="sumv">' + num(st.remaining) + '</div><div class="suml">Remaining</div></div>' +
+      '</div>' +
+      '<div class="card"><h2>Shipments</h2>' +
+      (mine.length ? mine.map(function(b){
+        const bu = units.filter(function(u){ return u.batch_id === b.id; });
+        const tk = tracking.filter(function(t){ return t.batch_id === b.id; });
+        const per = {}; tk.forEach(function(t){ if (t.unit_id) per[t.unit_id] = t.tracking_no; });
+        const wide = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
+        const shipped = b.status === 'shipped';
+        return '<div class="batch">' +
+          '<div class="bhead">' +
+            '<div><b>Batch ' + b.batch_no + '</b><br><span class="chip ' + (shipped?'k':'w') + '">' + (shipped?'Shipped':'Preparing') + '</span></div>' +
+            '<div><b>' + esc(locName(b)) + '</b>' +
+              '<div class="sub">' + esc(locLine(b) || '') + '</div></div>' +
+            '<div class="mono">' + num(bu.length) + ' units<div class="sub">' +
+              (b.carrier ? esc(b.carrier) + ' &middot; ' : '') + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</div></div>' +
+            '<div><button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
+          '</div>' +
+          '<div class="bbody" id="bb_' + esc(b.id) + '" style="display:none;">' +
+            '<div class="twrap"><table><thead><tr><th>Serial</th><th>Model</th><th>Tracking</th></tr></thead><tbody>' +
+            bu.map(function(u){
+              return '<tr><td class="mono">' + esc(u.serial) + '</td>' +
+                '<td><span class="cfg" data-cfg="' + esc(u.config_id) + '" tabindex="0">' + esc(cfgName[u.config_id] || '\u2014') + '</span></td>' +
+                '<td class="mono">' + trackHtml(b.carrier, per[u.id] ? [per[u.id]] : wide) + '</td></tr>';
+            }).join('') + '</tbody></table></div>' +
+          '</div>' +
+        '</div>';
+      }).join('')
+      : '<div class="empty"><p>Nothing has shipped yet.</p></div>') +
+      '</div>';
+
+    $('back').addEventListener('click', renderList);
+    $('csv').addEventListener('click', function(){ exportCsv(o); });
+    $('prt').addEventListener('click', function(){
+      document.querySelectorAll('.bbody').forEach(function(x){ x.style.display = ''; });
+      window.print();
+    });
+    document.querySelectorAll('[data-x]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const bd = $('bb_' + btn.getAttribute('data-x'));
+        const open = bd.style.display !== 'none';
+        bd.style.display = open ? 'none' : '';
+        btn.textContent = open ? 'Details' : 'Hide';
+      });
+    });
+  }
+  $('listView').addEventListener('click', function(e){
+    const r = e.target.closest('.orow'); if (r) openOrder(r.getAttribute('data-id'));
+  });
+  $('listView').addEventListener('keydown', function(e){
+    const r = e.target.closest('.orow');
+    if (r && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openOrder(r.getAttribute('data-id')); }
+  });
+
+  /* ---------- serial lookup ---------- */
+  function serialLookup(){
+    const sn = window.prompt('Enter a serial number');
+    if (!sn) return;
+    const u = units.find(function(x){ return x.serial.toUpperCase() === sn.trim().toUpperCase(); });
+    if (!u){ window.alert('No unit with that serial on your orders.'); return; }
+    const o = orders.find(function(x){ return x.id === u.order_id; });
+    const b = u.batch_id ? batches.find(function(x){ return x.id === u.batch_id; }) : null;
+    const t = tracking.find(function(x){ return x.unit_id === u.id; }) ||
+              tracking.find(function(x){ return b && x.batch_id === b.id && !x.unit_id; });
+    window.alert(u.serial + '\n\nInvoice: ' + (o ? o.invoice_no : '?') +
+      (b ? '\nBatch ' + b.batch_no + (b.store_name ? ' to ' + b.store_name : '') : '\nNot yet assigned to a shipment') +
+      (t ? '\nTracking: ' + t.tracking_no : '') +
+      '\nStatus: ' + (u.unit_status || 'built'));
+    if (o) openOrder(o.id);
+  }
+
+  /* ---------- csv ---------- */
+  function exportCsv(o){
+    const cfgName = {}; configs.forEach(function(c){ cfgName[c.id] = c.name; });
+    const head = ['Serial','Model','Invoice','Batch','Store','Address','Carrier','Tracking','Ship date','Status'];
+    const rows = units.filter(function(u){ return u.order_id === o.id; }).map(function(u){
+      const b = u.batch_id ? batches.find(function(x){ return x.id === u.batch_id; }) : null;
+      const t = tracking.find(function(x){ return x.unit_id === u.id; }) ||
+                (b ? tracking.find(function(x){ return x.batch_id === b.id && !x.unit_id; }) : null);
+      return [u.serial, cfgName[u.config_id] || '', o.invoice_no, b ? b.batch_no : '',
+              b ? locName(b) : '', b ? locLine(b) : '', b ? (b.carrier || '') : '',
+              t ? t.tracking_no : '', b && b.ship_date ? b.ship_date : '', u.unit_status || ''];
+    });
+    const csv = [head].concat(rows).map(function(r){
+      return r.map(function(c){ return '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\r\n');
+    const blob = new Blob(['\ufeff' + csv], { type:'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'invoice-' + o.invoice_no + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  }
+
+  /* ---------- spec popover ---------- */
+  let popFor = null;
+  function popHide(){ $('pop').style.display = 'none'; popFor = null; }
+  function popShow(el){
+    const cfg = cfgById(el.getAttribute('data-cfg'));
+    if (!cfg) return;
+    const p = $('pop');
+    const sp = specLines(cfg);
+    p.innerHTML = '<h3>' + esc(cfg.name) + '</h3>' +
+      (sp.length ? '<dl>' + sp.map(function(x){ return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('') + '</dl>'
+                 : '<p class="muted">No specs recorded.</p>');
+    p.style.display = 'block';
+    popFor = el;
+    const r = el.getBoundingClientRect();
+    let left = Math.min(r.left, window.innerWidth - p.offsetWidth - 12);
+    if (left < 12) left = 12;
+    let top = r.bottom + 6;
+    if (top + p.offsetHeight > window.innerHeight - 12) top = Math.max(12, r.top - p.offsetHeight - 6);
+    p.style.left = Math.round(left) + 'px';
+    p.style.top = Math.round(top) + 'px';
+  }
+  document.addEventListener('mouseover', function(e){
+    const a = e.target.closest && e.target.closest('.cfg');
+    if (a && a !== popFor) popShow(a);
+  });
+  document.addEventListener('mouseout', function(e){
+    const a = e.target.closest && e.target.closest('.cfg');
+    if (a && a === popFor) popHide();
+  });
+  document.addEventListener('click', function(e){
+    const a = e.target.closest && e.target.closest('.cfg');
+    if (a){ e.preventDefault(); if (a === popFor) popHide(); else popShow(a); return; }
+    if (popFor) popHide();
+  });
+  document.addEventListener('focusin', function(e){
+    const a = e.target.closest && e.target.closest('.cfg');
+    if (a) popShow(a); else if (popFor) popHide();
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') popHide(); });
+  window.addEventListener('scroll', popHide, true);
+  window.addEventListener('resize', popHide);
+
+  init();
+})();
+</script>
+</body>
+</html>
