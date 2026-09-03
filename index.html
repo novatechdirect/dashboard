@@ -1564,6 +1564,51 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .ord-pool-actions button{ flex:1 1 auto; }
   }
 
+  /* ---- batches ---- */
+  .ord-head-r{ display:flex; align-items:center; gap:var(--s2); }
+  .ord-batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; }
+  .ord-batch-head{
+    display:grid; grid-template-columns:130px minmax(0,1fr) 150px auto;
+    gap:var(--s3); align-items:center; padding:var(--s3) var(--s4); background:var(--paper);
+  }
+  .ord-batch-id{ display:flex; flex-direction:column; gap:var(--s1); align-items:flex-start; }
+  .ord-batch-no{ font-weight:700; font-size:13.5px; }
+  .ord-batch-store{ font-weight:650; font-size:13.5px; }
+  .ord-batch-meta{ text-align:right; font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:13px; }
+  .ord-batch-meta .ord-sub{ font-family:var(--font-ui); }
+  .ord-batch-btns{ display:flex; gap:var(--s2); }
+  .ord-batch-body{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line); background:var(--soft); }
+  .ord-batch-foot{ display:flex; gap:var(--s2); margin-top:var(--s3); flex-wrap:wrap; }
+
+  .ord-newdest{ margin-top:var(--s3); padding:var(--s3); border:1px dashed var(--line-strong); border-radius:var(--r-md); }
+  .ord-newdest input{
+    width:100%; height:38px; padding:0 var(--s3); font:inherit; font-size:13px;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  .ord-newdest input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  .ord-track-mode{ display:flex; gap:var(--s4); margin-bottom:var(--s3); font-size:13px; }
+  .ord-track-mode label{ display:flex; align-items:center; gap:var(--s2); cursor:pointer; }
+  #ordTrkList, #ordTrkOne{
+    width:100%; font-family:var(--font-num); font-size:13px; padding:var(--s3);
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink); resize:vertical;
+  }
+  #ordTrkList:focus, #ordTrkOne:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  .ord-trk-preview{ margin-top:var(--s3); }
+  .ord-trk-preview table{ font-size:12px; }
+  .ord-miss{ color:var(--bad); font-style:italic; }
+  .ord-warnline{ color:var(--warn); font-size:12.5px; font-weight:600; }
+  .ord-check{ display:flex; align-items:center; gap:var(--s2); font-size:13.5px; margin:var(--s3) 0; cursor:pointer; }
+
+  @media (max-width:700px){
+    .ord-batch-head{ grid-template-columns:1fr; gap:var(--s2); }
+    .ord-batch-meta{ text-align:left; }
+    .ord-batch-btns{ width:100%; }
+    .ord-batch-btns button{ flex:1 1 auto; }
+    .ord-track-mode{ flex-direction:column; gap:var(--s2); }
+  }
+
 </style>
 </head>
 <body>
@@ -4469,7 +4514,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             (o.po_number ? ' \u00b7 PO ' + esc(o.po_number) : '') +
             (o.due_date ? ' \u00b7 due ' + esc(fmtDate(o.due_date)) : '') + '</div>' +
         '</div>' +
-        '<span class="ord-chip ' + sc.cls + '">' + sc.label + '</span>' +
+        '<div class="ord-head-r">' +
+          '<span class="ord-chip ' + sc.cls + '">' + sc.label + '</span>' +
+          (ordPerm.admin ? '<button class="ghost danger btn-sm" id="ordDelOrder" type="button">Delete order</button>' : '') +
+        '</div>' +
       '</div>' +
 
       '<div class="ord-sum">' +
@@ -4503,26 +4551,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             '<button class="ghost btn-sm" id="ordPrint46" type="button">4\u00d76 box PDF</button>' +
             '<button class="ghost btn-sm" id="ordPrintDymo" type="button">Dymo PDF</button>' +
             '<button class="ghost btn-sm" id="ordPrintNow" type="button">Print</button>' +
+            (ordPerm.manage ? '<button class="primary btn-sm" id="ordAddBatch" type="button">Add to batch</button>' : '') +
           '</span>' +
         '</div>' +
       '</section>' +
 
-      '<section class="card"><h2 class="card-title">Batches</h2>' +
-        (ordBatches.length
-          ? ordBatches.map(function(b){
-              const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
-              const n = ordUnits.filter(function(u){ return u.batch_id === b.id; }).length;
-              const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; }).length;
-              return '<div class="ord-line">' +
-                '<div><div class="ord-line-n">Batch ' + b.batch_no + ' \u2014 ' + esc(loc ? loc.store_name : 'No destination') + '</div>' +
-                '<div class="ord-sub">' + ordNum(n) + ' units \u00b7 ' + ordNum(tk) + ' tracking</div></div>' +
-                '<span class="ord-chip ' + (b.status === 'shipped' ? 'ok' : 'neutral') + '">' + esc(b.status) + '</span>' +
-              '</div>';
-            }).join('')
-          : '<p class="muted-sm">No batches yet.</p>') +
-      '</section>';
+      '<section class="card"><h2 class="card-title">Batches</h2><div id="ordBatchBody"></div></section>';
 
     ordRenderPool();
+    ordRenderBatches();
   }
 
   /* ---- list interactions ---- */
@@ -4980,6 +5017,35 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target.id === 'ordPrint46'){   if (ordLoadLabelState()) generatePdf();     return; }
     if (e.target.id === 'ordPrintDymo'){ if (ordLoadLabelState()) generatePdfDymo(); return; }
     if (e.target.id === 'ordPrintNow'){  if (ordLoadLabelState()) window.print();    return; }
+    if (e.target.id === 'ordAddBatch'){  ordAddToBatchModal(); return; }
+    if (e.target.id === 'ordDelOrder'){
+      const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+      if (o) ordDeleteOrder(o);
+      return;
+    }
+    const bx = e.target.closest('[data-bexpand]');
+    if (bx){
+      const body = document.getElementById('ordBatchBody_' + bx.getAttribute('data-bexpand'));
+      if (body){
+        const open = body.style.display !== 'none';
+        body.style.display = open ? 'none' : '';
+        bx.textContent = open ? 'Details' : 'Hide';
+      }
+      return;
+    }
+    const bfind = function(a){ const el = e.target.closest('[' + a + ']');
+      return el ? ordBatches.find(function(b){ return b.id === el.getAttribute(a); }) : null; };
+    const bs = bfind('data-bship');  if (bs){ ordMarkShipped(bs); return; }
+    const be = bfind('data-bedit');  if (be){ ordEditBatchModal(be); return; }
+    const bd = bfind('data-bdel');   if (bd){ ordReturnBatch(bd); return; }
+    const bp = bfind('data-bprint');
+    if (bp){
+      ordSel.clear();
+      ordBatchUnits(bp.id).forEach(function(u){ ordSel.add(u.id); });
+      if (ordLoadLabelState()) generatePdf();
+      ordSel.clear(); ordRenderPool();
+      return;
+    }
   });
   ordDetailBody.addEventListener('change', function(e){
     if (e.target.id === 'ordPoolCfg'){ ordPoolCfg = e.target.value; ordRenderPool(); }
@@ -5014,6 +5080,429 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
               missed.slice(0, 4).join(', ') + (missed.length > 4 ? '\u2026' : ''), 'warn', 8000);
       } else {
         toast(hit + ' unit' + (hit === 1 ? '' : 's') + ' selected', 'ok');
+      }
+    });
+  }
+
+
+  /* ================= DELETE AN ORDER (admin) ================= */
+  async function ordDeleteOrder(o){
+    const st = ordStats(o);
+    const bg = mgModal(
+      mgModalHead('Delete invoice ' + esc(o.invoice_no) + '?', 'This cannot be undone') +
+      '<div class="mg-modal-body">' +
+        '<p>This removes the order, its ' + ordNum(st.made) + ' unit' + (st.made === 1 ? '' : 's') +
+        ' and every batch on it.</p>' +
+        '<label class="ord-check"><input type="checkbox" id="ordDelRestore" checked> ' +
+        'Put the parts back into inventory</label>' +
+        '<p class="muted-sm">Leave that ticked unless the parts really were consumed. ' +
+        'Serial numbers are never reissued, so this leaves a gap in the NT sequence \u2014 that is normal.</p>' +
+        '<div class="err" id="ordDelErr" style="margin-top:var(--s3);"></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordDelCancel">Keep it</button>' +
+      '<button class="ghost danger" id="ordDelGo" data-primary>Delete the order</button></div>');
+    bg.querySelector('#ordDelCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordDelGo').addEventListener('click', async function(){
+      const err = bg.querySelector('#ordDelErr');
+      const restore = bg.querySelector('#ordDelRestore').checked;
+      this.disabled = true; this.textContent = 'Deleting\u2026';
+      try {
+        if (restore){
+          const mv = await SB.from('inv_moves').select('*')
+            .eq('reason', 'build').like('note', 'Order ' + o.invoice_no + ' %');
+          if (mv.error) throw mv.error;
+          const byItem = {};
+          (mv.data || []).forEach(function(m){ byItem[m.item_id] = (byItem[m.item_id] || 0) + (+m.delta || 0); });
+          for (const id of Object.keys(byItem)){
+            const it = invItems.find(function(x){ return String(x.id) === String(id); });
+            if (!it) continue;
+            const back = (it.qty | 0) - byItem[id];      // delta is negative, so this adds
+            const u = await SB.from('inv_items').update({ qty: back }).eq('id', it.id);
+            if (!u.error) it.qty = back;
+          }
+          if ((mv.data || []).length){
+            await SB.from('inv_moves').delete()
+              .eq('reason', 'build').like('note', 'Order ' + o.invoice_no + ' %');
+            invMovesRows = invMovesRows.filter(function(m){
+              return !(m.reason === 'build' && String(m.note || '').indexOf('Order ' + o.invoice_no + ' ') === 0);
+            });
+          }
+        }
+        const dp = await SB.from('pc_log').delete().eq('order_id', o.id);
+        if (dp.error) throw dp.error;
+        const dd = await SB.from('orders').delete().eq('id', o.id);
+        if (dd.error) throw dd.error;
+
+        mgCloseModal();
+        toast('Invoice ' + o.invoice_no + ' deleted' + (restore ? ' \u00b7 inventory restored' : ''), 'ok', 5000);
+        ordOrders = ordOrders.filter(function(x){ return x.id !== o.id; });
+        delete ordCounts[o.id];
+        ordCurrentId = null; ordSel.clear();
+        renderInventory(); renderInvMoves(); renderHomeStatus();
+        ordShowList(); ordRenderList();
+      } catch(e){
+        this.disabled = false; this.textContent = 'Delete the order';
+        err.textContent = e.message || 'Could not delete the order.';
+      }
+    });
+  }
+
+  /* ================= BATCHES ================= */
+  function ordLocLabel(l){
+    if (!l) return 'No destination';
+    return l.store_name + (l.store_number ? ' #' + l.store_number : '');
+  }
+  function ordLocAddress(l){
+    if (!l) return '';
+    return [l.address1, l.address2, [l.city, l.state].filter(Boolean).join(', '), l.zip]
+      .filter(Boolean).join(' \u00b7 ');
+  }
+  function ordBatchUnits(bid){
+    return ordUnits.filter(function(u){ return u.batch_id === bid; });
+  }
+
+  function ordRenderBatches(){
+    const host = document.getElementById('ordBatchBody');
+    if (!host) return;
+    if (!ordBatches.length){
+      host.innerHTML = '<div class="empty"><div class="empty-ico">\u25b8</div>' +
+        '<p>No batches yet.</p><p class="muted-sm">Select units from the pool above and add them to a batch.</p></div>';
+      return;
+    }
+    const cfgs = {}; ordConfigs.forEach(function(c){ cfgs[c.id] = c.name; });
+    host.innerHTML = ordBatches.map(function(b){
+      const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
+      const units = ordBatchUnits(b.id);
+      const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; });
+      const perUnit = {}; tk.forEach(function(t){ if (t.unit_id) perUnit[t.unit_id] = t.tracking_no; });
+      const batchWide = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
+      const shipped = b.status === 'shipped';
+      return '<div class="ord-batch" data-bid="' + esc(b.id) + '">' +
+        '<div class="ord-batch-head">' +
+          '<div class="ord-batch-id">' +
+            '<span class="ord-batch-no">Batch ' + b.batch_no + '</span>' +
+            '<span class="ord-chip ' + (shipped ? 'ok' : 'warn') + '">' + (shipped ? 'Shipped' : 'Open') + '</span>' +
+          '</div>' +
+          '<div class="ord-batch-dest">' +
+            '<div class="ord-batch-store">' + esc(ordLocLabel(loc)) + '</div>' +
+            '<div class="ord-sub">' + esc(ordLocAddress(loc) || 'No address on file') + '</div>' +
+          '</div>' +
+          '<div class="ord-batch-meta">' +
+            '<div class="ord-mono">' + ordNum(units.length) + ' unit' + (units.length === 1 ? '' : 's') + '</div>' +
+            '<div class="ord-sub">' + (b.carrier ? esc(b.carrier) + ' \u00b7 ' : '') +
+              (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not shipped') + '</div>' +
+          '</div>' +
+          '<div class="ord-batch-btns">' +
+            '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
+            (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
+            (ordPerm.manage ? '<button class="ghost btn-sm" data-bedit="' + esc(b.id) + '" type="button">Edit</button>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="ord-batch-body" id="ordBatchBody_' + esc(b.id) + '" style="display:none;">' +
+          (batchWide.length
+            ? '<p class="muted-sm">Batch tracking: <span class="ord-mono">' + batchWide.map(esc).join(', ') + '</span></p>'
+            : '') +
+          '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+            '<th>Serial</th><th>Config</th><th>Tracking</th>' +
+          '</tr></thead><tbody>' +
+          units.map(function(u){
+            return '<tr><td class="ord-mono">' + esc(u.serial) + '</td>' +
+              '<td>' + esc(cfgs[u.config_id] || '\u2014') + '</td>' +
+              '<td class="ord-mono">' + esc(perUnit[u.id] || (batchWide.length ? '(batch)' : '\u2014')) + '</td></tr>';
+          }).join('') +
+          '</tbody></table></div>' +
+          '<div class="ord-batch-foot">' +
+            '<button class="ghost btn-sm" data-bprint="' + esc(b.id) + '" type="button">Print labels for this batch</button>' +
+            (ordPerm.admin ? '<button class="ghost danger btn-sm" data-bdel="' + esc(b.id) + '" type="button">Return units to pool</button>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function ordDestOptions(sel){
+    const list = ordLocations.slice().sort(function(a, b){
+      return (b.last_used_at || '').localeCompare(a.last_used_at || '');
+    });
+    return '<option value="">Select a destination\u2026</option>' +
+      list.map(function(l){
+        return '<option value="' + esc(l.id) + '"' + (l.id === sel ? ' selected' : '') + '>' + esc(ordLocLabel(l)) + '</option>';
+      }).join('') +
+      '<option value="__new">+ New destination\u2026</option>';
+  }
+
+  function ordDestFieldsHtml(){
+    return '<div class="ord-newdest" id="ordNewDest" style="display:none;">' +
+      '<div class="ord-cfg-grid">' +
+        '<div class="field"><label for="ordDStore">Store name</label><input id="ordDStore" type="text" placeholder="Rent-A-Center" autocomplete="off"></div>' +
+        '<div class="field"><label for="ordDNum">Store number</label><input id="ordDNum" type="text" placeholder="4471" autocomplete="off"></div>' +
+        '<div class="field"><label for="ordDAddr1">Address</label><input id="ordDAddr1" type="text" autocomplete="off"></div>' +
+        '<div class="field"><label for="ordDAddr2">Address line 2</label><input id="ordDAddr2" type="text" autocomplete="off"></div>' +
+        '<div class="field"><label for="ordDCity">City</label><input id="ordDCity" type="text" autocomplete="off"></div>' +
+        '<div class="field"><label for="ordDState">State</label><input id="ordDState" type="text" maxlength="2" autocomplete="off"></div>' +
+        '<div class="field"><label for="ordDZip">ZIP</label><input id="ordDZip" type="text" autocomplete="off"></div>' +
+        '<div class="field"><label for="ordDPhone">Phone</label><input id="ordDPhone" type="text" autocomplete="off"></div>' +
+      '</div>' +
+      '<p class="muted-sm">Saved to this customer\u2019s destination list for next time.</p>' +
+    '</div>';
+  }
+
+  async function ordSaveNewDest(bg, customerId){
+    const store = bg.querySelector('#ordDStore').value.trim();
+    if (!store) return { error: 'Give the destination a store name.' };
+    const r = await SB.from('ship_to_locations').insert({
+      customer_id: customerId,
+      store_name: store,
+      store_number: bg.querySelector('#ordDNum').value.trim() || null,
+      address1: bg.querySelector('#ordDAddr1').value.trim() || null,
+      address2: bg.querySelector('#ordDAddr2').value.trim() || null,
+      city: bg.querySelector('#ordDCity').value.trim() || null,
+      state: bg.querySelector('#ordDState').value.trim().toUpperCase() || null,
+      zip: bg.querySelector('#ordDZip').value.trim() || null,
+      phone: bg.querySelector('#ordDPhone').value.trim() || null,
+      last_used_at: new Date().toISOString()
+    }).select().limit(1);
+    if (r.error) return { error: r.error.message || 'Could not save the destination.' };
+    ordLocations.push(r.data[0]);
+    return { loc: r.data[0] };
+  }
+
+  /* ---- add selected units to a batch ---- */
+  function ordAddToBatchModal(){
+    const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+    const sel = ordSelectedUnits();
+    if (!o || !sel.length) return;
+
+    const bg = mgModal(
+      mgModalHead('Add ' + sel.length + ' unit' + (sel.length === 1 ? '' : 's') + ' to a batch',
+                  'Invoice ' + esc(o.invoice_no)) +
+      '<div class="mg-modal-body">' +
+        '<div class="field"><label for="ordBDest">Destination</label>' +
+          '<select id="ordBDest">' + ordDestOptions() + '</select></div>' +
+        ordDestFieldsHtml() +
+        '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
+          '<div class="field"><label for="ordBCarrier">Carrier</label>' +
+            '<select id="ordBCarrier"><option value="">\u2014</option><option>UPS</option><option>FedEx</option><option>USPS</option><option>Freight</option><option>Other</option></select></div>' +
+          '<div class="field"><label for="ordBDate">Ship date <span class="muted-sm">optional</span></label>' +
+            '<input id="ordBDate" type="date"></div>' +
+        '</div>' +
+        '<h3 class="ord-tools-h" style="margin-top:var(--s5);">Tracking</h3>' +
+        '<div class="ord-track-mode">' +
+          '<label><input type="radio" name="ordTrkMode" value="unit" checked> One per unit</label>' +
+          '<label><input type="radio" name="ordTrkMode" value="batch"> One for the whole batch</label>' +
+        '</div>' +
+        '<div id="ordTrkUnit">' +
+          '<textarea id="ordTrkList" rows="6" spellcheck="false" placeholder="Paste ' + sel.length +
+            ' tracking numbers from ShipStation, one per line"></textarea>' +
+          '<div id="ordTrkPreview" class="ord-trk-preview"></div>' +
+        '</div>' +
+        '<div id="ordTrkBatch" style="display:none;">' +
+          '<input id="ordTrkOne" type="text" placeholder="One tracking number for the pallet" autocomplete="off">' +
+        '</div>' +
+        '<div class="err" id="ordBErr" style="margin-top:var(--s3);"></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordBCancel">Cancel</button>' +
+      '<button class="primary" id="ordBSave" data-primary>Create batch</button></div>', true);
+
+    const destEl = bg.querySelector('#ordBDest');
+    const newWrap = bg.querySelector('#ordNewDest');
+    destEl.addEventListener('change', function(){
+      newWrap.style.display = (this.value === '__new') ? '' : 'none';
+    });
+
+    bg.querySelectorAll('[name="ordTrkMode"]').forEach(function(r){
+      r.addEventListener('change', function(){
+        const unit = bg.querySelector('[name="ordTrkMode"]:checked').value === 'unit';
+        bg.querySelector('#ordTrkUnit').style.display = unit ? '' : 'none';
+        bg.querySelector('#ordTrkBatch').style.display = unit ? 'none' : '';
+      });
+    });
+
+    const listEl = bg.querySelector('#ordTrkList');
+    function drawPreview(){
+      const nums = listEl.value.split(/\r?\n/).map(function(x){ return x.trim(); }).filter(Boolean);
+      const prev = bg.querySelector('#ordTrkPreview');
+      if (!nums.length){ prev.innerHTML = ''; return; }
+      const rows = sel.slice(0, 6).map(function(u, i){
+        return '<tr><td class="ord-mono">' + esc(u.serial) + '</td>' +
+               '<td class="ord-mono">' + (nums[i] ? esc(nums[i]) : '<span class="ord-miss">missing</span>') + '</td></tr>';
+      }).join('');
+      prev.innerHTML =
+        '<p class="' + (nums.length === sel.length ? 'muted-sm' : 'ord-warnline') + '">' +
+          nums.length + ' number' + (nums.length === 1 ? '' : 's') + ' for ' + sel.length + ' unit' + (sel.length === 1 ? '' : 's') +
+          (nums.length === sel.length ? ' \u2014 they line up.' : ' \u2014 these must match before you can save.') +
+        '</p>' +
+        '<table class="hist-table"><thead><tr><th>Serial</th><th>Tracking</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+        (sel.length > 6 ? '<p class="muted-sm">showing the first 6</p>' : '');
+    }
+    listEl.addEventListener('input', drawPreview);
+
+    bg.querySelector('#ordBCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordBSave').addEventListener('click', async function(){
+      const err = bg.querySelector('#ordBErr');
+      err.textContent = '';
+      const perUnit = bg.querySelector('[name="ordTrkMode"]:checked').value === 'unit';
+      const nums = listEl.value.split(/\r?\n/).map(function(x){ return x.trim(); }).filter(Boolean);
+      const one = bg.querySelector('#ordTrkOne').value.trim();
+
+      if (perUnit && nums.length && nums.length !== sel.length){
+        err.textContent = 'You have ' + nums.length + ' tracking numbers for ' + sel.length +
+          ' units. Fix the list, or switch to one number for the whole batch.';
+        return;
+      }
+      this.disabled = true; this.textContent = 'Creating\u2026';
+      try {
+        let locId = destEl.value;
+        if (locId === '__new'){
+          const made = await ordSaveNewDest(bg, o.customer_id);
+          if (made.error) throw new Error(made.error);
+          locId = made.loc.id;
+        } else if (locId){
+          await SB.from('ship_to_locations').update({ last_used_at: new Date().toISOString() }).eq('id', locId);
+          const l = ordLocations.find(function(x){ return x.id === locId; });
+          if (l) l.last_used_at = new Date().toISOString();
+        }
+
+        const nb = await SB.rpc('next_batch_no', { p_order: o.id });
+        const batchNo = (nb && !nb.error && nb.data) ? nb.data
+          : (ordBatches.reduce(function(a, b){ return Math.max(a, b.batch_no); }, 0) + 1);
+
+        const ins = await SB.from('batches').insert({
+          order_id: o.id, batch_no: batchNo, location_id: locId || null,
+          carrier: bg.querySelector('#ordBCarrier').value || null,
+          ship_date: bg.querySelector('#ordBDate').value || null,
+          status: 'open', created_by: session.user.id
+        }).select().limit(1);
+        if (ins.error) throw ins.error;
+        const batch = ins.data[0];
+
+        const trk = [];
+        if (perUnit && nums.length){
+          sel.forEach(function(u, i){ trk.push({ batch_id: batch.id, tracking_no: nums[i], unit_id: u.id }); });
+        } else if (!perUnit && one){
+          trk.push({ batch_id: batch.id, tracking_no: one, unit_id: null });
+        }
+        if (trk.length){
+          const tr = await SB.from('batch_tracking').insert(trk);
+          if (tr.error) throw tr.error;
+        }
+
+        const ids = sel.map(function(u){ return u.id; });
+        const up = await SB.from('pc_log')
+          .update({ batch_id: batch.id, unit_status: 'assigned' }).in('id', ids);
+        if (up.error) throw up.error;
+
+        mgCloseModal();
+        toast('Batch ' + batchNo + ' created with ' + sel.length + ' unit' + (sel.length === 1 ? '' : 's'), 'ok', 5000);
+        ordSel.clear();
+        await ordOpenOrder(o.id);
+      } catch(e){
+        this.disabled = false; this.textContent = 'Create batch';
+        err.textContent = e.message || 'Could not create the batch.';
+      }
+    });
+  }
+
+  /* ---- mark shipped / edit / return to pool ---- */
+  async function ordMarkShipped(b){
+    const units = ordBatchUnits(b.id);
+    const when = b.ship_date || fmtYMD(new Date());
+    const ub = await SB.from('batches').update({ status: 'shipped', ship_date: when }).eq('id', b.id);
+    if (ub.error){ toast('Could not mark it shipped: ' + ub.error.message, 'bad'); return; }
+    if (units.length){
+      const uu = await SB.from('pc_log').update({ unit_status: 'shipped', status: 'shipped' })
+        .in('id', units.map(function(u){ return u.id; }));
+      if (uu.error){ toast('Batch marked shipped, but the units did not update.', 'warn', 7000); }
+    }
+    toast('Batch ' + b.batch_no + ' marked shipped', 'ok');
+    await ordOpenOrder(ordCurrentId);
+  }
+
+  function ordEditBatchModal(b){
+    const shipped = b.status === 'shipped';
+    const bg = mgModal(
+      mgModalHead('Batch ' + b.batch_no, shipped ? 'This batch is already marked shipped' : '') +
+      '<div class="mg-modal-body">' +
+        (shipped && ordPerm.admin
+          ? '<p class="ord-warnline">This batch is already marked shipped. Changing it may not match what the customer has been told.</p>'
+          : '') +
+        '<div class="field"><label for="ordBDest">Destination</label>' +
+          '<select id="ordBDest">' + ordDestOptions(b.location_id) + '</select></div>' +
+        ordDestFieldsHtml() +
+        '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
+          '<div class="field"><label for="ordBCarrier">Carrier</label>' +
+            '<select id="ordBCarrier"><option value="">\u2014</option>' +
+            ['UPS','FedEx','USPS','Freight','Other'].map(function(c){
+              return '<option' + (b.carrier === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
+            '</select></div>' +
+          '<div class="field"><label for="ordBDate">Ship date</label>' +
+            '<input id="ordBDate" type="date" value="' + esc(b.ship_date || '') + '"></div>' +
+        '</div>' +
+        '<div class="err" id="ordBErr" style="margin-top:var(--s3);"></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordBCancel">Cancel</button>' +
+      '<button class="primary" id="ordBSave" data-primary>Save changes</button></div>', true);
+
+    const destEl = bg.querySelector('#ordBDest');
+    destEl.addEventListener('change', function(){
+      bg.querySelector('#ordNewDest').style.display = (this.value === '__new') ? '' : 'none';
+    });
+    bg.querySelector('#ordBCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordBSave').addEventListener('click', async function(){
+      const err = bg.querySelector('#ordBErr');
+      if (shipped && !ordPerm.admin){ err.textContent = 'Only an order admin can change a shipped batch.'; return; }
+      this.disabled = true; this.textContent = 'Saving\u2026';
+      try {
+        let locId = destEl.value;
+        if (locId === '__new'){
+          const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+          const made = await ordSaveNewDest(bg, o.customer_id);
+          if (made.error) throw new Error(made.error);
+          locId = made.loc.id;
+        }
+        const u = await SB.from('batches').update({
+          location_id: locId || null,
+          carrier: bg.querySelector('#ordBCarrier').value || null,
+          ship_date: bg.querySelector('#ordBDate').value || null
+        }).eq('id', b.id);
+        if (u.error) throw u.error;
+        mgCloseModal();
+        toast('Batch ' + b.batch_no + ' updated', 'ok');
+        await ordOpenOrder(ordCurrentId);
+      } catch(e){
+        this.disabled = false; this.textContent = 'Save changes';
+        err.textContent = e.message || 'Could not save.';
+      }
+    });
+  }
+
+  async function ordReturnBatch(b){
+    const units = ordBatchUnits(b.id);
+    const bg = mgModal(
+      mgModalHead('Return batch ' + b.batch_no + ' to the pool?', '') +
+      '<div class="mg-modal-body"><p>' + ordNum(units.length) + ' unit' + (units.length === 1 ? '' : 's') +
+      ' go back to the unassigned pool and the batch is deleted, along with its tracking numbers.</p>' +
+      (b.status === 'shipped' ? '<p class="ord-warnline">This batch is marked shipped.</p>' : '') +
+      '<div class="err" id="ordRErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordRCancel">Cancel</button>' +
+      '<button class="ghost danger" id="ordRGo" data-primary>Return to pool</button></div>');
+    bg.querySelector('#ordRCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordRGo').addEventListener('click', async function(){
+      this.disabled = true; this.textContent = 'Working\u2026';
+      try {
+        if (units.length){
+          const u = await SB.from('pc_log').update({ batch_id: null, unit_status: 'built' })
+            .in('id', units.map(function(x){ return x.id; }));
+          if (u.error) throw u.error;
+        }
+        const d = await SB.from('batches').delete().eq('id', b.id);
+        if (d.error) throw d.error;
+        mgCloseModal();
+        toast('Batch ' + b.batch_no + ' returned to the pool', 'ok');
+        await ordOpenOrder(ordCurrentId);
+      } catch(e){
+        this.disabled = false; this.textContent = 'Return to pool';
+        bg.querySelector('#ordRErr').textContent = e.message || 'Could not do that.';
       }
     });
   }
