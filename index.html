@@ -1609,6 +1609,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .ord-track-mode{ flex-direction:column; gap:var(--s2); }
   }
 
+  .ord-trk{ color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent-line); }
+  .ord-trk:hover{ color:var(--accent-hover); border-bottom-color:var(--accent-hover); }
+  .ord-trk:focus-visible{ outline:none; box-shadow:var(--ring); border-radius:2px; }
+  .ord-trk-plain{ color:var(--ink); border-bottom:1px dotted var(--line-strong); cursor:help; }
+  .ord-trk-none{ color:var(--faint); }
+  .ord-trk-hint{ color:var(--faint); font-family:var(--font-ui); font-size:11.5px; }
+
 </style>
 </head>
 <body>
@@ -4960,6 +4967,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function ordLoadLabelState(){
     const sel = ordSelectedUnits();
     if (!sel.length) return false;
+    /* A label carries one spec, so every unit in a print run must share a
+       config. The pool disables its buttons for this, but a batch can span
+       configs too, so the invariant lives here where both paths hit it. */
+    const cfgIds = new Set(sel.map(function(u){ return u.config_id; }));
+    if (cfgIds.size > 1){
+      toast('That set covers ' + cfgIds.size + ' different configs. Labels print one config at a time \u2014 ' +
+            'use the pool above and filter by config.', 'bad', 8000);
+      return false;
+    }
     const cfg = ordCfgById(sel[0].config_id);
     if (!cfg) { toast('That config is missing.', 'bad'); return false; }
     const lines = ordCfgSpecLines(cfg);
@@ -5038,12 +5054,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const bs = bfind('data-bship');  if (bs){ ordMarkShipped(bs); return; }
     const be = bfind('data-bedit');  if (be){ ordEditBatchModal(be); return; }
     const bd = bfind('data-bdel');   if (bd){ ordReturnBatch(bd); return; }
-    const bp = bfind('data-bprint');
-    if (bp){
+    const b46 = bfind('data-bprint46');
+    const bdy = bfind('data-bprintdymo');
+    if (b46 || bdy){
+      const b = b46 || bdy;
+      const keep = new Set(ordSel);                 // don't clobber the pool selection
       ordSel.clear();
-      ordBatchUnits(bp.id).forEach(function(u){ ordSel.add(u.id); });
-      if (ordLoadLabelState()) generatePdf();
-      ordSel.clear(); ordRenderPool();
+      ordBatchUnits(b.id).forEach(function(u){ ordSel.add(u.id); });
+      if (ordLoadLabelState()){ if (b46) generatePdf(); else generatePdfDymo(); }
+      ordSel = keep;
+      ordRenderPool();
       return;
     }
   });
@@ -5157,6 +5177,29 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return [l.address1, l.address2, [l.city, l.state].filter(Boolean).join(', '), l.zip]
       .filter(Boolean).join(' \u00b7 ');
   }
+  /* Carrier tracking links. Only carriers with a known public URL get linked;
+     anything else renders as plain text rather than a guessed link. */
+  function ordTrackUrl(carrier, num){
+    const n = encodeURIComponent(String(num || '').trim());
+    if (!n) return '';
+    switch (String(carrier || '').trim().toLowerCase()){
+      case 'ups':   return 'https://www.ups.com/track?loc=en_US&requester=QUIC&tracknum=' + n;
+      case 'fedex': return 'https://www.fedex.com/fedextrack/?trknbr=' + n;
+      case 'usps':  return 'https://tools.usps.com/go/TrackConfirmAction?tLabels=' + n;
+      default: return '';
+    }
+  }
+  function ordTrackHtml(carrier, nums){
+    const list = (Array.isArray(nums) ? nums : [nums]).filter(Boolean);
+    if (!list.length) return '<span class="ord-trk-none">\u2014</span>';
+    return list.map(function(n){
+      const url = ordTrackUrl(carrier, n);
+      return url
+        ? '<a class="ord-trk" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(n) + '</a>'
+        : '<span class="ord-trk-plain" title="Set a carrier on this batch to link the number">' + esc(n) + '</span>';
+    }).join(', ');
+  }
+
   function ordBatchUnits(bid){
     return ordUnits.filter(function(u){ return u.batch_id === bid; });
   }
@@ -5200,7 +5243,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '</div>' +
         '<div class="ord-batch-body" id="ordBatchBody_' + esc(b.id) + '" style="display:none;">' +
           (batchWide.length
-            ? '<p class="muted-sm">Batch tracking: <span class="ord-mono">' + batchWide.map(esc).join(', ') + '</span></p>'
+            ? '<p class="muted-sm">Batch tracking: <span class="ord-mono">' + ordTrackHtml(b.carrier, batchWide) + '</span>' +
+              (ordTrackUrl(b.carrier, batchWide[0]) ? '' : ' <span class="ord-trk-hint">\u00b7 add a carrier to link it</span>') + '</p>'
             : '') +
           '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
             '<th>Serial</th><th>Config</th><th>Tracking</th>' +
@@ -5208,11 +5252,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           units.map(function(u){
             return '<tr><td class="ord-mono">' + esc(u.serial) + '</td>' +
               '<td>' + esc(cfgs[u.config_id] || '\u2014') + '</td>' +
-              '<td class="ord-mono">' + esc(perUnit[u.id] || (batchWide.length ? '(batch)' : '\u2014')) + '</td></tr>';
+              '<td class="ord-mono">' + ordTrackHtml(b.carrier, perUnit[u.id] ? [perUnit[u.id]] : batchWide) + '</td></tr>';
           }).join('') +
           '</tbody></table></div>' +
           '<div class="ord-batch-foot">' +
-            '<button class="ghost btn-sm" data-bprint="' + esc(b.id) + '" type="button">Print labels for this batch</button>' +
+            '<button class="ghost btn-sm" data-bprint46="' + esc(b.id) + '" type="button">4\u00d76 box PDF</button>' +
+            '<button class="ghost btn-sm" data-bprintdymo="' + esc(b.id) + '" type="button">Dymo PDF</button>' +
             (ordPerm.admin ? '<button class="ghost danger btn-sm" data-bdel="' + esc(b.id) + '" type="button">Return units to pool</button>' : '') +
           '</div>' +
         '</div>' +
