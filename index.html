@@ -4598,18 +4598,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<option value="__new">+ New config\u2026</option>';
   }
 
-  function ordNewOrderModal(){
-    const custOpts = ordCustomers.map(function(c){ return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>'; }).join('');
+  /* mgModal() closes whatever modal is already open, so launching the config
+     editor from in here destroys this form. Snapshot the fields first and pass
+     them back in when we reopen, so nothing the user typed is lost. */
+  function ordNewOrderModal(pre){
+    pre = pre || {};
+    const custOpts = ordCustomers.map(function(c){
+      return '<option value="' + esc(c.id) + '"' + (pre.customer_id === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>';
+    }).join('');
     const bg = mgModal(
       mgModalHead('New order', 'The invoice number comes from your accounting system') +
       '<div class="mg-modal-body">' +
         '<div class="ord-cfg-grid">' +
           '<div class="field"><label for="ordNCust">Customer</label><select id="ordNCust">' + custOpts + '</select></div>' +
-          '<div class="field"><label for="ordNInv">Invoice #</label><input id="ordNInv" type="text" placeholder="1042" autocomplete="off"></div>' +
-          '<div class="field"><label for="ordNPo">PO number <span class="muted-sm">optional</span></label><input id="ordNPo" type="text" autocomplete="off"></div>' +
-          '<div class="field"><label for="ordNDue">Due date</label><input id="ordNDue" type="date"></div>' +
+          '<div class="field"><label for="ordNInv">Invoice #</label><input id="ordNInv" type="text" placeholder="1042" autocomplete="off" value="' + esc(pre.invoice_no || '') + '"></div>' +
+          '<div class="field"><label for="ordNPo">PO number <span class="muted-sm">optional</span></label><input id="ordNPo" type="text" autocomplete="off" value="' + esc(pre.po_number || '') + '"></div>' +
+          '<div class="field"><label for="ordNDue">Due date</label><input id="ordNDue" type="date" value="' + esc(pre.due_date || '') + '"></div>' +
         '</div>' +
-        '<div class="field" style="margin-top:var(--s3);"><label for="ordNNotes">Notes <span class="muted-sm">optional</span></label><input id="ordNNotes" type="text" autocomplete="off"></div>' +
+        '<div class="field" style="margin-top:var(--s3);"><label for="ordNNotes">Notes <span class="muted-sm">optional</span></label><input id="ordNNotes" type="text" autocomplete="off" value="' + esc(pre.notes || '') + '"></div>' +
         '<h3 class="ord-tools-h" style="margin-top:var(--s5);">Line items</h3>' +
         '<div id="ordNLines"></div>' +
         '<button class="ghost btn-sm" id="ordNAddLine" type="button">+ Add line</button>' +
@@ -4620,7 +4626,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     const custEl = bg.querySelector('#ordNCust');
     const linesEl = bg.querySelector('#ordNLines');
-    let lines = [{ config_id:'', qty:'' }];
+    let lines = (pre.lines && pre.lines.length) ? pre.lines : [{ config_id:'', qty:'' }];
 
     function drawLines(){
       linesEl.innerHTML = lines.map(function(l, i){
@@ -4643,10 +4649,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (what === 'qty') lines[i].qty = e.target.value;
       if (what === 'config'){
         if (e.target.value === '__new'){
-          e.target.value = lines[i].config_id || '';
-          const made = await ordNewConfigModal(custEl.value);
-          if (made){ lines[i].config_id = made.id; drawLines(); }
-        } else lines[i].config_id = e.target.value;
+          /* Capture everything before the config modal replaces this one. */
+          const snap = {
+            customer_id: custEl.value,
+            invoice_no: bg.querySelector('#ordNInv').value,
+            po_number:  bg.querySelector('#ordNPo').value,
+            due_date:   bg.querySelector('#ordNDue').value,
+            notes:      bg.querySelector('#ordNNotes').value,
+            lines: lines.map(function(l){ return { config_id:l.config_id, qty:l.qty }; })
+          };
+          const custForCfg = custEl.value;
+          const made = await ordNewConfigModal(custForCfg);
+          if (made) snap.lines[i].config_id = made.id;
+          ordNewOrderModal(snap);
+          return;
+        }
+        lines[i].config_id = e.target.value;
       }
     });
     linesEl.addEventListener('click', function(e){
