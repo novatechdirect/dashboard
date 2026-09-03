@@ -1522,6 +1522,48 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .ord-head h1{ font-size:21px; }
   }
 
+  /* ---- unit generation + pool ---- */
+  .ord-gen{ display:flex; gap:var(--s2); align-items:center; flex-shrink:0; }
+  .ord-gen input{
+    width:74px; height:34px; padding:0 var(--s2); font:inherit; font-size:13px;
+    font-family:var(--font-num); text-align:right; font-variant-numeric:tabular-nums;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  .ord-gen input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  .ord-pool-tools{ display:flex; gap:var(--s2); align-items:center; flex-wrap:wrap; margin-bottom:var(--s3); }
+  .ord-pool-table tbody tr.sel{ background:var(--accent-soft); }
+  .ord-mono{ font-family:var(--font-num); font-variant-numeric:tabular-nums; }
+  .ord-pool-bar{
+    position:sticky; bottom:0; z-index:5;
+    display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
+    margin-top:var(--s3); padding:var(--s3);
+    background:var(--paper); border:1px solid var(--accent-line);
+    border-radius:var(--r-md); box-shadow:var(--e2);
+  }
+  .ord-sel-count{ font-family:var(--font-num); font-weight:650; font-size:13px; font-variant-numeric:tabular-nums; }
+  .ord-sel-note{ color:var(--warn); font-size:12px; flex:1 1 auto; }
+  .ord-pool-actions{ display:flex; gap:var(--s2); margin-left:auto; }
+  .ord-ram-row{ display:grid; grid-template-columns:74px minmax(0,1fr); gap:var(--s2); }
+  .ord-ram-row select{
+    width:100%; height:38px; padding:0 var(--s2); font:inherit; font-size:13px;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  #ordScanIn{
+    width:100%; font-family:var(--font-num); font-size:13px; padding:var(--s3);
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink); resize:vertical;
+  }
+  #ordScanIn:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  @media (max-width:700px){
+    .ord-line{ flex-wrap:wrap; }
+    .ord-gen{ width:100%; margin-top:var(--s2); }
+    .ord-gen input{ flex:1 1 auto; width:auto; }
+    .ord-pool-actions{ width:100%; margin-left:0; }
+    .ord-pool-actions button{ flex:1 1 auto; }
+  }
+
 </style>
 </head>
 <body>
@@ -3921,9 +3963,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       : ('Showing ' + (startIdx + 1) + '\u2013' + Math.min(startIdx + PAGE_SIZE, total) + ' of ' + total);
   }
 
-  async function deductForBuild(n, orderNo){
+  async function deductForBuild(n, orderNo, spec){
     if (!n) return { moves: 0, warn: [] };
     if (!invItems.length) return { moves: 0, warn: ['inventory not loaded \u2014 nothing deducted'] };
+    /* spec is optional. Without it we read the Labels form, as before. With it
+       (unit generation from a config) every name must be the RAW inv_items
+       name, not the display string. */
+    const src = spec || {
+      caseName: caseEl.value, cpuName: cpuEl.value, gpuName: gpuEl.value,
+      storageName: storageEl.value, ramName: ramEl.value,
+      sticks: parseInt(ramSticksEl.value, 10) || 1
+    };
     const warn = [];
     const ded = [];
     function want(sel, label){
@@ -3931,12 +3981,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (!it){ warn.push(label + ' \u201c' + sel + '\u201d not found in inventory'); return null; }
       return it;
     }
-    const caseIt = want(caseEl.value, 'case');   if (caseIt) ded.push({ it: caseIt, amt: n });
-    const cpuIt  = want(cpuEl.value, 'CPU');     if (cpuIt)  ded.push({ it: cpuIt, amt: n });
-    const gpuIt  = want(gpuEl.value, 'GPU');     if (gpuIt)  ded.push({ it: gpuIt, amt: n });
-    const storIt = want(storageEl.value, 'storage'); if (storIt) ded.push({ it: storIt, amt: n });
-    const ramIt  = want(ramEl.value, 'RAM');
-    const sticks = parseInt(ramSticksEl.value, 10) || 1;
+    const caseIt = want(src.caseName, 'case');   if (caseIt) ded.push({ it: caseIt, amt: n });
+    const cpuIt  = want(src.cpuName, 'CPU');     if (cpuIt)  ded.push({ it: cpuIt, amt: n });
+    const gpuIt  = want(src.gpuName, 'GPU');     if (gpuIt)  ded.push({ it: gpuIt, amt: n });
+    const storIt = want(src.storageName, 'storage'); if (storIt) ded.push({ it: storIt, amt: n });
+    const ramIt  = want(src.ramName, 'RAM');
+    const sticks = src.sticks || 1;
     if (ramIt) ded.push({ it: ramIt, amt: n * sticks });
     if (cpuIt){
       if (cpuIt.mobo_id){
@@ -4185,6 +4235,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let ordCounts = {};                 // order_id -> {built, assigned, shipped}
   let ordUnits = [], ordBatches = [], ordTracking = [], ordLines = [];
   let ordFilter = '', ordQuery = '';
+  let ordSel = new Set(), ordPoolCfg = '';
 
   const ordListPane   = document.getElementById('ordListPane');
   const ordDetailPane = document.getElementById('ordDetailPane');
@@ -4344,6 +4395,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   async function ordOpenOrder(id){
+    if (ordCurrentId !== id){ ordSel.clear(); ordPoolCfg = ''; }
     ordCurrentId = id;
     ordShowDetail();
     document.getElementById('ordCrumb').textContent = '';
@@ -4394,9 +4446,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const lines = ordLines.filter(function(l){ return l.order_id === o.id; });
     const lineHtml = lines.length ? lines.map(function(l){
       const made = madeBy[l.config_id] || 0;
+      const left = Math.max(0, (+l.qty_ordered || 0) - made);
       return '<div class="ord-line">' +
-        '<div><div class="ord-line-n">' + esc(cfgName[l.config_id] || 'Unknown config') + '</div></div>' +
-        '<div class="ord-line-q">' + ordNum(made) + ' / ' + ordNum(l.qty_ordered) + ' built</div>' +
+        '<div><div class="ord-line-n">' + esc(cfgName[l.config_id] || 'Unknown config') + '</div>' +
+          '<div class="ord-line-q">' + ordNum(made) + ' / ' + ordNum(l.qty_ordered) + ' built' +
+          (left ? ' \u00b7 ' + ordNum(left) + ' to go' : ' \u00b7 complete') + '</div></div>' +
+        (ordPerm.manage && left
+          ? '<div class="ord-gen">' +
+              '<input type="number" min="1" max="1000" value="' + Math.min(left, 30) + '" data-genqty="' + esc(l.id) + '">' +
+              '<button class="soft btn-sm" data-gen="' + esc(l.id) + '" type="button">Generate</button>' +
+              '<button class="ghost btn-sm" data-genall="' + esc(l.id) + '" data-left="' + left + '" type="button">All ' + ordNum(left) + '</button>' +
+            '</div>'
+          : '') +
       '</div>';
     }).join('') : '<p class="muted-sm">No line items on this order.</p>';
 
@@ -4422,8 +4483,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<section class="card"><h2 class="card-title">Line items</h2>' + lineHtml + '</section>' +
 
       '<section class="card"><h2 class="card-title">Unit pool</h2>' +
-        '<p class="muted-sm">' + ordNum(st.built) + ' unit' + (st.built === 1 ? '' : 's') +
-        ' generated and not yet in a batch. Generating units and building batches arrives in the next update.</p>' +
+        '<div class="ord-pool-tools">' +
+          '<select id="ordPoolCfg" class="sel-sm">' +
+            '<option value="">All configs</option>' +
+            lines.map(function(l){
+              return '<option value="' + esc(l.config_id) + '"' + (ordPoolCfg === l.config_id ? ' selected' : '') + '>' +
+                     esc(cfgName[l.config_id] || 'Config') + '</option>';
+            }).join('') +
+          '</select>' +
+          '<button class="ghost btn-sm" id="ordSelAll" type="button">Select all</button>' +
+          '<button class="ghost btn-sm" id="ordSelNone" type="button">Clear</button>' +
+          '<button class="ghost btn-sm" id="ordScanBtn" type="button">Scan / paste serials</button>' +
+        '</div>' +
+        '<div id="ordPoolBody"></div>' +
+        '<div class="ord-pool-bar" id="ordPoolBar" style="display:none;">' +
+          '<span class="ord-sel-count" id="ordSelCount"></span>' +
+          '<span class="ord-sel-note" id="ordSelNote"></span>' +
+          '<span class="ord-pool-actions">' +
+            '<button class="ghost btn-sm" id="ordPrint46" type="button">4\u00d76 box PDF</button>' +
+            '<button class="ghost btn-sm" id="ordPrintDymo" type="button">Dymo PDF</button>' +
+            '<button class="ghost btn-sm" id="ordPrintNow" type="button">Print</button>' +
+          '</span>' +
+        '</div>' +
       '</section>' +
 
       '<section class="card"><h2 class="card-title">Batches</h2>' +
@@ -4440,6 +4521,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             }).join('')
           : '<p class="muted-sm">No batches yet.</p>') +
       '</section>';
+
+    ordRenderPool();
   }
 
   /* ---- list interactions ---- */
@@ -4622,16 +4705,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function ordNewConfigModal(customerId){
     return new Promise(function(resolve){
       if (!customerId){ toast('Pick a customer first.', 'warn'); resolve(null); return; }
+      if (!invItems.length){ toast('Inventory has not loaded yet \u2014 try again in a moment.', 'warn'); resolve(null); return; }
       const bg = mgModal(
-        mgModalHead('New config', 'A named build spec for this customer') +
+        mgModalHead('New config', 'Parts come from inventory so stock deducts correctly') +
         '<div class="mg-modal-body">' +
           '<div class="field"><label for="ordCfgName">Name</label><input id="ordCfgName" type="text" placeholder="LP-Gaming-A" autocomplete="off"></div>' +
           '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
-            '<div class="field"><label for="ordCfgCase">Case</label><input id="ordCfgCase" type="text" autocomplete="off"></div>' +
-            '<div class="field"><label for="ordCfgCpu">CPU</label><input id="ordCfgCpu" type="text" autocomplete="off"></div>' +
-            '<div class="field"><label for="ordCfgGpu">GPU</label><input id="ordCfgGpu" type="text" autocomplete="off"></div>' +
-            '<div class="field"><label for="ordCfgRam">RAM</label><input id="ordCfgRam" type="text" autocomplete="off"></div>' +
-            '<div class="field"><label for="ordCfgSto">Storage</label><input id="ordCfgSto" type="text" autocomplete="off"></div>' +
+            '<div class="field"><label for="ordCfgCase">Case</label><select id="ordCfgCase">' + ordCatOptions('cases') + '</select></div>' +
+            '<div class="field"><label for="ordCfgCpu">CPU</label><select id="ordCfgCpu">' + ordCatOptions('cpus') + '</select></div>' +
+            '<div class="field"><label for="ordCfgGpu">GPU</label><select id="ordCfgGpu">' + ordCatOptions('gpus') + '</select></div>' +
+            '<div class="field"><label for="ordCfgSto">Storage</label><select id="ordCfgSto">' + ordCatOptions('storage') + '</select></div>' +
+            '<div class="field"><label for="ordCfgRam">RAM</label>' +
+              '<div class="ord-ram-row">' +
+                '<select id="ordCfgSticks"><option value="1">1x</option><option value="2" selected>2x</option><option value="4">4x</option></select>' +
+                '<select id="ordCfgRam">' + ordCatOptions('ram') + '</select>' +
+              '</div>' +
+            '</div>' +
           '</div>' +
           '<div class="err" id="ordCfgErr" style="margin-top:var(--s3);"></div>' +
         '</div>' +
@@ -4647,11 +4736,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         this.disabled = true; this.textContent = 'Saving\u2026';
         const r = await SB.from('configs').insert({
           customer_id: customerId, name: name,
-          pc_case: bg.querySelector('#ordCfgCase').value.trim() || null,
-          cpu:     bg.querySelector('#ordCfgCpu').value.trim() || null,
-          gpu:     bg.querySelector('#ordCfgGpu').value.trim() || null,
-          ram:     bg.querySelector('#ordCfgRam').value.trim() || null,
-          storage: bg.querySelector('#ordCfgSto').value.trim() || null
+          pc_case: bg.querySelector('#ordCfgCase').value || null,
+          cpu:     bg.querySelector('#ordCfgCpu').value || null,
+          gpu:     bg.querySelector('#ordCfgGpu').value || null,
+          ram:     bg.querySelector('#ordCfgRam').value || null,
+          ram_sticks: parseInt(bg.querySelector('#ordCfgSticks').value, 10) || 1,
+          storage: bg.querySelector('#ordCfgSto').value || null
         }).select().limit(1);
         if (r.error){
           this.disabled = false; this.textContent = 'Save config';
@@ -4665,6 +4755,248 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         toast('Config "' + name + '" saved', 'ok');
         done = true; resolve(r.data[0]);
       });
+    });
+  }
+
+  /* ---------- config helpers: raw inventory names in, display strings out ---------- */
+  function ordCatOptions(cat, sel){
+    const opts = invItems.filter(function(it){ return it.category === cat && it.track_qty; });
+    if (!opts.length) return '<option value="">(none in inventory)</option>';
+    return '<option value="">\u2014</option>' + opts.map(function(it){
+      return '<option value="' + esc(it.name) + '"' + (it.name === sel ? ' selected' : '') + '>' + esc(it.name) + '</option>';
+    }).join('');
+  }
+  function ordCfgById(id){ return ordConfigs.find(function(c){ return c.id === id; }); }
+  function ordCfgSpecObj(cfg){
+    if (!cfg) return { case:'', cpu:'', gpu:'', ram:'', storage:'' };
+    const sticks = cfg.ram_sticks || 1;
+    const base = cleanRamName(cfg.ram || '');
+    return {
+      case: cleanCaseName(cfg.pc_case || ''),
+      cpu: (cfg.cpu || '').trim(),
+      gpu: (cfg.gpu || '').trim(),
+      ram: base ? ((sticks > 1 ? sticks + 'x ' : '') + base) : '',
+      storage: (cfg.storage || '').trim()
+    };
+  }
+  function ordCfgSpecLines(cfg){
+    const o = ordCfgSpecObj(cfg);
+    return [['Case',o.case],['CPU',o.cpu],['GPU',o.gpu],['RAM',o.ram],['Storage',o.storage]]
+      .filter(function(pr){ return pr[1] !== ''; })
+      .map(function(pr){ return pr[0] + ': ' + pr[1]; });
+  }
+  function ordCfgDeductSpec(cfg){
+    return {
+      caseName: cfg.pc_case || '', cpuName: cfg.cpu || '', gpuName: cfg.gpu || '',
+      storageName: cfg.storage || '', ramName: cfg.ram || '', sticks: cfg.ram_sticks || 1
+    };
+  }
+
+  /* ---------- generate units ---------- */
+  async function ordGenerateUnits(lineId, count){
+    const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+    const line = ordLines.find(function(l){ return l.id === lineId; });
+    if (!o || !line) return;
+    const cfg = ordCfgById(line.config_id);
+    if (!cfg){ toast('That line has no config.', 'bad'); return; }
+    count = Math.max(1, Math.min(1000, parseInt(count, 10) || 0));
+    if (!count){ toast('Enter how many to generate.', 'warn'); return; }
+
+    const btns = ordDetailBody.querySelectorAll('[data-gen]');
+    btns.forEach(function(b){ b.disabled = true; });
+    try {
+      const r = await SB.rpc('alloc_serials', { p_customer: o.customer_id, p_count: count });
+      if (r.error) throw r.error;
+      const serials = r.data || [];
+      if (!serials.length) throw new Error('No serial numbers were returned.');
+
+      const cust = ordCustomers.find(function(c){ return c.id === o.customer_id; });
+      const spec = ordCfgSpecObj(cfg);
+      const now = new Date().toISOString();
+      const rows = serials.map(function(sn){
+        return {
+          generated_at: now,
+          customer: cust ? cust.name : null,
+          order_no: o.invoice_no,
+          serial: sn,
+          pc_case: spec.case, cpu: spec.cpu, gpu: spec.gpu, ram: spec.ram, storage: spec.storage,
+          status: 'building',
+          order_id: o.id, config_id: cfg.id, unit_status: 'built'
+        };
+      });
+      const ins = await SB.from('pc_log').insert(rows);
+      if (ins.error) throw ins.error;
+
+      const res = await deductForBuild(serials.length, o.invoice_no, ordCfgDeductSpec(cfg));
+      toast(serials.length + ' unit' + (serials.length === 1 ? '' : 's') + ' generated \u00b7 ' +
+            serials[0] + (serials.length > 1 ? ' \u2013 ' + serials[serials.length - 1] : ''), 'ok', 5000);
+      if (res && res.warn && res.warn.length) toast('Inventory: ' + res.warn.join('; '), 'warn', 8000);
+      await ordOpenOrder(o.id);
+    } catch(e){
+      btns.forEach(function(b){ b.disabled = false; });
+      toast('Could not generate units: ' + (e.message || e), 'bad', 7000);
+    }
+  }
+
+  /* ---------- unit pool ---------- */
+  function ordPoolUnits(){
+    return ordUnits.filter(function(u){
+      if (u.batch_id) return false;
+      if (ordPoolCfg && u.config_id !== ordPoolCfg) return false;
+      return true;
+    });
+  }
+  function ordRenderPool(){
+    const host = document.getElementById('ordPoolBody');
+    if (!host) return;
+    const pool = ordPoolUnits();
+    const cfgs = {}; ordConfigs.forEach(function(c){ cfgs[c.id] = c.name; });
+
+    if (!pool.length){
+      host.innerHTML = '<div class="empty"><div class="empty-ico">\u25a2</div>' +
+        '<p>' + (ordPoolCfg ? 'No unassigned units for that config.' : 'No units waiting to be routed.') + '</p>' +
+        '<p class="muted-sm">Generate units above, then select them here to print labels.</p></div>';
+      ordRenderPoolBar();
+      return;
+    }
+    host.innerHTML =
+      '<div class="table-wrap"><table class="hist-table ord-pool-table"><thead><tr>' +
+        '<th class="chk-col"><input type="checkbox" id="ordPoolAll" title="Select all shown"></th>' +
+        '<th>Serial</th><th>Config</th><th>Generated</th>' +
+      '</tr></thead><tbody>' +
+      pool.map(function(u){
+        return '<tr data-uid="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' class="sel"' : '') + '>' +
+          '<td class="chk-col"><input type="checkbox" data-upick="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' checked' : '') + '></td>' +
+          '<td class="ord-mono">' + esc(u.serial) + '</td>' +
+          '<td>' + esc(cfgs[u.config_id] || '\u2014') + '</td>' +
+          '<td>' + esc(fmtDate(u.generated_at || u.created_at)) + '</td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table></div>';
+    const all = document.getElementById('ordPoolAll');
+    if (all) all.checked = pool.every(function(u){ return ordSel.has(u.id); });
+    ordRenderPoolBar();
+  }
+  function ordRenderPoolBar(){
+    const bar = document.getElementById('ordPoolBar');
+    if (!bar) return;
+    const n = ordSel.size;
+    bar.style.display = n ? '' : 'none';
+    const lbl = document.getElementById('ordSelCount');
+    if (lbl) lbl.textContent = n + ' selected';
+    const cfgIds = new Set();
+    ordUnits.forEach(function(u){ if (ordSel.has(u.id)) cfgIds.add(u.config_id); });
+    const note = document.getElementById('ordSelNote');
+    if (note){
+      note.textContent = cfgIds.size > 1
+        ? 'Labels print one config at a time \u2014 filter by config first.'
+        : '';
+    }
+    ['ordPrint46','ordPrintDymo','ordPrintNow'].forEach(function(id){
+      const b = document.getElementById(id);
+      if (b) b.disabled = (cfgIds.size !== 1);
+    });
+  }
+
+  /* ---------- printing from a selection (reuses the label engine unchanged) ---------- */
+  function ordSelectedUnits(){
+    return ordUnits.filter(function(u){ return ordSel.has(u.id); });
+  }
+  function ordLoadLabelState(){
+    const sel = ordSelectedUnits();
+    if (!sel.length) return false;
+    const cfg = ordCfgById(sel[0].config_id);
+    if (!cfg) { toast('That config is missing.', 'bad'); return false; }
+    const lines = ordCfgSpecLines(cfg);
+    const serials = sel.map(function(u){ return u.serial; });
+    const bad = serials.find(function(x){ return /[^\x20-\x7F]/.test(x); });
+    if (bad){ toast('Serial "' + bad + '" has a character Code 128-B cannot encode.', 'bad'); return false; }
+    printArea.innerHTML = '';
+    serials.forEach(function(sn){ printArea.appendChild(buildLabel(lines, sn)); });
+    lastSpecLines = lines;
+    lastSpecObj = ordCfgSpecObj(cfg);
+    lastSerials = serials;
+    lastGeneratedAt = new Date().toISOString();
+    return true;
+  }
+
+
+  /* ---------- detail-pane interactions (delegated, survives re-render) ---------- */
+  ordDetailBody.addEventListener('click', function(e){
+    const gen = e.target.closest('[data-gen]');
+    if (gen){
+      const id = gen.getAttribute('data-gen');
+      const qty = ordDetailBody.querySelector('[data-genqty="' + id + '"]');
+      ordGenerateUnits(id, qty ? qty.value : 0);
+      return;
+    }
+    const all = e.target.closest('[data-genall]');
+    if (all){ ordGenerateUnits(all.getAttribute('data-genall'), all.getAttribute('data-left')); return; }
+
+    const pick = e.target.closest('[data-upick]');
+    if (pick){
+      const uid = pick.getAttribute('data-upick');
+      const u = ordUnits.find(function(x){ return String(x.id) === String(uid); });
+      if (u){
+        if (pick.checked) ordSel.add(u.id); else ordSel.delete(u.id);
+        const row = pick.closest('tr'); if (row) row.classList.toggle('sel', pick.checked);
+        const allBox = document.getElementById('ordPoolAll');
+        if (allBox) allBox.checked = ordPoolUnits().every(function(x){ return ordSel.has(x.id); });
+        ordRenderPoolBar();
+      }
+      return;
+    }
+    if (e.target.id === 'ordPoolAll'){
+      const on = e.target.checked;
+      ordPoolUnits().forEach(function(u){ if (on) ordSel.add(u.id); else ordSel.delete(u.id); });
+      ordRenderPool();
+      return;
+    }
+    if (e.target.id === 'ordSelAll'){
+      ordPoolUnits().forEach(function(u){ ordSel.add(u.id); });
+      ordRenderPool(); return;
+    }
+    if (e.target.id === 'ordSelNone'){ ordSel.clear(); ordRenderPool(); return; }
+    if (e.target.id === 'ordScanBtn'){ ordScanModal(); return; }
+
+    if (e.target.id === 'ordPrint46'){   if (ordLoadLabelState()) generatePdf();     return; }
+    if (e.target.id === 'ordPrintDymo'){ if (ordLoadLabelState()) generatePdfDymo(); return; }
+    if (e.target.id === 'ordPrintNow'){  if (ordLoadLabelState()) window.print();    return; }
+  });
+  ordDetailBody.addEventListener('change', function(e){
+    if (e.target.id === 'ordPoolCfg'){ ordPoolCfg = e.target.value; ordRenderPool(); }
+  });
+
+  /* ---------- scan / paste serials to select ---------- */
+  function ordScanModal(){
+    const bg = mgModal(
+      mgModalHead('Select by serial', 'Scan the boxes, or paste a list \u2014 one per line') +
+      '<div class="mg-modal-body">' +
+        '<textarea id="ordScanIn" rows="8" spellcheck="false" placeholder="NT26000175&#10;NT26000176"></textarea>' +
+        '<div id="ordScanOut" class="muted-sm" style="margin-top:var(--s3);"></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordScanCancel">Cancel</button>' +
+      '<button class="primary" id="ordScanGo" data-primary>Select these</button></div>');
+    bg.querySelector('#ordScanCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordScanGo').addEventListener('click', function(){
+      const raw = bg.querySelector('#ordScanIn').value.split(/[\s,]+/).map(function(x){ return x.trim(); }).filter(Boolean);
+      if (!raw.length){ bg.querySelector('#ordScanOut').textContent = 'Nothing to match.'; return; }
+      const pool = ordUnits.filter(function(u){ return !u.batch_id; });
+      const bySerial = {}; pool.forEach(function(u){ bySerial[u.serial.toUpperCase()] = u; });
+      const missed = [];
+      let hit = 0;
+      raw.forEach(function(sn){
+        const u = bySerial[sn.toUpperCase()];
+        if (u){ ordSel.add(u.id); hit++; } else missed.push(sn);
+      });
+      mgCloseModal();
+      ordRenderPool();
+      if (missed.length){
+        toast(hit + ' selected \u00b7 ' + missed.length + ' not in this order\u2019s pool: ' +
+              missed.slice(0, 4).join(', ') + (missed.length > 4 ? '\u2026' : ''), 'warn', 8000);
+      } else {
+        toast(hit + ' unit' + (hit === 1 ? '' : 's') + ' selected', 'ok');
+      }
     });
   }
 
