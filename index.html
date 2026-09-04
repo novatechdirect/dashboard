@@ -1857,8 +1857,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     .ord-head-r{ width:100%; flex-wrap:wrap; }
     .ord-head-r button{ flex:1 1 auto; }
-    .adm-tabs{ overflow-x:auto; flex-wrap:nowrap; padding-bottom:var(--s1); -webkit-overflow-scrolling:touch; }
-    .adm-tabs .mg-pill{ white-space:nowrap; }
+    .adm-tabs{ overflow-x:auto; flex-wrap:wrap; padding-bottom:var(--s1); -webkit-overflow-scrolling:touch; gap:8px; }
+    .adm-tabs .mg-pill{ white-space:nowrap; flex:0 0 auto; }
   }
 
   /* =====================================================================
@@ -1889,35 +1889,40 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     .login-card input{ margin-bottom:0; min-height:48px; }
 
-    .ord-chips, .mg-pill-row, .status-pills, .low-list{
+    .ord-chips, .status-pills{
       flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
       scrollbar-width:none; padding-bottom:6px; margin-inline:-2px;
       scroll-snap-type:x proximity;
     }
-    .ord-chips::-webkit-scrollbar, .mg-pill-row::-webkit-scrollbar,
-    .status-pills::-webkit-scrollbar, .low-list::-webkit-scrollbar{ display:none; }
-    .ord-chips .mg-pill, .mg-pill-row .mg-pill, .status-pills .pill, .low-chip{
-      flex:0 0 auto;
-    }
+    .ord-chips::-webkit-scrollbar, .status-pills::-webkit-scrollbar{ display:none; }
+    .ord-chips .mg-pill, .status-pills .pill{ flex:0 0 auto; }
+    .low-list, .mg-pill-row{ flex-wrap:wrap; overflow:visible; }
     .ord-chips .mg-pill, .mg-pill{ min-height:40px; }
+
+    .inv-topbar{
+      display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px;
+    }
+    .inv-topbar input[type=text]{ width:100%; min-width:0 !important; }
+    .inv-topbar-right{ width:auto; display:flex; }
+    .inv-topbar-right button{ width:auto; min-height:48px; padding-left:14px; padding-right:14px; }
 
     .inv-row{
       display:grid; grid-template-columns:1fr auto auto;
       align-items:center; gap:8px 10px;
     }
     .inv-row .inv-name{ grid-column:1 / -1; min-width:0; }
+    .inv-row .sev{ justify-self:start; }
     .inv-row .status-pills, .inv-row .adjust-bar, .inv-row .inv-menu-row{ grid-column:1 / -1; }
     .inv-row .inv-menu-row button{ flex:1 1 calc(50% - 6px); }
     .inv-row .adjust-bar input[type=text], .inv-row .adjust-bar select{ min-width:0; flex:1 1 100%; }
     .inv-row .adjust-bar input[type=number]{ width:100%; max-width:120px; }
 
     .ord-bar, .ord-bar-l, .ord-bar-r,
-    .hist-toolbar, .hist-actions, .hist-actions-left, .hist-actions-right,
-    .inv-topbar, .inv-topbar-right{ width:100%; }
-    .ord-bar-r, .hist-actions-left, .hist-actions-right, .inv-topbar-right{
+    .hist-toolbar, .hist-actions, .hist-actions-left, .hist-actions-right{ width:100%; }
+    .ord-bar-r, .hist-actions-left, .hist-actions-right{
       display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:8px;
     }
-    .ord-bar-r button, .hist-actions-right button, .inv-topbar-right button,
+    .ord-bar-r button, .hist-actions-right button,
     .hist-actions-left > *{ width:100%; min-width:0; }
     .date-lbl{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .date-lbl input, .date-lbl select{ flex:1; min-width:0; }
@@ -1933,7 +1938,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       scrollbar-width:none; justify-content:stretch;
     }
     .tabbar.on::-webkit-scrollbar{ display:none; }
-    .tab-btn{ min-width:68px; flex:1 0 auto; }
+    .tab-btn{ min-width:56px; flex:1 1 0; padding:8px 2px 7px; font-size:9.5px; }
+    .tab-btn svg{ width:20px; height:20px; }
 
     .card{ padding:var(--s4); }
     #previewScroll{ margin-inline:-12px; padding-inline:12px; }
@@ -1942,9 +1948,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .app-header h1{ font-size:22px; }
     .ord-back-row{ flex-wrap:wrap; }
     #ordBackBtn{ min-height:44px; flex:1 1 auto; }
+    .ord-crumb{ width:100%; }
     .tc-actions .primary{ width:100%; min-height:48px; }
     .header-right{ width:100%; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .header-right button{ width:100%; }
+
+    .ord-head-r{
+      width:100%; display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:stretch;
+    }
+    .ord-head-r .ord-chip{ grid-column:1 / -1; justify-self:start; }
+    .ord-head-r button{ width:100%; min-height:44px; margin:0; }
+    .ord-head-r .danger{ grid-column:1 / -1; }
+    .ord-sum-c:last-child{ grid-column:1 / -1; }
+
+    .hist-table.stack tr{
+      padding:14px 12px; margin-bottom:10px;
+    }
+    .hist-table.stack.adm-people td.adm-chk{
+      min-height:48px; align-items:center; padding:8px 0;
+    }
+    .hist-table.stack.adm-people td.adm-chk input{ width:22px; height:22px; }
+    .hist-table.stack td.adm-spec{ word-break:break-word; overflow-wrap:anywhere; }
 
     .hist-table.stack tr.detail-row{
       padding:0; border:none; margin:-4px 0 10px; background:transparent; box-shadow:none;
@@ -2714,6 +2738,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
   }
   navHome.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
+  document.querySelector('.nav-brand').addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
   navOrders.addEventListener('click', function(e){ e.preventDefault(); ordCurrentId = null; ordSetUrl(null); ordShowList(); showTool('orders'); });
   navAdmin.addEventListener('click', function(e){ e.preventDefault(); showTool('admin'); });
 
@@ -6462,7 +6487,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function admPanePeople(p){
     const me = session && session.user ? session.user.id : null;
     p.innerHTML =
-      '<p class="muted-sm">Employee logins are created in the Supabase dashboard. This is where you set what each person can reach.</p>' +
       '<div class="table-wrap stack-wrap"><table class="hist-table stack adm-people"><thead><tr>' +
         '<th>Name</th><th>Email</th><th title="Timeclock admin">TC&nbsp;admin</th>' +
         '<th>View orders</th><th>Manage orders</th><th>Order admin</th><th title="Customers, configs and destinations">Catalog</th><th>Margins</th><th>Active</th>' +
