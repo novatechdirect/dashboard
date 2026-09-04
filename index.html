@@ -1750,6 +1750,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-copybox{ width:100%; height:40px; padding:0 var(--s3); font-family:var(--font-num); font-size:12.5px;
     border:1px solid var(--line-strong); border-radius:var(--r-sm); background:var(--soft); color:var(--ink); }
 
+  /* pipeline step colours */
+  .ord-step.s1{ background:var(--warn); color:#fff; }
+  .ord-step.s2{ background:var(--accent); color:#fff; }
+  .ord-step.s3{ background:var(--ok); color:#fff; }
+  .ord-flow-s.s1 b{ border-color:var(--warn-line); color:var(--warn); background:var(--warn-bg); }
+  .ord-flow-s.s2 b{ border-color:var(--accent-line); color:var(--accent); background:var(--accent-soft); }
+  .ord-flow-s.s3 b{ border-color:var(--ok-line); color:var(--ok); background:var(--ok-bg); }
+
+  /* a taller pool so more rows are visible without a giant page */
+  .ord-pool-wrap{ max-height:min(62vh, 620px); overflow-y:auto; }
+  .ord-pool-wrap thead th{ position:sticky; top:0; z-index:2; background:var(--paper); }
+  .ord-pool-table td{ padding-top:10px; padding-bottom:10px; }
+
+  /* select N */
+  .ord-seln{ display:inline-flex; align-items:center; gap:var(--s2); }
+  .ord-seln label{ font-size:12px; color:var(--muted); }
+  .ord-seln input{
+    width:74px; height:32px; padding:0 var(--s2); font:inherit; font-size:13px;
+    font-family:var(--font-num); text-align:right; font-variant-numeric:tabular-nums;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  .ord-seln input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+
 </style>
 </head>
 <body>
@@ -2396,7 +2420,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       mgIsAdmin = false; mgInited = false;
       var _na = document.getElementById('navAdmin'); if (_na) _na.style.display = 'none';
       var _ta = document.getElementById('tileAdmin'); if (_ta) _ta.style.display = 'none';
-      ordPerm = { view:false, manage:false, admin:false };
+      ordPerm = { view:false, manage:false, admin:false, catalog:false };
       ordInited = false; admInited = false; ordCurrentId = null;
       var _mb = document.getElementById('mgBar'); if (_mb) _mb.remove();
       var _mm = document.getElementById('mgModalBg'); if (_mm) _mm.remove();
@@ -2465,7 +2489,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* declared here, not in the orders module below, so showTool() and
      renderAuth() can touch them no matter when they first run */
   let ordInited = false, admInited = false, ordCurrentId = null;
-  let ordPerm = { view:false, manage:false, admin:false };
+  let ordPerm = { view:false, manage:false, admin:false, catalog:false };
   function showTool(which){
     const views = { home: [navHome, toolHome], orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], admin: [navAdmin, toolAdmin] };
     if (!views[which]) which = 'home';
@@ -4035,10 +4059,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function ordNum(n){ return (n === null || n === undefined || n === '') ? '\u2014' : Number(n).toLocaleString(); }
 
   async function ordLoadPerms(){
-    ordPerm = { view:false, manage:false, admin:false };
+    ordPerm = { view:false, manage:false, admin:false, catalog:false };
     if (!SB || !session || !session.user) return;
     const { data, error } = await SB.from('staff')
-      .select('can_view_orders,can_manage_orders,can_admin_orders,is_admin,active')
+      .select('can_view_orders,can_manage_orders,can_admin_orders,can_manage_catalog,is_admin,active')
       .eq('user_id', session.user.id).limit(1);
     if (error || !data || !data.length){
       /* Not on the staff roster. If they are a mapped customer login, this is
@@ -4049,13 +4073,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const r = data[0];
     if (!r.active) return;
-    ordPerm.admin  = !!(r.can_admin_orders || r.is_admin);
-    ordPerm.manage = !!(r.can_manage_orders) || ordPerm.admin;
-    ordPerm.view   = !!(r.can_view_orders)   || ordPerm.manage;
+    ordPerm.admin   = !!(r.can_admin_orders || r.is_admin);
+    ordPerm.catalog = !!(r.can_manage_catalog) || ordPerm.admin;
+    ordPerm.manage  = !!(r.can_manage_orders) || ordPerm.admin;
+    ordPerm.view    = !!(r.can_view_orders)   || ordPerm.manage;
     const na = document.getElementById('navAdmin');
     const ta = document.getElementById('tileAdmin');
-    if (na) na.style.display = ordPerm.admin ? '' : 'none';
-    if (ta) ta.style.display = ordPerm.admin ? '' : 'none';
+    const canAdminPage = ordPerm.admin || ordPerm.catalog;
+    if (na) na.style.display = canAdminPage ? '' : 'none';
+    if (ta) ta.style.display = canAdminPage ? '' : 'none';
     const nb = document.getElementById('ordNewBtn');
     if (nb) nb.style.display = ordPerm.manage ? '' : 'none';
   }
@@ -4341,18 +4367,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</div>' +
 
       '<div class="ord-flow">' +
-        '<span class="ord-flow-s"><b>1</b> Mark units built</span>' +
+        '<span class="ord-flow-s s1"><b>1</b> Mark units built</span>' +
         '<span class="ord-flow-a">\u2192</span>' +
-        '<span class="ord-flow-s"><b>2</b> Group into a batch</span>' +
+        '<span class="ord-flow-s s2"><b>2</b> Group into a batch</span>' +
         '<span class="ord-flow-a">\u2192</span>' +
-        '<span class="ord-flow-s"><b>3</b> Add tracking</span>' +
+        '<span class="ord-flow-s s3"><b>3</b> Add tracking</span>' +
         '<span class="ord-flow-a">\u2192</span>' +
-        '<span class="ord-flow-s"><b>4</b> Mark shipped</span>' +
+        '<span class="ord-flow-s s3"><b>4</b> Mark shipped</span>' +
       '</div>' +
 
       ordPdfCard(o) +
       '<section class="card">' +
-        '<h2 class="card-title"><span class="ord-step">1</span>Line items <span class="card-sub">what was ordered, and how many are built</span></h2>' +
+        '<h2 class="card-title"><span class="ord-step s1">1</span>Line items <span class="card-sub">what was ordered, and how many are built</span></h2>' +
         lineHtml +
         '<p class="card-note">Marking units built gives each one an NT serial number' +
           (o.deduct_inventory === false
@@ -4362,7 +4388,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</section>' +
 
       '<section class="card">' +
-        '<h2 class="card-title"><span class="ord-step">2</span>Unit pool <span class="card-sub">units with serials but no destination yet \u00b7 select them to print labels or add them to a batch</span></h2>' +
+        '<h2 class="card-title"><span class="ord-step s2">2</span>Unit pool <span class="card-sub">units with serials but no destination yet \u00b7 select them to print labels or add them to a batch</span></h2>' +
         '<div class="ord-pool-tools">' +
           '<select id="ordPoolCfg" class="sel-sm">' +
             '<option value="">All configs</option>' +
@@ -4371,6 +4397,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                      esc(cfgName[l.config_id] || 'Config') + '</option>';
             }).join('') +
           '</select>' +
+          '<span class="ord-seln"><label for="ordSelN">Select</label>' +
+            '<input id="ordSelN" type="number" min="1" max="' + ordPoolUnits().length + '" placeholder="30" aria-label="How many units to select">' +
+            '<button class="soft btn-sm" id="ordSelNGo" type="button">Take</button></span>' +
           '<button class="ghost btn-sm" id="ordSelAll" type="button">Select all ' + ordNum(ordPoolUnits().length) + '</button>' +
           '<button class="ghost btn-sm" id="ordSelNone" type="button">Clear</button>' +
           '<button class="ghost btn-sm" id="ordScanBtn" type="button">Scan / paste serials</button>' +
@@ -4389,7 +4418,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</section>' +
 
       '<section class="card">' +
-        '<h2 class="card-title"><span class="ord-step">3</span>Batches <span class="card-sub">one batch = one shipment to one store \u00b7 add tracking, then mark it shipped</span></h2>' +
+        '<h2 class="card-title"><span class="ord-step s3">3</span>Batches <span class="card-sub">one batch = one shipment to one store \u00b7 add tracking, then mark it shipped</span></h2>' +
         '<div id="ordBatchBody"></div>' +
         '<p class="card-note">Marking a batch shipped stamps the ship date and flips its units to shipped. ' +
         'The customer sees it in their portal straight away, tracking numbers included.</p>' +
@@ -4846,7 +4875,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
     host.innerHTML =
-      '<div class="table-wrap"><table class="hist-table ord-pool-table"><thead><tr>' +
+      '<div class="table-wrap ord-pool-wrap"><table class="hist-table ord-pool-table"><thead><tr>' +
         '<th class="chk-col"><input type="checkbox" id="ordPoolAll" title="Select everything on this page"></th>' +
         '<th>Serial</th><th>Config</th><th>Built</th>' +
       '</tr></thead><tbody>' +
@@ -4965,6 +4994,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordPoolUnits().forEach(function(u){ ordSel.add(u.id); });
       ordRenderPool(); return;
     }
+    if (e.target.id === 'ordSelNGo'){
+      const box = document.getElementById('ordSelN');
+      const pool = ordPoolUnits();
+      let n = parseInt(box && box.value, 10);
+      if (!n || n < 1){ toast('Enter how many units to select.', 'warn'); return; }
+      if (n > pool.length){
+        toast('Only ' + ordNum(pool.length) + ' in the pool \u2014 selecting all of them.', 'warn', 5000);
+        n = pool.length;
+      }
+      ordSel.clear();
+      pool.slice(0, n).forEach(function(u){ ordSel.add(u.id); });
+      ordRenderPool();
+      return;
+    }
     if (e.target.id === 'ordSelNone'){ ordSel.clear(); ordRenderPool(); return; }
     if (e.target.id === 'ordScanBtn'){ ordScanModal(); return; }
 
@@ -5031,6 +5074,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
   });
+  ordDetailBody.addEventListener('keydown', function(e){
+    if (e.target.id === 'ordSelN' && e.key === 'Enter'){
+      e.preventDefault();
+      const go = document.getElementById('ordSelNGo');
+      if (go) go.click();
+    }
+  });
   ordDetailBody.addEventListener('change', function(e){
     if (e.target.id === 'ordPoolCfg'){ ordPoolCfg = e.target.value; ordPoolPage = 0; ordRenderPool(); return; }
     if (e.target.id === 'ordPdfInput'){
@@ -5078,15 +5128,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* ================= DELETE AN ORDER (admin) ================= */
   async function ordDeleteOrder(o){
     const st = ordStats(o);
+    const tookStock = o.deduct_inventory !== false;
     const bg = mgModal(
       mgModalHead('Delete invoice ' + esc(o.invoice_no) + '?', 'This cannot be undone') +
       '<div class="mg-modal-body">' +
         '<p>This removes the order, its ' + ordNum(st.made) + ' unit' + (st.made === 1 ? '' : 's') +
         ' and every batch on it.</p>' +
-        '<label class="ord-check"><input type="checkbox" id="ordDelRestore" checked> ' +
-        'Put the parts back into inventory</label>' +
-        '<p class="muted-sm">Leave that ticked unless the parts really were consumed. ' +
-        'Serial numbers are never reissued, so this leaves a gap in the NT sequence \u2014 that is normal.</p>' +
+        (tookStock
+          ? '<label class="ord-check"><input type="checkbox" id="ordDelRestore" checked> ' +
+            'Put the parts back into inventory</label>' +
+            '<p class="muted-sm">Leave that ticked unless the parts really were consumed.</p>'
+          : '<p class="muted-sm">This order never took anything out of inventory, so there is nothing to put back.</p>') +
+        '<p class="muted-sm">If these were the newest serial numbers issued, the counter winds back so they get reused.</p>' +
         '<div class="err" id="ordDelErr" style="margin-top:var(--s3);"></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="ordDelCancel">Keep it</button>' +
@@ -5094,7 +5147,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     bg.querySelector('#ordDelCancel').addEventListener('click', mgCloseModal);
     bg.querySelector('#ordDelGo').addEventListener('click', async function(){
       const err = bg.querySelector('#ordDelErr');
-      const restore = bg.querySelector('#ordDelRestore').checked;
+      const restoreBox = bg.querySelector('#ordDelRestore');
+      const restore = tookStock && !!(restoreBox && restoreBox.checked);
       this.disabled = true; this.textContent = 'Deleting\u2026';
       try {
         if (restore){
@@ -5118,13 +5172,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             });
           }
         }
+        /* remember the highest serial on this order before the rows go, so the
+           counter can be wound back only if we owned the tip of the sequence */
+        let topSerial = null;
+        ordUnits.forEach(function(u){
+          const n = parseInt(String(u.serial || '').replace(/^\D*\d{2}/, ''), 10);
+          if (!isNaN(n) && (topSerial === null || n > topSerial)) topSerial = n;
+        });
+
         const dp = await SB.from('pc_log').delete().eq('order_id', o.id);
         if (dp.error) throw dp.error;
         const dd = await SB.from('orders').delete().eq('id', o.id);
         if (dd.error) throw dd.error;
 
+        let reclaimed = null;
+        if (topSerial !== null){
+          const rc = await SB.rpc('reclaim_serials', { p_customer: o.customer_id, p_top: topSerial });
+          if (!rc.error) reclaimed = rc.data;
+        }
+
         mgCloseModal();
-        toast('Invoice ' + o.invoice_no + ' deleted' + (restore ? ' \u00b7 inventory restored' : ''), 'ok', 5000);
+        toast('Invoice ' + o.invoice_no + ' deleted' + (restore ? ' \u00b7 inventory restored' : '') +
+              ((reclaimed !== null && reclaimed < topSerial) ? ' \u00b7 serial numbers reclaimed' : ''), 'ok', 5000);
         ordOrders = ordOrders.filter(function(x){ return x.id !== o.id; });
         delete ordCounts[o.id];
         ordCurrentId = null; ordSel.clear();
@@ -5617,7 +5686,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         ordDestFieldsHtml() +
         '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
           '<div class="field"><label for="ordBCarrier">Carrier</label>' +
-            '<select id="ordBCarrier"><option value="">\u2014</option><option>UPS</option><option>FedEx</option><option>USPS</option><option>Freight</option><option>Other</option></select></div>' +
+            '<select id="ordBCarrier">' +
+              ['UPS','FedEx','USPS','Freight','Other'].map(function(c){
+                return '<option' + (c === 'UPS' ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
+              '<option value="">\u2014 none \u2014</option>' +
+            '</select></div>' +
           '<div class="field"><label for="ordBDate">Ship date <span class="muted-sm">optional</span></label>' +
             '<input id="ordBDate" type="date"></div>' +
         '</div>' +
@@ -5755,6 +5828,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   function ordEditBatchModal(b){
     const shipped = b.status === 'shipped';
+    const bUnits = ordBatchUnits(b.id);
+    const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; });
+    const perUnitMap = {}; tk.forEach(function(t){ if (t.unit_id) perUnitMap[t.unit_id] = t.tracking_no; });
+    const batchWide = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
+    const perUnitList = bUnits.map(function(u){ return perUnitMap[u.id] || ''; });
+    const wasPerUnit = perUnitList.some(Boolean) || !batchWide.length;
     const bg = mgModal(
       mgModalHead('Batch ' + b.batch_no, shipped ? 'This batch is already marked shipped' : '') +
       '<div class="mg-modal-body">' +
@@ -5773,6 +5852,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<div class="field"><label for="ordBDate">Ship date</label>' +
             '<input id="ordBDate" type="date" value="' + esc(b.ship_date || '') + '"></div>' +
         '</div>' +
+        '<h3 class="ord-tools-h" style="margin-top:var(--s5);">Tracking ' +
+          '<span class="card-sub">' + ordNum(bUnits.length) + ' unit' + (bUnits.length === 1 ? '' : 's') + ' in this batch</span></h3>' +
+        '<div class="ord-track-mode">' +
+          '<label><input type="radio" name="ordTrkMode" value="unit"' + (wasPerUnit ? ' checked' : '') + '> One per unit</label>' +
+          '<label><input type="radio" name="ordTrkMode" value="batch"' + (wasPerUnit ? '' : ' checked') + '> One for the whole batch</label>' +
+        '</div>' +
+        '<div id="ordTrkUnit"' + (wasPerUnit ? '' : ' style="display:none;"') + '>' +
+          '<textarea id="ordTrkList" rows="6" spellcheck="false" placeholder="One tracking number per line, in the order the serials are listed">' +
+            esc(perUnitList.join('\n')) + '</textarea>' +
+          '<div id="ordTrkPreview" class="ord-trk-preview"></div>' +
+        '</div>' +
+        '<div id="ordTrkBatch"' + (wasPerUnit ? ' style="display:none;"' : '') + '>' +
+          '<input id="ordTrkOne" type="text" autocomplete="off" placeholder="One tracking number for the pallet" value="' + esc(batchWide[0] || '') + '">' +
+        '</div>' +
+        '<p class="muted-sm">Saving replaces the tracking on this batch. Leave it empty to clear it.</p>' +
         '<div class="err" id="ordBErr" style="margin-top:var(--s3);"></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="ordBCancel">Cancel</button>' +
@@ -5782,6 +5876,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     destEl.addEventListener('change', function(){
       bg.querySelector('#ordNewDest').style.display = (this.value === '__new') ? '' : 'none';
     });
+    bg.querySelectorAll('[name="ordTrkMode"]').forEach(function(r){
+      r.addEventListener('change', function(){
+        const unit = bg.querySelector('[name="ordTrkMode"]:checked').value === 'unit';
+        bg.querySelector('#ordTrkUnit').style.display = unit ? '' : 'none';
+        bg.querySelector('#ordTrkBatch').style.display = unit ? 'none' : '';
+      });
+    });
+    const eList = bg.querySelector('#ordTrkList');
+    function eDraw(){
+      const nums = eList.value.split(/\r?\n/).map(function(x){ return x.trim(); }).filter(Boolean);
+      const prev = bg.querySelector('#ordTrkPreview');
+      if (!nums.length){ prev.innerHTML = '<p class="muted-sm">Empty \u2014 saving will clear the tracking on this batch.</p>'; return; }
+      prev.innerHTML = '<p class="' + (nums.length === bUnits.length ? 'muted-sm' : 'ord-warnline') + '">' +
+        nums.length + ' number' + (nums.length === 1 ? '' : 's') + ' for ' + bUnits.length + ' unit' + (bUnits.length === 1 ? '' : 's') +
+        (nums.length === bUnits.length ? ' \u2014 they line up.' : ' \u2014 these must match before you can save.') + '</p>';
+    }
+    eList.addEventListener('input', eDraw);
+    eDraw();
     bg.querySelector('#ordBCancel').addEventListener('click', mgCloseModal);
     bg.querySelector('#ordBSave').addEventListener('click', async function(){
       const err = bg.querySelector('#ordBErr');
@@ -5801,6 +5913,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           ship_date: bg.querySelector('#ordBDate').value || null
         }).eq('id', b.id);
         if (u.error) throw u.error;
+
+        /* tracking is replaced wholesale: clear then re-insert */
+        const perUnit = bg.querySelector('[name="ordTrkMode"]:checked').value === 'unit';
+        const nums = eList.value.split(/\r?\n/).map(function(x){ return x.trim(); }).filter(Boolean);
+        const one = bg.querySelector('#ordTrkOne').value.trim();
+        if (perUnit && nums.length && nums.length !== bUnits.length){
+          throw new Error('You have ' + nums.length + ' tracking numbers for ' + bUnits.length +
+            ' units. Fix the list, or switch to one number for the whole batch.');
+        }
+        const dl = await SB.from('batch_tracking').delete().eq('batch_id', b.id);
+        if (dl.error) throw dl.error;
+        const rows = [];
+        if (perUnit && nums.length){
+          bUnits.forEach(function(u2, i){ if (nums[i]) rows.push({ batch_id: b.id, tracking_no: nums[i], unit_id: u2.id }); });
+        } else if (!perUnit && one){
+          rows.push({ batch_id: b.id, tracking_no: one, unit_id: null });
+        }
+        if (rows.length){
+          const ins = await SB.from('batch_tracking').insert(rows);
+          if (ins.error) throw ins.error;
+        }
+
         mgCloseModal();
         toast('Batch ' + b.batch_no + ' updated', 'ok');
         await ordOpenOrder(ordCurrentId);
@@ -5917,7 +6051,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let admTab = 'customers', admStaff = [], admLogins = [], admSeqs = [], admCustFilter = '';
 
   async function admOpen(){
-    if (!ordPerm.admin) return;
+    if (!ordPerm.admin && !ordPerm.catalog) return;
     if (!ordInited) await ordOpen();
     if (!admInited){ admInited = true; }
     await admLoad();
@@ -5943,8 +6077,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   function admRender(){
     const host = document.getElementById('admBody');
-    const tabs = [['customers','Customers'],['configs','Configs'],['dests','Destinations'],
-                  ['people','People'],['logins','Customer logins']];
+    const tabs = ordPerm.admin
+      ? [['customers','Customers'],['configs','Configs'],['dests','Destinations'],
+         ['people','People'],['logins','Customer logins']]
+      : [['customers','Customers'],['configs','Configs'],['dests','Destinations']];
+    if (!tabs.some(function(t){ return t[0] === admTab; })) admTab = 'customers';
     host.innerHTML =
       '<div class="adm-tabs">' + tabs.map(function(t){
         return '<button type="button" class="mg-pill' + (admTab === t[0] ? ' on' : '') + '" data-admtab="' + t[0] + '">' + t[1] + '</button>';
@@ -5973,8 +6110,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (admTab === 'customers') return admPaneCustomers(p);
     if (admTab === 'configs')   return admPaneConfigs(p);
     if (admTab === 'dests')     return admPaneDests(p);
-    if (admTab === 'people')    return admPanePeople(p);
-    if (admTab === 'logins')    return admPaneLogins(p);
+    if (admTab === 'people'  && ordPerm.admin) return admPanePeople(p);
+    if (admTab === 'logins'  && ordPerm.admin) return admPaneLogins(p);
   }
 
   /* ---- customers + serial sequences ---- */
@@ -6059,7 +6196,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<p class="muted-sm">Employee logins are created in the Supabase dashboard. This is where you set what each person can reach.</p>' +
       '<div class="table-wrap"><table class="hist-table adm-people"><thead><tr>' +
         '<th>Name</th><th>Email</th><th title="Timeclock admin">TC&nbsp;admin</th>' +
-        '<th>View orders</th><th>Manage orders</th><th>Order admin</th><th>Margins</th><th>Active</th>' +
+        '<th>View orders</th><th>Manage orders</th><th>Order admin</th><th title="Customers, configs and destinations">Catalog</th><th>Margins</th><th>Active</th>' +
       '</tr></thead><tbody>' +
       admStaff.map(function(e){
         const self = me && e.user_id === me;
@@ -6074,6 +6211,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           box('can_view_orders', e.can_view_orders, false) +
           box('can_manage_orders', e.can_manage_orders, false) +
           box('can_admin_orders', e.can_admin_orders, self) +
+          box('can_manage_catalog', e.can_manage_catalog, false) +
           box('can_view_margins', e.can_view_margins, false) +
           box('active', e.active, self) +
         '</tr>';
