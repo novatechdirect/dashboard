@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Novatech">
 <!-- JsBarcode (inlined for offline use) -->
@@ -1002,8 +1003,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       width:26px; height:2px; border-radius:0 0 2px 2px; background:var(--accent);
     }
     .tab-btn:not(.active):active{ color:var(--ink); }
-    body.authed .controls{ padding-bottom:calc(80px + env(safe-area-inset-bottom)); }
-    body.authed .nav-menu{ display:none; }
+    body.authed .controls{ padding-bottom:calc(108px + env(safe-area-inset-bottom)); }
+    .nav-menu{ display:none; }
   }
 
   /* --- v27: install helper --- */
@@ -1873,6 +1874,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       touch-action:manipulation;
     }
     .topnav{ padding-top:env(safe-area-inset-top); }
+    .nav-menu{ display:none !important; }
+    .ord-bar-l{ width:100%; display:grid; grid-template-columns:1fr; gap:8px; }
+    .ord-bar-l input, .ord-bar-l button{ width:100%; min-height:48px; }
 
     #loginView{
       min-height:calc(100dvh - 52px - env(safe-area-inset-top));
