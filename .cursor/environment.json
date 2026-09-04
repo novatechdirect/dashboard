@@ -1,0 +1,13 @@
+{
+  "name": "Novatech Dashboard",
+  "ports": [
+    { "name": "static-site", "port": 8080 }
+  ],
+  "terminals": [
+    {
+      "name": "static-server",
+      "command": "python3 -m http.server 8080",
+      "description": "Serves the static PWA over HTTP at http://localhost:8080 (index.html = admin dashboard, portal.html = customer order portal). Both pages load @supabase/supabase-js from a CDN and talk to the hosted Supabase backend at runtime."
+    }
+  ]
+}
