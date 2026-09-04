@@ -282,15 +282,52 @@
   }
 
   @media (max-width:820px){
-    .wrap{ padding:var(--s5) var(--s4) var(--s7); }
-    header.top{ padding:var(--s3) var(--s4); }
+    html, body{ overflow-x:hidden; max-width:100%; }
+    body{
+      padding-left:env(safe-area-inset-left);
+      padding-right:env(safe-area-inset-right);
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .wrap{ padding:var(--s5) var(--s4) calc(var(--s7) + env(safe-area-inset-bottom)); }
+    header.top{
+      padding:calc(var(--s3) + env(safe-area-inset-top)) var(--s4) var(--s3);
+      gap:var(--s2);
+    }
+    .brand b{ font-size:14px; }
+    .who{ justify-content:flex-end; gap:var(--s2); }
+    .who-em{
+      max-width:42vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
     .orow{ grid-template-columns:1fr; gap:var(--s3); }
     .orow .chev{ display:none; }
     .sum{ grid-template-columns:repeat(2,1fr); }
     .sumv{ font-size:22px; }
     .bhead{ grid-template-columns:1fr; }
-    .back .btn{ flex:1 1 auto; }
+    .back .btn{ flex:1 1 auto; min-height:44px; }
+    .btn, .btn.sm{ min-height:44px; }
+    .icon-btn{ width:44px; height:44px; }
     h1{ font-size:21px; }
+    .login{ margin:8vh auto; padding:0 var(--s3); }
+    .login .card{ padding:var(--s5) var(--s4); }
+    .field input, .searchbox, .pickbox{ min-height:48px; font-size:16px; max-width:100%; }
+    .pickbox{ max-width:100%; width:100%; height:48px; }
+    .toolbar{ flex-direction:column; }
+    .toolbar .searchbox{ flex:1 1 auto; min-width:0; width:100%; }
+    .modal-bg{ align-items:flex-end; padding:0; }
+    .modal{
+      max-width:none; border-bottom-left-radius:0; border-bottom-right-radius:0;
+      max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    }
+    .modal-f{ position:sticky; bottom:0; background:var(--paper);
+      padding-bottom:calc(var(--s5) + env(safe-area-inset-bottom)); }
+    .modal-f .btn{ flex:1; }
+    .toast-stack{ bottom:calc(var(--s4) + env(safe-area-inset-bottom)); width:calc(100% - 24px); }
+    .twrap{ -webkit-overflow-scrolling:touch; }
+    table{ font-size:13px; }
+  }
+  @media (max-width:420px){
+    .sum{ grid-template-columns:1fr 1fr; }
   }
   @media print{
     header.top, .toolbar, .back, .btn, .icon-btn, .toast-stack{ display:none !important; }
