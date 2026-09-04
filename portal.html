@@ -410,6 +410,36 @@
   }
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
 
+  /* ---------- shareable links: read once at startup, no listeners ---------- */
+  function baseUrl(){ return location.origin + location.pathname; }
+  function linkFor(orderId){ return baseUrl() + '?order=' + encodeURIComponent(orderId); }
+  function setUrl(orderId){
+    try { history.replaceState(null, '', orderId ? linkFor(orderId) : baseUrl()); } catch(e){}
+  }
+  function readLink(){
+    const v = new URLSearchParams(location.search || '').get('order');
+    return (v && /^[0-9a-fA-F-]{36}$/.test(v)) ? v : null;
+  }
+  async function copyLink(text){
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly','');
+        ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      }
+      toast('Link copied', 'ok');
+    } catch(e){
+      openModal('<div class="modal-h"><h3>Copy this link</h3></div>' +
+        '<div class="modal-b"><input id="cpBox" type="text" class="searchbox mono" readonly value="' + esc(text) + '"></div>' +
+        '<div class="modal-f"><button class="btn primary" id="cpDone" type="button">Done</button></div>');
+      const b = document.getElementById('cpBox'); if (b){ b.focus(); b.select(); }
+      const dn = document.getElementById('cpDone'); if (dn) dn.addEventListener('click', closeModal);
+    }
+  }
+
   let session = null, me = null, customer = null;
   let isStaff = false, allCustomers = [], viewAs = null;
   let orders = [], lines = [], configs = [], batches = [], tracking = [], units = [], locations = [];
@@ -515,7 +545,7 @@
       $('viewAs').addEventListener('change', async function(){
         viewAs = this.value;
         me = { customer_id: viewAs };
-        currentId = null; query = '';
+        currentId = null; query = ''; setUrl(null);
         $('detailView').style.display = 'none';
         await load();
       });
@@ -535,6 +565,9 @@
       } else tracking = [];
     } else { lines = []; batches = []; units = []; tracking = []; }
     renderList();
+    const want = readLink();
+    if (want && orders.some(function(o){ return o.id === want; })) openOrder(want);
+    else if (want) toast('That order is not on your account.', 'bad', 6000);
   }
 
   /* ---------- helpers ---------- */
@@ -599,6 +632,7 @@
 
   /* ---------- list ---------- */
   function renderList(){
+    setUrl(null);
     $('detailView').style.display = 'none';
     $('listView').style.display = '';
     const q = query.trim().toLowerCase();
@@ -646,6 +680,7 @@
     currentId = id;
     const o = orders.find(function(x){ return x.id === id; });
     if (!o) return;
+    setUrl(id);
     const st = stats(o), s = statusOf(st);
     const mine = batches.filter(function(b){ return b.order_id === id; });
     const cfgName = {}; configs.forEach(function(c){ cfgName[c.id] = c.name; });
@@ -656,6 +691,7 @@
       '<div class="back"><button class="btn" id="back" type="button">&larr; All orders</button>' +
       ' <button class="btn" id="csv" type="button">Download CSV</button>' +
       ' <button class="btn" id="prt" type="button">Print</button>' +
+      ' <button class="btn" id="share" type="button">Copy link</button>' +
       (o.invoice_pdf_name ? ' <button class="btn primary" id="pdf" type="button">Invoice PDF</button>' : '') +
       '</div>' +
       '<h1>Invoice <span class="mono">' + esc(o.invoice_no) + '</span> <span class="chip ' + s.c + '">' + s.l + '</span></h1>' +
@@ -700,6 +736,7 @@
       '</div>';
 
     $('back').addEventListener('click', renderList);
+    $('share').addEventListener('click', function(){ copyLink(linkFor(o.id)); });
     if ($('pdf')) $('pdf').addEventListener('click', async function(){
       const btn = this; btn.disabled = true; btn.textContent = 'Opening\u2026';
       const r = await SB.storage.from('order-invoices').createSignedUrl(o.id + '/invoice.pdf', 120);

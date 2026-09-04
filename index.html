@@ -1745,6 +1745,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     color:var(--faint); margin-right:1px;
   }
 
+  .ord-focus{ box-shadow:var(--ring); border-color:var(--accent) !important;
+    transition:box-shadow var(--t-slow), border-color var(--t-slow); }
+  .ord-copybox{ width:100%; height:40px; padding:0 var(--s3); font-family:var(--font-num); font-size:12.5px;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm); background:var(--soft); color:var(--ink); }
+
 </style>
 </head>
 <body>
@@ -2479,12 +2484,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
   }
   navHome.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
-  navOrders.addEventListener('click', function(e){ e.preventDefault(); ordCurrentId = null; ordShowList(); showTool('orders'); });
+  navOrders.addEventListener('click', function(e){ e.preventDefault(); ordCurrentId = null; ordSetUrl(null); ordShowList(); showTool('orders'); });
   navAdmin.addEventListener('click', function(e){ e.preventDefault(); showTool('admin'); });
 
   document.getElementById('tabbar').addEventListener('click', function(e){
     const b = e.target.closest('.tab-btn');
-    if (b) showTool(b.getAttribute('data-goto'));
+    if (!b) return;
+    const to = b.getAttribute('data-goto');
+    /* tapping Orders returns to the list, same as the nav item, so the tab bar
+       and the top nav never disagree about where you are */
+    if (to === 'orders'){ ordCurrentId = null; ordSetUrl(null); ordShowList(); }
+    showTool(to);
   });
 
   /* ---- install-to-home-screen helper ---- */
@@ -4052,6 +4062,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   async function ordBoot(){
     await ordOpen();
+    const link = ordReadLink();
+    if (link){
+      showTool('orders');
+      await ordOpenOrder(link.order, link.batch);
+    }
   }
 
   async function ordCheckCustomerLogin(){
@@ -4207,10 +4222,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ordDetailPane.style.display = '';
   }
 
-  async function ordOpenOrder(id){
+  async function ordOpenOrder(id, focusBatch){
     if (ordCurrentId !== id){ ordSel.clear(); ordPoolCfg = ''; ordPoolPage = 0; ordBatchPage = {}; }
     ordCurrentId = id;
     ordShowDetail();
+    ordSetUrl(id, focusBatch);
     document.getElementById('ordCrumb').textContent = '';
     ordDetailBody.innerHTML = '<div class="skel-card"><div class="skel skel-line" style="width:38%"></div><div class="skel skel-line"></div></div>';
     if (!ordInited){ ordInited = true; await ordLoadPerms(); await ordLoadAll(); }
@@ -4245,6 +4261,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       else ordCounts[id].built++;
     });
     ordRenderDetail(o);
+    if (focusBatch){
+      const card = document.querySelector('.ord-batch[data-bid="' + focusBatch + '"]');
+      if (card){
+        const body = document.getElementById('ordBatchBody_' + focusBatch);
+        if (body) body.style.display = '';
+        const btn = card.querySelector('[data-bexpand]');
+        if (btn) btn.textContent = 'Hide';
+        card.classList.add('ord-focus');
+        if (card.scrollIntoView) card.scrollIntoView({ block:'center', behavior:'smooth' });
+        setTimeout(function(){ card.classList.remove('ord-focus'); }, 2600);
+      } else {
+        toast('That batch is not on this order any more.', 'warn', 6000);
+      }
+    }
   }
 
   function ordRenderDetail(o){
@@ -4295,6 +4325,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '</div>' +
         '<div class="ord-head-r">' +
           '<span class="ord-chip ' + sc.cls + '">' + sc.label + '</span>' +
+          '<button class="ghost btn-sm" id="ordCopyLink" type="button" title="Link to this order for the team">Copy link</button>' +
+          (ordPerm.manage ? '<button class="ghost btn-sm" id="ordCopyCust" type="button" title="Link to this invoice in the customer portal">Customer link</button>' : '') +
           (ordPerm.manage ? '<button class="ghost btn-sm" id="ordEditOrder" type="button">Edit</button>' : '') +
           (ordPerm.admin ? '<button class="ghost danger btn-sm" id="ordDelOrder" type="button">Delete order</button>' : '') +
         '</div>' +
@@ -4377,7 +4409,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (r && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); ordOpenOrder(r.getAttribute('data-ordid')); }
   });
   document.getElementById('ordBackBtn').addEventListener('click', function(){
-    ordCurrentId = null; ordShowList(); ordRenderList();
+    ordCurrentId = null; ordSetUrl(null); ordShowList(); ordRenderList();
   });
   document.getElementById('ordChips').addEventListener('click', function(e){
     const b = e.target.closest('[data-ordfilter]');
@@ -4940,6 +4972,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target.id === 'ordPrintDymo'){ if (ordLoadLabelState()) generatePdfDymo(); return; }
     if (e.target.id === 'ordPrintNow'){  if (ordLoadLabelState()) window.print();    return; }
     if (e.target.id === 'ordAddBatch'){  ordAddToBatchModal(); return; }
+    if (e.target.id === 'ordCopyLink'){ ordCopy(ordLinkFor(ordCurrentId), 'Order link'); return; }
+    if (e.target.id === 'ordCopyCust'){ ordCopy(ordCustomerLinkFor(ordCurrentId), 'Customer portal link'); return; }
+    const bl = e.target.closest('[data-blink]');
+    if (bl){ ordCopy(ordLinkFor(ordCurrentId, bl.getAttribute('data-blink')), 'Batch link'); return; }
     if (e.target.id === 'ordPdfPick'){ document.getElementById('ordPdfInput').click(); return; }
     if (e.target.id === 'ordPdfOpen'){
       const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
@@ -5346,6 +5382,60 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
   }
 
+
+  /* ================= SHAREABLE LINKS =================
+     Read once at startup, written with replaceState. No hashchange listener,
+     so there is no event ordering to get wrong and no way to loop. */
+  function ordBaseUrl(){ return location.origin + location.pathname; }
+  function ordPortalUrl(){
+    return location.origin + location.pathname.replace(/[^\/]*$/, '') + 'portal.html';
+  }
+  function ordLinkFor(orderId, batchId){
+    return ordBaseUrl() + '?order=' + encodeURIComponent(orderId) +
+           (batchId ? '&batch=' + encodeURIComponent(batchId) : '');
+  }
+  function ordCustomerLinkFor(orderId){
+    return ordPortalUrl() + '?order=' + encodeURIComponent(orderId);
+  }
+  function ordSetUrl(orderId, batchId){
+    try {
+      const u = orderId ? ordLinkFor(orderId, batchId) : ordBaseUrl();
+      history.replaceState(null, '', u);
+    } catch(e){}
+  }
+  function ordReadLink(){
+    const p = new URLSearchParams(location.search || '');
+    const o = p.get('order');
+    if (!o || !/^[0-9a-fA-F-]{36}$/.test(o)) return null;
+    const b = p.get('batch');
+    return { order: o, batch: (b && /^[0-9a-fA-F-]{36}$/.test(b)) ? b : null };
+  }
+
+  async function ordCopy(text, what){
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly','');
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+      }
+      toast((what || 'Link') + ' copied', 'ok');
+    } catch(e){
+      /* clipboard blocked (http, or permission denied) — show it so they can copy by hand */
+      mgModal(
+        mgModalHead('Copy this link', what || '') +
+        '<div class="mg-modal-body"><input id="ordCopyBox" type="text" class="ord-copybox" readonly value="' + esc(text) + '"></div>' +
+        '<div class="mg-modal-foot"><button class="primary" id="ordCopyClose" data-primary>Done</button></div>');
+      const box = document.getElementById('ordCopyBox');
+      if (box){ box.focus(); box.select(); }
+      const btn = document.getElementById('ordCopyClose');
+      if (btn) btn.addEventListener('click', mgCloseModal);
+    }
+  }
+
   /* ================= BATCHES ================= */
   function ordLocLabel(l){
     /* one-line form, for dropdowns and modal titles */
@@ -5421,6 +5511,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '</div>' +
           '<div class="ord-batch-btns">' +
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
+            '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
             (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
             (ordPerm.manage ? '<button class="ghost btn-sm" data-bedit="' + esc(b.id) + '" type="button">Edit</button>' : '') +
           '</div>' +
