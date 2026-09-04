@@ -3,152 +3,301 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
 <title>NovaTech &middot; Order Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  (function(){
+    try{
+      var t = localStorage.getItem('ntTheme');
+      if (!t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if (t === 'dark') document.documentElement.setAttribute('data-theme','dark');
+    }catch(e){}
+  })();
+</script>
 <style>
+
   :root{
-    --font-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
-    --font-num:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-    --ink:#1a1d23; --muted:#697077; --faint:#9aa1ab;
-    --bg:#eceff3; --paper:#fff; --soft:#f6f8fa;
-    --line:#e6e8ec; --line-strong:#d5d9df;
-    --accent:#2563eb; --accent-hover:#1d4ed8; --accent-soft:#eef4ff; --accent-line:#c9dbff;
-    --ok:#15803d; --ok-bg:#e7f6ec; --ok-line:#bfe4cc;
-    --warn:#9a6700; --warn-bg:#fff6e0; --warn-line:#f0dca8;
+    color-scheme:light;
+    --font-ui:'Instrument Sans',system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --font-num:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --ink:#12161c; --muted:#5b6673; --faint:#8c97a5;
+    --bg:#eff1f5; --paper:#ffffff; --soft:#f4f6f9;
+    --line:#e2e6ec; --line-strong:#cdd4de;
+    --accent:#2050c8; --accent-hover:#1a44ad; --accent-soft:#e8eefc; --accent-line:#bdcdf4; --accent-ink:#ffffff;
+    --ok:#10693a;   --ok-bg:#e3f3e8;   --ok-line:#bfe0cb;
+    --warn:#8a5a00; --warn-bg:#fdf1d6; --warn-line:#f0d79a;
+    --bad:#b3261e;  --bad-bg:#fdeae8;  --bad-line:#f3c6c1;
+    --info:#1a4971; --info-bg:#e4eef8; --info-line:#c2d8ec;
     --e1:0 1px 2px rgba(16,24,40,.05);
     --e2:0 1px 2px rgba(16,24,40,.04), 0 4px 12px rgba(16,24,40,.06);
+    --e3:0 2px 6px rgba(16,24,40,.06), 0 18px 44px rgba(16,24,40,.13);
     --ring:0 0 0 1px var(--accent), 0 0 0 4px var(--accent-soft);
-    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
-    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-pill:999px;
     --t:160ms cubic-bezier(.2,.6,.2,1);
+    --t-slow:220ms cubic-bezier(.2,.6,.2,1);
+    --scrim:rgba(11,15,20,.5);
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      color-scheme:dark;
-      --ink:#e8ecf2; --muted:#9aa5b4; --faint:#6c7787;
-      --bg:#0e1116; --paper:#161b22; --soft:#1c222b;
-      --line:#252c36; --line-strong:#374250;
-      --accent:#6f9bff; --accent-hover:#8bb0ff; --accent-soft:#182338; --accent-line:#2c3f63;
-      --ok:#5ec98a; --ok-bg:#122319; --ok-line:#23432f;
-      --warn:#e0b256; --warn-bg:#241d0e; --warn-line:#463722;
-    }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --ink:#e8ecf2; --muted:#9aa5b4; --faint:#6c7787;
+    --bg:#0e1116; --paper:#161b22; --soft:#1c222b;
+    --line:#252c36; --line-strong:#374250;
+    --accent:#6f9bff; --accent-hover:#8bb0ff; --accent-soft:#182338; --accent-line:#2c3f63; --accent-ink:#0b0f14;
+    --ok:#5ec98a;   --ok-bg:#122319;   --ok-line:#23432f;
+    --warn:#e0b256; --warn-bg:#241d0e; --warn-line:#463722;
+    --bad:#f08b81;  --bad-bg:#2a1513;  --bad-line:#4d2622;
+    --info:#8ec1ec; --info-bg:#12212c; --info-line:#25394a;
+    --e1:0 1px 2px rgba(0,0,0,.4);
+    --e2:0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.4);
+    --e3:0 2px 6px rgba(0,0,0,.4), 0 20px 48px rgba(0,0,0,.55);
+    --scrim:rgba(4,6,9,.66);
   }
   *{ box-sizing:border-box; }
+  html,body{ height:100%; }
   body{
     margin:0; background:var(--bg); color:var(--ink);
-    font-family:var(--font-ui); font-size:14px; line-height:1.5;
-    -webkit-font-smoothing:antialiased;
-    padding-env:0;
+    font-family:var(--font-ui); font-size:14px; line-height:1.55;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    transition:background var(--t-slow), color var(--t-slow);
   }
-  .wrap{ max-width:1040px; margin:0 auto; padding:var(--s5) var(--s4) var(--s6); }
-  header.top{
-    display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
-    padding:var(--s3) var(--s4); background:var(--paper); border-bottom:1px solid var(--line);
-    position:sticky; top:0; z-index:10; flex-wrap:wrap;
+  ::selection{ background:var(--accent-soft); color:var(--ink); }
+  a{ color:var(--accent); text-decoration:none; }
+  a:hover{ color:var(--accent-hover); }
+  a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{
+    outline:none; box-shadow:var(--ring); border-radius:var(--r-sm);
   }
-  .brand{ display:flex; align-items:center; gap:var(--s3); }
-  .brand img{ height:26px; width:auto; }
-  .brand b{ font-size:15px; letter-spacing:-0.01em; }
-  .brand span{ color:var(--faint); font-size:12px; }
-  .who{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:var(--s3); }
-  a{ color:var(--accent); }
-  button{ font:inherit; }
-  .btn{
-    border:1px solid var(--line-strong); background:var(--paper); color:var(--ink);
-    border-radius:var(--r-sm); padding:7px 13px; font-size:13px; font-weight:600; cursor:pointer;
-    transition:border-color var(--t), background var(--t);
-  }
-  .btn:hover{ border-color:var(--muted); }
-  .btn:focus-visible{ outline:none; box-shadow:var(--ring); }
-  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
-  .btn.primary:hover{ background:var(--accent-hover); }
-  .card{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-lg); padding:var(--s5); margin-bottom:var(--s4); box-shadow:var(--e1); }
-  h1{ font-size:24px; letter-spacing:-0.025em; margin:0 0 var(--s2); }
-  h2{ font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s3); }
   .mono{ font-family:var(--font-num); font-variant-numeric:tabular-nums; }
   .muted{ color:var(--muted); font-size:12.5px; }
+  .subtle{ font-size:11.5px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--muted); margin-left:var(--s2); }
 
-  /* login */
-  .login{ max-width:380px; margin:12vh auto; }
-  .login .card{ padding:var(--s6); }
+  /* ---------- top bar ---------- */
+  header.top{
+    display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
+    padding:var(--s3) var(--s5); background:var(--paper);
+    border-bottom:1px solid var(--line); position:sticky; top:0; z-index:30; flex-wrap:wrap;
+    box-shadow:var(--e1);
+  }
+  .brand{ display:flex; align-items:center; gap:var(--s3); min-width:0; }
+  .brand img{ height:28px; width:auto; }
+  .brand b{ font-size:15px; letter-spacing:-0.015em; display:block; }
+  .brand span{ color:var(--faint); font-size:12px; }
+  .who{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; }
+  .who-em{ font-size:12.5px; color:var(--muted); }
+
+  /* ---------- buttons ---------- */
+  .btn{
+    border:1px solid var(--line-strong); background:var(--paper); color:var(--ink);
+    border-radius:var(--r-sm); padding:8px 14px; font:inherit; font-size:13px; font-weight:600;
+    cursor:pointer; transition:border-color var(--t), background var(--t), transform var(--t), box-shadow var(--t);
+  }
+  .btn:hover{ border-color:var(--muted); box-shadow:var(--e1); }
+  .btn:active{ transform:translateY(1px); }
+  .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.primary:hover{ background:var(--accent-hover); border-color:var(--accent-hover); }
+  .btn.sm{ padding:6px 11px; font-size:12.5px; }
+  .icon-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; padding:0; border:1px solid var(--line-strong);
+    background:var(--paper); color:var(--muted); border-radius:var(--r-sm); cursor:pointer;
+    transition:color var(--t), border-color var(--t), background var(--t);
+  }
+  .icon-btn:hover{ color:var(--ink); border-color:var(--muted); }
+  .icon-btn svg{ width:17px; height:17px; }
+  :root:not([data-theme="dark"]) .i-sun{ display:none; }
+  :root[data-theme="dark"] .i-moon{ display:none; }
+
+  /* ---------- layout ---------- */
+  .wrap{ max-width:1080px; margin:0 auto; padding:var(--s6) var(--s5) var(--s7); }
+  .card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--r-lg);
+    padding:var(--s5); margin-bottom:var(--s4); box-shadow:var(--e1);
+  }
+  h1{ font-size:26px; letter-spacing:-0.028em; margin:0 0 var(--s2); }
+  h2{ font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s3); }
+  .page-head{ margin-bottom:var(--s5); }
+
+  /* ---------- login ---------- */
+  .login{ max-width:400px; margin:11vh auto; padding:0 var(--s4); animation:rise var(--t-slow) both; }
   .field{ margin-bottom:var(--s3); }
   .field label{ display:block; font-size:12px; font-weight:650; color:var(--muted); margin-bottom:var(--s1); }
-  .field input{
+  .field input, .pickbox, .searchbox{
     width:100%; height:42px; padding:0 var(--s3); font:inherit; font-size:14px;
     border:1px solid var(--line-strong); border-radius:var(--r-sm);
     background:var(--paper); color:var(--ink);
+    transition:border-color var(--t), box-shadow var(--t);
   }
-  .field input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
-  .err{ color:#b42318; font-size:12.5px; min-height:1.2em; margin-top:var(--s2); }
+  .field input:focus, .pickbox:focus, .searchbox:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  .err{ color:var(--bad); font-size:12.5px; min-height:1.2em; margin-top:var(--s2); font-weight:600; }
 
-  /* order list */
+  /* ---------- order rows ---------- */
+  .toolbar{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
+  .searchbox{ flex:1 1 260px; height:38px; font-size:13px; }
   .orow{
-    display:grid; grid-template-columns:minmax(0,1fr) 200px 120px; gap:var(--s4);
+    display:grid; grid-template-columns:minmax(0,1fr) 210px 120px 28px; gap:var(--s4);
     align-items:center; padding:var(--s4); border:1px solid var(--line);
     border-radius:var(--r-md); background:var(--paper); margin-bottom:var(--s3);
-    cursor:pointer; transition:border-color var(--t), box-shadow var(--t);
+    cursor:pointer; box-shadow:var(--e1);
+    transition:border-color var(--t), box-shadow var(--t), transform var(--t);
+    animation:rise var(--t-slow) both;
   }
-  .orow:hover{ border-color:var(--line-strong); box-shadow:var(--e1); }
+  .orow:hover{ border-color:var(--line-strong); box-shadow:var(--e2); transform:translateY(-1px); }
+  .orow:hover .chev{ transform:translateX(3px); color:var(--accent); }
   .orow:focus-visible{ outline:none; box-shadow:var(--ring); }
-  .inv{ font-weight:700; font-size:15px; display:flex; align-items:center; gap:var(--s2); }
-  .sub{ color:var(--muted); font-size:12.5px; margin-top:3px; }
+  .inv{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; font-weight:700; font-size:15px; }
+  .inv-lbl{ font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--faint); }
+  .sub{ color:var(--muted); font-size:12.5px; margin-top:4px; }
+  .chev{ color:var(--faint); display:flex; justify-content:flex-end; transition:transform var(--t), color var(--t); }
+  .chev svg{ width:18px; height:18px; }
+
   .chip{
     display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
     font-size:11.5px; font-weight:700; letter-spacing:.02em;
-    padding:4px 9px; border-radius:var(--r-pill); border:1px solid transparent;
+    padding:4px 10px; border-radius:var(--r-pill); border:1px solid transparent;
   }
   .chip::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
-  .chip.n{ color:var(--muted); background:var(--soft); border-color:var(--line); }
-  .chip.i{ color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line); }
-  .chip.w{ color:var(--warn); background:var(--warn-bg); border-color:var(--warn-line); }
-  .chip.k{ color:var(--ok); background:var(--ok-bg); border-color:var(--ok-line); }
-  .bar{ height:7px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; display:flex; }
-  .bar i{ display:block; height:100%; }
-  .bar i.s{ background:var(--ok); } .bar i.a{ background:var(--accent); } .bar i.b{ background:var(--line-strong); }
-  .barlbl{ font-family:var(--font-num); font-size:11.5px; color:var(--muted); margin-top:5px; }
+  .chip.n{ color:var(--muted);  background:var(--soft);      border-color:var(--line); }
+  .chip.i{ color:var(--info);   background:var(--info-bg);   border-color:var(--info-line); }
+  .chip.w{ color:var(--warn);   background:var(--warn-bg);   border-color:var(--warn-line); }
+  .chip.k{ color:var(--ok);     background:var(--ok-bg);     border-color:var(--ok-line); }
 
-  /* detail */
-  .sum{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3); margin-bottom:var(--s4); }
-  .sumc{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); }
-  .sumv{ font-family:var(--font-num); font-size:24px; font-weight:600; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
+  .bar{ height:7px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; display:flex; border:1px solid var(--line); }
+  .bar i{ display:block; height:100%; transition:width var(--t-slow); }
+  .bar i.s{ background:var(--ok); } .bar i.a{ background:var(--accent); } .bar i.b{ background:var(--line-strong); }
+  .barlbl{ font-family:var(--font-num); font-size:11.5px; color:var(--muted); margin-top:6px; font-variant-numeric:tabular-nums; }
+
+  /* ---------- detail ---------- */
+  .back{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
+  .sum{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3); margin-bottom:var(--s5); }
+  .sumc{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
+    padding:var(--s4); box-shadow:var(--e1); animation:rise var(--t-slow) both;
+  }
+  .sumv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
   .suml{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); }
-  .batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; }
-  .bhead{ display:grid; grid-template-columns:110px minmax(0,1fr) 150px auto; gap:var(--s3); align-items:center; padding:var(--s3) var(--s4); background:var(--paper); }
+  .sumc.ok .sumv{ color:var(--ok); }
+  .sumc.rem .sumv{ color:var(--warn); }
+
+  .batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; background:var(--paper); }
+  .bhead{ display:grid; grid-template-columns:120px minmax(0,1fr) 160px auto; gap:var(--s3); align-items:center; padding:var(--s4); }
+  .bhead b{ font-size:13.5px; }
+  .storenum{
+    display:inline-block; margin-left:var(--s2); font-family:var(--font-num); font-size:11px;
+    font-weight:600; color:var(--muted); background:var(--soft); border:1px solid var(--line);
+    border-radius:var(--r-pill); padding:1px 7px; vertical-align:middle;
+  }
   .bbody{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line); background:var(--soft); }
+
+  /* ---------- tables ---------- */
+  .twrap{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--paper); }
   table{ width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; }
-  th{ text-align:left; padding:8px 10px; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); border-bottom:1px solid var(--line); }
-  td{ padding:9px 10px; border-bottom:1px solid var(--line); }
-  tr:last-child td{ border-bottom:0; }
-  .twrap{ overflow-x:auto; }
-  .cfg{ border-bottom:1px dotted var(--line-strong); cursor:help; }
+  thead th{
+    position:sticky; top:0; z-index:1; background:var(--paper);
+    text-align:left; padding:9px 12px; font-size:10.5px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
+    border-bottom:1px solid var(--line);
+  }
+  td{ padding:10px 12px; border-bottom:1px solid var(--line); }
+  tbody tr:last-child td{ border-bottom:0; }
+  tbody tr{ transition:background var(--t); }
+  tbody tr:hover{ background:var(--soft); }
+
+  /* ---------- config popover ---------- */
+  .cfg{ border-bottom:1px dotted var(--line-strong); cursor:help; transition:color var(--t), border-color var(--t); }
   .cfg:hover{ color:var(--accent); border-bottom-color:var(--accent); }
   .pop{
-    display:none; position:fixed; z-index:120; max-width:290px; background:var(--paper);
-    border:1px solid var(--line-strong); border-radius:var(--r-md); box-shadow:var(--e2); padding:var(--s3) var(--s4);
+    display:none; position:fixed; z-index:120; max-width:300px;
+    background:var(--paper); border:1px solid var(--line-strong);
+    border-radius:var(--r-md); box-shadow:var(--e3); padding:var(--s3) var(--s4);
+    animation:pop var(--t) both;
   }
   .pop h3{ margin:0 0 var(--s2); padding-bottom:var(--s2); border-bottom:1px solid var(--line); font-size:13px; }
-  .pop dl{ margin:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:3px var(--s3); }
-  .pop dt{ font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  .pop dl{ margin:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px var(--s3); }
+  .pop dt{ font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); align-self:center; }
   .pop dd{ margin:0; font-size:12.5px; font-family:var(--font-num); }
-  .empty{ text-align:center; padding:var(--s6) var(--s4); color:var(--muted); }
-  .back{ margin-bottom:var(--s4); }
-  .toolbar{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
-  .searchbox{ flex:1 1 240px; height:38px; padding:0 var(--s3); font:inherit; font-size:13px;
-    border:1px solid var(--line-strong); border-radius:var(--r-sm); background:var(--paper); color:var(--ink); }
-  .searchbox:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
 
-  @media (max-width:760px){
-    .orow{ grid-template-columns:1fr; gap:var(--s2); }
+  /* ---------- empty + skeleton ---------- */
+  .empty{ text-align:center; padding:var(--s7) var(--s4); color:var(--muted); }
+  .empty-ico{
+    width:44px; height:44px; margin:0 auto var(--s3); border-radius:var(--r-md);
+    display:flex; align-items:center; justify-content:center;
+    background:var(--soft); border:1px solid var(--line); color:var(--faint);
+  }
+  .empty-ico svg{ width:22px; height:22px; }
+  .skel{ background:linear-gradient(90deg,var(--soft) 25%,var(--line) 37%,var(--soft) 63%);
+    background-size:400% 100%; animation:shimmer 1.3s ease-in-out infinite; border-radius:var(--r-sm); }
+  .skel-line{ height:12px; margin-bottom:var(--s2); }
+  .skel-card{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
+    padding:var(--s4); margin-bottom:var(--s3); }
+
+  /* ---------- toasts + modal ---------- */
+  .toast-stack{ position:fixed; left:50%; bottom:var(--s5); transform:translateX(-50%);
+    z-index:200; display:flex; flex-direction:column; gap:var(--s2); align-items:center; pointer-events:none; }
+  .toast{
+    pointer-events:auto; background:var(--paper); color:var(--ink);
+    border:1px solid var(--line-strong); border-left:3px solid var(--accent);
+    border-radius:var(--r-sm); box-shadow:var(--e3);
+    padding:10px var(--s4); font-size:13px; font-weight:600; max-width:88vw;
+    animation:rise var(--t) both;
+  }
+  .toast.ok{ border-left-color:var(--ok); }
+  .toast.bad{ border-left-color:var(--bad); }
+  .modal-bg{
+    position:fixed; inset:0; z-index:150; background:var(--scrim);
+    display:flex; align-items:center; justify-content:center; padding:var(--s4);
+    animation:fade var(--t) both;
+  }
+  .modal{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--r-lg);
+    box-shadow:var(--e3); width:100%; max-width:440px; animation:pop var(--t-slow) both;
+  }
+  .modal-h{ padding:var(--s5) var(--s5) 0; }
+  .modal-h h3{ margin:0; font-size:17px; letter-spacing:-0.02em; }
+  .modal-h p{ margin:var(--s1) 0 0; font-size:12.5px; color:var(--muted); }
+  .modal-b{ padding:var(--s4) var(--s5); }
+  .modal-f{ padding:0 var(--s5) var(--s5); display:flex; gap:var(--s2); justify-content:flex-end; }
+  .lookup-out{ margin-top:var(--s3); font-size:13px; }
+  .lookup-out dl{ margin:var(--s2) 0 0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px var(--s3); }
+  .lookup-out dt{ font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); align-self:center; }
+  .lookup-out dd{ margin:0; font-family:var(--font-num); font-size:12.5px; }
+
+  .staffbadge{
+    font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--warn); background:var(--warn-bg); border:1px solid var(--warn-line);
+    border-radius:var(--r-pill); padding:3px 8px;
+  }
+  .pickbox{ height:34px; font-size:12.5px; max-width:190px; width:auto; }
+
+  @keyframes rise{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+  @keyframes pop{ from{ opacity:0; transform:scale(.97); } to{ opacity:1; transform:none; } }
+  @keyframes fade{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes shimmer{ from{ background-position:100% 50%; } to{ background-position:0 50%; } }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important;
+      transition-duration:.01ms !important; }
+  }
+
+  @media (max-width:820px){
+    .wrap{ padding:var(--s5) var(--s4) var(--s7); }
+    header.top{ padding:var(--s3) var(--s4); }
+    .orow{ grid-template-columns:1fr; gap:var(--s3); }
+    .orow .chev{ display:none; }
     .sum{ grid-template-columns:repeat(2,1fr); }
+    .sumv{ font-size:22px; }
     .bhead{ grid-template-columns:1fr; }
+    .back .btn{ flex:1 1 auto; }
+    h1{ font-size:21px; }
   }
   @media print{
-    header.top, .toolbar, .back, .btn{ display:none !important; }
+    header.top, .toolbar, .back, .btn, .icon-btn, .toast-stack{ display:none !important; }
     body{ background:#fff; }
-    .card, .batch{ box-shadow:none; border-color:#ccc; break-inside:avoid; }
+    .card, .batch, .sumc{ box-shadow:none; border-color:#ccc; break-inside:avoid; }
     .bbody{ display:block !important; background:#fff; }
+    .orow{ animation:none; }
   }
 </style>
 </head>
@@ -157,11 +306,16 @@
 <header class="top" id="topbar" style="display:none;">
   <div class="brand">
     <img src="logo.png" alt="" onerror="this.style.display='none'">
-    <div><b>Order Portal</b><br><span id="custName"></span></div>
+    <div><b>Order Portal</b><span id="custName"></span></div>
   </div>
   <div class="who">
-    <span id="whoEmail"></span>
-    <button class="btn" id="signOut" type="button">Sign out</button>
+    <span id="staffPick" style="display:none;"></span>
+    <span class="who-em" id="whoEmail"></span>
+    <button type="button" class="icon-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">
+      <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button class="btn sm" id="signOut" type="button">Sign out</button>
   </div>
 </header>
 
@@ -171,9 +325,15 @@
     <p class="muted" style="margin-top:0;">Sign in to see your orders, shipments and serial numbers.</p>
     <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="username"></div>
     <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div>
-    <button class="btn primary" id="go" type="button" style="width:100%; height:42px;">Sign in</button>
+    <button class="btn primary" id="go" type="button" style="width:100%; height:44px;">Sign in</button>
     <div class="err" id="loginErr"></div>
   </div>
+  <p class="muted" style="text-align:center;">
+    <button type="button" class="icon-btn" id="themeBtn2" title="Toggle dark mode" aria-label="Toggle dark mode">
+      <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+  </p>
 </div>
 
 <div class="wrap" id="app" style="display:none;">
@@ -182,6 +342,7 @@
 </div>
 
 <div class="pop" id="pop"></div>
+<div class="toast-stack" id="toastStack"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -203,7 +364,54 @@
     return isNaN(d) ? String(v) : d.toLocaleDateString();
   }
 
+  /* ---------- theme ---------- */
+  function setTheme(t){
+    document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+    if (t !== 'dark') document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('ntTheme', t); } catch(e){}
+    const m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', t === 'dark' ? '#0e1116' : '#ffffff');
+  }
+  function toggleTheme(){
+    setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  }
+  ['themeBtn','themeBtn2'].forEach(function(id){
+    const b = $(id); if (b) b.addEventListener('click', toggleTheme);
+  });
+
+  /* ---------- toast ---------- */
+  function toast(msg, kind, ms){
+    const stack = $('toastStack'); if (!stack) return;
+    const el = document.createElement('div');
+    el.className = 'toast' + (kind ? ' ' + kind : '');
+    el.textContent = msg;
+    stack.appendChild(el);
+    setTimeout(function(){
+      el.style.transition = 'opacity 200ms, transform 200ms';
+      el.style.opacity = '0'; el.style.transform = 'translateY(6px)';
+      setTimeout(function(){ el.remove(); }, 220);
+    }, ms || 4000);
+  }
+
+  /* ---------- modal ---------- */
+  let modalBg = null;
+  function closeModal(){ if (modalBg){ modalBg.remove(); modalBg = null; } }
+  function openModal(html){
+    closeModal();
+    modalBg = document.createElement('div');
+    modalBg.className = 'modal-bg';
+    modalBg.id = 'modalBg';
+    modalBg.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>';
+    modalBg.addEventListener('click', function(e){ if (e.target === modalBg) closeModal(); });
+    document.body.appendChild(modalBg);
+    const first = modalBg.querySelector('input, button');
+    if (first) first.focus();
+    return modalBg;
+  }
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
+
   let session = null, me = null, customer = null;
+  let isStaff = false, allCustomers = [], viewAs = null;
   let orders = [], lines = [], configs = [], batches = [], tracking = [], units = [], locations = [];
   let currentId = null, query = '';
 
@@ -226,7 +434,32 @@
     $('whoEmail').textContent = session.user.email || '';
     const cu = await SB.from('customer_users').select('*').eq('user_id', session.user.id).limit(1);
     me = (cu.data || [])[0];
+
     if (!me || !me.active){
+      /* Not a customer login. NovaTech staff can still open this page to see
+         exactly what a customer sees, so check the roster before refusing. */
+      const st = await SB.from('staff')
+        .select('name,active,can_view_orders,can_manage_orders,can_admin_orders,is_admin')
+        .eq('user_id', session.user.id).limit(1);
+      const r = (st.data || [])[0];
+      const staffOk = r && r.active &&
+        (r.can_view_orders || r.can_manage_orders || r.can_admin_orders || r.is_admin);
+      if (staffOk){
+        isStaff = true;
+        const cs = await SB.from('customers').select('*').eq('active', true).order('name');
+        allCustomers = cs.data || [];
+        if (!allCustomers.length){
+          $('app').style.display = ''; $('topbar').style.display = '';
+          $('listView').innerHTML = '<div class="card"><h1>No customers yet</h1>' +
+            '<p class="muted">Add one in the dashboard\u2019s Admin page first.</p></div>';
+          return;
+        }
+        if (!viewAs) viewAs = allCustomers[0].id;
+        me = { customer_id: viewAs };
+        $('app').style.display = ''; $('topbar').style.display = '';
+        await load();
+        return;
+      }
       $('app').style.display = '';
       $('topbar').style.display = '';
       $('custName').textContent = '';
@@ -253,7 +486,14 @@
 
   /* ---------- data ---------- */
   async function load(){
-    $('listView').innerHTML = '<div class="card"><p class="muted">Loading your orders\u2026</p></div>';
+    $('listView').innerHTML =
+      '<div class="page-head"><h1>Your orders</h1></div>' +
+      '<div class="skel-card"><div class="skel skel-line" style="width:32%"></div>' +
+        '<div class="skel skel-line" style="width:64%"></div></div>' +
+      '<div class="skel-card"><div class="skel skel-line" style="width:28%"></div>' +
+        '<div class="skel skel-line" style="width:55%"></div></div>' +
+      '<div class="skel-card"><div class="skel skel-line" style="width:36%"></div>' +
+        '<div class="skel skel-line" style="width:48%"></div></div>';
     const [c, o, cf, lo] = await Promise.all([
       SB.from('customers').select('*').eq('id', me.customer_id).limit(1),
       SB.from('orders').select('*').eq('customer_id', me.customer_id).eq('archived', false).order('created_at', { ascending:false }),
@@ -265,6 +505,21 @@
     configs = cf.data || [];
     locations = lo.data || [];
     $('custName').textContent = customer ? customer.name : '';
+    const pick = $('staffPick');
+    if (isStaff && pick){
+      pick.style.display = '';
+      pick.innerHTML = '<span class="staffbadge">Staff preview</span> ' +
+        '<select id="viewAs" class="pickbox">' + allCustomers.map(function(c){
+          return '<option value="' + esc(c.id) + '"' + (c.id === viewAs ? ' selected' : '') + '>' + esc(c.name) + '</option>';
+        }).join('') + '</select>';
+      $('viewAs').addEventListener('change', async function(){
+        viewAs = this.value;
+        me = { customer_id: viewAs };
+        currentId = null; query = '';
+        $('detailView').style.display = 'none';
+        await load();
+      });
+    }
     const ids = orders.map(function(x){ return x.id; });
     if (ids.length){
       const [ln, ba, un] = await Promise.all([
@@ -333,9 +588,9 @@
   function locOf(b){ return b && b.location_id ? locations.find(function(l){ return l.id === b.location_id; }) : null; }
   function locName(b){
     const l = locOf(b);
-    if (!l) return 'Destination to be confirmed';
-    return l.store_name + (l.store_number ? ' #' + l.store_number : '');
+    return l ? l.store_name : 'Destination to be confirmed';
   }
+  function locNum(b){ const l = locOf(b); return (l && l.store_number) ? l.store_number : ''; }
   function locLine(b){
     const l = locOf(b);
     if (!l) return '';
@@ -352,6 +607,7 @@
     });
     $('listView').innerHTML =
       '<h1>Your orders</h1>' +
+      '<p class="muted" style="margin-top:0;">Progress, shipments, tracking numbers and serial numbers for everything you have ordered.</p>' +
       '<div class="toolbar">' +
         '<input class="searchbox" id="q" type="text" placeholder="Search invoice or PO" value="' + esc(query) + '">' +
         '<button class="btn" id="lookup" type="button">Find a serial</button>' +
@@ -360,7 +616,8 @@
         const st = stats(o), s = statusOf(st);
         const pct = function(n){ return st.ordered ? Math.min(100, n/st.ordered*100) : 0; };
         return '<div class="orow" role="button" tabindex="0" data-id="' + esc(o.id) + '">' +
-          '<div><div class="inv"><span class="mono">' + esc(o.invoice_no) + '</span>' +
+          '<div><div class="inv"><span class="inv-lbl">Invoice #</span>' +
+            '<span class="mono">' + esc(o.invoice_no) + '</span>' +
             '<span class="chip ' + s.c + '">' + s.l + '</span></div>' +
             '<div class="sub">' + (o.po_number ? 'PO ' + esc(o.po_number) + ' &middot; ' : '') +
             (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : 'no due date') + '</div></div>' +
@@ -370,10 +627,14 @@
             '<i class="b" style="width:' + pct(st.built) + '%"></i>' +
           '</div><div class="barlbl">' + num(st.shipped) + ' of ' + num(st.ordered) + ' shipped</div></div>' +
           '<div class="barlbl">' + num(st.made) + ' built</div>' +
+          '<div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>' +
         '</div>';
       }).join('')
-      : '<div class="card"><div class="empty"><p>' +
-        (orders.length ? 'No orders match that search.' : 'No orders yet.') + '</p></div></div>');
+      : '<div class="card"><div class="empty">' +
+        '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg></div>' +
+        '<p>' + (orders.length ? 'No orders match that search.' : 'Nothing here yet.') + '</p>' +
+        '<p class="muted">' + (orders.length ? 'Try a different invoice or PO number.' : 'Orders appear here once NovaTech creates them.') + '</p>' +
+        '</div></div>');
     const qi = $('q');
     if (qi) qi.addEventListener('input', function(){ query = this.value; renderList(); $('q').focus(); });
     const lk = $('lookup');
@@ -394,17 +655,19 @@
     $('detailView').innerHTML =
       '<div class="back"><button class="btn" id="back" type="button">&larr; All orders</button>' +
       ' <button class="btn" id="csv" type="button">Download CSV</button>' +
-      ' <button class="btn" id="prt" type="button">Print</button></div>' +
+      ' <button class="btn" id="prt" type="button">Print</button>' +
+      (o.invoice_pdf_name ? ' <button class="btn primary" id="pdf" type="button">Invoice PDF</button>' : '') +
+      '</div>' +
       '<h1>Invoice <span class="mono">' + esc(o.invoice_no) + '</span> <span class="chip ' + s.c + '">' + s.l + '</span></h1>' +
       '<p class="muted">' + (o.po_number ? 'PO ' + esc(o.po_number) + ' &middot; ' : '') +
         (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : '') + '</p>' +
       '<div class="sum">' +
-        '<div class="sumc"><div class="sumv">' + num(st.ordered) + '</div><div class="suml">Ordered</div></div>' +
-        '<div class="sumc"><div class="sumv">' + num(st.made) + '</div><div class="suml">Built</div></div>' +
-        '<div class="sumc"><div class="sumv">' + num(st.shipped) + '</div><div class="suml">Shipped</div></div>' +
-        '<div class="sumc"><div class="sumv">' + num(st.remaining) + '</div><div class="suml">Remaining</div></div>' +
+        '<div class="sumc" title="Total quantity on this invoice"><div class="sumv">' + num(st.ordered) + '</div><div class="suml">Ordered</div></div>' +
+        '<div class="sumc" title="Assembled and given a serial number"><div class="sumv">' + num(st.made) + '</div><div class="suml">Built</div></div>' +
+        '<div class="sumc ok" title="Dispatched to a store"><div class="sumv">' + num(st.shipped) + '</div><div class="suml">Shipped</div></div>' +
+        '<div class="sumc rem" title="Still to be built"><div class="sumv">' + num(st.remaining) + '</div><div class="suml">Remaining</div></div>' +
       '</div>' +
-      '<div class="card"><h2>Shipments</h2>' +
+      '<div class="card"><h2>Shipments <span class="subtle">each shipment goes to one store</span></h2>' +
       (mine.length ? mine.map(function(b){
         const bu = units.filter(function(u){ return u.batch_id === b.id; });
         const tk = tracking.filter(function(t){ return t.batch_id === b.id; });
@@ -415,6 +678,7 @@
           '<div class="bhead">' +
             '<div><b>Batch ' + b.batch_no + '</b><br><span class="chip ' + (shipped?'k':'w') + '">' + (shipped?'Shipped':'Preparing') + '</span></div>' +
             '<div><b>' + esc(locName(b)) + '</b>' +
+              (locNum(b) ? '<span class="storenum">Store ' + esc(locNum(b)) + '</span>' : '') +
               '<div class="sub">' + esc(locLine(b) || '') + '</div></div>' +
             '<div class="mono">' + num(bu.length) + ' units<div class="sub">' +
               (b.carrier ? esc(b.carrier) + ' &middot; ' : '') + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</div></div>' +
@@ -430,10 +694,22 @@
           '</div>' +
         '</div>';
       }).join('')
-      : '<div class="empty"><p>Nothing has shipped yet.</p></div>') +
+      : '<div class="empty">' +
+        '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>' +
+        '<p>Nothing has shipped yet.</p><p class="muted">Shipments appear here as they leave the building.</p></div>') +
       '</div>';
 
     $('back').addEventListener('click', renderList);
+    if ($('pdf')) $('pdf').addEventListener('click', async function(){
+      const btn = this; btn.disabled = true; btn.textContent = 'Opening\u2026';
+      const r = await SB.storage.from('order-invoices').createSignedUrl(o.id + '/invoice.pdf', 120);
+      btn.disabled = false; btn.textContent = 'Invoice PDF';
+      if (r.error || !r.data || !r.data.signedUrl){
+        toast('That invoice PDF could not be opened. Please ask your NovaTech contact.', 'bad', 7000);
+        return;
+      }
+      window.open(r.data.signedUrl, '_blank', 'noopener');
+    });
     $('csv').addEventListener('click', function(){ exportCsv(o); });
     $('prt').addEventListener('click', function(){
       document.querySelectorAll('.bbody').forEach(function(x){ x.style.display = ''; });
@@ -458,31 +734,63 @@
 
   /* ---------- serial lookup ---------- */
   function serialLookup(){
-    const sn = window.prompt('Enter a serial number');
-    if (!sn) return;
-    const u = units.find(function(x){ return x.serial.toUpperCase() === sn.trim().toUpperCase(); });
-    if (!u){ window.alert('No unit with that serial on your orders.'); return; }
-    const o = orders.find(function(x){ return x.id === u.order_id; });
-    const b = u.batch_id ? batches.find(function(x){ return x.id === u.batch_id; }) : null;
-    const t = tracking.find(function(x){ return x.unit_id === u.id; }) ||
-              tracking.find(function(x){ return b && x.batch_id === b.id && !x.unit_id; });
-    window.alert(u.serial + '\n\nInvoice: ' + (o ? o.invoice_no : '?') +
-      (b ? '\nBatch ' + b.batch_no + (b.store_name ? ' to ' + b.store_name : '') : '\nNot yet assigned to a shipment') +
-      (t ? '\nTracking: ' + t.tracking_no : '') +
-      '\nStatus: ' + (u.unit_status || 'built'));
-    if (o) openOrder(o.id);
+    const bg = openModal(
+      '<div class="modal-h"><h3>Find a serial number</h3>' +
+      '<p>Type or scan a serial to see which order and shipment it belongs to.</p></div>' +
+      '<div class="modal-b">' +
+        '<div class="field"><label for="snIn">Serial</label>' +
+        '<input id="snIn" type="text" placeholder="NT26000175" autocomplete="off" spellcheck="false"></div>' +
+        '<div class="lookup-out" id="snOut"></div>' +
+      '</div>' +
+      '<div class="modal-f"><button class="btn" id="snClose" type="button">Close</button>' +
+      '<button class="btn primary" id="snGo" type="button">Look up</button></div>');
+
+    const out = bg.querySelector('#snOut');
+    bg.querySelector('#snClose').addEventListener('click', closeModal);
+    bg.querySelector('#snIn').addEventListener('keydown', function(e){ if (e.key === 'Enter') run(); });
+    bg.querySelector('#snGo').addEventListener('click', run);
+
+    function run(){
+      const sn = bg.querySelector('#snIn').value.trim();
+      if (!sn){ out.innerHTML = '<span class="muted">Enter a serial number.</span>'; return; }
+      const u = units.find(function(x){ return x.serial.toUpperCase() === sn.toUpperCase(); });
+      if (!u){
+        out.innerHTML = '<span class="chip w">Not found</span> ' +
+          '<span class="muted">No unit with that serial on your orders.</span>';
+        return;
+      }
+      const o = orders.find(function(x){ return x.id === u.order_id; });
+      const b = u.batch_id ? batches.find(function(x){ return x.id === u.batch_id; }) : null;
+      const t = tracking.find(function(x){ return x.unit_id === u.id; }) ||
+                (b ? tracking.find(function(x){ return x.batch_id === b.id && !x.unit_id; }) : null);
+      const cfg = cfgById(u.config_id);
+      const st = u.unit_status === 'shipped' ? 'k' : (u.unit_status === 'assigned' ? 'i' : 'n');
+      out.innerHTML =
+        '<div><span class="mono" style="font-weight:700;">' + esc(u.serial) + '</span> ' +
+          '<span class="chip ' + st + '">' + esc(u.unit_status || 'built') + '</span></div>' +
+        '<dl>' +
+          '<dt>Invoice</dt><dd>' + esc(o ? o.invoice_no : '\u2014') + '</dd>' +
+          (cfg ? '<dt>Model</dt><dd>' + esc(cfg.name) + '</dd>' : '') +
+          (b ? '<dt>Shipment</dt><dd>Batch ' + b.batch_no + (locName(b) ? ' \u00b7 ' + esc(locName(b)) : '') + '</dd>' : '') +
+          (t ? '<dt>Tracking</dt><dd>' + trackHtml(b ? b.carrier : '', [t.tracking_no]) + '</dd>' : '') +
+          (b && b.ship_date ? '<dt>Shipped</dt><dd>' + esc(fmtDate(b.ship_date)) + '</dd>' : '') +
+        '</dl>' +
+        (o ? '<p style="margin-bottom:0;"><button class="btn sm" id="snOpen" type="button">Open invoice ' + esc(o.invoice_no) + '</button></p>' : '');
+      const go = out.querySelector('#snOpen');
+      if (go) go.addEventListener('click', function(){ closeModal(); openOrder(o.id); });
+    }
   }
 
   /* ---------- csv ---------- */
   function exportCsv(o){
     const cfgName = {}; configs.forEach(function(c){ cfgName[c.id] = c.name; });
-    const head = ['Serial','Model','Invoice','Batch','Store','Address','Carrier','Tracking','Ship date','Status'];
+    const head = ['Serial','Model','Invoice','Batch','Store','Store #','Address','Carrier','Tracking','Ship date','Status'];
     const rows = units.filter(function(u){ return u.order_id === o.id; }).map(function(u){
       const b = u.batch_id ? batches.find(function(x){ return x.id === u.batch_id; }) : null;
       const t = tracking.find(function(x){ return x.unit_id === u.id; }) ||
                 (b ? tracking.find(function(x){ return x.batch_id === b.id && !x.unit_id; }) : null);
       return [u.serial, cfgName[u.config_id] || '', o.invoice_no, b ? b.batch_no : '',
-              b ? locName(b) : '', b ? locLine(b) : '', b ? (b.carrier || '') : '',
+              b ? locName(b) : '', b ? locNum(b) : '', b ? locLine(b) : '', b ? (b.carrier || '') : '',
               t ? t.tracking_no : '', b && b.ship_date ? b.ship_date : '', u.unit_status || ''];
     });
     const csv = [head].concat(rows).map(function(r){
@@ -494,6 +802,7 @@
     a.download = 'invoice-' + o.invoice_no + '.csv';
     document.body.appendChild(a); a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    toast('CSV downloaded \u00b7 ' + rows.length + ' unit' + (rows.length === 1 ? '' : 's'), 'ok');
   }
 
   /* ---------- spec popover ---------- */
