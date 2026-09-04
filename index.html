@@ -1774,6 +1774,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .ord-seln input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
 
+  .adm-arch{ display:inline-flex; align-items:center; gap:var(--s2); font-size:12.5px; color:var(--muted); cursor:pointer; }
+  .adm-seq{ margin:0 0 var(--s4); display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px var(--s4);
+    padding:var(--s3) var(--s4); background:var(--soft); border:1px solid var(--line); border-radius:var(--r-sm); }
+  .adm-seq dt{ font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); align-self:center; }
+  .adm-seq dd{ margin:0; font-size:13px; }
+
 </style>
 </head>
 <body>
@@ -4073,7 +4079,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const r = data[0];
     if (!r.active) return;
-    ordPerm.admin   = !!(r.can_admin_orders || r.is_admin);
+    /* is_admin is the TIMECLOCK admin flag and must not imply order admin.
+       Conflating them handed the whole Admin page to timeclock admins. */
+    ordPerm.admin   = !!r.can_admin_orders;
     ordPerm.catalog = !!(r.can_manage_catalog) || ordPerm.admin;
     ordPerm.manage  = !!(r.can_manage_orders) || ordPerm.admin;
     ordPerm.view    = !!(r.can_view_orders)   || ordPerm.manage;
@@ -4133,7 +4141,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ordListBody.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:62%"></div></div>'.repeat(3);
     try {
       const [cu, cf, lo, or_, un] = await Promise.all([
-        SB.from('customers').select('*').eq('active', true).order('name'),
+        /* every customer, archived included: an archived one still has to
+           resolve its name on the orders it already owns */
+        SB.from('customers').select('*').order('name'),
         SB.from('configs').select('*').order('name'),
         SB.from('ship_to_locations').select('*').eq('active', true).order('store_name'),
         SB.from('orders').select('*').eq('archived', false).order('created_at', { ascending:false }),
@@ -4421,7 +4431,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<h2 class="card-title"><span class="ord-step s3">3</span>Batches <span class="card-sub">one batch = one shipment to one store \u00b7 add tracking, then mark it shipped</span></h2>' +
         '<div id="ordBatchBody"></div>' +
         '<p class="card-note">Marking a batch shipped stamps the ship date and flips its units to shipped. ' +
-        'The customer sees it in their portal straight away, tracking numbers included.</p>' +
+        'The customer sees it in their portal straight away, tracking numbers included. ' +
+        'A shipped serial number is retired for good \u2014 even if the order is deleted later, that number is never issued again.</p>' +
       '</section>';
 
     ordRenderPool();
@@ -4506,7 +4517,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      them back in when we reopen, so nothing the user typed is lost. */
   function ordNewOrderModal(pre){
     pre = pre || {};
-    const custOpts = ordCustomers.map(function(c){
+    const custOpts = ordCustomers.filter(function(c){ return c.active !== false; }).map(function(c){
       return '<option value="' + esc(c.id) + '"' + (pre.customer_id === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>';
     }).join('');
     const bg = mgModal(
@@ -5139,7 +5150,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             'Put the parts back into inventory</label>' +
             '<p class="muted-sm">Leave that ticked unless the parts really were consumed.</p>'
           : '<p class="muted-sm">This order never took anything out of inventory, so there is nothing to put back.</p>') +
-        '<p class="muted-sm">If these were the newest serial numbers issued, the counter winds back so they get reused.</p>' +
+        '<p class="muted-sm">If these were the newest serial numbers issued, the counter winds back so they get reused \u2014 ' +
+        'except any that already shipped, which stay retired.</p>' +
         '<div class="err" id="ordDelErr" style="margin-top:var(--s3);"></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="ordDelCancel">Keep it</button>' +
@@ -6049,6 +6061,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* ================= ADMIN ================= */
   let admTab = 'customers', admStaff = [], admLogins = [], admSeqs = [], admCustFilter = '';
+  let admShowArch = false;
 
   async function admOpen(){
     if (!ordPerm.admin && !ordPerm.catalog) return;
@@ -6061,8 +6074,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     host.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:60%"></div></div>';
     try {
       const [st, cu, sq] = await Promise.all([
-        SB.from('staff').select('*').order('name'),
-        SB.from('customer_users').select('*'),
+        ordPerm.admin ? SB.from('staff').select('*').order('name') : Promise.resolve({ data: [] }),
+        ordPerm.admin ? SB.from('customer_users').select('*')      : Promise.resolve({ data: [] }),
         SB.from('serial_sequences').select('*')
       ]);
       if (st.error) throw st.error;
@@ -6087,6 +6100,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         return '<button type="button" class="mg-pill' + (admTab === t[0] ? ' on' : '') + '" data-admtab="' + t[0] + '">' + t[1] + '</button>';
       }).join('') + '</div><p class="adm-blurb" id="admBlurb"></p><div id="admPane"></div>';
     admRenderPane();
+  }
+
+  function admArchToggle(n){
+    if (!n && !admShowArch) return '';
+    return '<label class="adm-arch"><input type="checkbox" id="admArch"' + (admShowArch ? ' checked' : '') + '> ' +
+           'Show archived' + (n ? ' (' + ordNum(n) + ')' : '') + '</label>';
   }
 
   function admCustSelect(id, sel, allLabel){
@@ -6117,11 +6136,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* ---- customers + serial sequences ---- */
   function admPaneCustomers(p){
     p.innerHTML =
-      '<div class="adm-bar"><button class="primary btn-sm" id="admAddCust" type="button">Add customer</button></div>' +
+      '<div class="adm-bar">' +
+        (ordPerm.admin ? '<button class="primary btn-sm" id="admAddCust" type="button">Add customer</button>' : '') +
+        admArchToggle(ordCustomers.filter(function(c){ return c.active === false; }).length) +
+      '</div>' +
       '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
-        '<th>Customer</th><th>Code</th><th>Next serial</th><th>Active</th><th></th>' +
+        '<th>Customer</th><th>Code</th><th>Next serial</th><th>Status</th><th></th>' +
       '</tr></thead><tbody>' +
-      ordCustomers.map(function(c){
+      ordCustomers.filter(function(c){ return admShowArch || c.active !== false; }).map(function(c){
         const q = admSeqs.find(function(s){ return s.customer_id === c.id; });
         const next = q
           ? q.prefix + (q.use_year ? (q.year_2 || '') : '') + String((q.current_value || 0) + 1).padStart(q.pad || 6, '0')
@@ -6129,9 +6151,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         return '<tr><td><b>' + esc(c.name) + '</b></td>' +
           '<td>' + esc(c.code || '\u2014') + '</td>' +
           '<td class="ord-mono">' + next + '</td>' +
-          '<td>' + (c.active ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Off</span>') + '</td>' +
+          '<td>' + (c.active !== false ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Archived</span>') + '</td>' +
           '<td class="adm-act">' +
-            (q ? '<button class="ghost mini" data-admseq="' + esc(c.id) + '" type="button">Serial counter</button>' : '') +
+            '<button class="ghost mini" data-admcustedit="' + esc(c.id) + '" type="button">Edit</button>' +
+            ((q && ordPerm.admin) ? '<button class="ghost mini" data-admseq="' + esc(c.id) + '" type="button">Serial counter</button>' : '') +
+            '<button class="ghost mini" data-admcustarch="' + esc(c.id) + '" type="button">' +
+              (c.active === false ? 'Restore' : 'Archive') + '</button>' +
           '</td></tr>';
       }).join('') +
       '</tbody></table></div>' +
@@ -6140,10 +6165,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* ---- configs ---- */
   function admPaneConfigs(p){
-    const list = ordConfigs.filter(function(c){ return !admCustFilter || c.customer_id === admCustFilter; });
+    const arch = ordConfigs.filter(function(c){ return c.active === false; }).length;
+    const list = ordConfigs.filter(function(c){
+      if (admCustFilter && c.customer_id !== admCustFilter) return false;
+      return admShowArch || c.active !== false;
+    });
     const custName = {}; ordCustomers.forEach(function(c){ custName[c.id] = c.name; });
     p.innerHTML =
-      '<div class="adm-bar">' + admCustSelect('admCfgCust', admCustFilter, 'All customers') + '</div>' +
+      '<div class="adm-bar">' + admCustSelect('admCfgCust', admCustFilter, 'All customers') +
+        '<button class="primary btn-sm" id="admAddCfg" type="button">Add config</button>' +
+        admArchToggle(arch) +
+      '</div>' +
       (list.length
         ? '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
             '<th>Name</th><th>Customer</th><th>Specs</th><th>Status</th><th></th></tr></thead><tbody>' +
@@ -6159,15 +6191,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
               '</td></tr>';
           }).join('') + '</tbody></table></div>'
         : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No configs yet.</p>' +
-          '<p class="muted-sm">Configs are created from the line items on a new order.</p></div>');
+          '<p class="muted-sm">Add one here, or create it from the line items on a new order.</p></div>');
   }
 
   /* ---- destinations ---- */
   function admPaneDests(p){
-    const list = ordLocations.filter(function(l){ return !admCustFilter || l.customer_id === admCustFilter; });
+    const archL = ordLocations.filter(function(l){ return l.active === false; }).length;
+    const list = ordLocations.filter(function(l){
+      if (admCustFilter && l.customer_id !== admCustFilter) return false;
+      return admShowArch || l.active !== false;
+    });
     p.innerHTML =
       '<div class="adm-bar">' + admCustSelect('admDstCust', admCustFilter, 'All customers') +
-        '<span class="muted-sm">Destinations save themselves when you type a new one on a batch, so duplicates creep in. Merge them here.</span>' +
+        '<button class="primary btn-sm" id="admAddDest" type="button">Add destination</button>' +
+        admArchToggle(archL) +
+        '<span class="muted-sm">Destinations also save themselves when you type a new one on a batch, so duplicates creep in. Merge them here.</span>' +
       '</div>' +
       (list.length
         ? '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
@@ -6186,7 +6224,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                   (l.active === false ? 'Restore' : 'Archive') + '</button>' +
               '</td></tr>';
           }).join('') + '</tbody></table></div>'
-        : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No destinations yet.</p></div>');
+        : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No destinations yet.</p>' +
+          '<p class="muted-sm">Add one here, or type a new one straight onto a batch.</p></div>');
   }
 
   /* ---- people ---- */
@@ -6247,8 +6286,25 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (t){ admTab = t.getAttribute('data-admtab'); admRender(); return; }
 
     if (e.target.id === 'admAddCust'){ admCustomerModal(); return; }
-    if (e.target.id === 'admAddLogin'){ admLoginModal(); return; }
+    if (e.target.id === 'admAddCfg'){ admConfigModal(null); return; }
+    if (e.target.id === 'admAddDest'){ admDestModal(null); return; }
+    if (e.target.id === 'admAddLogin'){
+      if (!ordPerm.admin){ toast('Only an order admin can manage customer logins.', 'bad', 6000); return; }
+      admLoginModal(); return;
+    }
 
+    const ce2 = e.target.closest('[data-admcustedit]');
+    if (ce2){
+      admCustomerEditModal(ordCustomers.find(function(c){ return c.id === ce2.getAttribute('data-admcustedit'); }));
+      return;
+    }
+    const ca2 = e.target.closest('[data-admcustarch]');
+    if (ca2){
+      const c = ordCustomers.find(function(x){ return x.id === ca2.getAttribute('data-admcustarch'); });
+      if (!c) return;
+      admCustomerArchive(c);
+      return;
+    }
     const sq = e.target.closest('[data-admseq]');
     if (sq){ admSeqModal(sq.getAttribute('data-admseq')); return; }
 
@@ -6284,6 +6340,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     const lt = e.target.closest('[data-admlogtog]');
     if (lt){
+      if (!ordPerm.admin){ toast('Only an order admin can manage customer logins.', 'bad', 6000); return; }
       const u = admLogins.find(function(x){ return x.id === lt.getAttribute('data-admlogtog'); });
       const r = await SB.from('customer_users').update({ active: !u.active }).eq('id', u.id);
       if (r.error){ toast(r.error.message, 'bad'); return; }
@@ -6294,6 +6351,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     const ld = e.target.closest('[data-admlogdel]');
     if (ld){
+      if (!ordPerm.admin){ toast('Only an order admin can manage customer logins.', 'bad', 6000); return; }
       const u = admLogins.find(function(x){ return x.id === ld.getAttribute('data-admlogdel'); });
       const r = await SB.from('customer_users').delete().eq('id', u.id);
       if (r.error){ toast(r.error.message, 'bad'); return; }
@@ -6308,8 +6366,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target.id === 'admCfgCust' || e.target.id === 'admDstCust'){
       admCustFilter = e.target.value; admRenderPane(); return;
     }
+    if (e.target.id === 'admArch'){ admShowArch = e.target.checked; admRenderPane(); return; }
     const pb = e.target.closest('[data-admperm]');
     if (pb){
+      if (!ordPerm.admin){
+        pb.checked = !pb.checked;
+        toast('Only an order admin can change permissions.', 'bad', 6000);
+        return;
+      }
       const row = admStaff.find(function(x){ return String(x.id) === pb.getAttribute('data-admperm'); });
       const field = pb.getAttribute('data-field');
       const val = pb.checked;
@@ -6368,25 +6432,123 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
   }
 
+  function admCustomerEditModal(c){
+    if (!c) return;
+    const bg = mgModal(
+      mgModalHead('Edit ' + esc(c.name), 'Renaming is safe \u2014 orders point at the customer, not the name') +
+      '<div class="mg-modal-body"><div class="ord-cfg-grid">' +
+        '<div class="field"><label for="admUName">Name</label><input id="admUName" type="text" value="' + esc(c.name) + '" autocomplete="off"></div>' +
+        '<div class="field"><label for="admUCode">Short code</label><input id="admUCode" type="text" value="' + esc(c.code || '') + '" autocomplete="off"></div>' +
+      '</div><div class="err" id="admUErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admUCancel">Cancel</button>' +
+      '<button class="primary" id="admUSave" data-primary>Save</button></div>', true);
+    bg.querySelector('#admUCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admUSave').addEventListener('click', async function(){
+      const name = bg.querySelector('#admUName').value.trim();
+      if (!name){ bg.querySelector('#admUErr').textContent = 'A name is required.'; return; }
+      this.disabled = true; this.textContent = 'Saving\u2026';
+      const patch = { name: name, code: bg.querySelector('#admUCode').value.trim().toUpperCase() || null };
+      const r = await SB.from('customers').update(patch).eq('id', c.id);
+      if (r.error){
+        this.disabled = false; this.textContent = 'Save';
+        bg.querySelector('#admUErr').textContent = /duplicate|unique/i.test(r.error.message || '')
+          ? 'That short code is already taken.' : r.error.message;
+        return;
+      }
+      Object.assign(c, patch);
+      mgCloseModal(); toast('Customer saved', 'ok');
+      admRenderPane(); ordRenderList();
+    });
+  }
+
+  function admCustomerArchive(c){
+    const restoring = c.active === false;
+    const openOrders = ordOrders.filter(function(o){
+      return o.customer_id === c.id && ordStatus(ordStats(o)).key !== 'complete';
+    }).length;
+    const bg = mgModal(
+      mgModalHead((restoring ? 'Restore ' : 'Archive ') + esc(c.name), '') +
+      '<div class="mg-modal-body">' +
+        (restoring
+          ? '<p>They will be selectable again when creating orders, configs and destinations.</p>'
+          : '<p>They stop appearing when creating new orders. Existing orders, units and batches are untouched ' +
+            'and keep showing their name.</p>' +
+            (openOrders
+              ? '<p class="ord-warnline">' + ordNum(openOrders) + ' order' + (openOrders === 1 ? ' is' : 's are') +
+                ' still open for this customer.</p>'
+              : '')) +
+        '<div class="err" id="admAErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admACancel">Cancel</button>' +
+      '<button class="' + (restoring ? 'primary' : 'ghost danger') + '" id="admAGo" data-primary>' +
+        (restoring ? 'Restore' : 'Archive') + '</button></div>');
+    bg.querySelector('#admACancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admAGo').addEventListener('click', async function(){
+      this.disabled = true; this.textContent = 'Working\u2026';
+      const r = await SB.from('customers').update({ active: restoring }).eq('id', c.id);
+      if (r.error){
+        this.disabled = false; this.textContent = restoring ? 'Restore' : 'Archive';
+        bg.querySelector('#admAErr').textContent = r.error.message; return;
+      }
+      c.active = restoring;
+      mgCloseModal(); toast(esc(c.name) + (restoring ? ' restored' : ' archived'), 'ok');
+      admRenderPane();
+    });
+  }
+
   function admSeqModal(customerId){
     const q = admSeqs.find(function(s){ return s.customer_id === customerId; });
     const c = ordCustomers.find(function(x){ return x.id === customerId; });
     if (!q) return;
+    const pfx = q.prefix + (q.use_year ? (q.year_2 || '') : '');
+    const fmt = function(n){ return pfx + String(n).padStart(q.pad, '0'); };
     const bg = mgModal(
       mgModalHead('Serial counter \u00b7 ' + esc(c.name), '') +
       '<div class="mg-modal-body">' +
-        '<p class="muted-sm">Last issued: <span class="ord-mono">' + esc(q.prefix + (q.year_2 || '') +
-          String(q.current_value).padStart(q.pad, '0')) + '</span></p>' +
-        '<div class="field"><label for="admQVal">Counter</label><input id="admQVal" type="number" min="0" value="' + q.current_value + '"></div>' +
-        '<p class="ord-warnline">Lowering this will reissue serial numbers that already exist. Only ever raise it, ' +
-        'or lower it after deleting the units that used those numbers.</p>' +
+        '<dl class="adm-seq">' +
+          '<dt>Last issued</dt><dd class="ord-mono">' + esc(fmt(q.current_value)) + '</dd>' +
+          '<dt>Next out</dt><dd class="ord-mono">' + esc(fmt(q.current_value + 1)) + '</dd>' +
+          '<dt title="Highest serial on a live unit or already shipped">Highest used</dt>' +
+            '<dd class="ord-mono" id="admQHigh">checking\u2026</dd>' +
+          '<dt title="The next number that has never been issued">Lowest free</dt>' +
+            '<dd class="ord-mono" id="admQLow">checking\u2026</dd>' +
+        '</dl>' +
+        '<div class="field"><label for="admQVal">Counter</label>' +
+          '<input id="admQVal" type="number" min="0" value="' + q.current_value + '"></div>' +
+        '<p class="muted-sm" id="admQHint">The counter is the last number handed out, so the next serial is one higher.</p>' +
         '<div class="err" id="admQErr"></div></div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="admQCancel">Cancel</button>' +
       '<button class="primary" id="admQSave" data-primary>Save</button></div>');
+
+    /* The floor comes from the database, which counts BOTH live units and
+       burned serials. A shipped serial stays burned even after its order is
+       deleted, so the number on a box in a store can never come back round. */
+    let floor = null;
+    (async function(){
+      const r = await SB.rpc('serial_floor', { p_customer: customerId });
+      floor = (r.error || r.data === null || r.data === undefined) ? null : (r.data | 0);
+      const hi = bg.querySelector('#admQHigh'), lo = bg.querySelector('#admQLow');
+      const hint = bg.querySelector('#admQHint');
+      if (floor === null){
+        if (hi) hi.textContent = 'could not check';
+        if (lo) lo.textContent = '\u2014';
+        if (hint) hint.textContent = 'Could not work out which serials are in use, so the counter is locked.';
+        return;
+      }
+      if (hi) hi.textContent = floor ? fmt(floor) : 'none yet';
+      if (lo) lo.textContent = fmt(floor + 1);
+      if (hint) hint.textContent = 'Lowest free number is ' + fmt(floor + 1) +
+        '. Anything at or below ' + floor + ' is either on a unit or has already shipped.';
+    })();
     bg.querySelector('#admQCancel').addEventListener('click', mgCloseModal);
     bg.querySelector('#admQSave').addEventListener('click', async function(){
       const v = parseInt(bg.querySelector('#admQVal').value, 10);
       if (isNaN(v) || v < 0){ bg.querySelector('#admQErr').textContent = 'Enter a whole number.'; return; }
+      if (floor === null){ bg.querySelector('#admQErr').textContent = 'Still checking which serials are in use \u2014 try again in a second.'; return; }
+      if (v < floor){
+        bg.querySelector('#admQErr').textContent =
+          fmt(floor) + ' is already in use or has shipped, so the counter cannot go below ' + floor + '.';
+        return;
+      }
       const r = await SB.from('serial_sequences').update({ current_value: v }).eq('id', q.id);
       if (r.error){ bg.querySelector('#admQErr').textContent = r.error.message; return; }
       q.current_value = v; mgCloseModal(); toast('Counter updated', 'ok'); admRenderPane();
@@ -6394,11 +6556,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   function admConfigModal(cfg){
-    if (!cfg) return;
+    const creating = !cfg;
+    if (creating) cfg = { name:'', pc_case:'', cpu:'', gpu:'', ram:'', ram_sticks:2, storage:'' };
+    if (creating && !ordCustomers.length){ toast('Add a customer first.', 'warn'); return; }
+    if (!invItems.length){ toast('Inventory has not loaded yet \u2014 try again in a moment.', 'warn'); return; }
     const bg = mgModal(
-      mgModalHead('Edit ' + esc(cfg.name), 'Parts come from inventory so stock deducts correctly') +
+      mgModalHead(creating ? 'New config' : 'Edit ' + esc(cfg.name),
+                  'Parts come from inventory so stock deducts correctly') +
       '<div class="mg-modal-body">' +
-        '<div class="field"><label for="admFName">Name</label><input id="admFName" type="text" value="' + esc(cfg.name) + '" autocomplete="off"></div>' +
+        (creating
+          ? '<div class="field"><label for="admFCust">Customer</label>' +
+            admCustSelect('admFCust', admCustFilter || ordCustomers[0].id, '') + '</div>'
+          : '') +
+        '<div class="field"' + (creating ? ' style="margin-top:var(--s3);"' : '') + '>' +
+          '<label for="admFName">Name</label><input id="admFName" type="text" value="' + esc(cfg.name) + '" placeholder="LP-Gaming-A" autocomplete="off"></div>' +
         '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
           '<div class="field"><label for="admFCase">Case</label><select id="admFCase">' + ordCatOptions('cases', cfg.pc_case) + '</select></div>' +
           '<div class="field"><label for="admFCpu">CPU</label><select id="admFCpu">' + ordCatOptions('cpus', cfg.cpu) + '</select></div>' +
@@ -6410,14 +6581,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             '<select id="admFRamN">' + ordCatOptions('ram', cfg.ram) + '</select>' +
           '</div></div>' +
         '</div>' +
-        '<p class="muted-sm">Editing a config does not change units already generated \u2014 they keep the specs printed on their labels.</p>' +
+        '<p class="muted-sm">' + (creating
+          ? 'Pick parts from inventory so stock deducts correctly when units are marked built.'
+          : 'Editing a config does not change units already generated \u2014 they keep the specs printed on their labels.') + '</p>' +
         '<div class="err" id="admFErr"></div></div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="admFCancel">Cancel</button>' +
-      '<button class="primary" id="admFSave" data-primary>Save config</button></div>', true);
+      '<button class="primary" id="admFSave" data-primary>' + (creating ? 'Create config' : 'Save config') + '</button></div>', true);
     bg.querySelector('#admFCancel').addEventListener('click', mgCloseModal);
     bg.querySelector('#admFSave').addEventListener('click', async function(){
       const name = bg.querySelector('#admFName').value.trim();
       if (!name){ bg.querySelector('#admFErr').textContent = 'Give the config a name.'; return; }
+      const label = this.textContent;
       this.disabled = true; this.textContent = 'Saving\u2026';
       const patch = {
         name: name,
@@ -6428,32 +6602,50 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         ram_sticks: parseInt(bg.querySelector('#admFSticks').value, 10) || 1,
         storage: bg.querySelector('#admFSto').value || null
       };
-      const r = await SB.from('configs').update(patch).eq('id', cfg.id);
-      if (r.error){
-        this.disabled = false; this.textContent = 'Save config';
-        bg.querySelector('#admFErr').textContent = r.error.message; return;
+      let r;
+      if (creating){
+        patch.customer_id = bg.querySelector('#admFCust').value;
+        r = await SB.from('configs').insert(patch).select().limit(1);
+        if (!r.error && r.data && r.data[0]) ordConfigs.push(r.data[0]);
+      } else {
+        r = await SB.from('configs').update(patch).eq('id', cfg.id);
+        if (!r.error) Object.assign(cfg, patch);
       }
-      Object.assign(cfg, patch);
-      mgCloseModal(); toast('Config saved', 'ok'); admRenderPane();
+      if (r.error){
+        this.disabled = false; this.textContent = label;
+        bg.querySelector('#admFErr').textContent = /duplicate|unique/i.test(r.error.message || '')
+          ? 'A config called "' + name + '" already exists for that customer.'
+          : r.error.message;
+        return;
+      }
+      mgCloseModal(); toast(creating ? 'Config "' + name + '" created' : 'Config saved', 'ok'); admRenderPane();
     });
   }
 
   function admDestModal(loc){
-    if (!loc) return;
+    const creating = !loc;
+    if (creating) loc = { store_name:'', store_number:'', address1:'', address2:'', city:'', state:'', zip:'', phone:'' };
+    if (creating && !ordCustomers.length){ toast('Add a customer first.', 'warn'); return; }
     const f = function(id, label, val, extra){
       return '<div class="field"><label for="' + id + '">' + label + '</label>' +
         '<input id="' + id + '" type="text" value="' + esc(val || '') + '" autocomplete="off"' + (extra || '') + '></div>';
     };
     const bg = mgModal(
-      mgModalHead('Edit destination', esc(ordLocLabel(loc))) +
-      '<div class="mg-modal-body"><div class="ord-cfg-grid">' +
+      mgModalHead(creating ? 'New destination' : 'Edit destination',
+                  creating ? 'A store this customer ships to' : esc(ordLocLabel(loc))) +
+      '<div class="mg-modal-body">' +
+      (creating
+        ? '<div class="field" style="margin-bottom:var(--s3);"><label for="admLCust">Customer</label>' +
+          admCustSelect('admLCust', admCustFilter || ordCustomers[0].id, '') + '</div>'
+        : '') +
+      '<div class="ord-cfg-grid">' +
         f('admLStore','Store name',loc.store_name) + f('admLNum','Store number',loc.store_number) +
         f('admLA1','Address',loc.address1) + f('admLA2','Address line 2',loc.address2) +
         f('admLCity','City',loc.city) + f('admLState','State',loc.state,' maxlength="2"') +
         f('admLZip','ZIP',loc.zip) + f('admLPhone','Phone',loc.phone) +
       '</div><div class="err" id="admLErr"></div></div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="admLCancel">Cancel</button>' +
-      '<button class="primary" id="admLSave" data-primary>Save</button></div>', true);
+      '<button class="primary" id="admLSave" data-primary>' + (creating ? 'Create destination' : 'Save') + '</button></div>', true);
     bg.querySelector('#admLCancel').addEventListener('click', mgCloseModal);
     bg.querySelector('#admLSave').addEventListener('click', async function(){
       const store = bg.querySelector('#admLStore').value.trim();
@@ -6468,10 +6660,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         zip: bg.querySelector('#admLZip').value.trim() || null,
         phone: bg.querySelector('#admLPhone').value.trim() || null
       };
-      const r = await SB.from('ship_to_locations').update(patch).eq('id', loc.id);
+      let r;
+      if (creating){
+        patch.customer_id = bg.querySelector('#admLCust').value;
+        patch.active = true;
+        r = await SB.from('ship_to_locations').insert(patch).select().limit(1);
+        if (!r.error && r.data && r.data[0]) ordLocations.push(r.data[0]);
+      } else {
+        r = await SB.from('ship_to_locations').update(patch).eq('id', loc.id);
+        if (!r.error) Object.assign(loc, patch);
+      }
       if (r.error){ bg.querySelector('#admLErr').textContent = r.error.message; return; }
-      Object.assign(loc, patch);
-      mgCloseModal(); toast('Destination saved', 'ok'); admRenderPane();
+      mgCloseModal();
+      toast(creating ? 'Destination "' + store + '" created' : 'Destination saved', 'ok');
+      admRenderPane();
     });
   }
 
