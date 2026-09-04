@@ -417,8 +417,12 @@
     document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
     if (t !== 'dark') document.documentElement.removeAttribute('data-theme');
     try { localStorage.setItem('ntTheme', t); } catch(e){}
-    const m = document.querySelector('meta[name="theme-color"]');
-    if (m) m.setAttribute('content', t === 'dark' ? '#0e1116' : '#ffffff');
+    const metas = document.querySelectorAll('meta[name="theme-color"]');
+    metas.forEach(function(m){
+      if (!m.getAttribute('media')) m.setAttribute('content', t === 'dark' ? '#0e1116' : '#ffffff');
+    });
+    const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (bar) bar.setAttribute('content', t === 'dark' ? 'black-translucent' : 'default');
   }
   function toggleTheme(){
     setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
