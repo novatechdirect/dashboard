@@ -4,14 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Novatech Dashboard</title>
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+<link rel="apple-touch-icon" href="/icon-192.png" sizes="192x192">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Novatech">
+<meta name="application-name" content="Novatech">
+<meta name="format-detection" content="telephone=no">
 <!-- JsBarcode (inlined for offline use) -->
 <script>
 /*! JsBarcode v3.12.3 | (c) Johan Lindell | MIT license */
@@ -398,7 +403,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);var dark=t==='dark'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches);var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++){if(!metas[i].getAttribute('media'))metas[i].setAttribute('content',dark?'#0e1116':'#ffffff');}document.documentElement.style.colorScheme=dark?'dark':'light';}catch(e){}})();</script>
 <style>
   /* ============================================================
      v30 DESIGN TOKENS
@@ -1008,6 +1013,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   /* --- v27: install helper --- */
+  /* Homescreen / standalone web app */
+  @media (display-mode: standalone){
+    html, body{ min-height:100dvh; overscroll-behavior:none; }
+    .install-card{ display:none !important; }
+  }
+  @supports (-webkit-touch-callout:none){
+    @media (display-mode: standalone){
+      body{ min-height:-webkit-fill-available; }
+    }
+  }
   .install-card{ margin-top:14px; display:flex; align-items:center; gap:12px; background:var(--paper); border:1px dashed var(--line-strong); border-radius:14px; padding:14px 16px; flex-wrap:wrap; }
   .install-txt{ flex:1; min-width:180px; font-size:12.5px; color:var(--muted); display:flex; flex-direction:column; gap:3px; }
   .install-txt b{ color:var(--ink); font-size:13.5px; }
@@ -2143,7 +2158,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="install-card" id="installCard" style="display:none;">
       <div class="install-txt">
         <b>Put this on your home screen</b>
-        <span id="installHowIos" style="display:none;">In Safari: tap the Share button (the square with the arrow), then &ldquo;Add to Home Screen&rdquo;.</span>
+        <span id="installHowIos" style="display:none;">Open <code>dash.novatechgaming.com</code> in Safari (not a deep link), tap Share, then &ldquo;Add to Home Screen&rdquo;. If an old icon exists, delete it first.</span>
         <span id="installHowAndroid" style="display:none;">In Chrome: tap the &#8942; menu, then &ldquo;Add to Home screen&rdquo;.</span>
       </div>
       <button class="primary btn-sm" id="installBtn" style="display:none;">Install</button>
@@ -3927,8 +3942,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* ---- v30: theme toggle (UI only) ---- */
   (function(){
+    function syncThemeColor(theme){
+      var dark = theme === 'dark';
+      var color = dark ? '#0e1116' : '#ffffff';
+      var metas = document.querySelectorAll('meta[name="theme-color"]');
+      for (var i = 0; i < metas.length; i++){
+        if (!metas[i].getAttribute('media')) metas[i].setAttribute('content', color);
+      }
+      document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+      var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+      if (bar) bar.setAttribute('content', dark ? 'black-translucent' : 'default');
+    }
     var btn = document.getElementById('themeBtn');
     if (!btn) return;
+    var initial = document.documentElement.getAttribute('data-theme');
+    if (!initial){
+      initial = window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+    }
+    syncThemeColor(initial);
     btn.addEventListener('click', function(){
       var root = document.documentElement;
       var isDark = root.getAttribute('data-theme') === 'dark' ||
@@ -3936,6 +3967,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var next = isDark ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
       try { localStorage.setItem('ntTheme', next); } catch(e){}
+      syncThemeColor(next);
     });
   })();
 
