@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Novatech Dashboard</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffffff">
@@ -1780,6 +1780,82 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .adm-seq dt{ font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); align-self:center; }
   .adm-seq dd{ margin:0; font-size:13px; }
 
+  /* =====================================================================
+     MOBILE / iOS
+     Scoped to phones so desktop density is untouched.
+     ===================================================================== */
+  @media (max-width:700px){
+
+    /* 16px on form controls is already handled by the v23 block above, which
+       stops Safari zooming on focus. This only adds the touch height, and
+       covers the input types that block missed (search, tel, url, none). */
+    input:not([type="checkbox"]):not([type="radio"]),
+    select, textarea{
+      font-size:16px;
+      min-height:44px;
+    }
+    textarea{ min-height:96px; line-height:1.45; }
+    select{ padding-right:var(--s5); }
+
+    /* 44px is Apple's minimum comfortable target */
+    .btn-sm, .primary, .ghost, .soft, .green, .danger,
+    button.mini, .qbtn, .theme-btn, .icon-btn{
+      min-height:44px; padding-top:10px; padding-bottom:10px;
+    }
+    .mini{ min-height:40px; padding-left:var(--s3); padding-right:var(--s3); }
+    input[type="checkbox"], input[type="radio"]{
+      width:22px; height:22px; min-height:22px;
+    }
+    .adm-chk input[type="checkbox"]{ width:24px; height:24px; }
+
+    /* the row is the target, not the 22px box inside it */
+    .ord-pool-table tbody tr{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .ord-pool-table tbody tr.sel{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+    .ord-pool-table .chk-col{ justify-content:flex-end; }
+
+    /* stacked cards: give the action buttons room to breathe */
+    .hist-table.stack td.adm-act{ justify-content:flex-start; flex-wrap:wrap; gap:var(--s2); padding-top:var(--s3); }
+    .hist-table.stack td.adm-act button{ margin-left:0; flex:1 1 auto; }
+    .hist-table.stack td.adm-spec{ text-align:right; word-break:break-word; }
+    .hist-table.stack .ord-cfg{ text-align:right; }
+
+    /* the pool scrolls the page on a phone rather than a box inside it */
+    .ord-pool-wrap{ max-height:none; overflow-y:visible; }
+
+    /* modals: full-width sheet, and never taller than the screen */
+    .mg-modal{ max-width:none; width:100%; max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+    .mg-modal-bg{ align-items:flex-end; padding:0; }
+    .mg-modal{ border-bottom-left-radius:0; border-bottom-right-radius:0; }
+    .mg-modal-foot{
+      position:sticky; bottom:0; background:var(--paper);
+      border-top:1px solid var(--line);
+      padding-bottom:calc(var(--s4) + env(safe-area-inset-bottom));
+    }
+    .mg-modal-foot button{ flex:1 1 auto; }
+
+    /* the sticky selection bar has to clear the tab bar */
+    .ord-pool-bar{ bottom:calc(60px + env(safe-area-inset-bottom)); }
+    .ord-pool-actions{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s2); width:100%; }
+    .ord-pool-actions button{ width:100%; }
+    .ord-with{ width:100%; }
+
+    /* toolbars wrap instead of squeezing */
+    .ord-pool-tools, .adm-bar, .ord-bar{ gap:var(--s2); }
+    .ord-pool-tools > *, .adm-bar > button{ flex:1 1 auto; }
+    .ord-seln{ width:100%; }
+    .ord-seln input{ flex:1 1 auto; width:auto; }
+
+    /* the workflow strip reads as two lines rather than a squashed one */
+    .ord-flow{ display:grid; grid-template-columns:auto 1fr; gap:var(--s2) var(--s3); }
+    .ord-flow-a{ display:none; }
+    .ord-flow-s{ grid-column:1 / -1; }
+
+    .ord-head-r{ width:100%; flex-wrap:wrap; }
+    .ord-head-r button{ flex:1 1 auto; }
+    .adm-tabs{ overflow-x:auto; flex-wrap:nowrap; padding-bottom:var(--s1); -webkit-overflow-scrolling:touch; }
+    .adm-tabs .mg-pill{ white-space:nowrap; }
+  }
+
 </style>
 </head>
 <body>
@@ -2479,7 +2555,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* ================= VIEW SWITCHING ================= */
   const navInventory = document.getElementById('navInventory');
-  const toolLabels = document.getElementById('toolLabels');
   const toolInventory = document.getElementById('toolInventory');
   let invLoaded = false;
   const navTimeclock = document.getElementById('navTimeclock');
@@ -2577,7 +2652,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let invOpenAdjust = null;
   let invAddCat = null; // {id, sign} or {id, mode:'menu'|'count'|'edit'}
 
-  const moboHintEl = document.getElementById('moboHint');
   const invBody = document.getElementById('invBody');
   const invSearch = document.getElementById('invSearch');
   const lowCard = document.getElementById('lowCard');
@@ -4886,16 +4960,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
     host.innerHTML =
-      '<div class="table-wrap ord-pool-wrap"><table class="hist-table ord-pool-table"><thead><tr>' +
+      '<div class="table-wrap stack-wrap ord-pool-wrap"><table class="hist-table stack ord-pool-table"><thead><tr>' +
         '<th class="chk-col"><input type="checkbox" id="ordPoolAll" title="Select everything on this page"></th>' +
         '<th>Serial</th><th>Config</th><th>Built</th>' +
       '</tr></thead><tbody>' +
       shown.map(function(u){
         return '<tr data-uid="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' class="sel"' : '') + '>' +
-          '<td class="chk-col"><input type="checkbox" data-upick="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' checked' : '') + '></td>' +
-          '<td class="ord-mono">' + esc(u.serial) + '</td>' +
-          '<td>' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
-          '<td>' + esc(fmtDate(u.generated_at || u.created_at)) + '</td>' +
+          '<td class="chk-col" data-l=""><input type="checkbox" data-upick="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' checked' : '') + '></td>' +
+          '<td class="ord-mono" data-l="Serial">' + esc(u.serial) + '</td>' +
+          '<td data-l="Config">' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
+          '<td data-l="Built">' + esc(fmtDate(u.generated_at || u.created_at)) + '</td>' +
         '</tr>';
       }).join('') +
       '</tbody></table></div>' +
@@ -4976,6 +5050,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const all = e.target.closest('[data-genall]');
     if (all){ ordGenerateUnits(all.getAttribute('data-genall'), all.getAttribute('data-left')); return; }
 
+    /* the whole row is the target on a phone, not just the checkbox */
+    const prow = e.target.closest('.ord-pool-table tbody tr');
+    if (prow && !e.target.closest('[data-upick]') && !e.target.closest('a, .ord-cfg')){
+      const box = prow.querySelector('[data-upick]');
+      if (box){ box.checked = !box.checked; box.dispatchEvent(new Event('click', { bubbles: true })); }
+      return;
+    }
     const pick = e.target.closest('[data-upick]');
     if (pick){
       const uid = pick.getAttribute('data-upick');
@@ -5194,6 +5275,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
         const dp = await SB.from('pc_log').delete().eq('order_id', o.id);
         if (dp.error) throw dp.error;
+        /* the file lives outside the database, so nothing cascades it away */
+        if (o.invoice_pdf_name){
+          await SB.storage.from(ORD_PDF_BUCKET).remove([ordPdfPath(o.id)]);
+        }
+
         const dd = await SB.from('orders').delete().eq('id', o.id);
         if (dd.error) throw dd.error;
 
@@ -5320,6 +5406,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       }
       this.disabled = true; this.textContent = 'Saving\u2026';
       try {
+        const oldInv = o.invoice_no;
         const up = await SB.from('orders').update({
           invoice_no: inv,
           po_number: bg.querySelector('#ordEPo').value.trim() || null,
@@ -5328,6 +5415,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           deduct_inventory: bg.querySelector('#ordEDeduct').checked
         }).eq('id', o.id);
         if (up.error) throw up.error;
+
+        /* Inventory movements are matched by the invoice number written into
+           their note. Rename the invoice without fixing them and a later
+           delete finds nothing to put back — silently, and stock stays wrong.
+           Keep them, and the units' reference field, in step. */
+        if (inv !== oldInv){
+          const mv = await SB.from('inv_moves').select('id,note')
+            .eq('reason', 'build').like('note', 'Order ' + oldInv + ' %');
+          for (const m of (mv.data || [])){
+            await SB.from('inv_moves')
+              .update({ note: 'Order ' + inv + String(m.note).slice(('Order ' + oldInv).length) })
+              .eq('id', m.id);
+          }
+          await SB.from('pc_log').update({ order_no: inv }).eq('order_id', o.id);
+        }
 
         const keptIds = good.filter(function(l){ return l.id; }).map(function(l){ return l.id; });
         const removed = originalIds.filter(function(id){ return keptIds.indexOf(id) < 0; });
@@ -5608,13 +5710,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             if (bp > bpages - 1) bp = bpages - 1;
             const bfrom = bp * ORD_PAGE;
             const bshown = units.slice(bfrom, bfrom + ORD_PAGE);
-            return '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+            return '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr>' +
             '<th>Serial</th><th>Config</th><th>Tracking</th>' +
           '</tr></thead><tbody>' +
           bshown.map(function(u){
-            return '<tr><td class="ord-mono">' + esc(u.serial) + '</td>' +
-              '<td>' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
-              '<td class="ord-mono">' + ordTrackHtml(b.carrier, perUnit[u.id] ? [perUnit[u.id]] : batchWide) + '</td></tr>';
+            return '<tr><td class="ord-mono" data-l="Serial">' + esc(u.serial) + '</td>' +
+              '<td data-l="Config">' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
+              '<td class="ord-mono" data-l="Tracking">' + ordTrackHtml(b.carrier, perUnit[u.id] ? [perUnit[u.id]] : batchWide) + '</td></tr>';
           }).join('') +
           '</tbody></table></div>' +
           (bpages > 1
@@ -6140,7 +6242,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         (ordPerm.admin ? '<button class="primary btn-sm" id="admAddCust" type="button">Add customer</button>' : '') +
         admArchToggle(ordCustomers.filter(function(c){ return c.active === false; }).length) +
       '</div>' +
-      '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+      '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr>' +
         '<th>Customer</th><th>Code</th><th>Next serial</th><th>Status</th><th></th>' +
       '</tr></thead><tbody>' +
       ordCustomers.filter(function(c){ return admShowArch || c.active !== false; }).map(function(c){
@@ -6148,11 +6250,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         const next = q
           ? q.prefix + (q.use_year ? (q.year_2 || '') : '') + String((q.current_value || 0) + 1).padStart(q.pad || 6, '0')
           : '<span class="ord-trk-none">no sequence</span>';
-        return '<tr><td><b>' + esc(c.name) + '</b></td>' +
-          '<td>' + esc(c.code || '\u2014') + '</td>' +
-          '<td class="ord-mono">' + next + '</td>' +
-          '<td>' + (c.active !== false ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Archived</span>') + '</td>' +
-          '<td class="adm-act">' +
+        return '<tr><td data-l="Customer"><b>' + esc(c.name) + '</b></td>' +
+          '<td data-l="Code">' + esc(c.code || '\u2014') + '</td>' +
+          '<td class="ord-mono" data-l="Next serial">' + next + '</td>' +
+          '<td data-l="Status">' + (c.active !== false ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Archived</span>') + '</td>' +
+          '<td class="adm-act" data-l="">' +
             '<button class="ghost mini" data-admcustedit="' + esc(c.id) + '" type="button">Edit</button>' +
             ((q && ordPerm.admin) ? '<button class="ghost mini" data-admseq="' + esc(c.id) + '" type="button">Serial counter</button>' : '') +
             '<button class="ghost mini" data-admcustarch="' + esc(c.id) + '" type="button">' +
@@ -6177,14 +6279,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         admArchToggle(arch) +
       '</div>' +
       (list.length
-        ? '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+        ? '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr>' +
             '<th>Name</th><th>Customer</th><th>Specs</th><th>Status</th><th></th></tr></thead><tbody>' +
           list.map(function(c){
-            return '<tr><td><b>' + esc(c.name) + '</b></td>' +
-              '<td>' + esc(custName[c.customer_id] || '\u2014') + '</td>' +
-              '<td class="adm-spec">' + esc(ordCfgSpecLines(c).join('  \u00b7  ') || 'none') + '</td>' +
-              '<td>' + (c.active === false ? '<span class="ord-chip neutral">Archived</span>' : '<span class="ord-chip ok">Active</span>') + '</td>' +
-              '<td class="adm-act">' +
+            return '<tr><td data-l="Config"><b>' + esc(c.name) + '</b></td>' +
+              '<td data-l="Customer">' + esc(custName[c.customer_id] || '\u2014') + '</td>' +
+              '<td class="adm-spec" data-l="Specs">' + esc(ordCfgSpecLines(c).join('  \u00b7  ') || 'none') + '</td>' +
+              '<td data-l="Status">' + (c.active === false ? '<span class="ord-chip neutral">Archived</span>' : '<span class="ord-chip ok">Active</span>') + '</td>' +
+              '<td class="adm-act" data-l="">' +
                 '<button class="ghost mini" data-admcfgedit="' + esc(c.id) + '" type="button">Edit</button>' +
                 '<button class="ghost mini" data-admcfgarch="' + esc(c.id) + '" type="button">' +
                   (c.active === false ? 'Restore' : 'Archive') + '</button>' +
@@ -6208,16 +6310,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<span class="muted-sm">Destinations also save themselves when you type a new one on a batch, so duplicates creep in. Merge them here.</span>' +
       '</div>' +
       (list.length
-        ? '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+        ? '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr>' +
             '<th>Store</th><th>Store #</th><th>Address</th><th>Batches</th><th>Status</th><th></th></tr></thead><tbody>' +
           list.map(function(l){
             const used = ordBatches.filter(function(b){ return b.location_id === l.id; }).length;
-            return '<tr><td><b>' + esc(ordLocName(l)) + '</b></td>' +
-              '<td class="ord-mono">' + esc(ordLocNum(l) || '\u2014') + '</td>' +
-              '<td class="adm-spec">' + esc(ordLocAddress(l) || '\u2014') + '</td>' +
-              '<td class="ord-mono">' + used + '</td>' +
-              '<td>' + (l.active === false ? '<span class="ord-chip neutral">Archived</span>' : '<span class="ord-chip ok">Active</span>') + '</td>' +
-              '<td class="adm-act">' +
+            return '<tr><td data-l="Store"><b>' + esc(ordLocName(l)) + '</b></td>' +
+              '<td class="ord-mono" data-l="Store #">' + esc(ordLocNum(l) || '\u2014') + '</td>' +
+              '<td class="adm-spec" data-l="Address">' + esc(ordLocAddress(l) || '\u2014') + '</td>' +
+              '<td class="ord-mono" data-l="Batches">' + used + '</td>' +
+              '<td data-l="Status">' + (l.active === false ? '<span class="ord-chip neutral">Archived</span>' : '<span class="ord-chip ok">Active</span>') + '</td>' +
+              '<td class="adm-act" data-l="">' +
                 '<button class="ghost mini" data-admdstedit="' + esc(l.id) + '" type="button">Edit</button>' +
                 '<button class="ghost mini" data-admdstmerge="' + esc(l.id) + '" type="button">Merge</button>' +
                 '<button class="ghost mini" data-admdstarch="' + esc(l.id) + '" type="button">' +
@@ -6233,26 +6335,26 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const me = session && session.user ? session.user.id : null;
     p.innerHTML =
       '<p class="muted-sm">Employee logins are created in the Supabase dashboard. This is where you set what each person can reach.</p>' +
-      '<div class="table-wrap"><table class="hist-table adm-people"><thead><tr>' +
+      '<div class="table-wrap stack-wrap"><table class="hist-table stack adm-people"><thead><tr>' +
         '<th>Name</th><th>Email</th><th title="Timeclock admin">TC&nbsp;admin</th>' +
         '<th>View orders</th><th>Manage orders</th><th>Order admin</th><th title="Customers, configs and destinations">Catalog</th><th>Margins</th><th>Active</th>' +
       '</tr></thead><tbody>' +
       admStaff.map(function(e){
         const self = me && e.user_id === me;
-        function box(field, on, lock){
-          return '<td class="adm-chk"><input type="checkbox" data-admperm="' + esc(e.id) + '" data-field="' + field + '"' +
+        function box(field, on, lock, label){
+          return '<td class="adm-chk" data-l="' + esc(label || '') + '"><input type="checkbox" data-admperm="' + esc(e.id) + '" data-field="' + field + '"' +
             (on ? ' checked' : '') + (lock ? ' disabled title="You cannot change this on your own account"' : '') + '></td>';
         }
         return '<tr' + (self ? ' class="adm-self"' : '') + '>' +
-          '<td><b>' + esc(e.name || '\u2014') + '</b>' + (self ? ' <span class="adm-you">you</span>' : '') + '</td>' +
-          '<td class="adm-spec">' + esc(e.email) + '</td>' +
-          box('is_admin', e.is_admin, self) +
-          box('can_view_orders', e.can_view_orders, false) +
-          box('can_manage_orders', e.can_manage_orders, false) +
-          box('can_admin_orders', e.can_admin_orders, self) +
-          box('can_manage_catalog', e.can_manage_catalog, false) +
-          box('can_view_margins', e.can_view_margins, false) +
-          box('active', e.active, self) +
+          '<td data-l="Name"><b>' + esc(e.name || '\u2014') + '</b>' + (self ? ' <span class="adm-you">you</span>' : '') + '</td>' +
+          '<td class="adm-spec" data-l="Email">' + esc(e.email) + '</td>' +
+          box('is_admin', e.is_admin, self, 'TC admin') +
+          box('can_view_orders', e.can_view_orders, false, 'View orders') +
+          box('can_manage_orders', e.can_manage_orders, false, 'Manage orders') +
+          box('can_admin_orders', e.can_admin_orders, self, 'Order admin') +
+          box('can_manage_catalog', e.can_manage_catalog, false, 'Catalog') +
+          box('can_view_margins', e.can_view_margins, false, 'Margins') +
+          box('active', e.active, self, 'Active') +
         '</tr>';
       }).join('') +
       '</tbody></table></div>';
@@ -6266,13 +6368,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<p class="muted-sm">Create the login itself in the Supabase dashboard first (Authentication \u2192 Add user), ' +
       'then map that email to a customer here. A mapped login can read that customer\u2019s orders and nothing else.</p>' +
       (admLogins.length
-        ? '<div class="table-wrap"><table class="hist-table"><thead><tr>' +
+        ? '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr>' +
             '<th>Email</th><th>Customer</th><th>Status</th><th></th></tr></thead><tbody>' +
           admLogins.map(function(u){
-            return '<tr><td class="adm-spec">' + esc(u.email || u.user_id) + '</td>' +
-              '<td>' + esc(custName[u.customer_id] || '\u2014') + '</td>' +
-              '<td>' + (u.active ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Off</span>') + '</td>' +
-              '<td class="adm-act">' +
+            return '<tr><td class="adm-spec" data-l="Email">' + esc(u.email || u.user_id) + '</td>' +
+              '<td data-l="Customer">' + esc(custName[u.customer_id] || '\u2014') + '</td>' +
+              '<td data-l="Status">' + (u.active ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Off</span>') + '</td>' +
+              '<td class="adm-act" data-l="">' +
                 '<button class="ghost mini" data-admlogtog="' + esc(u.id) + '" type="button">' + (u.active ? 'Disable' : 'Enable') + '</button>' +
                 '<button class="ghost mini danger" data-admlogdel="' + esc(u.id) + '" type="button">Remove</button>' +
               '</td></tr>';
