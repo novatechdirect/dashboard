@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Novatech">
 <!-- JsBarcode (inlined for offline use) -->
@@ -784,7 +785,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   #loginView{ display:flex; justify-content:center; padding:48px 0; }
   .login-card{ width:100%; max-width:360px; background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:26px; box-shadow:var(--shadow); }
   .login-title{ font-size:18px; margin:0 0 4px; letter-spacing:-0.01em; }
+  .login-card .field{ margin-bottom:12px; }
+  .login-card .field label{ display:block; font-size:12px; font-weight:650; color:var(--muted); margin-bottom:6px; }
   .login-card input{ width:100%; margin-bottom:10px; border:1px solid var(--line-strong); border-radius:var(--r-sm); padding:11px 12px; font-size:14px; background-color:var(--paper); color:var(--ink); }
+  .login-card .field input{ margin-bottom:0; }
   .login-card input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
   .login-card button{ width:100%; }
 
@@ -999,8 +1003,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       width:26px; height:2px; border-radius:0 0 2px 2px; background:var(--accent);
     }
     .tab-btn:not(.active):active{ color:var(--ink); }
-    body.authed .controls{ padding-bottom:calc(80px + env(safe-area-inset-bottom)); }
-    body.authed .nav-menu{ display:none; }
+    body.authed .controls{ padding-bottom:calc(108px + env(safe-area-inset-bottom)); }
+    .nav-menu{ display:none; }
   }
 
   /* --- v27: install helper --- */
@@ -1414,6 +1418,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .ord-bar-l input[type="text"]:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
   .ord-chips{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
+  .ord-chips .mg-pill{ scroll-snap-align:start; }
 
   .ord-row{
     display:grid; grid-template-columns:minmax(0,1fr) 220px 128px 40px;
@@ -1852,8 +1857,141 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     .ord-head-r{ width:100%; flex-wrap:wrap; }
     .ord-head-r button{ flex:1 1 auto; }
-    .adm-tabs{ overflow-x:auto; flex-wrap:nowrap; padding-bottom:var(--s1); -webkit-overflow-scrolling:touch; }
-    .adm-tabs .mg-pill{ white-space:nowrap; }
+    .adm-tabs{ overflow-x:auto; flex-wrap:wrap; padding-bottom:var(--s1); -webkit-overflow-scrolling:touch; gap:8px; }
+    .adm-tabs .mg-pill{ white-space:nowrap; flex:0 0 auto; }
+  }
+
+  /* =====================================================================
+     Mobile layout pass — overflow, safe areas, stacked tools
+     ===================================================================== */
+  html{ overflow-x:clip; }
+  body{ -webkit-tap-highlight-color:transparent; }
+  @media (max-width:700px){
+    html, body{ overflow-x:hidden; max-width:100%; }
+    body{
+      padding-left:env(safe-area-inset-left);
+      padding-right:env(safe-area-inset-right);
+      touch-action:manipulation;
+    }
+    .topnav{ padding-top:env(safe-area-inset-top); }
+    .nav-menu{ display:none !important; }
+    .ord-bar-l{ width:100%; display:grid; grid-template-columns:1fr; gap:8px; }
+    .ord-bar-l input, .ord-bar-l button{ width:100%; min-height:48px; }
+
+    #loginView{
+      min-height:calc(100dvh - 52px - env(safe-area-inset-top));
+      align-items:center; padding:28px 0 48px;
+    }
+    .login-card{ max-width:none; padding:22px 18px; }
+    .login-card .field{ margin-bottom:12px; }
+    .login-card .field label{
+      display:block; font-size:12px; font-weight:650; color:var(--muted); margin-bottom:6px;
+    }
+    .login-card input{ margin-bottom:0; min-height:48px; }
+
+    .ord-chips, .status-pills{
+      flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      scrollbar-width:none; padding-bottom:6px; margin-inline:-2px;
+      scroll-snap-type:x proximity;
+    }
+    .ord-chips::-webkit-scrollbar, .status-pills::-webkit-scrollbar{ display:none; }
+    .ord-chips .mg-pill, .status-pills .pill{ flex:0 0 auto; }
+    .low-list, .mg-pill-row{ flex-wrap:wrap; overflow:visible; }
+    .ord-chips .mg-pill, .mg-pill{ min-height:40px; }
+
+    .inv-topbar{
+      display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px;
+    }
+    .inv-topbar input[type=text]{ width:100%; min-width:0 !important; }
+    .inv-topbar-right{ width:auto; display:flex; }
+    .inv-topbar-right button{ width:auto; min-height:48px; padding-left:14px; padding-right:14px; }
+
+    .inv-row{
+      display:grid; grid-template-columns:1fr auto auto;
+      align-items:center; gap:8px 10px;
+    }
+    .inv-row .inv-name{ grid-column:1 / -1; min-width:0; }
+    .inv-row .sev{ justify-self:start; }
+    .inv-row .status-pills, .inv-row .adjust-bar, .inv-row .inv-menu-row{ grid-column:1 / -1; }
+    .inv-row .inv-menu-row button{ flex:1 1 calc(50% - 6px); }
+    .inv-row .adjust-bar input[type=text], .inv-row .adjust-bar select{ min-width:0; flex:1 1 100%; }
+    .inv-row .adjust-bar input[type=number]{ width:100%; max-width:120px; }
+
+    .ord-bar, .ord-bar-l, .ord-bar-r,
+    .hist-toolbar, .hist-actions, .hist-actions-left, .hist-actions-right{ width:100%; }
+    .ord-bar-r, .hist-actions-left, .hist-actions-right{
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:8px;
+    }
+    .ord-bar-r button, .hist-actions-right button,
+    .hist-actions-left > *{ width:100%; min-width:0; }
+    .date-lbl{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .date-lbl input, .date-lbl select{ flex:1; min-width:0; }
+    .sheet-row input, .login-row input, .hist-toolbar input,
+    .inv-topbar input[type=text]{ min-width:0 !important; width:100%; }
+    .ram-pair{ flex-direction:column; }
+    .ram-sticks{ width:100%; }
+    .hist-pager{ justify-content:space-between; gap:8px; }
+    .hist-pager button{ flex:1; }
+
+    .tabbar.on{
+      overflow-x:auto; -webkit-overflow-scrolling:touch;
+      scrollbar-width:none; justify-content:stretch;
+    }
+    .tabbar.on::-webkit-scrollbar{ display:none; }
+    .tab-btn{ min-width:56px; flex:1 1 0; padding:8px 2px 7px; font-size:9.5px; }
+    .tab-btn svg{ width:20px; height:20px; }
+
+    .card{ padding:var(--s4); }
+    #previewScroll{ margin-inline:-12px; padding-inline:12px; }
+    .tile{ grid-template-columns:auto 1fr; }
+    .tile-arrow{ display:none; }
+    .app-header h1{ font-size:22px; }
+    .ord-back-row{ flex-wrap:wrap; }
+    #ordBackBtn{ min-height:44px; flex:1 1 auto; }
+    .ord-crumb{ width:100%; }
+    .tc-actions .primary{ width:100%; min-height:48px; }
+    .header-right{ width:100%; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .header-right button{ width:100%; }
+
+    .ord-head-r{
+      width:100%; display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:stretch;
+    }
+    .ord-head-r .ord-chip{ grid-column:1 / -1; justify-self:start; }
+    .ord-head-r button{ width:100%; min-height:44px; margin:0; }
+    .ord-head-r .danger{ grid-column:1 / -1; }
+    .ord-sum-c:last-child{ grid-column:1 / -1; }
+
+    .hist-table.stack tr{
+      padding:14px 12px; margin-bottom:10px;
+    }
+    .hist-table.stack.adm-people td.adm-chk{
+      min-height:48px; align-items:center; padding:8px 0;
+    }
+    .hist-table.stack.adm-people td.adm-chk input{ width:22px; height:22px; }
+    .hist-table.stack td.adm-spec{ word-break:break-word; overflow-wrap:anywhere; }
+
+    .hist-table.stack tr.detail-row{
+      padding:0; border:none; margin:-4px 0 10px; background:transparent; box-shadow:none;
+    }
+    .hist-table.stack tr.detail-row td,
+    .hist-table.stack tr.detail-row .detail-cell{
+      display:block; text-align:left; padding:10px 12px;
+      background:var(--soft); border:1px solid var(--line); border-radius:var(--r-md);
+    }
+    .hist-table.stack tr.detail-row td::before{ display:none; }
+    .hist-table.stack td[data-l=""]::before{ display:none; }
+    .hist-table.stack td[data-l=""]{ justify-content:flex-start; }
+    .hist-table.stack td.row-actions{
+      justify-content:flex-start; flex-wrap:wrap; gap:8px; padding-top:8px;
+    }
+    .hist-table.stack td.row-actions .mini{ flex:1 1 auto; }
+
+    .auth-chip{ max-width:42vw; overflow:hidden; }
+    .auth-chip a{ white-space:nowrap; }
+  }
+  @media (max-width:420px){
+    .mg-kpis{ grid-template-columns:1fr; }
+    .ord-sum, .sum{ grid-template-columns:1fr 1fr; }
   }
 
 </style>
@@ -1906,6 +2044,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="12"/><line x1="10.5" y1="20" x2="10.5" y2="5"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="21" y1="20" x2="21" y2="8"/></svg>
     <span>Margins</span>
   </button>
+  <button type="button" class="tab-btn" data-goto="admin" id="tabAdmin" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Admin</span>
+  </button>
 </nav>
 
 <div class="controls">
@@ -1914,8 +2056,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="login-card">
       <h2 class="login-title">Sign in</h2>
       <p class="muted-line">Sign in to use Novatech tools.</p>
-      <input id="authEmail" type="email" placeholder="Email" autocomplete="username">
-      <input id="authPass" type="password" placeholder="Password" autocomplete="current-password">
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input id="authEmail" type="email" placeholder="you@novatech.com" autocomplete="username" enterkeyhint="next">
+      </div>
+      <div class="field">
+        <label for="authPass">Password</label>
+        <input id="authPass" type="password" placeholder="Password" autocomplete="current-password" enterkeyhint="go">
+      </div>
       <button class="primary" id="signInBtn">Sign in</button>
       <div class="auth-err" id="authErr"></div>
     </div>
@@ -2069,8 +2217,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <button class="ghost btn-sm" id="histCsv">Export CSV</button>
         </div>
       </div>
-      <div class="table-wrap">
-        <table class="hist-table">
+      <div class="table-wrap stack-wrap">
+        <table class="hist-table stack">
           <thead><tr>
             <th class="chk-col"><input type="checkbox" id="histSelectAll" title="Select all (filtered)"></th>
             <th>Date</th><th>Customer</th><th>Order #</th><th>Serial</th><th>Status</th><th></th>
@@ -2225,8 +2373,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     <section class="card" id="tcTeamCard" style="display:none;">
       <h2 class="card-title">Team <span class="mobo-hint">(admin)</span></h2>
-      <div class="table-wrap">
-        <table class="hist-table">
+      <div class="table-wrap stack-wrap">
+        <table class="hist-table stack">
           <thead><tr><th>Name</th><th>Email</th><th>Rate $/hr</th><th>Discord</th><th>Admin</th><th>Active</th><th></th></tr></thead>
           <tbody id="tcTeamBody"></tbody>
         </table>
@@ -2502,6 +2650,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       mgIsAdmin = false; mgInited = false;
       var _na = document.getElementById('navAdmin'); if (_na) _na.style.display = 'none';
       var _ta = document.getElementById('tileAdmin'); if (_ta) _ta.style.display = 'none';
+      var _ba = document.getElementById('tabAdmin'); if (_ba) _ba.style.display = 'none';
       ordPerm = { view:false, manage:false, admin:false, catalog:false };
       ordInited = false; admInited = false; ordCurrentId = null;
       var _mb = document.getElementById('mgBar'); if (_mb) _mb.remove();
@@ -2589,6 +2738,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
   }
   navHome.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
+  document.querySelector('.nav-brand').addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
   navOrders.addEventListener('click', function(e){ e.preventDefault(); ordCurrentId = null; ordSetUrl(null); ordShowList(); showTool('orders'); });
   navAdmin.addEventListener('click', function(e){ e.preventDefault(); showTool('admin'); });
 
@@ -3190,11 +3340,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return '<tr>' +
         '<td data-l="Name">' + esc(e.name||'') + '</td>' +
         '<td data-l="Email">' + esc(e.email||'') + (e.user_id ? '' : ' <span class="mobo-hint">(not signed in yet)</span>') + '</td>' +
-        '<td>' + (e.hourly_rate != null ? ('$' + (+e.hourly_rate).toFixed(2)) : '\u2014') + '</td>' +
-        '<td>' + (e.discord_id ? '\u2713' : '\u2014') + '</td>' +
-        '<td>' + (e.is_admin ? '\u2713' : '') + '</td>' +
-        '<td>' + (e.active ? '\u2713' : '\u2014') + '</td>' +
-        '<td class="row-actions"><button class="mini" data-teedit="' + e.id + '">Edit</button></td>' +
+        '<td data-l="Rate">' + (e.hourly_rate != null ? ('$' + (+e.hourly_rate).toFixed(2)) : '\u2014') + '</td>' +
+        '<td data-l="Discord">' + (e.discord_id ? '\u2713' : '\u2014') + '</td>' +
+        '<td data-l="Admin">' + (e.is_admin ? '\u2713' : '') + '</td>' +
+        '<td data-l="Active">' + (e.active ? '\u2713' : '\u2014') + '</td>' +
+        '<td class="row-actions" data-l=""><button class="mini" data-teedit="' + e.id + '">Edit</button></td>' +
       '</tr>';
     });
     if (tcAddingEmp){
@@ -3916,13 +4066,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         .filter(function(pr){ return pr[1]; })
         .map(function(pr){ return '<b>'+pr[0]+':</b> '+esc(pr[1]); }).join('&nbsp;&nbsp;&middot;&nbsp;&nbsp;');
       return '<tr>' +
-        '<td class="chk-col"><input type="checkbox" class="row-chk" data-id="'+esc(r.id)+'"'+(selectedIds.has(String(r.id))?' checked':'')+'></td>' +
+        '<td class="chk-col" data-l=""><input type="checkbox" class="row-chk" data-id="'+esc(r.id)+'"'+(selectedIds.has(String(r.id))?' checked':'')+'></td>' +
         '<td data-l="Date">'+fmtDate(r.generated_at || r.created_at)+'</td>' +
-        '<td>'+esc(r.customer)+'</td>' +
-        '<td>'+esc(r.order_no)+'</td>' +
-        '<td>'+esc(r.serial)+'</td>' +
-        '<td>'+sel+'</td>' +
-        '<td class="row-actions">' +
+        '<td data-l="Customer">'+esc(r.customer)+'</td>' +
+        '<td data-l="Order #">'+esc(r.order_no)+'</td>' +
+        '<td data-l="Serial">'+esc(r.serial)+'</td>' +
+        '<td data-l="Status">'+sel+'</td>' +
+        '<td class="row-actions" data-l="">' +
           '<button type="button" class="mini specs-btn" data-id="'+esc(r.id)+'">Specs</button>' +
           '<button type="button" class="mini del-btn" data-id="'+esc(r.id)+'" data-serial="'+esc(r.serial)+'" title="Delete">&times;</button>' +
         '</td>' +
@@ -4069,6 +4219,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
 
   signInBtn.addEventListener('click', signIn);
+  authEmail.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); authPass.focus(); } });
   authPass.addEventListener('keydown', function(e){ if (e.key === 'Enter') signIn(); });
   histRefresh.addEventListener('click', loadHistory);
   histSearch.addEventListener('input', function(){ selectedIds.clear(); histPage = 0; renderHistory(); });
@@ -4164,6 +4315,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const canAdminPage = ordPerm.admin || ordPerm.catalog;
     if (na) na.style.display = canAdminPage ? '' : 'none';
     if (ta) ta.style.display = canAdminPage ? '' : 'none';
+    var ba = document.getElementById('tabAdmin');
+    if (ba) ba.style.display = canAdminPage ? '' : 'none';
     const nb = document.getElementById('ordNewBtn');
     if (nb) nb.style.display = ordPerm.manage ? '' : 'none';
   }
@@ -6334,7 +6487,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function admPanePeople(p){
     const me = session && session.user ? session.user.id : null;
     p.innerHTML =
-      '<p class="muted-sm">Employee logins are created in the Supabase dashboard. This is where you set what each person can reach.</p>' +
       '<div class="table-wrap stack-wrap"><table class="hist-table stack adm-people"><thead><tr>' +
         '<th>Name</th><th>Email</th><th title="Timeclock admin">TC&nbsp;admin</th>' +
         '<th>View orders</th><th>Manage orders</th><th>Order admin</th><th title="Customers, configs and destinations">Catalog</th><th>Margins</th><th>Active</th>' +
