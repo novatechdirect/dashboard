@@ -181,7 +181,7 @@
   .toolbar{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
   .searchbox{ flex:1 1 260px; height:32px; font-size:13px; }
   .orow{
-    display:grid; grid-template-columns:minmax(0,1fr) 210px 120px 28px; gap:var(--s4);
+    display:grid; grid-template-columns:minmax(0,1fr) auto 210px 28px; gap:var(--s5);
     align-items:center; padding:var(--s4); border:1px solid var(--line);
     border-radius:var(--r-md); background:var(--paper); margin-bottom:var(--s3);
     cursor:pointer; box-shadow:var(--e1);
@@ -192,7 +192,9 @@
   .orow:hover .chev{ transform:translateX(3px); color:var(--accent); }
   .orow:focus-visible{ outline:none; box-shadow:var(--ring); }
   .inv{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; font-weight:700; font-size:15px; }
-  .inv .chip{ margin-left:auto; flex:0 0 auto; }
+  /* its own cell, so the row's align-items:center does the vertical centring */
+  .ostat{ display:flex; align-items:center; justify-content:center; min-width:0; margin-right:var(--s4); }
+  .ostat .chip{ flex:0 0 auto; }
   .inv-lbl{ font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--faint); }
   .sub{ color:var(--muted); font-size:12.5px; margin-top:4px; }
   .chev{ color:var(--faint); display:flex; justify-content:flex-end; transition:transform var(--t), color var(--t); }
@@ -397,7 +399,9 @@
     .who-em{ display:none; }
     #staffPick{ padding:8px var(--s4); gap:var(--s2); }
     #staffPick .pickbox{ flex:1 1 auto; width:auto; max-width:none; }
-    .orow{ grid-template-columns:1fr; gap:var(--s3); }
+    .orow{ grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s3); }
+    .orow > .ostat{ align-self:start; justify-content:flex-end; }
+    .orow > div:nth-child(3){ grid-column:1 / -1; }
     .orow .chev{ display:none; }
     .orow .barlbl{ font-size:12.5px; }
     .sum{ grid-template-columns:repeat(2,1fr); }
@@ -810,10 +814,10 @@
         const pct = function(n){ return st.ordered ? Math.min(100, n/st.ordered*100) : 0; };
         return '<div class="orow" role="button" tabindex="0" data-id="' + esc(o.id) + '">' +
           '<div><div class="inv"><span class="inv-lbl">Invoice #</span>' +
-            '<span class="mono">' + esc(o.invoice_no) + '</span>' +
-            '<span class="chip ' + s.c + '">' + s.l + '</span></div>' +
+            '<span class="mono">' + esc(o.invoice_no) + '</span></div>' +
             '<div class="sub">' + (o.po_number ? 'PO ' + esc(o.po_number) + ' &middot; ' : '') +
             (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : 'no due date') + '</div></div>' +
+          '<div class="ostat"><span class="chip ' + s.c + '">' + s.l + '</span></div>' +
           '<div><div class="bar">' +
             '<i class="s" style="width:' + pct(st.shipped) + '%"></i>' +
             '<i class="a" style="width:' + pct(st.assigned) + '%"></i>' +
