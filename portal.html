@@ -116,7 +116,6 @@
   .brand span{ display:block; color:var(--faint); font-size:12px; line-height:1.3; }
 
   .who{ display:flex; align-items:center; gap:var(--s4); flex-wrap:nowrap; min-width:0; }
-  #staffPick{ display:flex; align-items:center; gap:var(--s3); }
   .who-em{ font-size:12.5px; color:var(--muted); }
   /* identity on one side of the rule, actions on the other */
   .who #themeBtn{ position:relative; margin-left:var(--s3); }
@@ -130,6 +129,10 @@
   .btn{
     border:1px solid var(--line-strong); background:var(--paper); color:var(--ink);
     border-radius:var(--r-pill); padding:6px 16px; min-height:32px; font:inherit; font-size:13px; font-weight:600;
+    /* an explicit line-height — the inherited 1.55 makes a 13px label 20px tall
+       and pushes the button past its min-height */
+    line-height:1.2;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
     cursor:pointer; transition:border-color var(--t), background var(--t), transform var(--t), box-shadow var(--t);
   }
   .btn:hover{ border-color:var(--muted); box-shadow:var(--e1); }
@@ -189,6 +192,7 @@
   .orow:hover .chev{ transform:translateX(3px); color:var(--accent); }
   .orow:focus-visible{ outline:none; box-shadow:var(--ring); }
   .inv{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; font-weight:700; font-size:15px; }
+  .inv .chip{ margin-left:auto; flex:0 0 auto; }
   .inv-lbl{ font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--faint); }
   .sub{ color:var(--muted); font-size:12.5px; margin-top:4px; }
   .chev{ color:var(--faint); display:flex; justify-content:flex-end; transition:transform var(--t), color var(--t); }
@@ -212,19 +216,56 @@
 
   /* ---------- detail ---------- */
   .back{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
-  .sum{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3); margin-bottom:var(--s5); }
+  .sum{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s3); margin-bottom:var(--s5); }
   .sumc{
     background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
     padding:var(--s4); box-shadow:var(--e1); animation:rise var(--t-slow) both;
   }
   .sumv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
-  .suml{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); }
+  .suml{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); line-height:1.3; text-wrap:balance; }
   .sumc.ok .sumv{ color:var(--ok); }
   .sumc.rem .sumv{ color:var(--warn); }
+  .sumc.prep .sumv{ color:var(--info); }
 
   .batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; background:var(--paper); }
-  .bhead{ display:grid; grid-template-columns:120px minmax(0,1fr) 160px auto; gap:var(--s3); align-items:center; padding:var(--s4); }
+  /* batch number and its status share one line, status at the right edge */
+  .bno{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); min-width:0; }
+  .bno .chip{ flex:0 0 auto; }
+  .bhead{
+    display:grid; grid-template-columns:auto minmax(0,1fr) auto auto;
+    gap:var(--s3) var(--s4); align-items:center; padding:var(--s4);
+  }
+  /* the action sits at the right edge of the header at every width */
+  .bhead > div:last-child{ justify-self:end; }
+  /* between phone and desktop there is not room for four columns: the batch
+     and its status take the first line, the rest pairs up below */
+  @media (min-width:821px) and (max-width:980px){
+    .bhead{ grid-template-columns:minmax(0,1fr) auto; }
+    .bhead > .bno{ grid-column:1 / -1; }
+    .bhead > div:last-child{ grid-column:1 / -1; justify-self:end; }
+  }
   .bhead b{ font-size:13.5px; }
+  .bship{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:3px; }
+  .bship a{ font-family:var(--font-num); font-size:12px; font-weight:600; }
+  .trk-dd{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .bdot{ color:var(--faint); }
+  .carrier{
+    display:inline-flex; align-items:center; flex:0 0 auto;
+    height:17px; padding:0 7px; border-radius:var(--r-pill);
+    background:var(--soft); border:1px solid var(--line-strong);
+    font-family:var(--font-num); font-size:9.5px; font-weight:700;
+    letter-spacing:0.07em; color:var(--muted); font-style:normal;
+  }
+  .carrier i{ font-style:normal; }
+  .carrier img{ height:14px; width:auto; display:block; }
+  /* a real logo needs no chrome around it */
+  .carrier.has-logo{ background:none; border:none; padding:0; height:auto; }
+  .carrier.has-logo i{ display:none; }
+  /* brand colours go slightly flat on a dark ground */
+  :root[data-theme="dark"] .carrier.has-logo img{ filter:brightness(1.1) saturate(1.05); }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme]) .carrier.has-logo img{ filter:brightness(1.1) saturate(1.05); }
+  }
   .storenum{
     display:inline-block; margin-left:var(--s2); font-family:var(--font-num); font-size:11px;
     font-weight:600; color:var(--muted); background:var(--soft); border:1px solid var(--line);
@@ -312,6 +353,15 @@
   }
   .pickbox{ height:32px; font-size:12.5px; max-width:210px; width:auto; min-width:0; flex:0 1 auto; padding-right:var(--s5); }
 
+  /* staff-only preview strip. It is a mode indicator, not customer identity,
+     so it gets its own band under the header rather than crowding the brand. */
+  #staffPick{
+    display:flex; align-items:center; gap:var(--s3);
+    padding:9px max(var(--s5), calc((100% - 1080px) / 2));
+    background:var(--warn-bg); border-bottom:1px solid var(--warn-line);
+  }
+  #staffPick .staffbadge{ flex:0 0 auto; }
+
   /* drop the email before anything is forced to wrap */
   @media (max-width:1100px){ .who-em{ display:none; } .who #themeBtn{ margin-left:0; } .who #themeBtn::before{ display:none; } }
 
@@ -341,25 +391,28 @@
       gap:var(--s2);
       align-items:stretch;
     }
-    header.top{ flex-wrap:wrap; }
-    .brand{ width:100%; }
-    .who{ width:100%; justify-content:flex-end; gap:var(--s2); flex-wrap:wrap; }
+    header.top{ flex-wrap:nowrap; }
+    .brand{ min-width:0; flex:1 1 auto; }
+    .who{ width:auto; justify-content:flex-end; gap:var(--s2); flex-wrap:nowrap; }
     .who-em{ display:none; }
-    #staffPick{ width:100%; order:-1; flex:1 1 100%; }
-    .pickbox{ max-width:100%; width:100%; height:48px; }
+    #staffPick{ padding:8px var(--s4); gap:var(--s2); }
+    #staffPick .pickbox{ flex:1 1 auto; width:auto; max-width:none; }
     .orow{ grid-template-columns:1fr; gap:var(--s3); }
     .orow .chev{ display:none; }
     .orow .barlbl{ font-size:12.5px; }
     .sum{ grid-template-columns:repeat(2,1fr); }
+    .sumc:last-child{ grid-column:1 / -1; }
     .sumv{ font-size:22px; }
     .bhead{ grid-template-columns:1fr; }
-    .back .btn{ flex:1 1 auto; min-height:44px; }
-    .btn, .btn.sm{ min-height:44px; }
-    .icon-btn{ width:44px; height:44px; }
+    .back .btn{ flex:1 1 auto; min-height:32px; }
+    .btn{ min-height:36px; }
+    .btn.sm{ min-height:30px; }
+    .icon-btn{ width:32px; height:32px; min-height:32px; }
     h1{ font-size:21px; }
     .login{ margin:4vh auto; padding:0 var(--s3); min-height:calc(100dvh - 8vh); display:flex; flex-direction:column; justify-content:center; }
     .login .card{ padding:var(--s5) var(--s4); }
-    .field input, .searchbox, .pickbox{ height:38px; min-height:38px; font-size:16px; max-width:100%; }
+    .field input, .searchbox{ height:38px; min-height:38px; font-size:16px; max-width:100%; }
+    .pickbox{ height:34px; min-height:34px; font-size:16px; }
     .toolbar{ flex-direction:column; }
     .toolbar .searchbox{ flex:1 1 auto; min-width:0; width:100%; }
     .toolbar .btn{ width:100%; }
@@ -396,7 +449,6 @@
     <div><b>Order Portal</b><span id="custName"></span></div>
   </div>
   <div class="who">
-    <span id="staffPick" style="display:none;"></span>
     <span class="who-em" id="whoEmail"></span>
     <button type="button" class="icon-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">
       <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -406,13 +458,15 @@
   </div>
 </header>
 
+<div id="staffPick" style="display:none;"></div>
+
 <div id="loginView" class="login">
   <div class="card">
     <h1>Order Portal</h1>
     <p class="muted" style="margin-top:0;">Sign in to see your orders, shipments and serial numbers.</p>
     <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="username"></div>
     <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div>
-    <button class="btn primary" id="go" type="button" style="width:100%; height:44px;">Sign in</button>
+    <button class="btn primary" id="go" type="button" style="width:100%; height:40px;">Sign in</button>
     <div class="err" id="loginErr"></div>
   </div>
   <p class="muted" style="text-align:center;">
@@ -686,7 +740,7 @@
     if (st.made === 0) return { c:'n', l:'Not started' };
     if (st.shipped > 0 && st.ordered > 0 && st.shipped >= st.ordered) return { c:'k', l:'Complete' };
     if (st.shipped > 0) return { c:'i', l:'Partially shipped' };
-    if (st.remaining === 0) return { c:'w', l:'Ready to ship' };
+    if (st.remaining === 0) return { c:'w', l:'Awaiting shipment' };
     return { c:'n', l:'In production' };
   }
   function trackUrl(carrier, n){
@@ -698,6 +752,21 @@
       case 'usps':  return 'https://tools.usps.com/go/TrackConfirmAction?tLabels=' + e;
       default: return '';
     }
+  }
+  /* Carrier mark. Looks for a real logo at carriers/<slug>.png and falls back to
+     the typographic badge when the file is absent — so Freight and Other, which
+     have no logo, keep reading as text. */
+  function carrierBadge(carrier){
+    const c = String(carrier || '').trim();
+    if (!c) return '';
+    const k = c.toLowerCase();
+    const slug = k.replace(/[^a-z0-9]+/g, '');
+    const short = k === 'fedex' ? 'FDX' : k === 'freight' ? 'FRT' : k === 'other' ? 'SHIP' : c.toUpperCase();
+    return '<span class="carrier" title="' + esc(c) + '">' +
+      '<img src="carriers/' + esc(slug) + '.png" alt="' + esc(c) + '"' +
+        ' onload="this.closest(\'.carrier\').classList.add(\'has-logo\')"' +
+        ' onerror="this.remove()">' +
+      '<i>' + esc(short) + '</i></span>';
   }
   function trackHtml(carrier, nums){
     const list = (Array.isArray(nums) ? nums : [nums]).filter(Boolean);
@@ -788,9 +857,10 @@
         (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : '') + '</p>' +
       '<div class="sum">' +
         '<div class="sumc" title="Total quantity on this invoice"><div class="sumv">' + num(st.ordered) + '</div><div class="suml">Ordered</div></div>' +
+        '<div class="sumc rem" title="Still to be built"><div class="sumv">' + num(st.remaining) + '</div><div class="suml">To build</div></div>' +
         '<div class="sumc" title="Assembled and given a serial number"><div class="sumv">' + num(st.made) + '</div><div class="suml">Built</div></div>' +
+        '<div class="sumc prep" title="Packed into a batch, waiting to leave"><div class="sumv">' + num(st.assigned) + '</div><div class="suml">Preparing to ship</div></div>' +
         '<div class="sumc ok" title="Dispatched to a store"><div class="sumv">' + num(st.shipped) + '</div><div class="suml">Shipped</div></div>' +
-        '<div class="sumc rem" title="Still to be built"><div class="sumv">' + num(st.remaining) + '</div><div class="suml">Remaining</div></div>' +
       '</div>' +
       '<div class="card"><h2>Shipments <span class="subtle">each shipment goes to one store</span></h2>' +
       (mine.length ? mine.map(function(b){
@@ -801,12 +871,19 @@
         const shipped = b.status === 'shipped';
         return '<div class="batch">' +
           '<div class="bhead">' +
-            '<div><b>Batch ' + b.batch_no + '</b><br><span class="chip ' + (shipped?'k':'w') + '">' + (shipped?'Shipped':'Preparing') + '</span></div>' +
+            '<div class="bno"><b>Batch ' + b.batch_no + '</b>' +
+              '<span class="chip ' + (shipped?'k':'w') + '">' + (shipped?'Shipped':'Preparing') + '</span></div>' +
             '<div><b>' + esc(locName(b)) + '</b>' +
               (locNum(b) ? '<span class="storenum">Store ' + esc(locNum(b)) + '</span>' : '') +
               '<div class="sub">' + esc(locLine(b) || '') + '</div></div>' +
-            '<div class="mono">' + num(bu.length) + ' units<div class="sub">' +
-              (b.carrier ? esc(b.carrier) + ' &middot; ' : '') + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</div></div>' +
+            '<div class="mono">' + num(bu.length) + ' units<div class="sub bship">' +
+              carrierBadge(b.carrier) +
+              (wide.length
+                ? trackHtml(b.carrier, [wide[0]]) +
+                  (wide.length > 1 ? '<span class="muted">+' + num(wide.length - 1) + '</span>' : '') +
+                  '<span class="bdot">&middot;</span>'
+                : '') +
+              '<span>' + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</span></div></div>' +
             '<div><button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
           '</div>' +
           '<div class="bbody" id="bb_' + esc(b.id) + '" style="display:none;">' +
@@ -898,7 +975,7 @@
           '<dt>Invoice</dt><dd>' + esc(o ? o.invoice_no : '\u2014') + '</dd>' +
           (cfg ? '<dt>Model</dt><dd>' + esc(cfg.name) + '</dd>' : '') +
           (b ? '<dt>Shipment</dt><dd>Batch ' + b.batch_no + (locName(b) ? ' \u00b7 ' + esc(locName(b)) : '') + '</dd>' : '') +
-          (t ? '<dt>Tracking</dt><dd>' + trackHtml(b ? b.carrier : '', [t.tracking_no]) + '</dd>' : '') +
+          (t ? '<dt>Tracking</dt><dd class="trk-dd">' + carrierBadge(b ? b.carrier : '') + trackHtml(b ? b.carrier : '', [t.tracking_no]) + '</dd>' : '') +
           (b && b.ship_date ? '<dt>Shipped</dt><dd>' + esc(fmtDate(b.ship_date)) + '</dd>' : '') +
         '</dl>' +
         (o ? '<p style="margin-bottom:0;"><button class="btn sm" id="snOpen" type="button">Open invoice ' + esc(o.invoice_no) + '</button></p>' : '');
