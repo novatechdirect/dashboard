@@ -19,7 +19,7 @@
 <script>
   (function(){
     try{
-      var t = localStorage.getItem('ntTheme') === 'light' ? 'light' : 'dark';
+      var t = localStorage.getItem('ntTheme') === 'dark' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', t);
     }catch(e){}
   })();
@@ -58,7 +58,7 @@
     --t:170ms cubic-bezier(.2,.6,.2,1);
     --t-slow:220ms cubic-bezier(.2,.6,.2,1);
   }
-  :root[data-theme="dark"], :root:not([data-theme]){
+  :root[data-theme="dark"]{
     color-scheme:dark;
     /* derived from the spec's own navy band colours — no new hues introduced */
     --ink:#e8ecf2; --charcoal:#e8ecf2; --muted:#9aa5b4; --faint:#6c7787;
@@ -130,8 +130,8 @@
   .brand{ display:flex; align-items:center; gap:var(--s4); min-width:0; }
   .brand img{ height:30px; width:auto; flex:0 0 auto; }
   .brand img.is-dark{ display:none; }
-  :root[data-theme="dark"] .brand img.is-light, :root:not([data-theme]) .brand img.is-light{ display:none; }
-  :root[data-theme="dark"] .brand img.is-dark, :root:not([data-theme]) .brand img.is-dark{ display:block; }
+  :root[data-theme="dark"] .brand img.is-light{ display:none; }
+  :root[data-theme="dark"] .brand img.is-dark{ display:block; }
   /* a hairline keeps the wordmark from touching the page label */
   .brand > div{ position:relative; padding-left:var(--s4); min-width:0; }
   .brand > div::before{
