@@ -281,14 +281,35 @@
   .rhead h1{ margin:0; }
   .rhead .btn, .rlook + * .btn, #rnLook, #rmaRetGo{ white-space:nowrap; }
   .rrow{
-    display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s4); align-items:center;
+    display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto 110px; gap:var(--s4); align-items:center;
     padding:var(--s4) var(--s4b); border:1px solid var(--line); border-radius:var(--r-md); background:var(--paper);
     margin-bottom:var(--s2); cursor:pointer; transition:border-color var(--t); animation:rise var(--t-slow) both;
   }
   .rrow:hover{ border-color:var(--line-strong); }
   .rrow .rno{ font-weight:600; font-variant-numeric:tabular-nums; }
   .rrow .rsub{ color:var(--muted); font-size:12.5px; margin-top:4px; }
-  .rrow .rissue{ grid-column:1 / -1; font-size:13px; color:var(--muted); }
+  .rrow .rissue{ font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rrow .rdate{ font-size:12px; color:var(--faint); text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .rtiles{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s3); margin-bottom:var(--s4); }
+  .rtile{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); }
+  .rtile b{ display:block; font-size:24px; font-weight:600; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; line-height:1.2; }
+  .rtile span{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--faint); }
+  .rtile.hot b{ color:var(--warn-ink); }
+  .rchips{ display:flex; flex-wrap:wrap; gap:var(--s2); margin-bottom:var(--s4); }
+  .rchips button{ font:inherit; font-size:12.5px; font-weight:500; padding:6px 14px; min-height:32px; border-radius:var(--r-pill) !important; border:1px solid var(--line); background:var(--paper); color:var(--muted); cursor:pointer; }
+  .rchips button:hover{ border-color:var(--line-strong); color:var(--ink); }
+  .rchips button.on{ background:var(--accent-soft); color:var(--accent-fg); border-color:var(--accent-line); }
+  .rpager{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); margin-top:var(--s3); font-size:12.5px; color:var(--muted); }
+  .rlink{ color:var(--link); cursor:pointer; text-decoration:none; }
+  .rlink:hover{ text-decoration:underline; }
+  .rparts{ margin:0 0 var(--s3); padding:0; list-style:none; font-size:13.5px; }
+  .rparts li{ display:flex; justify-content:space-between; gap:var(--s3); padding:6px 0; border-bottom:1px solid var(--line); }
+  .rparts li:last-child{ border-bottom:0; }
+  .rtl li.k::before{ background:var(--ok); }
+  .rtl li.i::before{ background:var(--accent); }
+  .rtl li.w::before{ background:var(--warn); }
+  .rtl li.b::before{ background:var(--bad); }
+  .raddr{ white-space:pre-wrap; font-size:13px; color:var(--muted); margin-top:6px; }
   .rnext{ font-size:13.5px; margin:0 0 var(--s4); padding:var(--s3) var(--s4); background:var(--soft); border-radius:var(--r-sm); border:1px solid var(--line); }
   .rnext.w{ background:var(--warn-bg); border-color:var(--warn-line); color:var(--warn-ink); }
   .rnext.b{ background:var(--bad-bg); border-color:var(--bad-line); color:var(--bad-ink); }
@@ -326,6 +347,11 @@
     .rgrid{ grid-template-columns:1fr; }
     .rhead .btn{ width:100%; }
     .pnav{ display:flex; } .pnav button{ flex:1; justify-content:center; }
+    .rrow{ grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s3); padding:var(--s3) var(--s4); }
+    .rrow .rissue{ grid-column:1 / -1; white-space:normal; }
+    .rrow .rdate{ grid-column:1 / -1; text-align:left; }
+    .rtiles{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .rtile b{ font-size:20px; }
   }
   @media (max-width:640px){
     .rcompose textarea, .rfield textarea{ font-size:16px; }
@@ -715,7 +741,7 @@
   let currentId = null, query = '';
   let pview = 'orders';
   let rmaTickets = [], rmaParts = [], rmaShipments = [], rmaComments = [], rmaAttachments = [], rmaEvents = [], rmaContacts = [];
-  let rmaCurrent = null;
+  let rmaCurrent = null, rmaReturnAddress = '';
 
   /* ---------- auth ---------- */
   async function init(){
@@ -853,9 +879,11 @@
       const cid = me.customer_id;
       const r = await Promise.all([
         SB.from('rma_tickets').select('*').eq('customer_id', cid).order('created_at', { ascending:false }),
-        SB.from('customer_contacts').select('*').eq('customer_id', cid)
+        SB.from('customer_contacts').select('*').eq('customer_id', cid),
+        SB.from('app_settings').select('*').eq('key', 'rma_return_address')
       ]);
       rmaTickets = r[0].data || []; rmaContacts = r[1].data || [];
+      const ra = (r[2].data || [])[0]; rmaReturnAddress = ra ? (ra.value || '') : '';
       const ids = rmaTickets.map(function(t){ return t.id; });
       if (ids.length){
         const s = await Promise.all([
@@ -1087,7 +1115,8 @@
                   '<span class="bdot">&middot;</span>'
                 : '') +
               '<span>' + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</span></div></div>' +
-            '<div><button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;"><button class="btn" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy serials</button>' +
+              '<button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
           '</div>' +
           '<div class="bbody" id="bb_' + esc(b.id) + '" style="display:none;">' +
             '<div class="twrap"><table><thead><tr><th>Serial</th><th>Model</th><th>Tracking</th></tr></thead><tbody>' +
@@ -1183,10 +1212,10 @@
     const e = new Date(start + 'T12:00:00'); e.setFullYear(e.getFullYear() + 1);
     const end = ymd(e), today = ymd(new Date());
     const left = Math.round((new Date(end + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000);
-    if (today < start) return { key:'active', start:start, end:end, label:'Starts ' + fmtDate(start), c:'k' };
+    if (today < start) return { key:'active', start:start, end:end, label:'Good until ' + fmtDate(end), c:'k' };
     if (left < 0)      return { key:'expired', start:start, end:end, label:'Expired ' + fmtDate(end), c:'b' };
-    if (left <= 30)    return { key:'expiring', start:start, end:end, label:left + ' days left', c:'w' };
-    return { key:'active', start:start, end:end, label:'In warranty \u00b7 ' + left + ' days left', c:'k' };
+    if (left <= 30)    return { key:'expiring', start:start, end:end, label:'Good until ' + fmtDate(end) + ' \u00b7 ' + left + 'd left', c:'w' };
+    return { key:'active', start:start, end:end, label:'Good until ' + fmtDate(end), c:'k' };
   }
   function rmaWarrantyChip(w){ return '<span class="chip ' + w.c + '"' + (w.end ? ' title="Through ' + esc(fmtDate(w.end)) + '"' : '') + '>' + esc(w.label) + '</span>'; }
   function rmaHistoryHtml(u){
@@ -1201,33 +1230,88 @@
   });
 
   /* ---- list ---- */
+  let rQuery = '', rFilter = 'open', rPage = 0;
+  const R_PAGE = 25;
+  const R_FILTERS = [['open','Open'],['new','Submitted'],['needs_info','Needs your reply'],['approved','Approved'],['shipped','Awaiting return'],['return_received','Returned'],['closed','Closed'],['denied','Not covered'],['','All']];
+  function rmaMatch(t, q){
+    if (!q) return true;
+    const bare = q.replace(/^rma-?/, '');
+    const u = units.find(function(x){ return String(x.id) === String(t.unit_id); }), cfg = u ? cfgById(u.config_id) : null;
+    return (bare && String(t.rma_no).indexOf(bare) === 0)
+        || (t.serial || '').toLowerCase().indexOf(q) >= 0
+        || (!!cfg && (cfg.name || '').toLowerCase().indexOf(q) >= 0)
+        || (t.issue || '').toLowerCase().indexOf(q) >= 0
+        || (t.part_requested || '').toLowerCase().indexOf(q) >= 0;
+  }
+  function rmaRows(){
+    const q = rQuery.trim().toLowerCase();
+    return rmaTickets.filter(function(t){
+      if (rFilter === 'open' && RMA_OPEN.indexOf(t.status) < 0) return false;
+      if (rFilter && rFilter !== 'open' && t.status !== rFilter) return false;
+      return rmaMatch(t, q);
+    });
+  }
   function renderRmaList(){
     setUrl(null); rmaCurrent = null;
     const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; });
-    const done = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) < 0; });
-    function row(t){
-      const u = units.find(function(x){ return String(x.id) === String(t.unit_id); });
-      const cfg = u ? cfgById(u.config_id) : null;
-      return '<div class="rrow" role="button" tabindex="0" data-rmaid="' + esc(t.id) + '">' +
-        '<div><div class="rno">' + rmaNo(t) + ' <span class="mono" style="color:var(--muted);font-weight:400;">' + esc(t.serial) + '</span></div>' +
-          '<div class="rsub">' + (cfg ? esc(cfg.name) + ' \u00b7 ' : '') + 'opened ' + esc(fmtDate(t.created_at)) + '</div></div>' +
-        rmaChip(t.status) +
-        '<div class="rissue">' + esc(rmaCat(t.issue_category)) + (t.part_requested ? ' \u00b7 ' + esc(t.part_requested) : '') + '</div></div>';
-    }
+    const needs = open.filter(function(t){ return t.status === 'needs_info'; }).length;
+    const awaiting = open.filter(function(t){ return t.status === 'shipped'; }).length;
+    const closed = rmaTickets.filter(function(t){ return t.status === 'closed'; }).length;
+    function tile(n, l, hot){ return '<div class="rtile' + (hot ? ' hot' : '') + '"><b>' + num(n) + '</b><span>' + l + '</span></div>'; }
     $('listView').innerHTML = pnavHtml() +
       '<div class="rhead"><div><h1>RMAs</h1><p class="muted" style="margin:0;">Warranty parts for units on your orders. Every request is tied to a serial number.</p></div>' +
         '<button class="btn primary" id="rmaNew" type="button">Request an RMA</button></div>' +
-      (rmaTickets.length
-        ? (open.length ? open.map(row).join('') : '<p class="muted">Nothing open right now.</p>') +
-          (done.length ? '<h2 style="margin:var(--s6) 0 var(--s3);font-size:15px;">Closed</h2>' + done.map(row).join('') : '')
-        : '<div class="card"><div class="empty">' +
-            '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>' +
-            '<p>No RMAs yet.</p><p class="muted">When a unit has a fault, request a part here with its serial number.</p></div></div>');
-    $('rmaNew').addEventListener('click', function(){ newRmaModal(''); });
-    $('listView').querySelectorAll('[data-rmaid]').forEach(function(r){
+      '<div class="rtiles">' + tile(open.length, 'Open') + tile(needs, 'Needs your reply', needs > 0) + tile(awaiting, 'Awaiting return', awaiting > 0) + tile(closed, 'Closed') + '</div>' +
+      '<div class="toolbar"><input id="rSearch" type="text" class="searchbox" placeholder="Search by RMA # or serial number" value="' + esc(rQuery) + '" autocomplete="off"></div>' +
+      '<div class="rchips">' + R_FILTERS.map(function(f){ return '<button type="button" data-rf="' + f[0] + '" class="' + (rFilter === f[0] ? 'on' : '') + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+      '<div id="rRows"></div>';
+    renderRmaRows();
+    $('rmaNew').addEventListener('click', function(){ newRmaModal('', null); });
+    $('rSearch').addEventListener('input', function(){ rQuery = this.value; rPage = 0; renderRmaRows(); });
+    $('listView').querySelectorAll('[data-rf]').forEach(function(b){
+      b.addEventListener('click', function(){
+        rFilter = b.getAttribute('data-rf'); rPage = 0;
+        $('listView').querySelectorAll('[data-rf]').forEach(function(x){ x.classList.toggle('on', x === b); });
+        renderRmaRows();
+      });
+    });
+  }
+  function renderRmaRows(){
+    const host = $('rRows'); if (!host) return;
+    const rows = rmaRows();
+    if (!rows.length){
+      host.innerHTML = '<div class="card"><div class="empty">' +
+        '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>' +
+        '<p>' + (rmaTickets.length ? 'No RMAs match.' : 'No RMAs yet.') + '</p>' +
+        (rmaTickets.length ? '' : '<p class="muted">When a unit has a fault, request a part here with its serial number.</p>') + '</div></div>';
+      return;
+    }
+    const pages = Math.max(1, Math.ceil(rows.length / R_PAGE));
+    if (rPage > pages - 1) rPage = pages - 1;
+    if (rPage < 0) rPage = 0;
+    const from = rPage * R_PAGE;
+    host.innerHTML = rows.slice(from, from + R_PAGE).map(function(t){
+      const u = units.find(function(x){ return String(x.id) === String(t.unit_id); }), cfg = u ? cfgById(u.config_id) : null;
+      const open = RMA_OPEN.indexOf(t.status) >= 0;
+      return '<div class="rrow" role="button" tabindex="0" data-rmaid="' + esc(t.id) + '">' +
+        '<div><div class="rno">' + rmaNo(t) + ' <span class="mono" style="color:var(--muted);font-weight:400;">' + esc(t.serial) + '</span></div>' +
+          '<div class="rsub">' + (cfg ? esc(cfg.name) : '') + '</div></div>' +
+        '<div class="rissue">' + esc(rmaCat(t.issue_category)) + (t.part_requested ? ' \u00b7 ' + esc(t.part_requested) : '') + '</div>' +
+        rmaChip(t.status) +
+        '<div class="rdate">' + (open ? 'opened ' + esc(fmtDate(t.created_at)) : esc(fmtDate(t.closed_at || t.updated_at))) + '</div></div>';
+    }).join('') +
+    (pages > 1
+      ? '<div class="rpager"><button class="btn sm" id="rPrev" type="button"' + (rPage === 0 ? ' disabled' : '') + '>Previous</button>' +
+        '<span>' + num(from + 1) + '\u2013' + num(Math.min(from + R_PAGE, rows.length)) + ' of ' + num(rows.length) + '</span>' +
+        '<button class="btn sm" id="rNext" type="button"' + (rPage >= pages - 1 ? ' disabled' : '') + '>Next</button></div>'
+      : '');
+    host.querySelectorAll('[data-rmaid]').forEach(function(r){
       r.addEventListener('click', function(){ openRma(r.getAttribute('data-rmaid')); });
       r.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openRma(r.getAttribute('data-rmaid')); } });
     });
+    const pv = $('rPrev'), nx = $('rNext');
+    if (pv) pv.addEventListener('click', function(){ rPage--; renderRmaRows(); });
+    if (nx) nx.addEventListener('click', function(){ rPage++; renderRmaRows(); });
   }
 
   /* ---- detail ---- */
@@ -1238,44 +1322,54 @@
     const o = orders.find(function(x){ return x.id === t.order_id; });
     const b = unitBatch(u), cfg = u ? cfgById(u.config_id) : null, w = u ? rmaWarranty(u) : null;
     const st = RMA_ST[t.status] || { l:t.status, c:'n', next:'' };
-    const parts = rmaParts.filter(function(x){ return x.rma_id === id; });
+    const parts = rmaParts.filter(function(x){ return x.rma_id === id && x.status !== 'denied'; });
     const out = rmaShipments.filter(function(x){ return x.rma_id === id && x.direction === 'outbound'; });
     const ret = rmaShipments.filter(function(x){ return x.rma_id === id && x.direction === 'return'; });
     const cmts = rmaComments.filter(function(x){ return x.rma_id === id; });
     const evts = rmaEvents.filter(function(x){ return x.rma_id === id && (x.kind === 'status' || x.kind === 'shipment'); });
     const loose = rmaAttachments.filter(function(x){ return x.rma_id === id && !x.comment_id; });
+    const editable = t.status === 'new' || t.status === 'needs_info';
+    const needReturn = t.status === 'shipped' && !ret.length;
+    const serialLink = o ? '<a class="mono rlink" data-goorder="' + esc(o.id) + '" title="Open this unit\u2019s order">' + esc(t.serial) + '</a>' : '<span class="mono">' + esc(t.serial) + '</span>';
 
     function shipRow(s){
       return '<div class="rmsg"><div class="rmsg-h"><b>' + (s.direction === 'return' ? 'Your return' : 'Part shipped') + (s.ship_date ? ' \u00b7 ' + esc(fmtDate(s.ship_date)) : '') + '</b>' +
-        '<span>' + (s.received_at ? 'received ' + esc(fmtDate(s.received_at)) : '') + '</span></div>' +
+        '<span>' + (s.received_at ? 'received by Novatech ' + esc(fmtDate(s.received_at)) : (s.direction === 'return' ? 'on its way' : '')) + '</span></div>' +
         '<div class="trk-dd">' + carrierBadge(s.carrier) + trackHtml(s.carrier, s.tracking_no ? [s.tracking_no] : []) + '</div>' +
-        (s.ship_to ? '<p class="muted" style="margin:6px 0 0;white-space:pre-wrap;">' + esc(s.ship_to) + '</p>' : '') + '</div>';
+        (s.ship_to ? '<p class="muted" style="margin:6px 0 0;white-space:pre-wrap;">' + esc(s.ship_to) + '</p>' : '') +
+        (s.direction === 'return' && !s.received_at ? '<div style="margin-top:8px;"><button class="btn sm" data-rslip="1" type="button">Print return slip</button></div>' : '') + '</div>';
     }
-    const returnBox = t.status === 'shipped'
-      ? '<div class="rnext w" style="margin:var(--s4) 0 0;"><b>Send the failed part back.</b> Add the tracking number here once it ships so Novatech can close the ticket.' +
+    const partsLine = parts.length && ['approved','shipped','return_received','closed'].indexOf(t.status) >= 0
+      ? '<p class="muted" style="margin:0 0 6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">' + (t.status === 'approved' ? 'Approved, shipping soon' : 'Parts shipped') + '</p>' +
+        '<ul class="rparts">' + parts.map(function(x){ return '<li><span>' + esc(x.description) + '</span><span class="mono">\u00d7 ' + x.qty + '</span></li>'; }).join('') + '</ul>'
+      : '';
+    const returnBox = needReturn
+      ? '<div class="rnext w" style="margin:var(--s4) 0 0;"><b>Send the failed part back.</b> Print a return slip for the box, then add the tracking number here so Novatech can close the ticket.' +
           '<div class="rbar" style="margin-top:var(--s3);"><select id="rmaRetCar" style="height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
             RMA_CARRIERS.map(function(c){ return '<option>' + c + '</option>'; }).join('') + '</select>' +
             '<input id="rmaRetTrk" type="text" placeholder="Tracking number" style="flex:1 1 180px;height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
-            '<button class="btn" id="rmaRetGo" type="button">Add tracking</button></div></div>'
+            '<button class="btn" id="rmaRetGo" type="button">Add tracking</button></div>' +
+          '<div style="margin-top:var(--s3);"><button class="btn sm" data-rslip="1" type="button">Print return slip</button></div></div>'
       : '';
 
     $('listView').style.display = 'none';
     $('detailView').style.display = '';
     $('detailView').innerHTML =
       '<div class="back"><button class="btn" id="rmaBack" type="button">&larr; All RMAs</button>' +
+        (editable ? ' <button class="btn" id="rmaEdit" type="button">Edit request</button>' : '') +
         (t.status === 'new' ? ' <button class="btn" id="rmaCancel" type="button">Cancel request</button>' : '') + '</div>' +
       '<h1 class="inv-h1">' + rmaNo(t) + rmaChip(t.status) + (t.coverage ? '<span class="chip n">' + esc(RMA_COV[t.coverage] || t.coverage) + '</span>' : '') + '</h1>' +
-      '<p class="muted"><span class="mono">' + esc(t.serial) + '</span>' + (cfg ? ' \u00b7 ' + esc(cfg.name) : '') + ' \u00b7 opened ' + esc(fmtDate(t.created_at)) + '</p>' +
-      (st.next ? '<p class="rnext' + (t.status === 'needs_info' ? ' w' : '') + '">' + esc(st.next) + '</p>' : '') +
+      '<p class="muted">' + serialLink + (cfg ? ' \u00b7 ' + esc(cfg.name) : '') + ' \u00b7 opened ' + esc(fmtDate(t.created_at)) + '</p>' +
+      (st.next ? '<p class="rnext' + (t.status === 'needs_info' ? ' w' : '') + '">' + esc(st.next) + (editable ? ' You can still edit the request until it is approved.' : '') + '</p>' : '') +
       (t.status === 'denied' ? '<p class="rnext b"><b>Not covered.</b> ' + esc(t.denial_reason || '') + '</p>' : '') +
       (t.status === 'closed' && t.resolution ? '<p class="rnext k"><b>Resolved.</b> ' + esc(t.resolution) + '</p>' : '') +
       '<div class="rgrid"><div>' +
         '<div class="card"><h2>Issue</h2><dl class="rdl"><dt>Category</dt><dd>' + esc(rmaCat(t.issue_category)) + '</dd>' +
           '<dt>Reported</dt><dd style="white-space:pre-wrap;">' + esc(t.issue) + '</dd>' +
           (t.part_requested ? '<dt>Part requested</dt><dd>' + esc(t.part_requested) + '</dd>' : '') +
-          (parts.length ? '<dt>Part' + (parts.length === 1 ? '' : 's') + ' sending</dt><dd>' + parts.filter(function(x){ return x.status !== 'denied'; }).map(function(x){ return esc(x.description) + (x.qty > 1 ? ' \u00d7 ' + x.qty : ''); }).join('<br>') + '</dd>' : '') +
+          '<dt>Ship part to</dt><dd>' + (t.ship_to_kind === 'store' ? 'The store' : 'The technician') + (t.ship_to_text ? '<div class="raddr">' + esc(t.ship_to_text) + '</div>' : '') + '</dd>' +
         '</dl>' + attHtml(loose) + '</div>' +
-        '<div class="card"><h2>Shipping</h2>' +
+        '<div class="card"><h2>Shipping</h2>' + partsLine +
           (out.length || ret.length ? '<div class="rthread">' + out.map(shipRow).join('') + ret.map(shipRow).join('') + '</div>' : '<p class="muted" style="margin:0;">Nothing has shipped yet.</p>') +
           returnBox + '</div>' +
         '<div class="card"><h2>Thread</h2><div class="rthread">' +
@@ -1290,20 +1384,24 @@
         '</div>' +
       '</div><div>' +
         '<div class="card"><h2>Unit</h2>' + (u ? '<dl class="rdl">' +
-          '<dt>Serial</dt><dd class="mono"><b>' + esc(u.serial) + '</b></dd>' +
+          '<dt>Serial</dt><dd><b>' + serialLink + '</b></dd>' +
           (cfg ? '<dt>Model</dt><dd>' + esc(cfg.name) + '</dd>' : '') +
-          '<dt>Invoice</dt><dd>' + (o ? '<a style="color:var(--link);cursor:pointer;" id="rmaGoOrder">' + esc(o.invoice_no) + '</a>' : '\u2014') + '</dd>' +
+          '<dt>Invoice</dt><dd>' + (o ? '<a class="rlink" data-goorder="' + esc(o.id) + '">' + esc(o.invoice_no) + '</a>' : '\u2014') + '</dd>' +
           '<dt>Shipped</dt><dd>' + (b && b.ship_date ? esc(fmtDate(b.ship_date)) + (locOf(b) ? ' to ' + esc(locName(b)) : '') : 'not yet') + '</dd>' +
           '<dt>Warranty</dt><dd>' + rmaWarrantyChip(w) + (w.end ? '<div class="muted" style="margin-top:4px;">' + esc(fmtDate(w.start)) + ' \u2013 ' + esc(fmtDate(w.end)) + '</div>' : '') + '</dd>' +
         '</dl>' : '<p class="muted" style="margin:0;">Serial <b class="mono">' + esc(t.serial) + '</b></p>') + '</div>' +
         '<div class="card"><h2>Timeline</h2>' + (evts.length ? '<ul class="rtl">' + evts.slice().reverse().map(function(e){
-          const txt = e.kind === 'status' ? (RMA_ST[e.to_val] || { l:e.to_val }).l : (e.to_val === 'return' ? 'Return tracking added' : 'Part shipped');
-          return '<li>' + esc(txt) + '<small>' + rmaWhen(e.created_at) + '</small></li>';
+          const isStatus = e.kind === 'status';
+          const cls = isStatus ? (RMA_ST[e.to_val] || { c:'n' }).c : (e.to_val === 'return' ? 'k' : 'i');
+          const txt = isStatus ? (RMA_ST[e.to_val] || { l:e.to_val }).l : (e.to_val === 'return' ? (e.detail && /^Received/.test(e.detail) ? 'Return received by Novatech' : 'Return tracking added') : 'Part shipped');
+          return '<li class="' + cls + '">' + esc(txt) + '<small>' + rmaWhen(e.created_at) + '</small></li>';
         }).join('') + '</ul>' : '<p class="muted" style="margin:0;">Nothing yet.</p>') + '</div>' +
       '</div></div>';
 
     $('rmaBack').addEventListener('click', function(){ pview = 'rmas'; renderList(); });
-    const go = $('rmaGoOrder'); if (go) go.addEventListener('click', function(){ pview = 'orders'; openOrder(o.id); });
+    const ed = $('rmaEdit'); if (ed) ed.addEventListener('click', function(){ newRmaModal(t.serial, t); });
+    $('detailView').querySelectorAll('[data-goorder]').forEach(function(a){ a.addEventListener('click', function(){ pview = 'orders'; openOrder(a.getAttribute('data-goorder')); }); });
+    $('detailView').querySelectorAll('[data-rslip]').forEach(function(bt){ bt.addEventListener('click', function(){ returnSlip(t); }); });
     const fi = $('rmaFiles'); if (fi) fi.addEventListener('change', function(){ $('rmaFilesNote').textContent = this.files.length ? this.files.length + ' file' + (this.files.length === 1 ? '' : 's') + ' ready' : ''; });
     const post = $('rmaPost'); if (post) post.addEventListener('click', async function(){
       const body = $('rmaBody').value.trim(), files = $('rmaFiles').files;
@@ -1337,6 +1435,32 @@
       toast('Return tracking added', 'ok'); openRma(t.id);
     });
     loadThumbs($('detailView'));
+  }
+
+  /* ---- return slip: goes in the box so the part lands on the right ticket ---- */
+  const R_SLIP_CSS = 'body{font:14px/1.5 -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;color:#1a1a1a;margin:0;padding:40px;max-width:720px}h1{font-size:26px;margin:0 0 2px;letter-spacing:-.5px}.k{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#787671;margin:22px 0 6px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px 0;border-bottom:1px solid #e5e3df;vertical-align:top}th{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#787671;font-weight:600}.n{text-align:right;white-space:nowrap}.big{font-size:24px;font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace}.box{border:1px solid #c8c4be;border-radius:8px;padding:12px 14px;white-space:pre-wrap;min-height:44px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:2px solid #1a1a1a;padding-bottom:14px}.muted{color:#5d5b54}@media print{body{padding:0}}';
+  function returnSlip(t){
+    const u = units.find(function(x){ return String(x.id) === String(t.unit_id); }), cfg = u ? cfgById(u.config_id) : null;
+    const o = orders.find(function(x){ return x.id === t.order_id; });
+    const parts = rmaParts.filter(function(x){ return x.rma_id === t.id && x.status !== 'denied'; });
+    const em = (session && session.user && session.user.email || '').toLowerCase();
+    const c = rmaContacts.find(function(x){ return (x.email || '').toLowerCase() === em; }) || rmaContacts[0] || null;
+    const from = c ? [c.name, c.address].filter(Boolean).join('\n') : (customer ? customer.name : '');
+    const to = rmaReturnAddress || 'Novatech Gaming\n(return address to be confirmed on the ticket)';
+    const w = window.open('', '_blank');
+    if (!w){ toast('Allow pop-ups to print the slip.', 'bad', 6000); return; }
+    const html = '<div class="top"><div><h1>RMA return slip</h1><div class="muted">' + esc(customer ? customer.name : '') + ' \u2192 Novatech Gaming</div></div>' +
+        '<div style="text-align:right"><div class="big">' + rmaNo(t) + '</div><div class="muted">' + esc(fmtDate(ymd(new Date()))) + '</div></div></div>' +
+      '<div class="grid"><div><div class="k">Ship to</div><div class="box">' + esc(to) + '</div></div>' +
+        '<div><div class="k">From</div><div class="box">' + esc(from || '\u2014') + '</div></div></div>' +
+      '<div class="k">Failed part' + (parts.length === 1 ? '' : 's') + ' enclosed</div><table><tr><th>Part</th><th class="n">Qty</th></tr>' +
+        (parts.length ? parts.map(function(x){ return '<tr><td>' + esc(x.description) + '</td><td class="n">' + x.qty + '</td></tr>'; }).join('')
+                      : '<tr><td colspan="2">' + esc(t.part_requested || rmaCat(t.issue_category)) + '</td></tr>') + '</table>' +
+      '<div class="k">From unit</div><div class="box">Serial ' + esc(t.serial) + (cfg ? '\n' + esc(cfg.name) : '') + (o ? '\nInvoice ' + esc(o.invoice_no) : '') + '</div>' +
+      '<div class="k">Instructions</div><div class="box">Place this slip inside the box and write ' + rmaNo(t) + ' on the outside. Add the tracking number to the ticket once it ships.</div>';
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + rmaNo(t) + ' return slip</title><style>' + R_SLIP_CSS + '</style></head><body>' + html + '</body></html>');
+    w.document.close(); w.focus();
+    setTimeout(function(){ try { w.print(); } catch(e){} }, 400);
   }
   async function rmaEvent(t, kind, from, to, detail){
     const r = await SB.from('rma_events').insert({ rma_id: t.id, kind: kind, from_val: from || null, to_val: to || null, detail: detail || null, actor_id: session.user.id, actor_type: 'customer', actor_name: myName() }).select().single();
@@ -1393,65 +1517,109 @@
     }
   }
 
-  /* ---- request an RMA ---- */
-  function newRmaModal(serial){
+  /* ---- request or edit an RMA ---- */
+  function locAddr(l){ return l ? [l.address1, l.address2, [l.city, l.state].filter(Boolean).join(', '), l.zip].filter(Boolean).join(', ') : ''; }
+  function newRmaModal(serial, edit){
+    const isEdit = !!edit;
+    const techs = rmaContacts.filter(function(c){ return c.active !== false; });
+    function shipOptions(sel){
+      let h = '';
+      if (techs.length) techs.forEach(function(c){ h += '<option value="tech:' + esc(c.id) + '"' + (sel === 'tech:' + c.id ? ' selected' : '') + '>Technician \u2014 ' + esc(c.name) + '</option>'; });
+      else h += '<option value="tech:"' + (sel === 'tech:' ? ' selected' : '') + '>Technician</option>';
+      locations.forEach(function(l){ h += '<option value="store:' + esc(l.id) + '"' + (sel === 'store:' + l.id ? ' selected' : '') + '>Store \u2014 ' + esc(l.store_name) + (l.store_number ? ' #' + esc(l.store_number) : '') + '</option>'; });
+      return h;
+    }
+    function shipInfo(val){
+      if (val.indexOf('store:') === 0){
+        const l = locations.find(function(x){ return String(x.id) === val.slice(6); });
+        return { kind:'store', loc: l ? l.id : null, text: l ? [l.store_name + (l.store_number ? ' #' + l.store_number : ''), locAddr(l)].filter(Boolean).join('\n') : '', shown: l ? (locAddr(l) || 'No address on file for this store') : '' };
+      }
+      const c = techs.find(function(x){ return String(x.id) === val.slice(5); });
+      return { kind:'tech', loc: null, text: c ? [c.name, c.address].filter(Boolean).join('\n') : '', shown: c ? (c.address || 'No address on file \u2014 Novatech will confirm before shipping') : 'No technician on file \u2014 Novatech will confirm the address before shipping' };
+    }
+    const defSel = isEdit && edit.ship_to_kind === 'store' && edit.store_location_id ? 'store:' + edit.store_location_id : (techs.length ? 'tech:' + techs[0].id : 'tech:');
     const bg = openModal(
-      '<div class="modal-h"><h3>Request an RMA</h3><p>Start with the serial number on the unit. Every request is tied to one PC.</p></div>' +
+      '<div class="modal-h"><h3>' + (isEdit ? 'Edit ' + rmaNo(edit) : 'Request an RMA') + '</h3><p>' + (isEdit ? 'Changes are visible to Novatech straight away. Once the request is approved it locks.' : 'Start with the serial number on the unit. Every request is tied to one PC.') + '</p></div>' +
       '<div class="modal-b scroll">' +
-        '<div class="field"><label for="rnSerial">Serial number</label><div style="display:flex;gap:8px;"><input id="rnSerial" type="text" value="' + esc(serial || '') + '" placeholder="LM26000042" autocomplete="off" spellcheck="false" style="flex:1;"><button class="btn" id="rnLook" type="button">Look up</button></div>' +
+        '<div class="field"><label for="rnSerial">Serial number</label><div style="display:flex;gap:8px;"><input id="rnSerial" type="text" value="' + esc(serial || '') + '" placeholder="NT26001000" autocomplete="off" spellcheck="false" style="flex:1;"><button class="btn" id="rnLook" type="button">Look up</button></div>' +
           '<div class="rlook" id="rnUnit" style="display:none;"></div></div>' +
         '<div id="rnForm" style="display:none;">' +
-          '<div class="field"><label for="rnCat">What is wrong</label><select id="rnCat">' + RMA_CATS.map(function(c){ return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('') + '</select></div>' +
-          '<div class="field rfield"><label for="rnIssue">What you found</label><textarea id="rnIssue" placeholder="What the customer reported, what you tested, what you ruled out"></textarea></div>' +
-          '<div class="field"><label for="rnPart">Part you need</label><input id="rnPart" type="text" placeholder="e.g. 32GB DDR5 kit, 1TB NVMe, front glass"></div>' +
-          '<div class="field"><label for="rnLoc">Where the PC is now</label><select id="rnLoc"><option value="">Not at a store / not sure</option>' + locations.map(function(l){ return '<option value="' + esc(l.id) + '">' + esc(l.store_name) + (l.store_number ? ' #' + esc(l.store_number) : '') + '</option>'; }).join('') + '</select></div>' +
+          '<div class="field"><label for="rnCat">What is wrong</label><select id="rnCat">' + RMA_CATS.map(function(c){ return '<option value="' + c[0] + '"' + (isEdit && edit.issue_category === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>' +
+          '<div class="field rfield"><label for="rnIssue">What you found</label><textarea id="rnIssue" placeholder="What the customer reported, what you tested, what you ruled out">' + esc(isEdit ? edit.issue : '') + '</textarea></div>' +
+          '<div class="field"><label for="rnPart">Part you need</label><input id="rnPart" type="text" placeholder="e.g. 32GB DDR5 kit, 1TB NVMe, front glass" value="' + esc(isEdit ? (edit.part_requested || '') : '') + '"></div>' +
+          '<div class="field"><label for="rnShip">Where to ship part(s)</label><select id="rnShip">' + shipOptions(defSel) + '</select><div class="raddr" id="rnShipAddr"></div></div>' +
           '<div class="field"><label>Photos (optional)</label><label class="btn filebtn" style="display:inline-flex;">Add photos or a PDF<input type="file" id="rnFiles" accept="image/*,application/pdf" multiple style="display:none;"></label> <span class="muted" id="rnFilesNote"></span></div>' +
         '</div>' +
       '</div>' +
-      '<div class="modal-f"><button class="btn" id="rnClose" type="button">Cancel</button><button class="btn primary" id="rnGo" type="button" disabled>Submit request</button></div>');
+      '<div class="modal-f"><button class="btn" id="rnClose" type="button">Cancel</button><button class="btn primary" id="rnGo" type="button" disabled>' + (isEdit ? 'Save changes' : 'Submit request') + '</button></div>');
     bg.querySelector('.modal').classList.add('wide');
     let unit = null;
+    function showAddr(){ bg.querySelector('#rnShipAddr').textContent = shipInfo(bg.querySelector('#rnShip').value).shown; }
     function look(){
       const v = bg.querySelector('#rnSerial').value.trim(), box = bg.querySelector('#rnUnit'), form = bg.querySelector('#rnForm'), go = bg.querySelector('#rnGo');
       unit = units.find(function(x){ return x.serial.toUpperCase() === v.toUpperCase(); }) || null;
       box.style.display = '';
       if (!unit){ box.innerHTML = '<span class="chip w">Not found</span> <span class="muted">No unit with that serial on your orders.</span>'; form.style.display = 'none'; go.disabled = true; return; }
       const o = orders.find(function(x){ return x.id === unit.order_id; }), cfg = cfgById(unit.config_id), b = unitBatch(unit), w = rmaWarranty(unit);
-      const open = rmaTickets.filter(function(t){ return String(t.unit_id) === String(unit.id) && RMA_OPEN.indexOf(t.status) >= 0; });
+      const open = rmaTickets.filter(function(t){ return String(t.unit_id) === String(unit.id) && RMA_OPEN.indexOf(t.status) >= 0 && !(isEdit && t.id === edit.id); });
       box.innerHTML = '<b>' + esc(cfg ? cfg.name : 'Unit') + '</b>' + (o ? ' \u00b7 invoice ' + esc(o.invoice_no) : '') +
         (b && b.ship_date ? '<br>Shipped ' + esc(fmtDate(b.ship_date)) + (locOf(b) ? ' to ' + esc(locName(b)) : '') : '<br>Not shipped yet') +
         '<br>Warranty: ' + rmaWarrantyChip(w) +
         (w.key === 'expired' ? '<div class="muted" style="margin-top:6px;">This unit is outside its warranty. You can still submit; Novatech will let you know how it is covered.</div>' : '') +
         (open.length ? '<div style="margin-top:8px;color:var(--warn-ink);"><b>This unit already has an open RMA</b> \u2014 ' + open.map(function(t){ return '<a data-rmaopen="' + esc(t.id) + '" style="color:var(--link);cursor:pointer;">' + rmaNo(t) + '</a>'; }).join(', ') + '. Add to it instead of opening another.</div>' : '');
       if (open.length){ form.style.display = 'none'; go.disabled = true; return; }
-      form.style.display = ''; go.disabled = false;
-      const loc = locOf(b); if (loc) bg.querySelector('#rnLoc').value = loc.id;
+      form.style.display = ''; go.disabled = false; showAddr();
     }
     bg.querySelector('#rnLook').addEventListener('click', look);
     bg.querySelector('#rnSerial').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); look(); } });
+    bg.querySelector('#rnShip').addEventListener('change', showAddr);
     bg.querySelector('#rnClose').addEventListener('click', closeModal);
     bg.querySelector('#rnFiles').addEventListener('change', function(){ bg.querySelector('#rnFilesNote').textContent = this.files.length ? this.files.length + ' file' + (this.files.length === 1 ? '' : 's') + ' ready' : ''; });
     if (serial) look();
     bg.querySelector('#rnGo').addEventListener('click', async function(){
       if (!unit) return;
       const issue = bg.querySelector('#rnIssue').value.trim(); if (!issue){ toast('Describe what you found.', 'bad'); return; }
-      const o = orders.find(function(x){ return x.id === unit.order_id; }), w = rmaWarranty(unit), b = unitBatch(unit);
-      const locId = bg.querySelector('#rnLoc').value || (locOf(b) ? locOf(b).id : null);
-      this.disabled = true; this.textContent = 'Submitting\u2026';
-      const row = { serial: unit.serial, unit_id: unit.id, customer_id: me.customer_id, order_id: o ? o.id : null, status: 'new',
+      const o = orders.find(function(x){ return x.id === unit.order_id; }), w = rmaWarranty(unit);
+      const ship = shipInfo(bg.querySelector('#rnShip').value);
+      this.disabled = true; this.textContent = isEdit ? 'Saving\u2026' : 'Submitting\u2026';
+      const row = { serial: unit.serial, unit_id: unit.id, order_id: o ? o.id : null,
         issue_category: bg.querySelector('#rnCat').value, issue: issue, part_requested: bg.querySelector('#rnPart').value.trim() || null,
-        ship_to_kind: 'tech', store_location_id: locId || null, warranty_status_at_open: w.key, warranty_end: w.end || null,
-        opened_by: session.user.id, opened_by_type: 'customer' };
-      const r = await SB.from('rma_tickets').insert(row).select().single();
-      if (r.error){ this.disabled = false; this.textContent = 'Submit request'; toast('Could not submit: ' + r.error.message, 'bad', 7000); return; }
-      rmaTickets.unshift(r.data);
-      await rmaEvent(r.data, 'status', null, 'new', 'Opened by ' + myName());
+        ship_to_kind: ship.kind, ship_to_text: ship.text || null, store_location_id: ship.loc,
+        warranty_status_at_open: w.key, warranty_end: w.end || null };
+      let r;
+      if (isEdit){
+        r = await SB.from('rma_tickets').update(row).eq('id', edit.id).select().single();
+      } else {
+        Object.assign(row, { customer_id: me.customer_id, status: 'new', opened_by: session.user.id, opened_by_type: 'customer' });
+        r = await SB.from('rma_tickets').insert(row).select().single();
+      }
+      if (r.error){ this.disabled = false; this.textContent = isEdit ? 'Save changes' : 'Submit request'; toast('Could not ' + (isEdit ? 'save' : 'submit') + ': ' + r.error.message, 'bad', 7000); return; }
+      if (isEdit){ Object.assign(edit, r.data); await rmaEvent(edit, 'note', null, null, 'Request updated by ' + myName() + (edit.serial !== serial ? ' \u00b7 serial changed to ' + edit.serial : '')); }
+      else { rmaTickets.unshift(r.data); await rmaEvent(r.data, 'status', null, 'new', 'Opened by ' + myName()); }
       const files = bg.querySelector('#rnFiles').files;
-      if (files.length) await rmaUpload(r.data, Array.from(files), null);
-      closeModal(); toast(rmaNo(r.data) + ' submitted', 'ok');
-      pview = 'rmas'; openRma(r.data.id);
+      if (files.length) await rmaUpload(isEdit ? edit : r.data, Array.from(files), null);
+      closeModal(); toast(rmaNo(isEdit ? edit : r.data) + (isEdit ? ' updated' : ' submitted'), 'ok');
+      pview = 'rmas'; openRma(isEdit ? edit.id : r.data.id);
     });
   }
+
+  /* ---- copy serials ---- */
+  async function copyText(text, label){
+    try { await navigator.clipboard.writeText(text); toast(label + ' copied', 'ok'); }
+    catch(e){
+      const bg = openModal('<div class="modal-h"><h3>Copy ' + esc(label.toLowerCase()) + '</h3></div>' +
+        '<div class="modal-b"><textarea class="searchbox mono" readonly style="width:100%;min-height:90px;height:auto;padding:12px;">' + esc(text) + '</textarea></div>' +
+        '<div class="modal-f"><button class="btn primary" id="cpDone2" type="button">Done</button></div>');
+      bg.querySelector('textarea').select();
+      bg.querySelector('#cpDone2').addEventListener('click', closeModal);
+    }
+  }
+  document.addEventListener('click', function(e){
+    const c = e.target.closest('[data-copy]'); if (!c) return;
+    const list = units.filter(function(u){ return u.batch_id === c.getAttribute('data-copy'); }).map(function(u){ return u.serial; });
+    if (!list.length){ toast('No units in that batch.', 'bad'); return; }
+    copyText(list.join(', '), list.length + ' serial' + (list.length === 1 ? '' : 's'));
+  });
 
   /* ---------- serial lookup ---------- */
   function serialLookup(){
