@@ -237,6 +237,7 @@
   .chip.i{ color:var(--info-ink);   background:var(--info-bg);   border-color:var(--info-line); --dot:var(--info); }
   .chip.w{ color:var(--warn-ink);   background:var(--warn-bg);   border-color:var(--warn-line); --dot:var(--warn); }
   .chip.k{ color:var(--ok-ink);     background:var(--ok-bg);     border-color:var(--ok-line); --dot:var(--ok); }
+  .chip.b{ color:var(--bad-ink);    background:var(--bad-bg);    border-color:var(--bad-line); --dot:var(--bad); }
 
   .bar{ height:7px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; display:flex; border:1px solid var(--line); }
   .bar i{ display:block; height:100%; transition:width var(--t-slow); }
@@ -270,6 +271,66 @@
   .pipel{ color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .pipen{ margin-left:auto; font-weight:600; font-variant-numeric:tabular-nums; }
   @media (max-width:640px){ .pipeleg{ grid-template-columns:1fr; gap:var(--s2); } .pipev{ font-size:24px; } }
+
+  /* ---------- RMAs ---------- */
+  .pnav{ display:inline-flex; gap:var(--s1); padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); margin-bottom:var(--s5); }
+  .pnav button{ border:0; background:transparent; color:var(--muted); font:inherit; font-size:13.5px; font-weight:500; padding:8px 18px; min-height:36px; border-radius:var(--r-pill) !important; cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
+  .pnav button.on{ background:var(--paper); color:var(--ink); box-shadow:var(--e1); }
+  .pnav .cnt{ font-size:11px; font-weight:600; padding:1px 7px; border-radius:var(--r-pill); background:var(--accent); color:var(--accent-ink); }
+  .rhead{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; margin-bottom:var(--s4); }
+  .rhead h1{ margin:0; }
+  .rhead .btn, .rlook + * .btn, #rnLook, #rmaRetGo{ white-space:nowrap; }
+  .rrow{
+    display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s4); align-items:center;
+    padding:var(--s4) var(--s4b); border:1px solid var(--line); border-radius:var(--r-md); background:var(--paper);
+    margin-bottom:var(--s2); cursor:pointer; transition:border-color var(--t); animation:rise var(--t-slow) both;
+  }
+  .rrow:hover{ border-color:var(--line-strong); }
+  .rrow .rno{ font-weight:600; font-variant-numeric:tabular-nums; }
+  .rrow .rsub{ color:var(--muted); font-size:12.5px; margin-top:4px; }
+  .rrow .rissue{ grid-column:1 / -1; font-size:13px; color:var(--muted); }
+  .rnext{ font-size:13.5px; margin:0 0 var(--s4); padding:var(--s3) var(--s4); background:var(--soft); border-radius:var(--r-sm); border:1px solid var(--line); }
+  .rnext.w{ background:var(--warn-bg); border-color:var(--warn-line); color:var(--warn-ink); }
+  .rnext.b{ background:var(--bad-bg); border-color:var(--bad-line); color:var(--bad-ink); }
+  .rnext.k{ background:var(--ok-bg); border-color:var(--ok-line); color:var(--ok-ink); }
+  .rgrid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:var(--s4); align-items:start; }
+  .rdl{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:var(--s2) var(--s4); font-size:13.5px; margin:0; }
+  .rdl dt{ color:var(--muted); } .rdl dd{ margin:0; min-width:0; overflow-wrap:anywhere; }
+  .rthread{ display:flex; flex-direction:column; gap:var(--s3); }
+  .rmsg{ border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s3) var(--s4); background:var(--paper); }
+  .rmsg.me{ background:var(--soft); }
+  .rmsg-h{ display:flex; justify-content:space-between; gap:var(--s3); font-size:12px; color:var(--muted); margin-bottom:var(--s1); flex-wrap:wrap; }
+  .rmsg-h b{ color:var(--ink); font-weight:600; }
+  .rmsg p{ margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-size:13.5px; }
+  .ratt{ display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s2); }
+  .ratt a{ display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:var(--r-pill); background:var(--paper); color:var(--ink); text-decoration:none; cursor:pointer; max-width:100%; }
+  .ratt a span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; }
+  .ratt img{ width:64px; height:64px; object-fit:cover; border-radius:var(--r-sm); border:1px solid var(--line); cursor:pointer; background:var(--soft); }
+  .rcompose{ margin-top:var(--s4); display:grid; gap:var(--s2); }
+  .rcompose textarea, .rfield textarea{ width:100%; min-height:80px; padding:var(--s3) var(--s4); font:inherit; font-size:14px; border:1px solid var(--line-strong); background:var(--paper); color:var(--ink); resize:vertical; }
+  .rbar{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; }
+  .rbar .spacer{ flex:1; }
+  .rbar .filebtn{ cursor:pointer; }
+  .rtl{ list-style:none; margin:0; padding:0; }
+  .rtl li{ position:relative; padding:0 0 var(--s3) var(--s4b); font-size:13px; }
+  .rtl li::before{ content:""; position:absolute; left:4px; top:6px; width:8px; height:8px; border-radius:50%; background:var(--line-strong); }
+  .rtl li::after{ content:""; position:absolute; left:7px; top:16px; bottom:-2px; width:2px; background:var(--line); }
+  .rtl li:last-child::after{ display:none; }
+  .rtl small{ display:block; color:var(--faint); font-size:11.5px; }
+  .rlook{ margin-top:var(--s2); padding:var(--s3) var(--s4); border:1px solid var(--line); border-radius:var(--r-sm); background:var(--soft); font-size:13px; }
+  .rlook .chip{ vertical-align:middle; }
+  .field select{ width:100%; height:44px; padding:0 var(--s4); font:inherit; font-size:14px; border:1px solid var(--line-strong); background:var(--paper); color:var(--ink); }
+  .modal.wide{ max-width:560px; }
+  .modal-b.scroll{ max-height:70vh; overflow:auto; }
+  @media (max-width:820px){
+    .rgrid{ grid-template-columns:1fr; }
+    .rhead .btn{ width:100%; }
+    .pnav{ display:flex; } .pnav button{ flex:1; justify-content:center; }
+  }
+  @media (max-width:640px){
+    .rcompose textarea, .rfield textarea{ font-size:16px; }
+    .rbar .btn{ flex:1 1 auto; }
+  }
 
   .batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; background:var(--paper); }
   /* batch number and its status share one line, status at the right edge */
@@ -490,7 +551,7 @@
      Notion geometry. Controls are 8px rectangles; {rounded.full}
      is reserved for status badges and pill tabs, per the spec.
      ============================================================ */
-  .btn, input:not([type="checkbox"]):not([type="radio"]), select, textarea{
+  .btn, input:not([type="checkbox"]):not([type="radio"]), select, textarea, .rlook, .rnext{
     border-radius:var(--r-sm) !important;
   }
   .chip, .carrier, .storenum, .bar, .pipebar, .staffbadge{ border-radius:var(--r-pill) !important; }
@@ -617,6 +678,13 @@
   function setUrl(orderId){
     try { history.replaceState(null, '', orderId ? linkFor(orderId) : baseUrl()); } catch(e){}
   }
+  function setRmaUrl(id){
+    try { history.replaceState(null, '', id ? baseUrl() + '?rma=' + encodeURIComponent(id) : baseUrl()); } catch(e){}
+  }
+  function readRmaLink(){
+    const v = new URLSearchParams(location.search || '').get('rma');
+    return (v && /^[0-9a-fA-F-]{36}$/.test(v)) ? v : null;
+  }
   function readLink(){
     const v = new URLSearchParams(location.search || '').get('order');
     return (v && /^[0-9a-fA-F-]{36}$/.test(v)) ? v : null;
@@ -645,6 +713,9 @@
   let isStaff = false, allCustomers = [], viewAs = null;
   let orders = [], lines = [], configs = [], batches = [], tracking = [], units = [], locations = [];
   let currentId = null, query = '';
+  let pview = 'orders';
+  let rmaTickets = [], rmaParts = [], rmaShipments = [], rmaComments = [], rmaAttachments = [], rmaEvents = [], rmaContacts = [];
+  let rmaCurrent = null;
 
   /* ---------- auth ---------- */
   async function init(){
@@ -765,10 +836,39 @@
         tracking = tr.data || [];
       } else tracking = [];
     } else { lines = []; batches = []; units = []; tracking = []; }
+    await loadRma();
+    const wantR = readRmaLink();
+    if (wantR){ pview = 'rmas'; }
     renderList();
     const want = readLink();
     if (want && orders.some(function(o){ return o.id === want; })) openOrder(want);
     else if (want) toast('That order is not on your account.', 'bad', 6000);
+    if (wantR){
+      if (rmaTickets.some(function(t){ return t.id === wantR; })) openRma(wantR);
+      else toast('That RMA is not on your account.', 'bad', 6000);
+    }
+  }
+  async function loadRma(){
+    try {
+      const cid = me.customer_id;
+      const r = await Promise.all([
+        SB.from('rma_tickets').select('*').eq('customer_id', cid).order('created_at', { ascending:false }),
+        SB.from('customer_contacts').select('*').eq('customer_id', cid)
+      ]);
+      rmaTickets = r[0].data || []; rmaContacts = r[1].data || [];
+      const ids = rmaTickets.map(function(t){ return t.id; });
+      if (ids.length){
+        const s = await Promise.all([
+          SB.from('rma_parts').select('*').in('rma_id', ids).order('created_at'),
+          SB.from('rma_shipments').select('*').in('rma_id', ids).order('created_at'),
+          SB.from('rma_comments').select('*').in('rma_id', ids).eq('internal', false).order('created_at'),
+          SB.from('rma_attachments').select('*').in('rma_id', ids).order('created_at'),
+          SB.from('rma_events').select('*').in('rma_id', ids).order('created_at')
+        ]);
+        rmaParts = s[0].data || []; rmaShipments = s[1].data || []; rmaComments = s[2].data || [];
+        rmaAttachments = s[3].data || []; rmaEvents = s[4].data || [];
+      } else { rmaParts = []; rmaShipments = []; rmaComments = []; rmaAttachments = []; rmaEvents = []; }
+    } catch(e){ rmaTickets = []; }
   }
 
   /* ---------- helpers ---------- */
@@ -880,15 +980,27 @@
       }).join('') + '</div></div>';
   }
 
+  function pnavHtml(){
+    const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; }).length;
+    return '<div class="pnav" role="tablist">' +
+      '<button type="button" class="' + (pview === 'orders' ? 'on' : '') + '" data-pview="orders">Orders</button>' +
+      '<button type="button" class="' + (pview === 'rmas' ? 'on' : '') + '" data-pview="rmas">RMAs' + (open ? ' <span class="cnt">' + open + '</span>' : '') + '</button></div>';
+  }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest('[data-pview]'); if (!b) return;
+    pview = b.getAttribute('data-pview'); rmaCurrent = null; currentId = null; renderList();
+  });
   function renderList(){
     setUrl(null);
     $('detailView').style.display = 'none';
+    $('listView').style.display = '';
+    if (pview === 'rmas') return renderRmaList();
     $('listView').style.display = '';
     const q = query.trim().toLowerCase();
     const rows = orders.filter(function(o){
       return !q || (o.invoice_no||'').toLowerCase().indexOf(q) >= 0 || (o.po_number||'').toLowerCase().indexOf(q) >= 0;
     });
-    $('listView').innerHTML =
+    $('listView').innerHTML = pnavHtml() +
       '<h1>Your orders</h1>' +
       '<p class="muted" style="margin-top:0;">Progress, shipments, tracking numbers and serial numbers for everything you have ordered.</p>' +
       pipeHtml() +
@@ -1026,6 +1138,321 @@
     if (r && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openOrder(r.getAttribute('data-id')); }
   });
 
+
+  /* ---------- RMAs ---------- */
+  const RMA_BUCKET = 'rma-attachments';
+  const RMA_OPEN = ['new','needs_info','approved','shipped','return_received'];
+  const RMA_ST = {
+    new:             { l:'Submitted',        c:'i', next:'Novatech is reviewing your request.' },
+    needs_info:      { l:'Needs your reply', c:'w', next:'Novatech asked a question. Reply in the thread below.' },
+    approved:        { l:'Approved',         c:'i', next:'Approved. The part is being pulled and will ship shortly.' },
+    shipped:         { l:'Part shipped',     c:'i', next:'Your part is on its way. Please send the failed part back \u2014 the ticket closes once it arrives.' },
+    return_received: { l:'Return received',  c:'k', next:'The failed part arrived. Novatech is closing out the ticket.' },
+    closed:          { l:'Closed',           c:'k', next:'' },
+    denied:          { l:'Not covered',      c:'b', next:'' },
+    cancelled:       { l:'Cancelled',        c:'n', next:'' }
+  };
+  const RMA_CATS = [
+    ['power','Won\u2019t power on'], ['display','No display'], ['boot','Boot or OS'],
+    ['memory','Memory (RAM)'], ['storage','Storage (M.2 / SSD)'], ['gpu','Graphics card'],
+    ['motherboard','Motherboard'], ['psu','Power supply'], ['cooling','Cooling or noise'],
+    ['physical','Physical damage'], ['other','Other']
+  ];
+  const RMA_COV = { warranty:'Under warranty', goodwill:'Goodwill', billable:'Billable' };
+  const RMA_CARRIERS = ['UPS','FedEx','USPS','Other'];
+
+  function rmaNo(t){ return 'RMA-' + t.rma_no; }
+  function rmaCat(k){ const c = RMA_CATS.find(function(x){ return x[0] === k; }); return c ? c[1] : (k || 'Other'); }
+  function rmaChip(s){ const d = RMA_ST[s] || { l:s, c:'n' }; return '<span class="chip ' + d.c + '">' + esc(d.l) + '</span>'; }
+  function rmaWhen(v){ const d = new Date(v); return isNaN(d) ? '' : d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }); }
+  function ymd(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  function addDays(s, n){ const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return ymd(d); }
+  function unitBatch(u){ return (u && u.batch_id) ? batches.find(function(b){ return b.id === u.batch_id; }) : null; }
+  function myName(){
+    const em = (session && session.user && session.user.email || '').toLowerCase();
+    const c = rmaContacts.find(function(x){ return (x.email || '').toLowerCase() === em; });
+    return c ? c.name : (session && session.user && session.user.email) || 'Technician';
+  }
+
+  /* warranty: 14 days after the unit ships, for one year */
+  function rmaWarranty(u){
+    const b = unitBatch(u);
+    const on = (u && u.unit_status === 'shipped' && b && b.ship_date) ? b.ship_date : null;
+    if (!on) return { key: u && u.unit_status === 'shipped' ? 'unknown' : 'unshipped', label: u && u.unit_status === 'shipped' ? 'Shipped, date unknown' : 'Not shipped yet', c:'n' };
+    const start = addDays(on, 14);
+    const e = new Date(start + 'T12:00:00'); e.setFullYear(e.getFullYear() + 1);
+    const end = ymd(e), today = ymd(new Date());
+    const left = Math.round((new Date(end + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000);
+    if (today < start) return { key:'active', start:start, end:end, label:'Starts ' + fmtDate(start), c:'k' };
+    if (left < 0)      return { key:'expired', start:start, end:end, label:'Expired ' + fmtDate(end), c:'b' };
+    if (left <= 30)    return { key:'expiring', start:start, end:end, label:left + ' days left', c:'w' };
+    return { key:'active', start:start, end:end, label:'In warranty \u00b7 ' + left + ' days left', c:'k' };
+  }
+  function rmaWarrantyChip(w){ return '<span class="chip ' + w.c + '"' + (w.end ? ' title="Through ' + esc(fmtDate(w.end)) + '"' : '') + '>' + esc(w.label) + '</span>'; }
+  function rmaHistoryHtml(u){
+    const list = rmaTickets.filter(function(t){ return String(t.unit_id) === String(u.id) || (t.serial || '').toUpperCase() === (u.serial || '').toUpperCase(); });
+    if (!list.length) return '<p class="muted" style="margin:8px 0 0;">No RMAs on this unit.</p>';
+    return '<p class="muted" style="margin:8px 0 0;">' + list.length + ' RMA' + (list.length === 1 ? '' : 's') + ' on this unit: ' +
+      list.map(function(t){ return '<a data-rmaopen="' + esc(t.id) + '" style="color:var(--link);cursor:pointer;">' + rmaNo(t) + '</a> ' + rmaChip(t.status); }).join(' \u00b7 ') + '</p>';
+  }
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('[data-rmaopen]'); if (!a) return;
+    e.preventDefault(); closeModal(); pview = 'rmas'; openRma(a.getAttribute('data-rmaopen'));
+  });
+
+  /* ---- list ---- */
+  function renderRmaList(){
+    setUrl(null); rmaCurrent = null;
+    const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; });
+    const done = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) < 0; });
+    function row(t){
+      const u = units.find(function(x){ return String(x.id) === String(t.unit_id); });
+      const cfg = u ? cfgById(u.config_id) : null;
+      return '<div class="rrow" role="button" tabindex="0" data-rmaid="' + esc(t.id) + '">' +
+        '<div><div class="rno">' + rmaNo(t) + ' <span class="mono" style="color:var(--muted);font-weight:400;">' + esc(t.serial) + '</span></div>' +
+          '<div class="rsub">' + (cfg ? esc(cfg.name) + ' \u00b7 ' : '') + 'opened ' + esc(fmtDate(t.created_at)) + '</div></div>' +
+        rmaChip(t.status) +
+        '<div class="rissue">' + esc(rmaCat(t.issue_category)) + (t.part_requested ? ' \u00b7 ' + esc(t.part_requested) : '') + '</div></div>';
+    }
+    $('listView').innerHTML = pnavHtml() +
+      '<div class="rhead"><div><h1>RMAs</h1><p class="muted" style="margin:0;">Warranty parts for units on your orders. Every request is tied to a serial number.</p></div>' +
+        '<button class="btn primary" id="rmaNew" type="button">Request an RMA</button></div>' +
+      (rmaTickets.length
+        ? (open.length ? open.map(row).join('') : '<p class="muted">Nothing open right now.</p>') +
+          (done.length ? '<h2 style="margin:var(--s6) 0 var(--s3);font-size:15px;">Closed</h2>' + done.map(row).join('') : '')
+        : '<div class="card"><div class="empty">' +
+            '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>' +
+            '<p>No RMAs yet.</p><p class="muted">When a unit has a fault, request a part here with its serial number.</p></div></div>');
+    $('rmaNew').addEventListener('click', function(){ newRmaModal(''); });
+    $('listView').querySelectorAll('[data-rmaid]').forEach(function(r){
+      r.addEventListener('click', function(){ openRma(r.getAttribute('data-rmaid')); });
+      r.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openRma(r.getAttribute('data-rmaid')); } });
+    });
+  }
+
+  /* ---- detail ---- */
+  function openRma(id){
+    const t = rmaTickets.find(function(x){ return x.id === id; }); if (!t) return;
+    rmaCurrent = id; currentId = null; setRmaUrl(id);
+    const u = units.find(function(x){ return String(x.id) === String(t.unit_id); });
+    const o = orders.find(function(x){ return x.id === t.order_id; });
+    const b = unitBatch(u), cfg = u ? cfgById(u.config_id) : null, w = u ? rmaWarranty(u) : null;
+    const st = RMA_ST[t.status] || { l:t.status, c:'n', next:'' };
+    const parts = rmaParts.filter(function(x){ return x.rma_id === id; });
+    const out = rmaShipments.filter(function(x){ return x.rma_id === id && x.direction === 'outbound'; });
+    const ret = rmaShipments.filter(function(x){ return x.rma_id === id && x.direction === 'return'; });
+    const cmts = rmaComments.filter(function(x){ return x.rma_id === id; });
+    const evts = rmaEvents.filter(function(x){ return x.rma_id === id && (x.kind === 'status' || x.kind === 'shipment'); });
+    const loose = rmaAttachments.filter(function(x){ return x.rma_id === id && !x.comment_id; });
+
+    function shipRow(s){
+      return '<div class="rmsg"><div class="rmsg-h"><b>' + (s.direction === 'return' ? 'Your return' : 'Part shipped') + (s.ship_date ? ' \u00b7 ' + esc(fmtDate(s.ship_date)) : '') + '</b>' +
+        '<span>' + (s.received_at ? 'received ' + esc(fmtDate(s.received_at)) : '') + '</span></div>' +
+        '<div class="trk-dd">' + carrierBadge(s.carrier) + trackHtml(s.carrier, s.tracking_no ? [s.tracking_no] : []) + '</div>' +
+        (s.ship_to ? '<p class="muted" style="margin:6px 0 0;white-space:pre-wrap;">' + esc(s.ship_to) + '</p>' : '') + '</div>';
+    }
+    const returnBox = t.status === 'shipped'
+      ? '<div class="rnext w" style="margin:var(--s4) 0 0;"><b>Send the failed part back.</b> Add the tracking number here once it ships so Novatech can close the ticket.' +
+          '<div class="rbar" style="margin-top:var(--s3);"><select id="rmaRetCar" style="height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
+            RMA_CARRIERS.map(function(c){ return '<option>' + c + '</option>'; }).join('') + '</select>' +
+            '<input id="rmaRetTrk" type="text" placeholder="Tracking number" style="flex:1 1 180px;height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
+            '<button class="btn" id="rmaRetGo" type="button">Add tracking</button></div></div>'
+      : '';
+
+    $('listView').style.display = 'none';
+    $('detailView').style.display = '';
+    $('detailView').innerHTML =
+      '<div class="back"><button class="btn" id="rmaBack" type="button">&larr; All RMAs</button>' +
+        (t.status === 'new' ? ' <button class="btn" id="rmaCancel" type="button">Cancel request</button>' : '') + '</div>' +
+      '<h1 class="inv-h1">' + rmaNo(t) + rmaChip(t.status) + (t.coverage ? '<span class="chip n">' + esc(RMA_COV[t.coverage] || t.coverage) + '</span>' : '') + '</h1>' +
+      '<p class="muted"><span class="mono">' + esc(t.serial) + '</span>' + (cfg ? ' \u00b7 ' + esc(cfg.name) : '') + ' \u00b7 opened ' + esc(fmtDate(t.created_at)) + '</p>' +
+      (st.next ? '<p class="rnext' + (t.status === 'needs_info' ? ' w' : '') + '">' + esc(st.next) + '</p>' : '') +
+      (t.status === 'denied' ? '<p class="rnext b"><b>Not covered.</b> ' + esc(t.denial_reason || '') + '</p>' : '') +
+      (t.status === 'closed' && t.resolution ? '<p class="rnext k"><b>Resolved.</b> ' + esc(t.resolution) + '</p>' : '') +
+      '<div class="rgrid"><div>' +
+        '<div class="card"><h2>Issue</h2><dl class="rdl"><dt>Category</dt><dd>' + esc(rmaCat(t.issue_category)) + '</dd>' +
+          '<dt>Reported</dt><dd style="white-space:pre-wrap;">' + esc(t.issue) + '</dd>' +
+          (t.part_requested ? '<dt>Part requested</dt><dd>' + esc(t.part_requested) + '</dd>' : '') +
+          (parts.length ? '<dt>Part' + (parts.length === 1 ? '' : 's') + ' sending</dt><dd>' + parts.filter(function(x){ return x.status !== 'denied'; }).map(function(x){ return esc(x.description) + (x.qty > 1 ? ' \u00d7 ' + x.qty : ''); }).join('<br>') + '</dd>' : '') +
+        '</dl>' + attHtml(loose) + '</div>' +
+        '<div class="card"><h2>Shipping</h2>' +
+          (out.length || ret.length ? '<div class="rthread">' + out.map(shipRow).join('') + ret.map(shipRow).join('') + '</div>' : '<p class="muted" style="margin:0;">Nothing has shipped yet.</p>') +
+          returnBox + '</div>' +
+        '<div class="card"><h2>Thread</h2><div class="rthread">' +
+          (cmts.length ? cmts.map(function(c){
+            return '<div class="rmsg' + (c.author_type === 'customer' ? ' me' : '') + '"><div class="rmsg-h"><b>' + esc(c.author_name || (c.author_type === 'customer' ? 'You' : 'Novatech')) + '</b><span>' + rmaWhen(c.created_at) + '</span></div>' +
+              '<p>' + esc(c.body) + '</p>' + attHtml(rmaAttachments.filter(function(x){ return x.comment_id === c.id; })) + '</div>';
+          }).join('') : '<p class="muted" style="margin:0;">No messages yet.</p>') + '</div>' +
+          (t.status === 'closed' || t.status === 'cancelled' ? '' :
+          '<div class="rcompose"><textarea id="rmaBody" placeholder="Reply to Novatech, or add details"></textarea>' +
+            '<div class="rbar"><label class="btn filebtn">Attach<input type="file" id="rmaFiles" accept="image/*,application/pdf" multiple style="display:none;"></label>' +
+            '<span class="muted" id="rmaFilesNote"></span><span class="spacer"></span><button class="btn primary" id="rmaPost" type="button">Post</button></div></div>') +
+        '</div>' +
+      '</div><div>' +
+        '<div class="card"><h2>Unit</h2>' + (u ? '<dl class="rdl">' +
+          '<dt>Serial</dt><dd class="mono"><b>' + esc(u.serial) + '</b></dd>' +
+          (cfg ? '<dt>Model</dt><dd>' + esc(cfg.name) + '</dd>' : '') +
+          '<dt>Invoice</dt><dd>' + (o ? '<a style="color:var(--link);cursor:pointer;" id="rmaGoOrder">' + esc(o.invoice_no) + '</a>' : '\u2014') + '</dd>' +
+          '<dt>Shipped</dt><dd>' + (b && b.ship_date ? esc(fmtDate(b.ship_date)) + (locOf(b) ? ' to ' + esc(locName(b)) : '') : 'not yet') + '</dd>' +
+          '<dt>Warranty</dt><dd>' + rmaWarrantyChip(w) + (w.end ? '<div class="muted" style="margin-top:4px;">' + esc(fmtDate(w.start)) + ' \u2013 ' + esc(fmtDate(w.end)) + '</div>' : '') + '</dd>' +
+        '</dl>' : '<p class="muted" style="margin:0;">Serial <b class="mono">' + esc(t.serial) + '</b></p>') + '</div>' +
+        '<div class="card"><h2>Timeline</h2>' + (evts.length ? '<ul class="rtl">' + evts.slice().reverse().map(function(e){
+          const txt = e.kind === 'status' ? (RMA_ST[e.to_val] || { l:e.to_val }).l : (e.to_val === 'return' ? 'Return tracking added' : 'Part shipped');
+          return '<li>' + esc(txt) + '<small>' + rmaWhen(e.created_at) + '</small></li>';
+        }).join('') + '</ul>' : '<p class="muted" style="margin:0;">Nothing yet.</p>') + '</div>' +
+      '</div></div>';
+
+    $('rmaBack').addEventListener('click', function(){ pview = 'rmas'; renderList(); });
+    const go = $('rmaGoOrder'); if (go) go.addEventListener('click', function(){ pview = 'orders'; openOrder(o.id); });
+    const fi = $('rmaFiles'); if (fi) fi.addEventListener('change', function(){ $('rmaFilesNote').textContent = this.files.length ? this.files.length + ' file' + (this.files.length === 1 ? '' : 's') + ' ready' : ''; });
+    const post = $('rmaPost'); if (post) post.addEventListener('click', async function(){
+      const body = $('rmaBody').value.trim(), files = $('rmaFiles').files;
+      if (!body && !files.length){ toast('Write something or attach a photo.', 'bad'); return; }
+      post.disabled = true;
+      let cid = null;
+      if (body){
+        const r = await SB.from('rma_comments').insert({ rma_id: t.id, author_id: session.user.id, author_type: 'customer', author_name: myName(), body: body, internal: false }).select().single();
+        if (r.error){ post.disabled = false; toast('Could not post: ' + r.error.message, 'bad'); return; }
+        rmaComments.push(r.data); cid = r.data.id;
+      }
+      if (files.length) await rmaUpload(t, Array.from(files), cid);
+      if (t.status === 'needs_info'){
+        const r2 = await SB.from('rma_tickets').update({ status: 'new' }).eq('id', t.id).select().single();
+        if (!r2.error && r2.data){ Object.assign(t, r2.data); await rmaEvent(t, 'status', 'needs_info', 'new', 'Technician replied'); }
+      }
+      openRma(t.id);
+    });
+    const cancel = $('rmaCancel'); if (cancel) cancel.addEventListener('click', async function(){
+      if (!confirm('Cancel ' + rmaNo(t) + '?')) return;
+      const r = await SB.from('rma_tickets').update({ status: 'cancelled' }).eq('id', t.id).select().single();
+      if (r.error){ toast('Could not cancel: ' + r.error.message, 'bad'); return; }
+      Object.assign(t, r.data); await rmaEvent(t, 'status', 'new', 'cancelled', 'Cancelled by the technician'); openRma(t.id);
+    });
+    const rg = $('rmaRetGo'); if (rg) rg.addEventListener('click', async function(){
+      const trk = $('rmaRetTrk').value.trim(); if (!trk){ toast('Enter the tracking number.', 'bad'); return; }
+      rg.disabled = true;
+      const r = await SB.from('rma_shipments').insert({ rma_id: t.id, direction: 'return', carrier: $('rmaRetCar').value, tracking_no: trk, ship_date: ymd(new Date()), created_by: session.user.id }).select().single();
+      if (r.error){ rg.disabled = false; toast('Could not save: ' + r.error.message, 'bad'); return; }
+      rmaShipments.push(r.data); await rmaEvent(t, 'shipment', null, 'return', $('rmaRetCar').value + ' ' + trk);
+      toast('Return tracking added', 'ok'); openRma(t.id);
+    });
+    loadThumbs($('detailView'));
+  }
+  async function rmaEvent(t, kind, from, to, detail){
+    const r = await SB.from('rma_events').insert({ rma_id: t.id, kind: kind, from_val: from || null, to_val: to || null, detail: detail || null, actor_id: session.user.id, actor_type: 'customer', actor_name: myName() }).select().single();
+    if (!r.error && r.data) rmaEvents.push(r.data);
+  }
+
+  /* ---- attachments ---- */
+  function attHtml(list){
+    if (!list.length) return '';
+    return '<div class="ratt">' + list.map(function(x){
+      return /^image\//.test(x.content_type || '')
+        ? '<img alt="" data-att="' + esc(x.id) + '" title="' + esc(x.filename) + '">'
+        : '<a data-att="' + esc(x.id) + '"><span>' + esc(x.filename) + '</span></a>';
+    }).join('') + '</div>';
+  }
+  async function loadThumbs(host){
+    const imgs = host.querySelectorAll('img[data-att]');
+    for (const im of imgs){
+      const x = rmaAttachments.find(function(y){ return y.id === im.getAttribute('data-att'); }); if (!x) continue;
+      const r = await SB.storage.from(RMA_BUCKET).createSignedUrl(x.path, 600);
+      if (!r.error && r.data) im.src = r.data.signedUrl;
+    }
+  }
+  document.addEventListener('click', async function(e){
+    const el = e.target.closest('[data-att]'); if (!el) return;
+    const x = rmaAttachments.find(function(y){ return y.id === el.getAttribute('data-att'); }); if (!x) return;
+    const r = await SB.storage.from(RMA_BUCKET).createSignedUrl(x.path, 120);
+    if (r.error || !r.data){ toast('Could not open the file.', 'bad'); return; }
+    window.open(r.data.signedUrl, '_blank', 'noopener');
+  });
+  function shrink(file){
+    return new Promise(function(res, rej){
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function(){
+        const max = 1600, r = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        c.toBlob(function(b){ b ? res(b) : rej(new Error('encode')); }, 'image/jpeg', 0.86);
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error('decode')); };
+      img.src = url;
+    });
+  }
+  async function rmaUpload(t, files, commentId){
+    for (const f of files){
+      let blob = f, type = f.type || 'application/octet-stream', name = f.name;
+      if (/^image\/(jpeg|png|webp)$/.test(type)){ try { blob = await shrink(f); type = 'image/jpeg'; name = name.replace(/\.\w+$/, '') + '.jpg'; } catch(e){} }
+      const safe = name.replace(/[^\w.\-]+/g, '_').slice(-80);
+      const path = t.id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '-' + safe;
+      const up = await SB.storage.from(RMA_BUCKET).upload(path, blob, { contentType: type, upsert: false });
+      if (up.error){ toast('Upload failed: ' + up.error.message, 'bad'); continue; }
+      const ins = await SB.from('rma_attachments').insert({ rma_id: t.id, comment_id: commentId || null, path: path, filename: f.name, size_bytes: blob.size, content_type: type, uploaded_by: session.user.id, uploaded_by_type: 'customer' }).select().single();
+      if (!ins.error && ins.data) rmaAttachments.push(ins.data);
+    }
+  }
+
+  /* ---- request an RMA ---- */
+  function newRmaModal(serial){
+    const bg = openModal(
+      '<div class="modal-h"><h3>Request an RMA</h3><p>Start with the serial number on the unit. Every request is tied to one PC.</p></div>' +
+      '<div class="modal-b scroll">' +
+        '<div class="field"><label for="rnSerial">Serial number</label><div style="display:flex;gap:8px;"><input id="rnSerial" type="text" value="' + esc(serial || '') + '" placeholder="LM26000042" autocomplete="off" spellcheck="false" style="flex:1;"><button class="btn" id="rnLook" type="button">Look up</button></div>' +
+          '<div class="rlook" id="rnUnit" style="display:none;"></div></div>' +
+        '<div id="rnForm" style="display:none;">' +
+          '<div class="field"><label for="rnCat">What is wrong</label><select id="rnCat">' + RMA_CATS.map(function(c){ return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('') + '</select></div>' +
+          '<div class="field rfield"><label for="rnIssue">What you found</label><textarea id="rnIssue" placeholder="What the customer reported, what you tested, what you ruled out"></textarea></div>' +
+          '<div class="field"><label for="rnPart">Part you need</label><input id="rnPart" type="text" placeholder="e.g. 32GB DDR5 kit, 1TB NVMe, front glass"></div>' +
+          '<div class="field"><label for="rnLoc">Where the PC is now</label><select id="rnLoc"><option value="">Not at a store / not sure</option>' + locations.map(function(l){ return '<option value="' + esc(l.id) + '">' + esc(l.store_name) + (l.store_number ? ' #' + esc(l.store_number) : '') + '</option>'; }).join('') + '</select></div>' +
+          '<div class="field"><label>Photos (optional)</label><label class="btn filebtn" style="display:inline-flex;">Add photos or a PDF<input type="file" id="rnFiles" accept="image/*,application/pdf" multiple style="display:none;"></label> <span class="muted" id="rnFilesNote"></span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-f"><button class="btn" id="rnClose" type="button">Cancel</button><button class="btn primary" id="rnGo" type="button" disabled>Submit request</button></div>');
+    bg.querySelector('.modal').classList.add('wide');
+    let unit = null;
+    function look(){
+      const v = bg.querySelector('#rnSerial').value.trim(), box = bg.querySelector('#rnUnit'), form = bg.querySelector('#rnForm'), go = bg.querySelector('#rnGo');
+      unit = units.find(function(x){ return x.serial.toUpperCase() === v.toUpperCase(); }) || null;
+      box.style.display = '';
+      if (!unit){ box.innerHTML = '<span class="chip w">Not found</span> <span class="muted">No unit with that serial on your orders.</span>'; form.style.display = 'none'; go.disabled = true; return; }
+      const o = orders.find(function(x){ return x.id === unit.order_id; }), cfg = cfgById(unit.config_id), b = unitBatch(unit), w = rmaWarranty(unit);
+      const open = rmaTickets.filter(function(t){ return String(t.unit_id) === String(unit.id) && RMA_OPEN.indexOf(t.status) >= 0; });
+      box.innerHTML = '<b>' + esc(cfg ? cfg.name : 'Unit') + '</b>' + (o ? ' \u00b7 invoice ' + esc(o.invoice_no) : '') +
+        (b && b.ship_date ? '<br>Shipped ' + esc(fmtDate(b.ship_date)) + (locOf(b) ? ' to ' + esc(locName(b)) : '') : '<br>Not shipped yet') +
+        '<br>Warranty: ' + rmaWarrantyChip(w) +
+        (w.key === 'expired' ? '<div class="muted" style="margin-top:6px;">This unit is outside its warranty. You can still submit; Novatech will let you know how it is covered.</div>' : '') +
+        (open.length ? '<div style="margin-top:8px;color:var(--warn-ink);"><b>This unit already has an open RMA</b> \u2014 ' + open.map(function(t){ return '<a data-rmaopen="' + esc(t.id) + '" style="color:var(--link);cursor:pointer;">' + rmaNo(t) + '</a>'; }).join(', ') + '. Add to it instead of opening another.</div>' : '');
+      if (open.length){ form.style.display = 'none'; go.disabled = true; return; }
+      form.style.display = ''; go.disabled = false;
+      const loc = locOf(b); if (loc) bg.querySelector('#rnLoc').value = loc.id;
+    }
+    bg.querySelector('#rnLook').addEventListener('click', look);
+    bg.querySelector('#rnSerial').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); look(); } });
+    bg.querySelector('#rnClose').addEventListener('click', closeModal);
+    bg.querySelector('#rnFiles').addEventListener('change', function(){ bg.querySelector('#rnFilesNote').textContent = this.files.length ? this.files.length + ' file' + (this.files.length === 1 ? '' : 's') + ' ready' : ''; });
+    if (serial) look();
+    bg.querySelector('#rnGo').addEventListener('click', async function(){
+      if (!unit) return;
+      const issue = bg.querySelector('#rnIssue').value.trim(); if (!issue){ toast('Describe what you found.', 'bad'); return; }
+      const o = orders.find(function(x){ return x.id === unit.order_id; }), w = rmaWarranty(unit), b = unitBatch(unit);
+      const locId = bg.querySelector('#rnLoc').value || (locOf(b) ? locOf(b).id : null);
+      this.disabled = true; this.textContent = 'Submitting\u2026';
+      const row = { serial: unit.serial, unit_id: unit.id, customer_id: me.customer_id, order_id: o ? o.id : null, status: 'new',
+        issue_category: bg.querySelector('#rnCat').value, issue: issue, part_requested: bg.querySelector('#rnPart').value.trim() || null,
+        ship_to_kind: 'tech', store_location_id: locId || null, warranty_status_at_open: w.key, warranty_end: w.end || null,
+        opened_by: session.user.id, opened_by_type: 'customer' };
+      const r = await SB.from('rma_tickets').insert(row).select().single();
+      if (r.error){ this.disabled = false; this.textContent = 'Submit request'; toast('Could not submit: ' + r.error.message, 'bad', 7000); return; }
+      rmaTickets.unshift(r.data);
+      await rmaEvent(r.data, 'status', null, 'new', 'Opened by ' + myName());
+      const files = bg.querySelector('#rnFiles').files;
+      if (files.length) await rmaUpload(r.data, Array.from(files), null);
+      closeModal(); toast(rmaNo(r.data) + ' submitted', 'ok');
+      pview = 'rmas'; openRma(r.data.id);
+    });
+  }
+
   /* ---------- serial lookup ---------- */
   function serialLookup(){
     const bg = openModal(
@@ -1069,9 +1496,15 @@
           (t ? '<dt>Tracking</dt><dd class="trk-dd">' + carrierBadge(b ? b.carrier : '') + trackHtml(b ? b.carrier : '', [t.tracking_no]) + '</dd>' : '') +
           (b && b.ship_date ? '<dt>Shipped</dt><dd>' + esc(fmtDate(b.ship_date)) + '</dd>' : '') +
         '</dl>' +
-        (o ? '<p style="margin-bottom:0;"><button class="btn sm" id="snOpen" type="button">Open invoice ' + esc(o.invoice_no) + '</button></p>' : '');
+        '<dl><dt>Warranty</dt><dd>' + rmaWarrantyChip(rmaWarranty(u)) + '</dd></dl>' +
+        rmaHistoryHtml(u) +
+        '<p style="margin-bottom:0;display:flex;gap:8px;flex-wrap:wrap;">' +
+          (o ? '<button class="btn sm" id="snOpen" type="button">Open invoice ' + esc(o.invoice_no) + '</button>' : '') +
+          '<button class="btn sm primary" id="snRma" type="button">Request an RMA</button></p>';
       const go = out.querySelector('#snOpen');
       if (go) go.addEventListener('click', function(){ closeModal(); openOrder(o.id); });
+      const rq = out.querySelector('#snRma');
+      if (rq) rq.addEventListener('click', function(){ closeModal(); newRmaModal(u.serial); });
     }
   }
 
