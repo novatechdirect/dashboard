@@ -2503,6 +2503,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .rma-flag.done{ background:var(--soft); color:var(--muted); border-color:var(--line); }
   .ord-serial-hit{ color:var(--ink); }
+  .rma-unit-hero{ padding-bottom:var(--s3); border-bottom:1px solid var(--line); margin-bottom:var(--s4); }
+  .rma-unit-serial{ font-size:18px; font-weight:600; letter-spacing:0; }
+  .rma-unit-build{ color:var(--muted); font-size:13px; margin-top:2px; }
+  .rma-dl-airy{ gap:var(--s3) var(--s4); }
+  .rma-unit-hist{ margin-top:var(--s4); padding-top:var(--s4); border-top:1px solid var(--line); }
+  .rma-hist-row{ display:flex; align-items:center; gap:var(--s2); font-size:13px; padding:4px 0; }
+  .rma-hist-row span{ color:var(--muted); flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rma-fail{ margin-top:var(--s4); }
+  .nav-badge{
+    display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; margin-left:6px;
+    border-radius:var(--r-pill); background:var(--warn); color:#fff; font-size:11px; font-weight:700; line-height:1; vertical-align:middle;
+  }
+  #tabRma{ position:relative; }
+  .tab-badge{
+    position:absolute; top:4px; left:calc(50% + 4px); min-width:16px; height:16px; padding:0 4px;
+    border-radius:var(--r-pill); background:var(--warn); color:#fff; font-size:10px; font-weight:700; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
   .rma-parts{ width:100%; border-collapse:collapse; font-size:13.5px; }
   .rma-parts td{ padding:var(--s2) 0; border-top:1px solid var(--line); vertical-align:middle; }
   .rma-parts tr:first-child td{ border-top:0; }
@@ -2593,7 +2611,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="nav-menu">
       <a class="nav-item active" href="#" id="navHome">Home</a>
       <a class="nav-item" href="#" id="navOrders">Orders</a>
-      <a class="nav-item" href="#" id="navRma">RMA</a>
+      <a class="nav-item" href="#" id="navRma">RMA<span class="nav-badge" id="navRmaBadge" style="display:none;"></span></a>
       <a class="nav-item" href="#" id="navInventory">Inventory</a>
       <a class="nav-item" href="#" id="navTimeclock">Timeclock</a>
       <a class="nav-item" href="#" id="navMargins" style="display:none;">Margins</a>
@@ -2605,7 +2623,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
       </button>
-      <span class="version" id="version">v3.7.0</span>
+      <span class="version" id="version">v3.7.1</span>
     </div>
   </div>
 </nav>
@@ -2619,7 +2637,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg>
     <span>Orders</span>
   </button>
-  <button type="button" class="tab-btn" data-goto="rma" id="tabRma">
+  <button type="button" class="tab-btn" data-goto="rma" id="tabRma"><span class="tab-badge" id="tabRmaBadge" style="display:none;"></span>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
     <span>RMA</span>
   </button>
@@ -2726,12 +2744,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             <div class="chart-val" id="hrVal">&mdash;</div>
             <div class="chart-sub" id="hrSub"></div>
           </div>
-          <button class="ghost btn-sm" type="button" data-goto="rma" style="flex:0 0 auto;">Open RMAs</button>
+          <button class="ghost btn-sm" type="button" id="homeRmaOpen" style="flex:0 0 auto;">Open RMAs</button>
         </div>
         <div class="chart-plot" id="hrPlot"></div>
       </section>
       <section class="card chart-card">
-        <h2 class="card-title">Failures by part <span class="card-sub">all time</span></h2>
+        <div class="chart-head"><h2 class="card-title" style="margin:0;">Failures by part</h2><div class="chart-tabs"><button type="button" class="chart-tab" data-failrange="30">30D</button><button type="button" class="chart-tab" data-failrange="ytd">YTD</button><button type="button" class="chart-tab on" data-failrange="all">All</button></div></div>
         <div class="rma-fail" id="hrFail"></div>
       </section>
     </div>
@@ -3088,7 +3106,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <div class="chart-plot" id="rmaTrendPlot"></div>
         </section>
         <section class="card chart-card">
-          <h2 class="card-title">Failures by part <span class="card-sub">all time</span></h2>
+          <div class="chart-head"><h2 class="card-title" style="margin:0;">Failures by part</h2><div class="chart-tabs"><button type="button" class="chart-tab" data-failrange="30">30D</button><button type="button" class="chart-tab" data-failrange="ytd">YTD</button><button type="button" class="chart-tab on" data-failrange="all">All</button></div></div>
           <div class="rma-fail" id="rmaFail"></div>
         </section>
       </div>
@@ -3489,6 +3507,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   navOrders.addEventListener('click', function(e){ e.preventDefault(); ordCurrentId = null; ordSetUrl(null); ordShowList(); showTool('orders'); });
   navAdmin.addEventListener('click', function(e){ e.preventDefault(); showTool('admin'); });
   navRma.addEventListener('click', function(e){ e.preventDefault(); rmaCurrentId = null; rmaSetUrl(null); rmaShowList(); showTool('rma'); });
+  document.getElementById('homeRmaOpen').addEventListener('click', function(){ rmaCurrentId = null; rmaSetUrl(null); rmaShowList(); showTool('rma'); });
 
   /* phones: Margins and Admin sit behind a More sheet so the bar stays at five */
   function tabMoreClose(){
@@ -7704,11 +7723,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     rmaTileStatus();
   }
   function rmaTileStatus(){
-    const tt = document.getElementById('tileRmaStatus'); if (!tt) return;
     const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; });
     const fresh = open.filter(function(t){ return t.status === 'new'; }).length;
-    tt.innerHTML = tileStat(open.length + ' open', fresh ? fresh + ' new to review' : (open.length ? 'in progress' : 'nothing waiting'));
-    tt.className = 'tile-status ' + (fresh ? 'warn' : (open.length ? '' : 'ok'));
+    const tt = document.getElementById('tileRmaStatus');
+    if (tt){
+      tt.innerHTML = tileStat(open.length + ' open', fresh ? fresh + ' new to review' : (open.length ? 'in progress' : 'nothing waiting'));
+      tt.className = 'tile-status ' + (fresh ? 'warn' : (open.length ? '' : 'ok'));
+    }
+    /* the badge counts requests nobody has acted on yet */
+    ['navRmaBadge','tabRmaBadge'].forEach(function(id){
+      const b = document.getElementById(id); if (!b) return;
+      b.textContent = fresh > 99 ? '99+' : String(fresh);
+      b.style.display = fresh && ordPerm.rma ? '' : 'none';
+    });
     rmaRenderHomeCharts();
   }
 
@@ -7825,16 +7852,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.getElementById(subId).textContent = 'opened in the last 12 weeks \u00b7 ' + CH.nf(closedM) + ' closed this month';
     CH.area(plot, series, { h:150, id:plotId, fmt:function(y){ return CH.nf(y) + ' opened'; }, fmtX:function(d){ return 'week of ' + CH.fmtShort(d); } });
   }
+  let rmaFailRange = localStorage.getItem('rmaFailRange') || 'all';
   function rmaFailInto(elId){
     const el = document.getElementById(elId); if (!el) return;
+    document.querySelectorAll('[data-failrange]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-failrange') === rmaFailRange); });
+    let since = null;
+    if (rmaFailRange === '30'){ since = new Date(); since.setDate(since.getDate() - 30); since.setHours(0,0,0,0); }
+    else if (rmaFailRange === 'ytd'){ since = new Date(new Date().getFullYear(), 0, 1); }
     const byCat = {};
-    rmaTickets.filter(function(t){ return t.status !== 'cancelled'; }).forEach(function(t){ const c = t.issue_category || 'other'; byCat[c] = (byCat[c] || 0) + 1; });
+    rmaTickets.filter(function(t){ return t.status !== 'cancelled' && (!since || new Date(t.created_at) >= since); })
+      .forEach(function(t){ const c = t.issue_category || 'other'; byCat[c] = (byCat[c] || 0) + 1; });
     const cats = Object.keys(byCat).sort(function(x, y){ return byCat[y] - byCat[x]; }).slice(0, 7);
     const max = cats.length ? byCat[cats[0]] : 1;
     el.innerHTML = cats.map(function(c){
       return '<div class="rma-fail-row"><span>' + esc(rmaCatLabel(c)) + '</span><div class="rma-fail-bar"><i style="width:' + (byCat[c] / max * 100) + '%"></i></div><b>' + byCat[c] + '</b></div>';
-    }).join('') || '<p class="muted-sm">Nothing yet.</p>';
+    }).join('') || '<p class="muted-sm" style="margin:0;">' + (rmaFailRange === 'all' ? 'Nothing yet.' : 'No RMAs in this period.') + '</p>';
   }
+  document.addEventListener('click', function(e){
+    const b = e.target.closest('[data-failrange]'); if (!b) return;
+    rmaFailRange = b.getAttribute('data-failrange'); localStorage.setItem('rmaFailRange', rmaFailRange);
+    rmaFailInto('hrFail'); rmaFailInto('rmaFail');
+  });
   /* home: open count, RMAs per 100 units shipped, the same trend and failure charts */
   function rmaRenderHomeCharts(){
     const g = document.getElementById('homeRmaGrid'); if (!g) return;
@@ -7917,16 +7955,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         actions = '<button class="ghost btn-sm" data-rmaact="reopen">Reopen</button>' + del;
     }
 
+    const others = u ? rmaTickets.filter(function(x){ return x.id !== t.id && x.status !== 'cancelled' && String(x.unit_id) === String(u.id); }) : [];
     const unitCard = '<section class="card"><h2 class="card-title">Unit</h2>' +
-      (u ? '<dl class="rma-dl">' +
-        '<dt>Serial</dt><dd><b>' + serialLink + '</b></dd>' +
-        '<dt>Build</dt><dd>' + esc(rmaCfgName(u.config_id)) + '</dd>' +
-        '<dt>Invoice</dt><dd>' + (o ? '<a class="rma-link" data-rmagoorder="' + esc(o.id) + '" data-rmagobatch="' + esc(u.batch_id || '') + '">' + esc(o.invoice_no) + (b ? ' \u00b7 Batch ' + b.batch_no : '') + '</a>' : '\u2014') + '</dd>' +
-        '<dt>Customer</dt><dd>' + esc(rmaCustName(t.customer_id)) + '</dd>' +
-        '<dt>Shipped</dt><dd>' + (b && b.ship_date ? rmaDate(b.ship_date) + (store ? ' to ' + esc(ordLocName(store)) + (ordLocNum(store) ? ' #' + esc(ordLocNum(store)) : '') : '') : (u.unit_status === 'shipped' ? 'date unknown' : 'not yet')) + '</dd>' +
-        '<dt>Warranty</dt><dd>' + rmaWarrantyChip(w) + (w.end ? '<div class="muted-sm" style="margin-top:4px;">' + rmaDate(w.start) + ' \u2013 ' + rmaDate(w.end) + '</div>' : '') + '</dd>' +
-        (t.warranty_status_at_open && t.warranty_status_at_open !== w.key ? '<dt>At opening</dt><dd class="muted-sm">was ' + esc(t.warranty_status_at_open) + '</dd>' : '') +
-        '</dl>' + rmaHistoryHtml(u).replace('on this unit', 'on this unit (including this one)')
+      (u ? '<div class="rma-unit-hero"><div class="rma-unit-serial">' + serialLink + '</div><div class="rma-unit-build">' + esc(rmaCfgName(u.config_id)) + '</div></div>' +
+        '<dl class="rma-dl rma-dl-airy">' +
+          '<dt>Invoice</dt><dd>' + (o ? '<a class="rma-link" data-rmagoorder="' + esc(o.id) + '" data-rmagobatch="' + esc(u.batch_id || '') + '">' + esc(o.invoice_no) + '</a>' + (b ? ' <span class="muted-sm">\u00b7 Batch ' + b.batch_no + '</span>' : '') : '\u2014') + '</dd>' +
+          '<dt>Customer</dt><dd>' + esc(rmaCustName(t.customer_id)) + '</dd>' +
+          '<dt>Shipped</dt><dd>' + (b && b.ship_date ? rmaDate(b.ship_date) + (store ? '<div class="muted-sm">to ' + esc(ordLocName(store)) + (ordLocNum(store) ? ' #' + esc(ordLocNum(store)) : '') + '</div>' : '') : (u.unit_status === 'shipped' ? 'date unknown' : 'not yet')) + '</dd>' +
+          '<dt>Warranty</dt><dd>' + rmaWarrantyChip(w) + (w.end ? '<div class="muted-sm" style="margin-top:6px;">' + rmaDate(w.start) + ' \u2013 ' + rmaDate(w.end) + '</div>' : '') + '</dd>' +
+        '</dl>' +
+        '<div class="rma-unit-hist"><h2 class="card-title" style="margin:0 0 var(--s2);">History</h2>' +
+          (others.length ? others.map(function(x){ return '<div class="rma-hist-row"><a class="rma-link" data-rmaopen="' + esc(x.id) + '">' + rmaNo(x) + '</a><span>' + esc(rmaCatLabel(x.issue_category)) + ' \u00b7 ' + rmaDate(x.created_at) + '</span>' + rmaChip(x.status) + '</div>'; }).join('')
+                        : '<p class="muted-sm" style="margin:0;">First RMA on this unit.</p>') + '</div>'
         : '<p class="muted-sm">Serial <b class="ord-mono">' + esc(t.serial) + '</b> is not in the unit list.</p>') +
       '</section>';
 
@@ -8041,10 +8081,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const r = await SB.storage.from(RMA_BUCKET).createSignedUrl(x.path, 120);
     if (r.error || !r.data){ toast('Could not open the file.', 'bad'); return; }
     window.open(r.data.signedUrl, '_blank', 'noopener');
-  });
-  document.addEventListener('click', function(e){
-    const g = e.target.closest('[data-rmagoorder]'); if (!g) return;
-    showTool('orders'); ordOpenOrder(g.getAttribute('data-rmagoorder'));
   });
 
   /* ---- writes ---- */

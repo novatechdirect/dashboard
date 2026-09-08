@@ -119,7 +119,7 @@
   header.top{
     display:flex; align-items:center; justify-content:space-between; gap:var(--s5);
     /* brand and actions land on the same columns as the page content below */
-    padding:var(--s3) max(var(--s5), calc((100% - 1080px) / 2)); background:var(--paper);
+    padding:var(--s3) max(var(--s5), calc((100% - 1280px) / 2)); background:var(--paper);
     border-bottom:1px solid var(--line); position:sticky; top:0; z-index:30; flex-wrap:nowrap;
     box-shadow:var(--e1);
   }
@@ -142,6 +142,17 @@
   .brand b{ font-size:15px; letter-spacing:0; display:block; line-height:1.3; }
   .brand span{ display:block; color:var(--faint); font-size:12px; line-height:1.3; }
 
+  .pmenu{ display:flex; align-items:center; gap:var(--s1); margin:0 auto 0 var(--s3); }
+  .pmenu a{
+    position:relative; display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--muted);
+    text-decoration:none; padding:8px 16px; line-height:1.3; border-radius:var(--r-pill) !important; white-space:nowrap; cursor:pointer;
+  }
+  .pmenu a:hover{ background:var(--soft); color:var(--ink); }
+  .pmenu a.on{ background:var(--ink); color:var(--paper); }
+  .pbadge{
+    display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px;
+    border-radius:var(--r-pill); background:var(--warn); color:#fff; font-size:11px; font-weight:700; line-height:1;
+  }
   .who{ display:flex; align-items:center; gap:var(--s4); flex-wrap:nowrap; min-width:0; }
   .who-em{ font-size:12.5px; color:var(--muted); }
   /* identity on one side of the rule, actions on the other */
@@ -180,13 +191,13 @@
   :root:not([data-theme="light"]) .i-moon{ display:none; }
 
   /* ---------- layout ---------- */
-  .wrap{ max-width:1080px; margin:0 auto; padding:var(--s6) var(--s5) var(--s7); }
+  .wrap{ max-width:1280px; margin:0 auto; padding:var(--s7) var(--s6) var(--s8); }
   .card{
-    background:var(--paper); border:1px solid var(--line); border-radius:var(--r-lg);
-    padding:var(--s5); margin-bottom:var(--s4); box-shadow:var(--e1);
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
+    padding:var(--s5); margin-bottom:var(--s5); box-shadow:none;
   }
-  h1{ font-size:26px; letter-spacing:0; margin:0 0 var(--s2); }
-  h2{ font-size:11.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s3); }
+  h1{ font-size:24px; letter-spacing:0; margin:0 0 var(--s2); line-height:1.2; }
+  h2{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s4b); }
   .page-head{ margin-bottom:var(--s5); }
   /* the status chip is a sibling of the number, not punctuation after it */
   .inv-h1{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; row-gap:var(--s2); }
@@ -249,7 +260,7 @@
   .sum{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s3); margin-bottom:var(--s5); }
   .sumc{
     background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
-    padding:var(--s4); box-shadow:var(--e1); animation:rise var(--t-slow) both;
+    padding:var(--s4); box-shadow:none; animation:rise var(--t-slow) both;
   }
   .sumv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:0; font-variant-numeric:tabular-nums; }
   .suml{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); line-height:1.3; text-wrap:balance; }
@@ -273,10 +284,6 @@
   @media (max-width:640px){ .pipeleg{ grid-template-columns:1fr; gap:var(--s2); } .pipev{ font-size:24px; } }
 
   /* ---------- RMAs ---------- */
-  .pnav{ display:inline-flex; gap:var(--s1); padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); margin-bottom:var(--s5); }
-  .pnav button{ border:0; background:transparent; color:var(--muted); font:inherit; font-size:13.5px; font-weight:500; padding:8px 18px; min-height:36px; border-radius:var(--r-pill) !important; cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
-  .pnav button.on{ background:var(--paper); color:var(--ink); box-shadow:var(--e1); }
-  .pnav .cnt{ font-size:11px; font-weight:600; padding:1px 7px; border-radius:var(--r-pill); background:var(--accent); color:var(--accent-ink); }
   .rhead{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; margin-bottom:var(--s4); }
   .rhead h1{ margin:0; }
   .rhead .btn, .rlook + * .btn, #rnLook, #rmaRetGo{ white-space:nowrap; }
@@ -299,6 +306,11 @@
   .rchips button{ font:inherit; font-size:12.5px; font-weight:500; padding:6px 14px; min-height:32px; border-radius:var(--r-pill) !important; border:1px solid var(--line); background:var(--paper); color:var(--muted); cursor:pointer; }
   .rchips button:hover{ border-color:var(--line-strong); color:var(--ink); }
   .rchips button.on{ background:var(--accent-soft); color:var(--accent-fg); border-color:var(--accent-line); }
+  .olist-card .orow{ animation:none; }
+  .olist-card .orow:last-of-type{ margin-bottom:0; }
+  .rlist-card .rrow{ animation:none; }
+  .rlist-card .rrow:last-of-type{ margin-bottom:0; }
+  .rlist-card .rchips{ margin-bottom:var(--s3); }
   .rpager{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); margin-top:var(--s3); font-size:12.5px; color:var(--muted); }
   .rlink{ color:var(--link); cursor:pointer; text-decoration:none; }
   .rlink:hover{ text-decoration:underline; }
@@ -346,7 +358,6 @@
   @media (max-width:820px){
     .rgrid{ grid-template-columns:1fr; }
     .rhead .btn{ width:100%; }
-    .pnav{ display:flex; } .pnav button{ flex:1; justify-content:center; }
     .rrow{ grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s3); padding:var(--s3) var(--s4); }
     .rrow .rissue{ grid-column:1 / -1; white-space:normal; }
     .rrow .rdate{ grid-column:1 / -1; text-align:left; }
@@ -488,7 +499,7 @@
      so it gets its own band under the header rather than crowding the brand. */
   #staffPick{
     display:flex; align-items:center; gap:var(--s3);
-    padding:8px max(var(--s5), calc((100% - 1080px) / 2));
+    padding:8px max(var(--s5), calc((100% - 1280px) / 2));
     background:var(--warn-bg); border-bottom:1px solid var(--warn-line);
   }
   #staffPick .staffbadge{ flex:0 0 auto; }
@@ -522,10 +533,13 @@
       gap:var(--s2);
       align-items:stretch;
     }
-    header.top{ flex-wrap:nowrap; }
-    .brand{ min-width:0; flex:1 1 auto; }
-    .who{ width:auto; justify-content:flex-end; gap:var(--s2); flex-wrap:nowrap; }
+    header.top{ flex-wrap:wrap; align-items:center; }
+    .brand{ min-width:0; flex:1 1 0; }
+    .who{ width:auto; justify-content:flex-end; gap:var(--s2); flex-wrap:nowrap; flex:0 0 auto; }
     .who-em{ display:none; }
+    .pmenu{ order:3; flex:1 1 100%; margin:var(--s2) 0 0; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
+    .pmenu a{ flex:1; justify-content:center; padding:7px 12px; }
+    .pmenu a.on{ background:var(--paper); color:var(--ink); box-shadow:var(--e1); }
     #staffPick{ padding:8px var(--s4); gap:var(--s2); }
     #staffPick .pickbox{ flex:1 1 auto; width:auto; max-width:none; }
     .orow{ grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s3); }
@@ -580,7 +594,7 @@
   .btn, input:not([type="checkbox"]):not([type="radio"]), select, textarea, .rlook, .rnext{
     border-radius:var(--r-sm) !important;
   }
-  .chip, .carrier, .storenum, .bar, .pipebar, .staffbadge{ border-radius:var(--r-pill) !important; }
+  .chip, .carrier, .storenum, .bar, .pipebar, .staffbadge, .btn.sm{ border-radius:var(--r-pill) !important; }
   .icon-btn{ border-radius:50% !important; }
 </style>
 </head>
@@ -592,6 +606,10 @@
     <img class="is-dark" src="logo-dark.png" alt="" onerror="this.style.display='none'">
     <div><b>Order Portal</b><span id="custName"></span></div>
   </div>
+  <nav class="pmenu" id="pmenu" aria-label="Sections">
+    <a data-pview="orders" class="on" role="button" tabindex="0">Orders</a>
+    <a data-pview="rmas" role="button" tabindex="0">RMAs<span class="pbadge" id="pmenuBadge" style="display:none;"></span></a>
+  </nav>
   <div class="who">
     <span class="who-em" id="whoEmail"></span>
     <button type="button" class="icon-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">
@@ -1008,15 +1026,20 @@
       }).join('') + '</div></div>';
   }
 
-  function pnavHtml(){
-    const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; }).length;
-    return '<div class="pnav" role="tablist">' +
-      '<button type="button" class="' + (pview === 'orders' ? 'on' : '') + '" data-pview="orders">Orders</button>' +
-      '<button type="button" class="' + (pview === 'rmas' ? 'on' : '') + '" data-pview="rmas">RMAs' + (open ? ' <span class="cnt">' + open + '</span>' : '') + '</button></div>';
+  function syncMenu(){
+    const menu = $('pmenu'); if (!menu) return;
+    menu.querySelectorAll('[data-pview]').forEach(function(a){ a.classList.toggle('on', a.getAttribute('data-pview') === pview); });
+    const needs = rmaTickets.filter(function(t){ return t.status === 'needs_info'; }).length;
+    const b = $('pmenuBadge'); if (b){ b.textContent = String(needs); b.style.display = needs ? '' : 'none'; }
   }
+  function pnavHtml(){ syncMenu(); return ''; }
   document.addEventListener('click', function(e){
     const b = e.target.closest('[data-pview]'); if (!b) return;
-    pview = b.getAttribute('data-pview'); rmaCurrent = null; currentId = null; renderList();
+    e.preventDefault(); pview = b.getAttribute('data-pview'); rmaCurrent = null; currentId = null; renderList();
+  });
+  document.addEventListener('keydown', function(e){
+    const b = e.target.closest && e.target.closest('[data-pview]'); if (!b || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault(); pview = b.getAttribute('data-pview'); rmaCurrent = null; currentId = null; renderList();
   });
   function renderList(){
     setUrl(null);
@@ -1032,6 +1055,7 @@
       '<h1>Your orders</h1>' +
       '<p class="muted" style="margin-top:0;">Progress, shipments, tracking numbers and serial numbers for everything you have ordered.</p>' +
       pipeHtml() +
+      '<div class="card olist-card">' +
       '<div class="toolbar">' +
         '<input class="searchbox" id="q" type="text" placeholder="Search invoice or PO" value="' + esc(query) + '">' +
         '<button class="btn" id="lookup" type="button">Find a serial</button>' +
@@ -1053,11 +1077,12 @@
           '<div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>' +
         '</div>';
       }).join('')
-      : '<div class="card"><div class="empty">' +
+      : '<div class="empty">' +
         '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg></div>' +
         '<p>' + (orders.length ? 'No orders match that search.' : 'Nothing here yet.') + '</p>' +
         '<p class="muted">' + (orders.length ? 'Try a different invoice or PO number.' : 'Orders appear here once NovaTech creates them.') + '</p>' +
-        '</div></div>');
+        '</div>') +
+      '</div>';
     const qi = $('q');
     if (qi) qi.addEventListener('input', function(){ query = this.value; renderList(); $('q').focus(); });
     const lk = $('lookup');
@@ -1066,7 +1091,7 @@
 
   /* ---------- detail ---------- */
   function openOrder(id){
-    currentId = id;
+    currentId = id; pview = 'orders'; syncMenu();
     const o = orders.find(function(x){ return x.id === id; });
     if (!o) return;
     setUrl(id);
@@ -1232,7 +1257,7 @@
   /* ---- list ---- */
   let rQuery = '', rFilter = 'open', rPage = 0;
   const R_PAGE = 25;
-  const R_FILTERS = [['open','Open'],['new','Submitted'],['needs_info','Needs your reply'],['approved','Approved'],['shipped','Awaiting return'],['return_received','Returned'],['closed','Closed'],['denied','Not covered'],['','All']];
+  const R_FILTERS = [['open','Open'],['new','Submitted'],['needs_info','Needs your reply'],['approved','Approved'],['shipped','Part shipped'],['return_received','Returned'],['closed','Closed'],['denied','Not covered'],['','All']];
   function rmaMatch(t, q){
     if (!q) return true;
     const bare = q.replace(/^rma-?/, '');
@@ -1262,9 +1287,11 @@
       '<div class="rhead"><div><h1>RMAs</h1><p class="muted" style="margin:0;">Warranty parts for units on your orders. Every request is tied to a serial number.</p></div>' +
         '<button class="btn primary" id="rmaNew" type="button">Request an RMA</button></div>' +
       '<div class="rtiles">' + tile(open.length, 'Open') + tile(needs, 'Needs your reply', needs > 0) + tile(awaiting, 'Awaiting return', awaiting > 0) + tile(closed, 'Closed') + '</div>' +
-      '<div class="toolbar"><input id="rSearch" type="text" class="searchbox" placeholder="Search by RMA # or serial number" value="' + esc(rQuery) + '" autocomplete="off"></div>' +
-      '<div class="rchips">' + R_FILTERS.map(function(f){ return '<button type="button" data-rf="' + f[0] + '" class="' + (rFilter === f[0] ? 'on' : '') + '">' + f[1] + '</button>'; }).join('') + '</div>' +
-      '<div id="rRows"></div>';
+      '<div class="card rlist-card">' +
+        '<div class="toolbar"><input id="rSearch" type="text" class="searchbox" placeholder="Search by RMA # or serial number" value="' + esc(rQuery) + '" autocomplete="off"></div>' +
+        '<div class="rchips">' + R_FILTERS.map(function(f){ return '<button type="button" data-rf="' + f[0] + '" class="' + (rFilter === f[0] ? 'on' : '') + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+        '<div id="rRows"></div>' +
+      '</div>';
     renderRmaRows();
     $('rmaNew').addEventListener('click', function(){ newRmaModal('', null); });
     $('rSearch').addEventListener('input', function(){ rQuery = this.value; rPage = 0; renderRmaRows(); });
@@ -1280,10 +1307,10 @@
     const host = $('rRows'); if (!host) return;
     const rows = rmaRows();
     if (!rows.length){
-      host.innerHTML = '<div class="card"><div class="empty">' +
+      host.innerHTML = '<div class="empty">' +
         '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>' +
         '<p>' + (rmaTickets.length ? 'No RMAs match.' : 'No RMAs yet.') + '</p>' +
-        (rmaTickets.length ? '' : '<p class="muted">When a unit has a fault, request a part here with its serial number.</p>') + '</div></div>';
+        (rmaTickets.length ? '' : '<p class="muted">When a unit has a fault, request a part here with its serial number.</p>') + '</div>';
       return;
     }
     const pages = Math.max(1, Math.ceil(rows.length / R_PAGE));
@@ -1317,7 +1344,7 @@
   /* ---- detail ---- */
   function openRma(id){
     const t = rmaTickets.find(function(x){ return x.id === id; }); if (!t) return;
-    rmaCurrent = id; currentId = null; setRmaUrl(id);
+    rmaCurrent = id; currentId = null; setRmaUrl(id); pview = 'rmas'; syncMenu();
     const u = units.find(function(x){ return String(x.id) === String(t.unit_id); });
     const o = orders.find(function(x){ return x.id === t.order_id; });
     const b = unitBatch(u), cfg = u ? cfgById(u.config_id) : null, w = u ? rmaWarranty(u) : null;
