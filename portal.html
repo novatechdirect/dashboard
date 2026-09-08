@@ -256,6 +256,21 @@
   .sumc.rem .sumv{ color:var(--warn); }
   .sumc.prep .sumv{ color:var(--info); }
 
+  /* ---------- pipeline summary ---------- */
+  .pipev{ font-size:28px; font-weight:600; line-height:1.25; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+  .pipes{ font-size:13px; color:var(--muted); }
+  .pipebar{
+    display:flex; height:12px; margin-top:var(--s4); overflow:hidden;
+    background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill);
+  }
+  .pipebar i{ display:block; height:100%; transition:width var(--t-slow); }
+  .pipeleg{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--s2) var(--s6); margin-top:var(--s4); }
+  .pipeit{ display:flex; align-items:center; gap:var(--s2); font-size:13px; min-width:0; }
+  .pipedot{ width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
+  .pipel{ color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pipen{ margin-left:auto; font-weight:600; font-variant-numeric:tabular-nums; }
+  @media (max-width:640px){ .pipeleg{ grid-template-columns:1fr; gap:var(--s2); } .pipev{ font-size:24px; } }
+
   .batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; background:var(--paper); }
   /* batch number and its status share one line, status at the right edge */
   .bno{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); min-width:0; }
@@ -478,7 +493,7 @@
   .btn, input:not([type="checkbox"]):not([type="radio"]), select, textarea{
     border-radius:var(--r-sm) !important;
   }
-  .chip, .carrier, .storenum, .bar, .staffbadge{ border-radius:var(--r-pill) !important; }
+  .chip, .carrier, .storenum, .bar, .pipebar, .staffbadge{ border-radius:var(--r-pill) !important; }
   .icon-btn{ border-radius:50% !important; }
 </style>
 </head>
@@ -832,6 +847,39 @@
   }
 
   /* ---------- list ---------- */
+  /* Everything still in flight, summed across open orders. Complete orders
+     drop out, so the total answers "what is left on my account". Stage order
+     runs least to most advanced, matching the detail page's stat cards. */
+  function pipeHtml(){
+    let toBuild = 0, built = 0, prep = 0, shipped = 0, open = 0;
+    orders.forEach(function(o){
+      const st = stats(o);
+      if (st.ordered > 0 && st.shipped >= st.ordered) return;
+      open++;
+      toBuild += st.remaining; built += st.built; prep += st.assigned; shipped += st.shipped;
+    });
+    const total = toBuild + built + prep + shipped;
+    if (!open || !total) return '';
+    const segs = [
+      { l:'To build',           n:toBuild, c:'var(--warn)' },
+      { l:'Built',              n:built,   c:'var(--line-strong)' },
+      { l:'Preparing to ship',  n:prep,    c:'var(--info)' },
+      { l:'Shipped',            n:shipped, c:'var(--ok)' }
+    ];
+    return '<div class="card">' +
+      '<h2>Pipeline <span class="subtle">across your open orders</span></h2>' +
+      '<div class="pipev">' + num(total) + '</div>' +
+      '<div class="pipes">units in ' + open + ' open order' + (open === 1 ? '' : 's') + '</div>' +
+      '<div class="pipebar">' + segs.map(function(s){
+        return s.n ? '<i style="width:' + (s.n/total*100) + '%;background:' + s.c + '" title="' +
+                     s.l + ': ' + num(s.n) + '"></i>' : '';
+      }).join('') + '</div>' +
+      '<div class="pipeleg">' + segs.map(function(s){
+        return '<div class="pipeit"><span class="pipedot" style="background:' + s.c + '"></span>' +
+               '<span class="pipel">' + s.l + '</span><span class="pipen">' + num(s.n) + '</span></div>';
+      }).join('') + '</div></div>';
+  }
+
   function renderList(){
     setUrl(null);
     $('detailView').style.display = 'none';
@@ -843,6 +891,7 @@
     $('listView').innerHTML =
       '<h1>Your orders</h1>' +
       '<p class="muted" style="margin-top:0;">Progress, shipments, tracking numbers and serial numbers for everything you have ordered.</p>' +
+      pipeHtml() +
       '<div class="toolbar">' +
         '<input class="searchbox" id="q" type="text" placeholder="Search invoice or PO" value="' + esc(query) + '">' +
         '<button class="btn" id="lookup" type="button">Find a serial</button>' +
