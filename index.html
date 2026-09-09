@@ -686,7 +686,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      can never tile. */
   select, select.spec-select, select.sel-sm, select.status-select{
     appearance:none; -webkit-appearance:none;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%235d5b54' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'><path d='M19 9L12 15L5 9' fill='none' stroke='%235d5b54' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
     background-repeat:no-repeat; background-position:right 13px center; padding-right:32px;
   }
   select.sel-sm, select.status-select{ background-position:right 11px center; padding-right:32px; }
@@ -694,7 +694,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   :root[data-theme="dark"] select.spec-select,
   :root[data-theme="dark"] select.sel-sm,
   :root[data-theme="dark"] select.status-select{
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%239aa5b4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'><path d='M19 9L12 15L5 9' fill='none' stroke='%239aa5b4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
     background-repeat:no-repeat; background-position:right 13px center;
   }
   :root[data-theme="dark"] select.sel-sm,
@@ -704,7 +704,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     :root:not([data-theme]) select.spec-select,
     :root:not([data-theme]) select.sel-sm,
     :root:not([data-theme]) select.status-select{
-      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%239aa5b4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'><path d='M19 9L12 15L5 9' fill='none' stroke='%239aa5b4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
       background-repeat:no-repeat; background-position:right 13px center;
     }
     :root:not([data-theme]) select.sel-sm,
@@ -960,6 +960,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .inv-row::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:transparent; }
   .inv-row.low::before{ background:var(--warn); }
   .inv-row.out::before{ background:var(--bad); }
+  .nt-ico-inv{ width:18px; height:18px; color:var(--faint); }
   .inv-name{ flex:1; min-width:150px; font-size:14px; font-weight:600; cursor:pointer; display:flex; flex-direction:column; gap:2px; }
   .inv-name .thr{ color:var(--faint); font-weight:500; font-size:11px; }
   .inv-qty{ font-family:var(--font-num); font-size:17px; font-weight:600; letter-spacing:0; min-width:46px; text-align:right; }
@@ -1083,6 +1084,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ts-val{ font-family:var(--font-num); font-size:13.5px; font-weight:600; letter-spacing:0; color:var(--ink); }
   .ts-lbl{ font-size:12px; color:var(--muted); }
   .tile-status.ok .ts-dot{ background:var(--ok); }
+  .tile-status.ok .nt-ico{ color:var(--ok); }
+  .tile-status.warn .nt-ico{ color:var(--warn); }
   .tile-status.warn .ts-dot{ background:var(--warn); } .tile-status.warn .ts-val{ color:var(--warn-ink); }
   .tile-arrow{ color:var(--faint); flex:0 0 auto; margin-top:2px; transition:color var(--t), transform var(--t); }
   .tile-arrow svg{ width:18px; height:18px; display:block; stroke-width:2; }
@@ -1670,7 +1673,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-sum{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--s3); margin-bottom:var(--s5); }
   .ord-sum-c{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); }
   .ord-sum-v{ font-family:var(--font-num); font-size:24px; font-weight:600; letter-spacing:0; font-variant-numeric:tabular-nums; }
-  .ord-sum-l{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); line-height:1.3; text-wrap:balance; }
+  .ord-sum-l{ display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); line-height:1.3; }
+  .ord-sum-l span{ min-width:0; text-wrap:balance; }
   .ord-sum-c.is-ok  .ord-sum-v{ color:var(--ok); }
   .ord-sum-c.is-rem .ord-sum-v{ color:var(--warn); }
 
@@ -2249,9 +2253,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     #rmaListPane .ord-bar-l input[type="text"]{ grid-column:auto; }
     #rmaListPane .ord-bar-r button{ width:auto; white-space:nowrap; }
 
+    /* top-biased, not dead-centre: the sticky header and the browser's own
+       bottom bar make a mathematically centred card read low on a phone */
     #loginView{
       min-height:calc(100dvh - 52px - env(safe-area-inset-top));
-      align-items:center; padding:32px 0 48px;
+      align-items:flex-start; padding:7vh 0 48px;
     }
 
     /* --- true phone widths only: three utility buttons will not fit beside
@@ -2306,7 +2312,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       display:grid; grid-template-columns:1fr auto auto;
       align-items:center; gap:8px 12px;
     }
-    .inv-row .inv-name{ grid-column:1 / -1; min-width:0; }
+    /* the glyph shares row 1 with the name and the name clears it with padding,
+       so the row keeps its original three-column layout underneath */
+    .inv-row .nt-ico-inv{ grid-row:1; grid-column:1; justify-self:start; align-self:start; margin-top:1px; }
+    .inv-row .inv-name{ grid-row:1; grid-column:1 / -1; min-width:0; padding-left:26px; }
     .inv-row .sev{ justify-self:start; }
     .inv-row .status-pills, .inv-row .adjust-bar, .inv-row .inv-menu-row{ grid-column:1 / -1; }
     .inv-row .inv-menu-row button{ flex:1 1 calc(50% - 6px); }
@@ -2587,8 +2596,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .rma-parts tr:first-child td{ border-top:0; }
   .rma-parts td.n{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .rma-parts td.a{ text-align:right; white-space:nowrap; }
+  /* category marks: a glyph only where it speeds up scanning, never as decoration */
+  .nt-ico{ width:16px; height:16px; flex:0 0 auto; color:var(--faint); }
+  .nt-ico-sm{ width:15px; height:15px; }
+  .nt-catline{ display:inline-flex; align-items:center; gap:6px; min-width:0; }
+  .nt-catline em{ font-style:normal; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .rma-fail{ display:grid; gap:var(--s2); }
-  .rma-fail-row{ display:grid; grid-template-columns:120px minmax(0,1fr) 28px; gap:var(--s3); align-items:center; font-size:13px; }
+  .rma-fail-row{ display:grid; grid-template-columns:142px minmax(0,1fr) 28px; gap:var(--s3); align-items:center; font-size:13px; }
   .rma-fail-row span{ color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .rma-fail-bar{ height:8px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; }
   .rma-fail-bar i{ display:block; height:100%; background:var(--accent); }
@@ -2612,7 +2626,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .rma-row > .rma-arrow{ display:none; }
     .rma-head h1{ font-size:20px; }
     .rma-actions{ width:100%; } .rma-actions button{ flex:1 1 auto; }
-    .rma-fail-row{ grid-template-columns:100px minmax(0,1fr) 28px; }
+    .rma-fail-row{ grid-template-columns:120px minmax(0,1fr) 28px; }
   }
 
   /* phones: Margins and Admin live behind More, so the bar stays at five */
@@ -2683,8 +2697,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="nav-right">
       <span class="auth-chip" id="authChip" style="display:none;"></span>
       <button type="button" class="theme-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">
-        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+        <svg viewBox="0 0 24 24" class="i-moon"><path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" d="M12 22C17.5228 22 22 17.5228 22 12C22 11.5373 21.3065 11.4608 21.0672 11.8568C19.9289 13.7406 17.8615 15 15.5 15C11.9101 15 9 12.0899 9 8.5C9 6.13845 10.2594 4.07105 12.1432 2.93276C12.5392 2.69347 12.4627 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/></svg>
+        <svg viewBox="0 0 24 24" class="i-sun"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 2V4"/><path stroke-linecap="round" d="M12 20V22"/><path stroke-linecap="round" d="M4 12L2 12"/><path stroke-linecap="round" d="M22 12L20 12"/><path stroke-linecap="round" d="M19.7778 4.22266L17.5558 6.25424"/><path stroke-linecap="round" d="M4.22217 4.22266L6.44418 6.25424"/><path stroke-linecap="round" d="M6.44434 17.5557L4.22211 19.7779"/><path stroke-linecap="round" d="M19.7778 19.7773L17.5558 17.5551"/></g></svg>
       </button>
       <span class="version" id="version">v3.9.11</span>
     </div>
@@ -2693,42 +2707,42 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
 <nav class="tabbar" id="tabbar">
   <button type="button" class="tab-btn active" data-goto="home">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z"/><path stroke-linecap="round" d="M12 15L12 18"/></g></svg>
     <span>Home</span>
   </button>
   <button type="button" class="tab-btn" data-goto="orders">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg>
     <span>Orders</span>
   </button>
   <button type="button" class="tab-btn" data-goto="rma" id="tabRma"><span class="tab-badge" id="tabRmaBadge" style="display:none;"></span>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><rect width="12.051" height="20" x="2" y="18.051" rx="3" transform="rotate(-90 2 18.051)"/><path d="M16.52 6C16.52 6.00944 16.52 5.99056 16.52 6ZM16.52 6C16.52 4.11438 16.52 3.17157 15.9342 2.58579C15.3484 2 14.4056 2 12.52 2H11.4795C9.59387 2 8.65107 2 8.06528 2.58579C7.47949 3.17157 7.47949 4.11438 7.47949 6"/><path d="M2 12C2.81331 12 4.18669 12 5 12"/><path d="M18.7839 12C19.6644 12 21.1196 12 22 12"/><path d="M8.78388 12C11.2342 12 12.5494 12 14.9997 12"/><path d="M8.40549 11H5.37839C5.16941 11 5 11.1694 5 11.3784V13.0141C5 13.1689 5.0942 13.308 5.23786 13.3655L5.7677 13.5774C6.4894 13.8661 7.29449 13.8661 8.01618 13.5774L8.54602 13.3655C8.68968 13.308 8.78388 13.1689 8.78388 13.0141V11.3784C8.78388 11.1694 8.61447 11 8.40549 11Z"/><path d="M18.4055 11H15.3784C15.1694 11 15 11.1694 15 11.3784V13.0141C15 13.1689 15.0942 13.308 15.2379 13.3655L15.7677 13.5774C16.4894 13.8661 17.2945 13.8661 18.0162 13.5774L18.546 13.3655C18.6897 13.308 18.7839 13.1689 18.7839 13.0141V11.3784C18.7839 11.1694 18.6145 11 18.4055 11Z"/></g></svg>
     <span>RMA</span>
   </button>
   <button type="button" class="tab-btn" data-goto="inventory">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg>
     <span>Inventory</span>
   </button>
   <button type="button" class="tab-btn" data-goto="timeclock">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg>
     <span>Timeclock</span>
   </button>
   <button type="button" class="tab-btn" data-goto="margins" id="tabMargins" style="display:none;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="12"/><line x1="10.5" y1="20" x2="10.5" y2="5"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="21" y1="20" x2="21" y2="8"/></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg>
     <span>Margins</span>
   </button>
   <button type="button" class="tab-btn" data-goto="admin" id="tabAdmin" style="display:none;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg>
     <span>Admin</span>
   </button>
   <button type="button" class="tab-btn" id="tabMore" style="display:none;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></g></svg>
     <span>More</span>
   </button>
 </nav>
 <div class="tab-more-scrim" id="tabMoreScrim"></div>
 <div class="tab-more-sheet" id="tabMoreSheet">
-  <button type="button" id="tabMoreMargins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="12"/><line x1="10.5" y1="20" x2="10.5" y2="5"/><line x1="16" y1="20" x2="16" y2="9"/></svg>Cost &amp; Margins</button>
-  <button type="button" id="tabMoreAdmin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Admin</button>
+  <button type="button" id="tabMoreMargins"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg>Cost &amp; Margins</button>
+  <button type="button" id="tabMoreAdmin"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg>Admin</button>
 </div>
 
 <div class="controls">
@@ -2818,58 +2832,58 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     </div>
     <div class="tile-grid" id="tileGrid">
       <a class="tile" href="#" data-goto="orders">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg></span>
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg></span>
         <span class="tile-body">
           <span class="tile-title">B2B Orders</span>
           <span class="tile-desc">Invoices, batches, labels and tracking</span>
           <span class="tile-status" id="tileOrdStatus"><span class="ts-lbl">Loading&hellip;</span></span>
         </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
       <a class="tile" href="#" data-goto="rma">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><rect width="12.051" height="20" x="2" y="18.051" rx="3" transform="rotate(-90 2 18.051)"/><path d="M16.52 6C16.52 6.00944 16.52 5.99056 16.52 6ZM16.52 6C16.52 4.11438 16.52 3.17157 15.9342 2.58579C15.3484 2 14.4056 2 12.52 2H11.4795C9.59387 2 8.65107 2 8.06528 2.58579C7.47949 3.17157 7.47949 4.11438 7.47949 6"/><path d="M2 12C2.81331 12 4.18669 12 5 12"/><path d="M18.7839 12C19.6644 12 21.1196 12 22 12"/><path d="M8.78388 12C11.2342 12 12.5494 12 14.9997 12"/><path d="M8.40549 11H5.37839C5.16941 11 5 11.1694 5 11.3784V13.0141C5 13.1689 5.0942 13.308 5.23786 13.3655L5.7677 13.5774C6.4894 13.8661 7.29449 13.8661 8.01618 13.5774L8.54602 13.3655C8.68968 13.308 8.78388 13.1689 8.78388 13.0141V11.3784C8.78388 11.1694 8.61447 11 8.40549 11Z"/><path d="M18.4055 11H15.3784C15.1694 11 15 11.1694 15 11.3784V13.0141C15 13.1689 15.0942 13.308 15.2379 13.3655L15.7677 13.5774C16.4894 13.8661 17.2945 13.8661 18.0162 13.5774L18.546 13.3655C18.6897 13.308 18.7839 13.1689 18.7839 13.0141V11.3784C18.7839 11.1694 18.6145 11 18.4055 11Z"/></g></svg></span>
         <span class="tile-body">
           <span class="tile-title">RMA</span>
           <span class="tile-desc">Warranty parts, by serial number</span>
           <span class="tile-status" id="tileRmaStatus"><span class="ts-lbl">Loading&hellip;</span></span>
         </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
       <a class="tile" href="#" data-goto="inventory">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg></span>
         <span class="tile-body">
           <span class="tile-title">Inventory</span>
           <span class="tile-desc">Parts on hand, low stock, activity</span>
           <span class="tile-status" id="tileInvStatus"><span class="ts-lbl">Loading&hellip;</span></span>
         </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
       <a class="tile" href="#" data-goto="timeclock">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3.5 2"/></svg></span>
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg></span>
         <span class="tile-body">
           <span class="tile-title">Timeclock</span>
           <span class="tile-desc">Hours and pay, every two weeks</span>
           <span class="tile-status" id="tileTcStatus"><span class="ts-lbl">Loading&hellip;</span></span>
         </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
       <a class="tile" href="#" data-goto="margins" id="tileMargins" style="display:none;">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M9.3 20V7M14.7 20v-6M20 20V4"/></svg></span>
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg></span>
         <span class="tile-body">
           <span class="tile-title">Cost &amp; Margins</span>
           <span class="tile-desc">Build costs, profit and margin by channel</span>
           <span class="tile-status" id="tileMgStatus"><span class="ts-lbl">Loading&hellip;</span></span>
         </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
       <a class="tile" href="#" data-goto="admin" id="tileAdmin" style="display:none;">
-        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.2" fill="var(--paper)"/><circle cx="15" cy="12" r="2.2" fill="var(--paper)"/><circle cx="8" cy="17" r="2.2" fill="var(--paper)"/></svg></span>
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg></span>
         <span class="tile-body">
           <span class="tile-title">Admin</span>
           <span class="tile-desc">Customers, configs, destinations, people</span>
           <span class="tile-status" id="tileAdmStatus"><span class="ts-lbl">Manage the shop</span></span>
         </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
     </div>
     <div class="install-card" id="installCard" style="display:none;">
@@ -3071,7 +3085,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <div id="tcNoProfile" style="display:none;"><p class="muted-line">You&rsquo;re signed in, but not on the team roster yet. Ask the admin to add you.</p></div>
       <div id="tcMine" style="display:none;">
         <p class="tc-reminder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+          <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg>
           <span id="tcDueText">One entry per two-week pay period.</span>
         </p>
         <div class="tc-entry">
@@ -3655,6 +3669,49 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   navMargins.addEventListener('click', function(e){ e.preventDefault(); showTool('margins'); });
 
   /* ================= INVENTORY ================= */
+  /* Solar category marks. Source set: assets/solar-icons.json */
+  window.NT_ICO = {
+    "truck":"<path fill=\"currentColor\" d=\"m255.42 117l-14-35a15.93 15.93 0 0 0-14.84-10H192v-8a8 8 0 0 0-8-8H32a16 16 0 0 0-16 16v112a16 16 0 0 0 16 16h17a32 32 0 0 0 62 0h50a32 32 0 0 0 62 0h17a16 16 0 0 0 16-16v-64a7.9 7.9 0 0 0-.58-3M192 88h34.58l9.6 24H192ZM32 72h144v64H32Zm48 136a16 16 0 1 1 16-16a16 16 0 0 1-16 16m81-24h-50a32 32 0 0 0-62 0H32v-32h144v12.31A32.1 32.1 0 0 0 161 184m31 24a16 16 0 1 1 16-16a16 16 0 0 1-16 16m48-24h-17a32.06 32.06 0 0 0-31-24v-32h48Z\"/>",
+    "tower":"<path fill=\"currentColor\" d=\"M88 72a8 8 0 0 1 8-8h64a8 8 0 0 1 0 16H96a8 8 0 0 1-8-8m8 40h64a8 8 0 0 0 0-16H96a8 8 0 0 0 0 16m112-72v176a16 16 0 0 1-16 16H64a16 16 0 0 1-16-16V40a16 16 0 0 1 16-16h128a16 16 0 0 1 16 16m-16 0H64v176h128Zm-64 128a12 12 0 1 0 12 12a12 12 0 0 0-12-12\"/>",
+    "gpu":"<path fill=\"currentColor\" d=\"M232 48H16a8 8 0 0 0-8 8v152a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h112a16 16 0 0 0 16-16V64a16 16 0 0 0-16-16m0 128H24V64h208Zm-56-16a40 40 0 1 0-40-40a40 40 0 0 0 40 40m-24-40a23.74 23.74 0 0 1 2.35-10.34l32 32A23.74 23.74 0 0 1 176 144a24 24 0 0 1-24-24m48 0a23.74 23.74 0 0 1-2.35 10.34l-32-32A23.74 23.74 0 0 1 176 96a24 24 0 0 1 24 24M80 160a40 40 0 1 0-40-40a40 40 0 0 0 40 40m-24-40a23.74 23.74 0 0 1 2.35-10.34l32 32A23.74 23.74 0 0 1 80 144a24 24 0 0 1-24-24m48 0a23.74 23.74 0 0 1-2.35 10.34l-32-32A23.74 23.74 0 0 1 80 96a24 24 0 0 1 24 24\"/>",
+    "ram":"<path fill=\"currentColor\" d=\"M232 56H24A16 16 0 0 0 8 72v128a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0V72a16 16 0 0 0-16-16M24 72h208v96H24Zm88 80a8 8 0 0 0 8-8V96a8 8 0 0 0-8-8H48a8 8 0 0 0-8 8v48a8 8 0 0 0 8 8Zm-56-48h48v32H56Zm88 48h64a8 8 0 0 0 8-8V96a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8v48a8 8 0 0 0 8 8m8-48h48v32h-48Z\"/>",
+    "power":"<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M12 2V6\"/><path d=\"M8.5 3.70605C5.26806 5.07157 3 8.27099 3 12.0001C3 16.9707 7.02944 21.0001 12 21.0001C16.9706 21.0001 21 16.9707 21 12.0001C21 8.27099 18.7319 5.07157 15.5 3.70605\"/></g>",
+    "monitor":"<path fill=\"currentColor\" d=\"M208 40H48a24 24 0 0 0-24 24v112a24 24 0 0 0 24 24h160a24 24 0 0 0 24-24V64a24 24 0 0 0-24-24m8 136a8 8 0 0 1-8 8H48a8 8 0 0 1-8-8V64a8 8 0 0 1 8-8h160a8 8 0 0 1 8 8Zm-48 48a8 8 0 0 1-8 8H96a8 8 0 0 1 0-16h64a8 8 0 0 1 8 8\"/>",
+    "restart":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M15.9775 8.71452L15.5355 8.2621C13.5829 6.26318 10.4171 6.26318 8.46447 8.2621C6.51184 10.261 6.51184 13.5019 8.46447 15.5008C10.4171 17.4997 13.5829 17.4997 15.5355 15.5008C16.671 14.3384 17.1462 12.7559 16.9611 11.242M15.9775 6V8.71452H13.3258\"/></g>",
+    "server":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M2 17C2 15.1144 2 14.1716 2.58579 13.5858C3.17157 13 4.11438 13 6 13H18C19.8856 13 20.8284 13 21.4142 13.5858C22 14.1716 22 15.1144 22 17C22 18.8856 22 19.8284 21.4142 20.4142C20.8284 21 19.8856 21 18 21H6C4.11438 21 3.17157 21 2.58579 20.4142C2 19.8284 2 18.8856 2 17Z\"/><path d=\"M2 6C2 4.11438 2 3.17157 2.58579 2.58579C3.17157 2 4.11438 2 6 2H18C19.8856 2 20.8284 2 21.4142 2.58579C22 3.17157 22 4.11438 22 6C22 7.88562 22 8.82843 21.4142 9.41421C20.8284 10 19.8856 10 18 10H6C4.11438 10 3.17157 10 2.58579 9.41421C2 8.82843 2 7.88562 2 6Z\"/><path stroke-linecap=\"round\" d=\"M11 6H18\"/><path stroke-linecap=\"round\" d=\"M6 6H8\"/><path stroke-linecap=\"round\" d=\"M11 17H18\"/><path stroke-linecap=\"round\" d=\"M6 17H8\"/></g>",
+    "ssd":"<path fill=\"currentColor\" d=\"M208 136H48a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16v-48a16 16 0 0 0-16-16m0 64H48v-48h160zm0-160H48a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V56a16 16 0 0 0-16-16m0 64H48V56h160zm-16-24a12 12 0 1 1-12-12a12 12 0 0 1 12 12m0 96a12 12 0 1 1-12-12a12 12 0 0 1 12 12\"/>",
+    "cpubolt":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M7 10C7 8.58579 7 7.87868 7.43934 7.43934C7.87868 7 8.58579 7 10 7H14C15.4142 7 16.1213 7 16.5607 7.43934C17 7.87868 17 8.58579 17 10V14C17 15.4142 17 16.1213 16.5607 16.5607C16.1213 17 15.4142 17 14 17H10C8.58579 17 7.87868 17 7.43934 16.5607C7 16.1213 7 15.4142 7 14V10Z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12.4286 10L11 12H13L11.5714 14\"/><path d=\"M4 12C4 8.22876 4 6.34315 5.17157 5.17157C6.34315 4 8.22876 4 12 4C15.7712 4 17.6569 4 18.8284 5.17157C20 6.34315 20 8.22876 20 12C20 15.7712 20 17.6569 18.8284 18.8284C17.6569 20 15.7712 20 12 20C8.22876 20 6.34315 20 5.17157 18.8284C4 17.6569 4 15.7712 4 12Z\"/><path stroke-linecap=\"round\" d=\"M4 12H2\"/><path stroke-linecap=\"round\" d=\"M22 12H20\"/><path stroke-linecap=\"round\" d=\"M4 9H2\"/><path stroke-linecap=\"round\" d=\"M22 9H20\"/><path stroke-linecap=\"round\" d=\"M4 15H2\"/><path stroke-linecap=\"round\" d=\"M22 15H20\"/><path stroke-linecap=\"round\" d=\"M12 20L12 22\"/><path stroke-linecap=\"round\" d=\"M12 2L12 4\"/><path stroke-linecap=\"round\" d=\"M9 20L9 22\"/><path stroke-linecap=\"round\" d=\"M9 2L9 4\"/><path stroke-linecap=\"round\" d=\"M15 20L15 22\"/><path stroke-linecap=\"round\" d=\"M15 2L15 4\"/></g>",
+    "cpu":"<path fill=\"currentColor\" d=\"M152 96h-48a8 8 0 0 0-8 8v48a8 8 0 0 0 8 8h48a8 8 0 0 0 8-8v-48a8 8 0 0 0-8-8m-8 48h-32v-32h32Zm88 0h-16v-32h16a8 8 0 0 0 0-16h-16V56a16 16 0 0 0-16-16h-40V24a8 8 0 0 0-16 0v16h-32V24a8 8 0 0 0-16 0v16H56a16 16 0 0 0-16 16v40H24a8 8 0 0 0 0 16h16v32H24a8 8 0 0 0 0 16h16v40a16 16 0 0 0 16 16h40v16a8 8 0 0 0 16 0v-16h32v16a8 8 0 0 0 16 0v-16h40a16 16 0 0 0 16-16v-40h16a8 8 0 0 0 0-16m-32 56H56V56h144z\"/>",
+    "plug":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path stroke-linecap=\"round\" d=\"M12 15.1082V20.1498C12 21.2635 11.0955 22.1875 10.0128 21.9673C5.44193 21.0381 2 16.9659 2 12.0832C2 6.51441 6.47715 2 12 2C17.5228 2 22 6.51441 22 12.0832C22 16.0743 19.7003 19.5239 16.3641 21.1581\"/><path stroke-linejoin=\"round\" d=\"M9 11.8C9 11.3582 9.35817 11 9.8 11H14.2C14.6418 11 15 11.3582 15 11.8V12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12V11.8Z\"/><path stroke-linecap=\"round\" d=\"M13.5 11V9\"/><path stroke-linecap=\"round\" d=\"M10.5 11V9\"/></g>",
+    "temperature":"<path fill=\"currentColor\" d=\"M233 135a60 60 0 0 0-89.62-35.45l16.39-65.44a8 8 0 0 0-3.45-8.68a60 60 0 1 0-60.63 103.48l-64.87 18.53a8 8 0 0 0-5.8 7.32a60 60 0 0 0 44.42 60.66a60.5 60.5 0 0 0 15.62 2.07a60.07 60.07 0 0 0 59.88-62l48.48 46.92a8 8 0 0 0 9.25 1.35A60 60 0 0 0 233 135m-121-7a16 16 0 1 1 16 16a16 16 0 0 1-16-16M80 76a44 44 0 0 1 62.75-39.82L127.77 96a32 32 0 0 0-27.92 16.8A43.85 43.85 0 0 1 80 76m27 119.57a44 44 0 0 1-65.86-34.43l59.31-16.94A32 32 0 0 0 128 160h.91A43.82 43.82 0 0 1 107 195.57m106.17-23a43.9 43.9 0 0 1-13 14.14l-44.32-42.89a31.91 31.91 0 0 0-.59-32.57a44 44 0 0 1 57.91 61.32\"/>",
+    "dangertriangle":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M5.31171 10.7615C8.23007 5.58716 9.68925 3 12 3C14.3107 3 15.7699 5.58716 18.6883 10.7615L19.0519 11.4063C21.4771 15.7061 22.6897 17.856 21.5937 19.428C20.4978 21 17.7864 21 12.3637 21H11.6363C6.21356 21 3.50217 21 2.40626 19.428C1.31034 17.856 2.52291 15.7061 4.94805 11.4063L5.31171 10.7615Z\"/><path stroke-linecap=\"round\" d=\"M12 8V13\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 16H12.0001\"/></g>",
+    "tag":"<path fill=\"currentColor\" d=\"M243.31 136L144 36.69A15.86 15.86 0 0 0 132.69 32H40a8 8 0 0 0-8 8v92.69A15.86 15.86 0 0 0 36.69 144L136 243.31a16 16 0 0 0 22.63 0l84.68-84.68a16 16 0 0 0 0-22.63m-96 96L48 132.69V48h84.69L232 147.31ZM96 84a12 12 0 1 1-12-12a12 12 0 0 1 12 12\"/>",
+    "question":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path stroke-linecap=\"round\" d=\"M10.125 8.875C10.125 7.83947 10.9645 7 12 7C13.0355 7 13.875 7.83947 13.875 8.875C13.875 9.56245 13.505 10.1635 12.9534 10.4899C12.478 10.7711 12 11.1977 12 11.75V13\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 16H12.0001\"/></g>",
+    "box":"<g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z\"/><path d=\"M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5\"/></g>",
+    "archive":"<path fill=\"currentColor\" d=\"m223.68 66.15l-88-48.15a15.88 15.88 0 0 0-15.36 0l-88 48.17a16 16 0 0 0-8.32 14v95.64a16 16 0 0 0 8.32 14l88 48.17a15.88 15.88 0 0 0 15.36 0l88-48.17a16 16 0 0 0 8.32-14V80.18a16 16 0 0 0-8.32-14.03M128 32l80.34 44l-29.77 16.3l-80.35-44Zm0 88L47.66 76l33.9-18.56l80.34 44ZM40 90l80 43.78v85.79l-80-43.75Zm176 85.78l-80 43.79v-85.75l32-17.51V152a8 8 0 0 0 16 0v-44.45L216 90v85.77Z\"/>",
+    "widget":"<path fill=\"currentColor\" d=\"M208 32H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16M88 160a8 8 0 1 1-8 8a8 8 0 0 1 8-8M48 48h32v97.38a24 24 0 1 0 16 0v-30.07l48 48V208H48Zm160 160h-48v-48a8 8 0 0 0-2.34-5.66L96 92.69V48h32v24a8 8 0 0 0 2.34 5.66l16 16A23.74 23.74 0 0 0 144 104a24 24 0 1 0 24-24a23.74 23.74 0 0 0-10.34 2.35L144 68.69V48h64zM168 96a8 8 0 1 1-8 8a8 8 0 0 1 8-8\"/>",
+    "wifi":"<path fill=\"currentColor\" d=\"M140 204a12 12 0 1 1-12-12a12 12 0 0 1 12 12m97.08-117a172 172 0 0 0-218.16 0a8 8 0 0 0 10.16 12.37a156 156 0 0 1 197.84 0A8 8 0 0 0 237.08 87M205 122.77a124 124 0 0 0-153.94 0A8 8 0 0 0 61 135.31a108 108 0 0 1 134.06 0a8 8 0 0 0 11.24-1.3a8 8 0 0 0-1.3-11.24m-32.26 35.76a76.05 76.05 0 0 0-89.42 0a8 8 0 0 0 9.42 12.94a60 60 0 0 1 70.58 0a8 8 0 1 0 9.42-12.94\"/>",
+    "clipboard":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195\"/><path stroke-linecap=\"round\" d=\"M7 14.5H15\"/><path stroke-linecap=\"round\" d=\"M7 18H12.5\"/><path d=\"M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z\"/></g>",
+    "checklist":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 15.8L7.14286 17L10 14\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 8.8L7.14286 10L10 7\"/><path stroke-linecap=\"round\" d=\"M13 9L18 9\"/><path stroke-linecap=\"round\" d=\"M13 16L18 16\"/></g>",
+    "checkcircle":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8.5 12.5L10.5 14.5L15.5 9.5\"/></g>",
+    "clock":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 8V12L14.5 14.5\"/></g>",
+    "delivery":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M9.56541 8.73049C9.0804 6.97492 8.8379 6.09714 9.24954 5.40562C9.66119 4.71409 10.5662 4.47889 12.3763 4.00849L14.2962 3.50955C16.1062 3.03915 17.0113 2.80394 17.7242 3.20319C18.4372 3.60244 18.6797 4.48023 19.1647 6.2358L19.6792 8.09786C20.1642 9.85343 20.4067 10.7312 19.995 11.4227C19.5834 12.1143 18.6784 12.3495 16.8683 12.8199L14.9484 13.3188C13.1384 13.7892 12.2333 14.0244 11.5203 13.6252C10.8073 13.2259 10.5648 12.3481 10.0798 10.5926L9.56541 8.73049Z\"/><path stroke-linecap=\"round\" d=\"M8.23 15.0602L6.08 7.27014C5.89453 6.61732 5.38563 6.12036 4.7 5.92L3 5.4502\"/><circle cx=\"8.05\" cy=\"18.1\" r=\"2.9\"/><path stroke-linecap=\"round\" d=\"M10.9199 17.36L19.9999 15\"/></g>"
+  };
+  /* Rule: physical hardware is Phosphor, everything else is Solar. Solar has no
+     truck, tower, GPU, DIMM, drive, fan or board, and its CPU/plug read poorly at
+     16px. Phosphor's regular weight matches Solar's 1.5 stroke; it uses a 256 box. */
+  window.NT_VB256 = { truck:1, tower:1, gpu:1, ram:1, cpu:1, widget:1, ssd:1, wifi:1, archive:1, tag:1, temperature:1, monitor:1 };
+  window.ntIco = function(key, cls){
+    var b = window.NT_ICO[key]; if (!b) return '';
+    var vb = window.NT_VB256[key] ? '0 0 256 256' : '0 0 24 24';
+    return '<svg class="' + (cls || 'nt-ico') + '" viewBox="' + vb + '" aria-hidden="true">' + b + '</svg>';
+  };
+  window.NT_RMA_ICO = { power:'power', display:'monitor', boot:'restart', memory:'ram',
+    storage:'ssd', gpu:'gpu', motherboard:'widget', psu:'plug', cooling:'temperature',
+    physical:'dangertriangle', other:'question' };
+  window.NT_INV_ICO = { cases:'tower', motherboards:'widget', cpus:'cpu', gpus:'gpu', ram:'ram',
+    storage:'ssd', wifi:'wifi', supplies:'archive', other:'tag' };
+
   const CATS = [
     ['cases','Cases'], ['motherboards','Motherboards'], ['cpus','CPUs'], ['gpus','GPUs'],
     ['ram','RAM'], ['storage','Storage'], ['wifi','WiFi'], ['supplies','Supplies'], ['other','Other']
@@ -3701,8 +3758,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         ? '<span class="n">' + (it.qty|0) + '</span> left'
         : esc(it.status);
       var ico = isOut
-        ? mgIco('', '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16h.01"/>')
-        : mgIco('', '<path d="M10.3 3.9L1.8 18a1.5 1.5 0 0 0 1.3 2.2h17.8a1.5 1.5 0 0 0 1.3-2.2L13.7 3.9a1.5 1.5 0 0 0-2.6 0z"/><path d="M12 9.5v4M12 17h.01"/>');
+        ? mgIco('', '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 7V13"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16H12.0001"/></g>')
+        : mgIco('', '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.31171 10.7615C8.23007 5.58716 9.68925 3 12 3C14.3107 3 15.7699 5.58716 18.6883 10.7615L19.0519 11.4063C21.4771 15.7061 22.6897 17.856 21.5937 19.428C20.4978 21 17.7864 21 12.3637 21H11.6363C6.21356 21 3.50217 21 2.40626 19.428C1.31034 17.856 2.52291 15.7061 4.94805 11.4063L5.31171 10.7615Z"/><path stroke-linecap="round" d="M12 8V13"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16H12.0001"/></g>');
       return '<span class="low-chip' + (isOut ? ' out' : '') + '">' + ico + esc(it.name) + ' \u00b7 ' + tail + '</span>';
     }).join('');
 
@@ -3745,11 +3802,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       }
       var q0 = it.qty|0, thr = it.low_at|0;
       var sev = q0 === 0
-        ? '<span class="sev sev-out">' + mgIco('', '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16h.01"/>') + 'Out</span>'
+        ? '<span class="sev sev-out">' + mgIco('', '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 7V13"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16H12.0001"/></g>') + 'Out</span>'
         : (q0 <= thr
-          ? '<span class="sev sev-low">' + mgIco('', '<path d="M10.3 3.9L1.8 18a1.5 1.5 0 0 0 1.3 2.2h17.8a1.5 1.5 0 0 0 1.3-2.2L13.7 3.9a1.5 1.5 0 0 0-2.6 0z"/><path d="M12 9.5v4M12 17h.01"/>') + 'Low</span>'
-          : '<span class="sev sev-ok">' + mgIco('', '<path d="M20 6L9 17l-5-5"/>') + 'In stock</span>');
+          ? '<span class="sev sev-low">' + mgIco('', '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.31171 10.7615C8.23007 5.58716 9.68925 3 12 3C14.3107 3 15.7699 5.58716 18.6883 10.7615L19.0519 11.4063C21.4771 15.7061 22.6897 17.856 21.5937 19.428C20.4978 21 17.7864 21 12.3637 21H11.6363C6.21356 21 3.50217 21 2.40626 19.428C1.31034 17.856 2.52291 15.7061 4.94805 11.4063L5.31171 10.7615Z"/><path stroke-linecap="round" d="M12 8V13"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16H12.0001"/></g>') + 'Low</span>'
+          : '<span class="sev sev-ok">' + mgIco('', '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8.5 12.5L10.5 14.5L15.5 9.5"/></g>') + 'In stock</span>');
       inner =
+        ntIco(NT_INV_ICO[it.category] || 'widget', 'nt-ico nt-ico-inv') +
         '<span class="inv-name" data-menu="' + it.id + '">' + esc(it.name) +
           '<span class="thr">low at ' + thr + moboTag + '</span></span>' +
         sev +
@@ -3760,6 +3818,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '</span>';
     } else {
       inner =
+        ntIco(NT_INV_ICO[it.category] || 'widget', 'nt-ico nt-ico-inv') +
         '<span class="inv-name" data-menu="' + it.id + '">' + esc(it.name) + '</span>' +
         '<span class="status-pills">' +
           ['good','low','out'].map(function(s){
@@ -4463,9 +4522,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   var MG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">';
   /* glyph carries the level too — never colour alone */
   function mgBadgeIco(pct){
-    if (pct >= MG_TARGET) return MG_SVG + '<path d="M20 6L9 17l-5-5"/></svg>';
-    if (pct >= MG_TARGET - 5) return MG_SVG + '<path d="M10.3 3.9L1.8 18a1.5 1.5 0 0 0 1.3 2.2h17.8a1.5 1.5 0 0 0 1.3-2.2L13.7 3.9a1.5 1.5 0 0 0-2.6 0z"/><path d="M12 9.5v4M12 17h.01"/></svg>';
-    return MG_SVG + '<circle cx="12" cy="12" r="9.2"/><path d="M12 7.4v5.2M12 16.4h.01"/></svg>';
+    if (pct >= MG_TARGET) return MG_SVG + '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8.5 12.5L10.5 14.5L15.5 9.5"/></g></svg>';
+    if (pct >= MG_TARGET - 5) return MG_SVG + '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.31171 10.7615C8.23007 5.58716 9.68925 3 12 3C14.3107 3 15.7699 5.58716 18.6883 10.7615L19.0519 11.4063C21.4771 15.7061 22.6897 17.856 21.5937 19.428C20.4978 21 17.7864 21 12.3637 21H11.6363C6.21356 21 3.50217 21 2.40626 19.428C1.31034 17.856 2.52291 15.7061 4.94805 11.4063L5.31171 10.7615Z"/><path stroke-linecap="round" d="M12 8V13"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16H12.0001"/></g></svg>';
+    return MG_SVG + '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 7V13"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16H12.0001"/></g></svg>';
   }
   function mgIco(cls, paths){
     return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>';
@@ -4622,7 +4681,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       x += '<div class="mg-sect"><div class="inv-cat">' + nm + '</div></div>' + ls.map(mgLineCard).join('');
     });
     el.innerHTML = x || ('<div class="empty">'
-      + mgIco('empty-ico', '<path d="M4 20V13M9.3 20V7M14.7 20v-6M20 20V4"/>')
+      + mgIco('empty-ico', '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g>')
       + '<h4>No builds yet</h4><p>Add your first build to start tracking cost, profit and margin by channel.</p>'
       + '<button class="primary btn-sm empty-act" id="mgEmptyAdd">+ Add build</button></div>');
   }
@@ -4630,7 +4689,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const el = document.getElementById('mgCustomBody'); if (!el) return;
     const ls = mgLines.filter(function(l){ return l.category === 3; });
     el.innerHTML = ls.length ? ls.map(mgLineCard).join('') : ('<div class="empty">'
-      + mgIco('empty-ico', '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>')
+      + mgIco('empty-ico', '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="6" r="4"/><path stroke-linecap="round" d="M15 9C16.6569 9 18 7.65685 18 6C18 4.34315 16.6569 3 15 3"/><ellipse cx="9" cy="17" rx="7" ry="4"/><path stroke-linecap="round" d="M18 14C19.7542 14.3847 21 15.3589 21 16.5C21 17.5293 19.9863 18.4229 18.5 18.8704"/></g>')
       + '<h4>No custom builds yet</h4><p>Price out a one-off customer request here. It stays separate from the mass-produced lineup and never affects the stats above.</p>'
       + '<button class="ghost btn-sm empty-act" id="mgEmptyCustom">+ Custom build</button></div>');
   }
@@ -4700,7 +4759,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         + line('Profit', mgMoney(x.c.profit), 'color:' + (x.c.profit >= 0 ? 'var(--ok)' : 'var(--bad)') + ';')
         + '<div style="margin-top:var(--s3);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;">'
         + mgBadgeHtml(x.c.pct)
-        + (idx === win ? '<span class="mg-win-tag">' + MG_SVG + '<path d="M20 6L9 17l-5-5"/></svg>Higher margin</span>' : '')
+        + (idx === win ? '<span class="mg-win-tag">' + MG_SVG + '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8.5 12.5L10.5 14.5L15.5 9.5"/></g></svg>Higher margin</span>' : '')
         + '</div>'
         + '<p class="mg-h" style="margin-top:var(--s4);">Components</p>'
         + mgItems(x.b.id).filter(function(i){ return +i.cost > 0 || mgIsShip(i.name); }).map(function(i){
@@ -4934,9 +4993,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* ---- v30: toasts (replaces alert()) ---- */
   var TOAST_ICO = {
-    ok:'<path d="M20 6L9 17l-5-5"/>',
-    err:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
-    info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'
+    ok:'<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8.5 12.5L10.5 14.5L15.5 9.5"/></g>',
+    err:'<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 7V13"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16H12.0001"/></g>',
+    info:'<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 17V11"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8H12.0001"/></g>'
   };
   function toast(msg, kind, ms){
     kind = kind || 'info';
@@ -4959,8 +5018,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   /* ---- home tiles status ---- */
-  function tileStat(val, label, kind){
-    return '<span class="ts-dot"></span><span class="ts-val">' + esc(val) + '</span>' +
+  function tileStat(val, label, ico){
+    return (ico ? ntIco(ico, 'nt-ico nt-ico-sm') : '<span class="ts-dot"></span>') +
+           '<span class="ts-val">' + esc(val) + '</span>' +
            (label ? '<span class="ts-lbl">' + esc(label) + '</span>' : '');
   }
 
@@ -5251,13 +5311,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         const wk = lastClosedPeriodEnd();
         const staff = tcEmployees.filter(function(e){ return e.active && !e.is_admin; });
         const done = staff.filter(function(e){ return !!tcFindHours(e.user_id, wk); }).length;
-        tt.innerHTML = tileStat(done + ' of ' + staff.length, 'submitted this period');
-        tt.className = 'tile-status ' + (staff.length && done === staff.length ? 'ok' : '');
+        const allIn = staff.length && done === staff.length;
+        tt.innerHTML = tileStat(done + ' of ' + staff.length, 'submitted this period', allIn ? 'checkcircle' : 'clock');
+        tt.className = 'tile-status ' + (allIn ? 'ok' : '');
       } else {
         const wk = lastClosedPeriodEnd();
         const row = tcFindHours(tcMe.user_id, wk);
-        if (row){ tt.innerHTML = tileStat((+row.hours) + ' hrs', 'submitted this period'); tt.className = 'tile-status ok'; }
-        else { tt.innerHTML = tileStat('Not submitted', 'this period'); tt.className = 'tile-status warn'; }
+        if (row){ tt.innerHTML = tileStat((+row.hours) + ' hrs', 'submitted this period', 'checkcircle'); tt.className = 'tile-status ok'; }
+        else { tt.innerHTML = tileStat('Not submitted', 'this period', 'clock'); tt.className = 'tile-status warn'; }
       }
     }
   }
@@ -5691,7 +5752,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     if (!rows.length){
       ordListBody.innerHTML = '<div class="empty">' +
-        '<div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg></div>' +
+        '<div class="empty-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg></div>' +
         '<p>' + (ordOrders.length ? 'No orders match that filter.' : 'No orders yet.') + '</p>' +
         (ordPerm.manage && !ordOrders.length
           ? '<p class="muted-sm">Create one to start generating units and building batches.</p>'
@@ -5728,7 +5789,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             (st.shipped ? ' \u00b7 ' + ordNum(st.shipped) + ' shipped' : '') + '</div>' +
         '</div>' +
         '<div class="ord-prog-lbl">' + ordNum(st.remaining) + ' to build</div>' +
-        '<div class="ord-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>' +
+        '<div class="ord-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></div>' +
       '</div>';
     }).join('');
   }
@@ -5859,11 +5920,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</div>' +
 
       '<div class="ord-sum">' +
-        '<div class="ord-sum-c" title="Total quantity across every line item on this invoice"><div class="ord-sum-v">' + ordNum(st.ordered) + '</div><div class="ord-sum-l">Ordered</div></div>' +
-        '<div class="ord-sum-c is-rem" title="Ordered units with no serial number yet"><div class="ord-sum-v">' + ordNum(st.remaining) + '</div><div class="ord-sum-l">To build</div></div>' +
-        '<div class="ord-sum-c" title="Serial numbers generated, not yet in a batch"><div class="ord-sum-v">' + ordNum(st.built) + '</div><div class="ord-sum-l">Built (in pool)</div></div>' +
-        '<div class="ord-sum-c" title="In a batch with a destination, but not shipped yet"><div class="ord-sum-v">' + ordNum(st.assigned) + '</div><div class="ord-sum-l">Assigned</div></div>' +
-        '<div class="ord-sum-c is-ok" title="In a batch that has been marked shipped"><div class="ord-sum-v">' + ordNum(st.shipped) + '</div><div class="ord-sum-l">Shipped</div></div>' +
+        '<div class="ord-sum-c" title="Total quantity across every line item on this invoice"><div class="ord-sum-v">' + ordNum(st.ordered) + '</div><div class="ord-sum-l">' + ntIco('clipboard', 'nt-ico nt-ico-sm') + '<span>Ordered</span></div></div>' +
+        '<div class="ord-sum-c is-rem" title="Ordered units with no serial number yet"><div class="ord-sum-v">' + ordNum(st.remaining) + '</div><div class="ord-sum-l">' + ntIco('checklist', 'nt-ico nt-ico-sm') + '<span>To build</span></div></div>' +
+        '<div class="ord-sum-c" title="Serial numbers generated, not yet in a batch"><div class="ord-sum-v">' + ordNum(st.built) + '</div><div class="ord-sum-l">' + ntIco('checkcircle', 'nt-ico nt-ico-sm') + '<span>Built (in pool)</span></div></div>' +
+        '<div class="ord-sum-c" title="In a batch with a destination, but not shipped yet"><div class="ord-sum-v">' + ordNum(st.assigned) + '</div><div class="ord-sum-l">' + ntIco('box', 'nt-ico nt-ico-sm') + '<span>Assigned</span></div></div>' +
+        '<div class="ord-sum-c is-ok" title="In a batch that has been marked shipped"><div class="ord-sum-v">' + ordNum(st.shipped) + '</div><div class="ord-sum-l">' + ntIco('truck', 'nt-ico nt-ico-sm') + '<span>Shipped</span></div></div>' +
       '</div>' +
 
       '<div class="ord-flow">' +
@@ -6957,13 +7018,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         (has
           ? '<span class="ord-pdf-sum-f">' + esc(o.invoice_pdf_name) + '</span>'
           : '<span class="ord-optional">optional</span>') +
-        '<svg class="ord-pdf-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' +
+        '<svg viewBox="0 0 24 24" class="ord-pdf-chev"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
       '</summary>' +
       '<div class="ord-pdf-in">' +
       (has
         ? '<div class="ord-pdf-row">' +
             '<span class="ord-pdf-file">' +
-              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+              '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M6 14.5H14"/><path d="M6 18H11.5"/><path d="M10.0296 2C6.23851 2 4.34296 2 3.17139 3.17157C1.99981 4.34315 2 6.22876 2 10V14C2 17.7712 2 19.6569 3.17157 20.8284"/><path d="M3.17139 20.8281C4.34296 21.9997 6.22858 21.9997 9.99981 21.9997L14 22C17.7712 22 19.6569 21.9997 20.8284 20.8281C22 19.6566 22 17.7712 22 14V13.5625"/><path stroke-linejoin="round" d="M19.3516 7.61621C20.6558 8.78998 21.3078 9.3774 21.6538 10.1543C21.9998 10.9312 21.9998 11.8085 21.9998 13.5631"/><path stroke-linejoin="round" d="M10.0298 2C11.5548 2 12.3173 2.00011 13.0093 2.26562C13.7012 2.53114 14.2651 3.03857 15.3929 4.05365L19.3516 7.61621"/><path d="M13 2.5V5C13 7.35702 13 8.53553 13.7322 9.26777C14.4645 10 15.643 10 18 10H21.5"/></g></svg>' +
               esc(o.invoice_pdf_name) +
               (o.invoice_pdf_at ? '<span class="muted-sm"> \u00b7 added ' + esc(fmtDate(o.invoice_pdf_at)) + '</span>' : '') +
             '</span>' +
@@ -7889,7 +7950,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<div class="rma-issue">' + esc(rmaCatLabel(t.issue_category)) + (t.part_requested ? ' \u00b7 ' + esc(t.part_requested) : '') + '</div>' +
       rmaChip(t.status) +
       '<div class="rma-age' + (stale ? ' stale' : '') + '">' + (open ? rmaAgeDays(t) + 'd open' + (stale ? ' \u00b7 quiet' : '') : rmaDate(t.closed_at || t.updated_at)) + '</div>' +
-      '<div class="ord-arrow rma-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>' +
+      '<div class="ord-arrow rma-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></div>' +
     '</div>';
   }
   function rmaRenderList(){
@@ -7897,7 +7958,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     rmaRenderKpis();
     const rows = rmaFiltered();
     if (!rows.length){
-      body.innerHTML = '<div class="empty"><div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>' +
+      body.innerHTML = '<div class="empty"><div class="empty-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><rect width="12.051" height="20" x="2" y="18.051" rx="3" transform="rotate(-90 2 18.051)"/><path d="M16.52 6C16.52 6.00944 16.52 5.99056 16.52 6ZM16.52 6C16.52 4.11438 16.52 3.17157 15.9342 2.58579C15.3484 2 14.4056 2 12.52 2H11.4795C9.59387 2 8.65107 2 8.06528 2.58579C7.47949 3.17157 7.47949 4.11438 7.47949 6"/><path d="M2 12C2.81331 12 4.18669 12 5 12"/><path d="M18.7839 12C19.6644 12 21.1196 12 22 12"/><path d="M8.78388 12C11.2342 12 12.5494 12 14.9997 12"/><path d="M8.40549 11H5.37839C5.16941 11 5 11.1694 5 11.3784V13.0141C5 13.1689 5.0942 13.308 5.23786 13.3655L5.7677 13.5774C6.4894 13.8661 7.29449 13.8661 8.01618 13.5774L8.54602 13.3655C8.68968 13.308 8.78388 13.1689 8.78388 13.0141V11.3784C8.78388 11.1694 8.61447 11 8.40549 11Z"/><path d="M18.4055 11H15.3784C15.1694 11 15 11.1694 15 11.3784V13.0141C15 13.1689 15.0942 13.308 15.2379 13.3655L15.7677 13.5774C16.4894 13.8661 17.2945 13.8661 18.0162 13.5774L18.546 13.3655C18.6897 13.308 18.7839 13.1689 18.7839 13.0141V11.3784C18.7839 11.1694 18.6145 11 18.4055 11Z"/></g></svg></div>' +
         '<p>' + (rmaTickets.length ? 'No RMAs match.' : 'No RMAs yet.') + '</p>' +
         (rmaTickets.length ? '' : '<p class="muted-sm">Technicians open them from the customer portal, or start one here from a serial number.</p>') + '</div>';
       return;
@@ -7956,7 +8017,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const cats = Object.keys(byCat).sort(function(x, y){ return byCat[y] - byCat[x]; }).slice(0, 7);
     const max = cats.length ? byCat[cats[0]] : 1;
     el.innerHTML = cats.map(function(c){
-      return '<div class="rma-fail-row"><span>' + esc(rmaCatLabel(c)) + '</span><div class="rma-fail-bar"><i style="width:' + (byCat[c] / max * 100) + '%"></i></div><b>' + byCat[c] + '</b></div>';
+      return '<div class="rma-fail-row"><span class="nt-catline">' + ntIco(NT_RMA_ICO[c] || 'question') + '<em>' + esc(rmaCatLabel(c)) + '</em></span><div class="rma-fail-bar"><i style="width:' + (byCat[c] / max * 100) + '%"></i></div><b>' + byCat[c] + '</b></div>';
     }).join('') || '<p class="muted-sm" style="margin:0;">' + (rmaFailRange === 'all' ? 'Nothing yet.' : 'No RMAs in this period.') + '</p>';
   }
   document.addEventListener('click', function(e){
@@ -8124,7 +8185,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       (t.status === 'denied' && t.denial_reason ? '<p class="rma-next" style="background:var(--bad-bg);color:var(--bad-ink);">Denied: ' + esc(t.denial_reason) + '</p>' : '') +
       (t.status === 'closed' && t.resolution ? '<p class="rma-next" style="background:var(--ok-bg);color:var(--ok-ink);">Resolution: ' + esc(t.resolution) + '</p>' : '') +
       '<div class="rma-grid"><div>' +
-        '<section class="card"><h2 class="card-title">Issue</h2><dl class="rma-dl"><dt>Category</dt><dd>' + esc(rmaCatLabel(t.issue_category)) + '</dd>' +
+        '<section class="card"><h2 class="card-title">Issue</h2><dl class="rma-dl"><dt>Category</dt><dd><span class="nt-catline">' + ntIco(NT_RMA_ICO[t.issue_category] || 'question') + '<em>' + esc(rmaCatLabel(t.issue_category)) + '</em></span></dd>' +
           '<dt>Reported</dt><dd style="white-space:pre-wrap;">' + esc(t.issue) + '</dd>' +
           (t.part_requested ? '<dt>Part requested</dt><dd>' + esc(t.part_requested) + '</dd>' : '') + '</dl>' + rmaAttHtml(loose) + '</section>' +
         '<section class="card"><h2 class="card-title">Parts</h2>' + partsHtml + addPart + '</section>' +
@@ -8155,7 +8216,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return '<div class="rma-att">' + list.map(function(x){
       const img = /^image\//.test(x.content_type || '');
       return img ? '<img alt="" data-rmaatt="' + esc(x.id) + '" title="' + esc(x.filename) + '">'
-                 : '<a data-rmaatt="' + esc(x.id) + '"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span>' + esc(x.filename) + '</span></a>';
+                 : '<a data-rmaatt="' + esc(x.id) + '"><svg viewBox="0 0 24 24" width="13" height="13"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M6 14.5H14"/><path d="M6 18H11.5"/><path d="M10.0296 2C6.23851 2 4.34296 2 3.17139 3.17157C1.99981 4.34315 2 6.22876 2 10V14C2 17.7712 2 19.6569 3.17157 20.8284"/><path d="M3.17139 20.8281C4.34296 21.9997 6.22858 21.9997 9.99981 21.9997L14 22C17.7712 22 19.6569 21.9997 20.8284 20.8281C22 19.6566 22 17.7712 22 14V13.5625"/><path stroke-linejoin="round" d="M19.3516 7.61621C20.6558 8.78998 21.3078 9.3774 21.6538 10.1543C21.9998 10.9312 21.9998 11.8085 21.9998 13.5631"/><path stroke-linejoin="round" d="M10.0298 2C11.5548 2 12.3173 2.00011 13.0093 2.26562C13.7012 2.53114 14.2651 3.03857 15.3929 4.05365L19.3516 7.61621"/><path d="M13 2.5V5C13 7.35702 13 8.53553 13.7322 9.26777C14.4645 10 15.643 10 18 10H21.5"/></g></svg><span>' + esc(x.filename) + '</span></a>';
     }).join('') + '</div>';
   }
   async function rmaLoadThumbs(host){
@@ -9387,7 +9448,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ['invTrends',      'Stock trend']
     ];
     const KEY = 'nt-charts-open';
-    const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+    const CHEV = '<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>';
     let open = {};
     try { open = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e){ open = {}; }
 
