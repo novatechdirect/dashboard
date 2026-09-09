@@ -286,6 +286,9 @@
   /* ---------- RMAs ---------- */
   .rhead{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; margin-bottom:var(--s4); }
   .rhead h1{ margin:0; }
+  .rsub{ display:flex; flex-wrap:wrap; align-items:center; gap:2px var(--s3); line-height:1.5; margin:var(--s2) 0 0; }
+  .rsub > span{ display:inline-flex; align-items:center; gap:var(--s3); min-width:0; }
+  .rsub > span + span::before{ content:"\00b7"; color:var(--faint); }
   .rhead .btn, .rlook + * .btn, #rnLook, #rmaRetGo{ white-space:nowrap; }
   .rrow{
     display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto 110px; gap:var(--s4); align-items:center;
@@ -327,7 +330,7 @@
   .rnext.b{ background:var(--bad-bg); border-color:var(--bad-line); color:var(--bad-ink); }
   .rnext.k{ background:var(--ok-bg); border-color:var(--ok-line); color:var(--ok-ink); }
   .rgrid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:var(--s4); align-items:start; }
-  .rdl{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:var(--s2) var(--s4); font-size:13.5px; margin:0; }
+  .rdl{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:var(--s3) var(--s4); font-size:13.5px; line-height:1.55; margin:0; }
   .rdl dt{ color:var(--muted); } .rdl dd{ margin:0; min-width:0; overflow-wrap:anywhere; }
   .rthread{ display:flex; flex-direction:column; gap:var(--s3); }
   .rmsg{ border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s3) var(--s4); background:var(--paper); }
@@ -358,6 +361,10 @@
   @media (max-width:820px){
     .rgrid{ grid-template-columns:1fr; }
     .rhead .btn{ width:100%; }
+    .inv-h1{ font-size:20px; gap:var(--s2); }
+    .rsub{ flex-direction:column; align-items:flex-start; gap:4px; }
+    .rsub > span + span::before{ content:none; }
+    .back .btn{ flex:1 1 140px; min-height:40px; }
     .rrow{ grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s3); padding:var(--s3) var(--s4); }
     .rrow .rissue{ grid-column:1 / -1; white-space:normal; }
     .rrow .rdate{ grid-column:1 / -1; text-align:left; }
@@ -1391,7 +1398,7 @@
         (editable ? ' <button class="btn" id="rmaEdit" type="button">Edit request</button>' : '') +
         (t.status === 'new' ? ' <button class="btn" id="rmaCancel" type="button">Cancel request</button>' : '') + '</div>' +
       '<h1 class="inv-h1">' + rmaNo(t) + rmaChip(t.status) + (t.coverage ? '<span class="chip n">' + esc(RMA_COV[t.coverage] || t.coverage) + '</span>' : '') + '</h1>' +
-      '<p class="muted">' + serialLink + (cfg ? ' \u00b7 ' + esc(cfg.name) : '') + ' \u00b7 opened ' + esc(fmtDate(t.created_at)) + '</p>' +
+      '<p class="muted rsub"><span>' + serialLink + '</span>' + (cfg ? '<span>' + esc(cfg.name) + '</span>' : '') + '<span>opened ' + esc(fmtDate(t.created_at)) + '</span></p>' +
       (st.next ? '<p class="rnext' + (t.status === 'needs_info' ? ' w' : '') + '">' + esc(st.next) + (editable ? ' You can still edit the request until it is approved.' : '') + '</p>' : '') +
       (t.status === 'denied' ? '<p class="rnext b"><b>Not covered.</b> ' + esc(t.denial_reason || '') + '</p>' : '') +
       (t.status === 'closed' && t.resolution ? '<p class="rnext k"><b>Resolved.</b> ' + esc(t.resolution) + '</p>' : '') +
