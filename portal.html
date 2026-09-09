@@ -286,9 +286,12 @@
   /* ---------- RMAs ---------- */
   .rhead{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; margin-bottom:var(--s4); }
   .rhead h1{ margin:0; }
-  .rsub{ display:flex; flex-wrap:wrap; align-items:center; gap:2px var(--s3); line-height:1.5; margin:var(--s2) 0 0; }
-  .rsub > span{ display:inline-flex; align-items:center; gap:var(--s3); min-width:0; }
-  .rsub > span + span::before{ content:"\00b7"; color:var(--faint); }
+  .rhsub{ display:flex; flex-wrap:wrap; align-items:center; gap:4px var(--s4); line-height:1.6; margin:var(--s3) 0 var(--s4); }
+  .rhsub > span{ display:inline-flex; align-items:center; gap:var(--s3); min-width:0; }
+  .rhsub > span + span::before{ content:"\00b7"; color:var(--faint); }
+  /* the number leads; status chips sit at the far right of the row */
+  .inv-h1 > .chip{ margin-left:auto; }
+  .inv-h1 > .chip + .chip{ margin-left:0; }
   .rhead .btn, .rlook + * .btn, #rnLook, #rmaRetGo{ white-space:nowrap; }
   .rrow{
     display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto 110px; gap:var(--s4); align-items:center;
@@ -329,6 +332,8 @@
   .rnext.w{ background:var(--warn-bg); border-color:var(--warn-line); color:var(--warn-ink); }
   .rnext.b{ background:var(--bad-bg); border-color:var(--bad-line); color:var(--bad-ink); }
   .rnext.k{ background:var(--ok-bg); border-color:var(--ok-line); color:var(--ok-ink); }
+  /* the status notice needs air between it and the header block above */
+  #detailView > .rnext{ margin-top:var(--s4); }
   .rgrid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:var(--s4); align-items:start; }
   .rdl{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:var(--s3) var(--s4); font-size:13.5px; line-height:1.55; margin:0; }
   .rdl dt{ color:var(--muted); } .rdl dd{ margin:0; min-width:0; overflow-wrap:anywhere; }
@@ -362,14 +367,29 @@
     .rgrid{ grid-template-columns:1fr; }
     .rhead .btn{ width:100%; }
     .inv-h1{ font-size:20px; gap:var(--s2); }
-    .rsub{ flex-direction:column; align-items:flex-start; gap:4px; }
-    .rsub > span + span::before{ content:none; }
-    .back .btn{ flex:1 1 140px; min-height:40px; }
+    .rhsub{ flex-direction:column; align-items:flex-start; gap:6px; }
+    .rhsub > span + span::before{ content:none; }
+    /* one action row, every button the same width whatever the label */
+    .back{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s2); }
+    .back .btn{ width:100%; min-height:40px; }
     .rrow{ grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s3); padding:var(--s3) var(--s4); }
     .rrow .rissue{ grid-column:1 / -1; white-space:normal; }
+    /* status reads as a corner badge, sized to its label */
+    .rrow > .chip{ grid-column:2; grid-row:1; justify-self:end; align-self:start; width:auto; white-space:nowrap; }
     .rrow .rdate{ grid-column:1 / -1; text-align:left; }
     .rtiles{ grid-template-columns:repeat(2, minmax(0,1fr)); }
     .rtile b{ font-size:20px; }
+    /* list card: shorter search, one scrolling filter row, then breathing room
+       before the RMA cards themselves */
+    .rlist-card .toolbar{ margin-bottom:var(--s3); }
+    .rlist-card .searchbox{ height:38px; min-height:38px; }
+    .rlist-card .rchips{
+      flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      scrollbar-width:none; scroll-snap-type:x proximity;
+      padding-right:12px; margin-bottom:var(--s5);
+    }
+    .rlist-card .rchips::-webkit-scrollbar{ display:none; }
+    .rlist-card .rchips button{ flex:0 0 auto; white-space:nowrap; scroll-snap-align:start; }
   }
   @media (max-width:640px){
     .rcompose textarea, .rfield textarea{ font-size:16px; }
@@ -386,6 +406,7 @@
   }
   /* the action sits at the right edge of the header at every width */
   .bhead > div:last-child{ justify-self:end; }
+  .bacts{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
   /* between phone and desktop there is not room for four columns: the batch
      and its status take the first line, the rest pairs up below */
   @media (min-width:821px) and (max-width:980px){
@@ -398,6 +419,8 @@
   .bship a{ font-family:var(--font-num); font-size:12px; font-weight:600; }
   .trk-dd{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .bdot{ color:var(--faint); }
+  /* the logo identifies the number, so the two never wrap apart */
+  .trk-grp{ display:inline-flex; align-items:center; gap:8px; min-width:0; }
   .carrier{
     display:inline-flex; align-items:center; flex:0 0 auto;
     height:17px; padding:0 8px; border-radius:var(--r-pill);
@@ -505,11 +528,16 @@
   /* staff-only preview strip. It is a mode indicator, not customer identity,
      so it gets its own band under the header rather than crowding the brand. */
   #staffPick{
-    display:flex; align-items:center; gap:var(--s3);
-    padding:8px max(var(--s5), calc((100% - 1280px) / 2));
+    display:flex; align-items:center; gap:var(--s2);
+    padding:5px max(var(--s5), calc((100% - 1280px) / 2));
     background:var(--warn-bg); border-bottom:1px solid var(--warn-line);
   }
   #staffPick .staffbadge{ flex:0 0 auto; }
+  /* a mode indicator, not a form: it stays out of the way */
+  #staffPick .pickbox{
+    height:28px; min-height:28px; font-size:12px; font-weight:500;
+    padding:0 var(--s3); width:auto; max-width:260px;
+  }
 
   /* drop the email before anything is forced to wrap */
   @media (max-width:1100px){ .who-em{ display:none; } .who #themeBtn{ margin-left:0; } .who #themeBtn::before{ display:none; } }
@@ -547,8 +575,8 @@
     .pmenu{ order:3; flex:1 1 100%; margin:var(--s2) 0 0; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
     .pmenu a{ flex:1; justify-content:center; padding:7px 12px; }
     .pmenu a.on{ background:var(--paper); color:var(--ink); box-shadow:var(--e1); }
-    #staffPick{ padding:8px var(--s4); gap:var(--s2); }
-    #staffPick .pickbox{ flex:1 1 auto; width:auto; max-width:none; }
+    #staffPick{ padding:5px var(--s4); gap:var(--s2); }
+    #staffPick .pickbox{ flex:1 1 auto; width:auto; max-width:none; height:28px; min-height:28px; font-size:12px; }
     .orow{ grid-template-columns:minmax(0,1fr) auto; gap:var(--s2) var(--s3); }
     .orow > .ostat{ align-self:start; justify-content:flex-end; }
     .orow > div:nth-child(3){ grid-column:1 / -1; }
@@ -558,7 +586,11 @@
     .sumc:last-child{ grid-column:1 / -1; }
     .sumv{ font-size:22px; }
     .bhead{ grid-template-columns:1fr; }
-    .back .btn{ flex:1 1 auto; min-height:32px; }
+    /* the two batch actions share the full width of the card footer */
+    .bhead > div:last-child{ justify-self:stretch; }
+    .bacts{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .bacts .btn{ width:100%; }
+    .back .btn{ min-height:36px; }
     .btn{ min-height:36px; }
     .btn.sm{ min-height:30px; }
     .icon-btn{ width:32px; height:32px; min-height:32px; }
@@ -1115,8 +1147,8 @@
     $('detailView').style.display = '';
     $('detailView').innerHTML =
       '<div class="back"><button class="btn" id="back" type="button">&larr; All orders</button>' +
-      ' <button class="btn" id="csv" type="button">Download CSV</button>' +
-      ' <button class="btn" id="prt" type="button">Print</button>' +
+      '<button class="btn" id="csv" type="button">Download CSV</button>' +
+      '<button class="btn" id="prt" type="button">Print</button>' +
       ' <button class="btn" id="share" type="button">Copy link</button>' +
       (o.invoice_pdf_name ? ' <button class="btn primary" id="pdf" type="button">Invoice PDF</button>' : '') +
       '</div>' +
@@ -1145,14 +1177,14 @@
               (locNum(b) ? '<span class="storenum">Store ' + esc(locNum(b)) + '</span>' : '') +
               '<div class="sub">' + esc(locLine(b) || '') + '</div></div>' +
             '<div class="mono">' + num(bu.length) + ' units<div class="sub bship">' +
-              carrierBadge(b.carrier) +
               (wide.length
-                ? trackHtml(b.carrier, [wide[0]]) +
+                ? '<span class="trk-grp">' + carrierBadge(b.carrier) +
+                  trackHtml(b.carrier, [wide[0]]) +
                   (wide.length > 1 ? '<span class="muted">+' + num(wide.length - 1) + '</span>' : '') +
-                  '<span class="bdot">&middot;</span>'
-                : '') +
+                  '</span><span class="bdot">&middot;</span>'
+                : carrierBadge(b.carrier)) +
               '<span>' + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</span></div></div>' +
-            '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;"><button class="btn" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy serials</button>' +
+            '<div class="bacts"><button class="btn" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy serials</button>' +
               '<button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
           '</div>' +
           '<div class="bbody" id="bb_' + esc(b.id) + '" style="display:none;">' +
@@ -1395,10 +1427,10 @@
     $('detailView').style.display = '';
     $('detailView').innerHTML =
       '<div class="back"><button class="btn" id="rmaBack" type="button">&larr; All RMAs</button>' +
-        (editable ? ' <button class="btn" id="rmaEdit" type="button">Edit request</button>' : '') +
-        (t.status === 'new' ? ' <button class="btn" id="rmaCancel" type="button">Cancel request</button>' : '') + '</div>' +
-      '<h1 class="inv-h1">' + rmaNo(t) + rmaChip(t.status) + (t.coverage ? '<span class="chip n">' + esc(RMA_COV[t.coverage] || t.coverage) + '</span>' : '') + '</h1>' +
-      '<p class="muted rsub"><span>' + serialLink + '</span>' + (cfg ? '<span>' + esc(cfg.name) + '</span>' : '') + '<span>opened ' + esc(fmtDate(t.created_at)) + '</span></p>' +
+        (editable ? '<button class="btn" id="rmaEdit" type="button">Edit request</button>' : '') +
+        (t.status === 'new' ? '<button class="btn" id="rmaCancel" type="button">Cancel request</button>' : '') + '</div>' +
+      '<h1 class="inv-h1 rma-h1">' + rmaNo(t) + rmaChip(t.status) + (t.coverage ? '<span class="chip n">' + esc(RMA_COV[t.coverage] || t.coverage) + '</span>' : '') + '</h1>' +
+      '<p class="muted rhsub"><span>' + serialLink + '</span>' + (cfg ? '<span>' + esc(cfg.name) + '</span>' : '') + '<span>opened ' + esc(fmtDate(t.created_at)) + '</span></p>' +
       (st.next ? '<p class="rnext' + (t.status === 'needs_info' ? ' w' : '') + '">' + esc(st.next) + (editable ? ' You can still edit the request until it is approved.' : '') + '</p>' : '') +
       (t.status === 'denied' ? '<p class="rnext b"><b>Not covered.</b> ' + esc(t.denial_reason || '') + '</p>' : '') +
       (t.status === 'closed' && t.resolution ? '<p class="rnext k"><b>Resolved.</b> ' + esc(t.resolution) + '</p>' : '') +
