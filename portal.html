@@ -800,7 +800,12 @@
             '<p class="muted">Add one in the dashboard\u2019s Admin page first.</p></div>';
           return;
         }
-        if (!viewAs) viewAs = allCustomers[0].id;
+        if (!viewAs){
+          /* the dashboard links here with ?as=<customer> so the ticket or order it points at is in view */
+          const asP = new URLSearchParams(location.search || '').get('as');
+          const hit = asP ? allCustomers.find(function(c){ return String(c.id) === asP; }) : null;
+          viewAs = hit ? hit.id : allCustomers[0].id;
+        }
         me = { customer_id: viewAs };
         $('app').style.display = ''; $('topbar').style.display = '';
         await load();
