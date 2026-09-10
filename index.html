@@ -484,6 +484,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     --hue-inventory:#2a9d99;
     --hue-timeclock:#ff64c8;
     --hue-margins:#dd5b00;
+    --hue-billing:#1f7a5a;
     --hue-admin:#523410;
     --hue-rma:#0075de;
   }
@@ -523,6 +524,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     --scrim:rgba(4,6,9,.66);
     --hue-orders:#d6b6f6; --hue-inventory:#2a9d99; --hue-timeclock:#ff64c8;
     --hue-margins:#dd5b00; --hue-admin:#f5d75e; --hue-rma:#dcecfa;
+    --hue-billing:#5fd2a8;
     --ring:0 0 0 2px var(--accent-hover);
   }
   @media (prefers-color-scheme:dark){
@@ -560,6 +562,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       --scrim:rgba(4,6,9,.66);
       --hue-orders:#d6b6f6; --hue-inventory:#2a9d99; --hue-timeclock:#ff64c8;
       --hue-margins:#dd5b00; --hue-admin:#f5d75e; --hue-rma:#dcecfa;
+      --hue-billing:#5fd2a8;
       --ring:0 0 0 2px var(--accent-hover);
     }
   }
@@ -882,6 +885,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   #navInventory{ --nav-hue:var(--hue-inventory); }
   #navTimeclock{ --nav-hue:var(--hue-timeclock); }
   #navMargins{ --nav-hue:var(--hue-margins); }
+  #navBilling{ --nav-hue:var(--hue-billing); }
   #navAdmin{ --nav-hue:var(--hue-admin); }
   @supports not (color: color-mix(in srgb, red, blue)){
     .nav-item.active{ background:var(--accent-soft); color:var(--accent-fg); }
@@ -1071,6 +1075,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .tile[data-goto="rma"]{ --tile-hue:var(--hue-rma); }
   .tile[data-goto="timeclock"]{ --tile-hue:var(--hue-timeclock); }
   .tile[data-goto="margins"]{ --tile-hue:var(--hue-margins); }
+  .tile[data-goto="billing"]{ --tile-hue:var(--hue-billing); }
   .tile[data-goto="admin"]{ --tile-hue:var(--hue-admin); }
   .tile-icon svg{ width:20px; height:20px; stroke-width:2; }
   .tile-body{ display:flex; flex-direction:column; min-width:0; }
@@ -1727,6 +1732,25 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .bill-pay-row:last-child{ border-bottom:0; }
   .bill-pay-a{ font-family:var(--font-num); font-weight:600; font-variant-numeric:tabular-nums; min-width:96px; }
   .bill-pay-m{ color:var(--muted); flex:1; min-width:0; }
+  /* invoiced vs collected, month by month */
+  .bill-bars{ display:flex; align-items:flex-end; gap:var(--s3); height:170px; margin-top:var(--s4); }
+  .bill-bar{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:flex-end; height:100%; }
+  .bill-bar-t{
+    position:relative; width:100%; background:var(--soft); border:1px solid var(--line);
+    border-radius:var(--r-sm); overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end;
+  }
+  .bill-bar-t i{ display:block; width:100%; background:var(--ok); }
+  .bill-bar-t.empty{ background:transparent; border-style:dashed; }
+  .bill-bar-x{ font-size:10.5px; color:var(--faint); text-align:center; margin-top:var(--s2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bill-legend{ display:flex; gap:var(--s4); margin-top:var(--s4); font-size:12px; color:var(--muted); flex-wrap:wrap; }
+  .bill-legend span{ display:flex; align-items:center; gap:6px; }
+  .bill-legend i{ width:9px; height:9px; border-radius:2px; display:block; }
+  .bill-cust{ display:grid; gap:var(--s3); }
+  .bill-cust-r{ min-width:0; }
+  .bill-cust-h{ display:flex; justify-content:space-between; gap:var(--s3); font-size:13px; }
+  .bill-cust-h b{ font-family:var(--font-num); font-variant-numeric:tabular-nums; }
+  .bill-cust-t{ height:6px; margin-top:5px; background:var(--soft); border-radius:var(--r-pill); overflow:hidden; }
+  .bill-cust-t i{ display:block; height:100%; background:var(--warn); }
   @media (max-width:700px){
     .bill-kpis, .bill-det{ grid-template-columns:1fr 1fr; }
     .bill-kv{ font-size:22px; }
@@ -2052,6 +2076,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .ord-pdf-chev{ width:14px; height:14px; flex:0 0 auto; margin-left:auto; transition:transform .2s ease; }
+  /* a status badge sits in the summary where a figure used to; let the chip own its look */
+  .ord-pdf-sum-f:has(.ord-chip){ font-family:inherit; }
+  .ord-pdf-sum-f .ord-chip{ vertical-align:middle; }
   .card.ord-pdf[open] .ord-pdf-chev{ transform:rotate(180deg); }
   .ord-pdf-in{ padding:0 var(--s4) var(--s4); }
   .ord-pdf-in > .muted-sm:first-child{ margin-top:0; }
@@ -2708,7 +2735,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* phones: Margins and Admin live behind More, so the bar stays at five */
   @media (max-width:700px){
-    #tabbar #tabMargins, #tabbar #tabAdmin{ display:none !important; }
+    #tabbar #tabMargins, #tabbar #tabAdmin, #tabbar #tabBilling{ display:none !important; }
   }
   .tab-more-scrim{ position:fixed; inset:0; z-index:59; background:var(--scrim); display:none; }
   .tab-more-scrim.on{ display:block; }
@@ -2769,6 +2796,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <a class="nav-item" href="#" id="navInventory">Inventory</a>
       <a class="nav-item" href="#" id="navTimeclock">Timeclock</a>
       <a class="nav-item" href="#" id="navMargins" style="display:none;">Margins</a>
+      <a class="nav-item" href="#" id="navBilling" style="display:none;">Billing</a>
       <a class="nav-item" href="#" id="navAdmin" style="display:none;">Admin</a>
     </div>
     <div class="nav-right">
@@ -2803,6 +2831,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg>
     <span>Timeclock</span>
   </button>
+  <button type="button" class="tab-btn" data-goto="billing" id="tabBilling" style="display:none;">
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M3 22H21"/><path d="M2 12C2 10.5858 2 9.87868 2.43934 9.43934C2.87868 9 3.58579 9 5 9C6.41421 9 7.12132 9 7.56066 9.43934C8 9.87868 8 10.5858 8 12V18C8 19.4142 8 20.1213 7.56066 20.5607C7.12132 21 6.41421 21 5 21C3.58579 21 2.87868 21 2.43934 20.5607C2 20.1213 2 19.4142 2 18V12Z"/><path d="M9 5C9 3.58579 9 2.87868 9.43934 2.43934C9.87868 2 10.5858 2 12 2C13.4142 2 14.1213 2 14.5607 2.43934C15 2.87868 15 3.58579 15 5V18C15 19.4142 15 20.1213 14.5607 20.5607C14.1213 21 13.4142 21 12 21C10.5858 21 9.87868 21 9.43934 20.5607C9 20.1213 9 19.4142 9 18V5Z"/><path d="M16 9C16 7.58579 16 6.87868 16.4393 6.43934C16.8787 6 17.5858 6 19 6C20.4142 6 21.1213 6 21.5607 6.43934C22 6.87868 22 7.58579 22 9V18C22 19.4142 22 20.1213 21.5607 20.5607C21.1213 21 20.4142 21 19 21C17.5858 21 16.8787 21 16.4393 20.5607C16 20.1213 16 19.4142 16 18V9Z"/></g></svg>
+    <span>Billing</span>
+  </button>
   <button type="button" class="tab-btn" data-goto="margins" id="tabMargins" style="display:none;">
     <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg>
     <span>Margins</span>
@@ -2818,6 +2850,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 </nav>
 <div class="tab-more-scrim" id="tabMoreScrim"></div>
 <div class="tab-more-sheet" id="tabMoreSheet">
+  <button type="button" id="tabMoreBilling" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M3 22H21"/><path d="M2 12C2 10.5858 2 9.87868 2.43934 9.43934C2.87868 9 3.58579 9 5 9C6.41421 9 7.12132 9 7.56066 9.43934C8 9.87868 8 10.5858 8 12V18C8 19.4142 8 20.1213 7.56066 20.5607C7.12132 21 6.41421 21 5 21C3.58579 21 2.87868 21 2.43934 20.5607C2 20.1213 2 19.4142 2 18V12Z"/><path d="M9 5C9 3.58579 9 2.87868 9.43934 2.43934C9.87868 2 10.5858 2 12 2C13.4142 2 14.1213 2 14.5607 2.43934C15 2.87868 15 3.58579 15 5V18C15 19.4142 15 20.1213 14.5607 20.5607C14.1213 21 13.4142 21 12 21C10.5858 21 9.87868 21 9.43934 20.5607C9 20.1213 9 19.4142 9 18V5Z"/><path d="M16 9C16 7.58579 16 6.87868 16.4393 6.43934C16.8787 6 17.5858 6 19 6C20.4142 6 21.1213 6 21.5607 6.43934C22 6.87868 22 7.58579 22 9V18C22 19.4142 22 20.1213 21.5607 20.5607C21.1213 21 20.4142 21 19 21C17.5858 21 16.8787 21 16.4393 20.5607C16 20.1213 16 19.4142 16 18V9Z"/></g></svg>Billing</button>
   <button type="button" id="tabMoreMargins"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg>Cost &amp; Margins</button>
   <button type="button" id="tabMoreAdmin"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg>Admin</button>
 </div>
@@ -2953,6 +2986,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         </span>
         <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
+      <a class="tile" href="#" data-goto="billing" id="tileBilling" style="display:none;">
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M3 22H21"/><path d="M2 12C2 10.5858 2 9.87868 2.43934 9.43934C2.87868 9 3.58579 9 5 9C6.41421 9 7.12132 9 7.56066 9.43934C8 9.87868 8 10.5858 8 12V18C8 19.4142 8 20.1213 7.56066 20.5607C7.12132 21 6.41421 21 5 21C3.58579 21 2.87868 21 2.43934 20.5607C2 20.1213 2 19.4142 2 18V12Z"/><path d="M9 5C9 3.58579 9 2.87868 9.43934 2.43934C9.87868 2 10.5858 2 12 2C13.4142 2 14.1213 2 14.5607 2.43934C15 2.87868 15 3.58579 15 5V18C15 19.4142 15 20.1213 14.5607 20.5607C14.1213 21 13.4142 21 12 21C10.5858 21 9.87868 21 9.43934 20.5607C9 20.1213 9 19.4142 9 18V5Z"/><path d="M16 9C16 7.58579 16 6.87868 16.4393 6.43934C16.8787 6 17.5858 6 19 6C20.4142 6 21.1213 6 21.5607 6.43934C22 6.87868 22 7.58579 22 9V18C22 19.4142 22 20.1213 21.5607 20.5607C21.1213 21 20.4142 21 19 21C17.5858 21 16.8787 21 16.4393 20.5607C16 20.1213 16 19.4142 16 18V9Z"/></g></svg></span>
+        <span class="tile-body">
+          <span class="tile-title">Billing</span>
+          <span class="tile-desc">Invoice totals, payments and what is outstanding</span>
+          <span class="tile-status" id="tileBillStatus"><span class="ts-lbl">Track the money</span></span>
+        </span>
+        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
+      </a>
       <a class="tile" href="#" data-goto="admin" id="tileAdmin" style="display:none;">
         <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg></span>
         <span class="tile-body">
@@ -2992,27 +3034,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <span class="chart-sub" id="rwSub"></span>
         </div>
         <div id="rwBody" style="margin-top:var(--s4);"></div>
-      </section>
-
-      <section class="card" id="ordBilling" style="display:none;">
-        <div class="chart-head">
-          <div class="chart-kpi">
-            <h2 class="card-title" style="margin:0;">Billing <span class="card-sub">admin only</span></h2>
-            <p class="muted-sm" style="margin:var(--s2) 0 0;" id="obSub"></p>
-          </div>
-          <div class="chart-tabs" id="obTabs">
-            <button type="button" class="chart-tab" data-obr="month">Month</button>
-            <button type="button" class="chart-tab" data-obr="quarter">Quarter</button>
-            <button type="button" class="chart-tab" data-obr="year">Year</button>
-            <button type="button" class="chart-tab on" data-obr="all">All time</button>
-          </div>
-        </div>
-        <div id="obBody"></div>
-      </section>
-
-      <section class="card" id="obTableCard" style="display:none;">
-        <h2 class="card-title">By invoice <span class="card-sub">what each one is worth, and what has landed</span></h2>
-        <div id="obTable"></div>
       </section>
 
       <section class="card ord-list-card">
@@ -3293,6 +3314,57 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div id="mgCustomBody"></div>
   </div><!-- /toolMargins -->
 
+  <div id="toolBilling" style="display:none;">
+    <header class="app-header">
+      <div class="brand">
+        <div>
+          <h1>Billing</h1>
+          <p class="tagline">What has been invoiced, what has landed, what is still out</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="card" id="obKpiCard">
+      <div class="chart-head">
+        <div class="chart-kpi">
+          <h2 class="card-title" style="margin:0;">Money</h2>
+          <p class="muted-sm" style="margin:var(--s2) 0 0;" id="obSub"></p>
+        </div>
+        <div class="chart-tabs" id="obTabs">
+          <button type="button" class="chart-tab" data-obr="month">Month</button>
+          <button type="button" class="chart-tab" data-obr="quarter">Quarter</button>
+          <button type="button" class="chart-tab" data-obr="year">Year</button>
+          <button type="button" class="chart-tab on" data-obr="all">All time</button>
+        </div>
+      </div>
+      <div id="obBody"></div>
+    </section>
+
+    <div class="chart-grid">
+      <section class="card chart-card" id="obChartCard">
+        <div class="chart-head">
+          <div class="chart-kpi">
+            <h2 class="card-title">Invoiced and collected</h2>
+            <div class="chart-sub" id="obChartSub"></div>
+          </div>
+        </div>
+        <div id="obChart"></div>
+      </section>
+      <section class="card chart-card" id="obCustCard">
+        <div class="chart-kpi">
+          <h2 class="card-title">Outstanding by customer</h2>
+          <div class="chart-sub">who owes what, largest first</div>
+        </div>
+        <div id="obCust" style="margin-top:var(--s4);"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2 class="card-title">By invoice <span class="card-sub">what each one is worth, and what has landed</span></h2>
+      <div id="obTable"></div>
+    </section>
+  </div><!-- /toolBilling -->
+
   </div>
 </div>
 
@@ -3529,6 +3601,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var _nm = document.getElementById('navMargins'); if (_nm) _nm.style.display = 'none';
       var _tm = document.getElementById('tileMargins'); if (_tm) _tm.style.display = 'none';
       var _bm = document.getElementById('tabMargins'); if (_bm) _bm.style.display = 'none';
+      var _nb = document.getElementById('navBilling'); if (_nb) _nb.style.display = 'none';
+      var _tb2 = document.getElementById('tileBilling'); if (_tb2) _tb2.style.display = 'none';
+      var _bb = document.getElementById('tabBilling'); if (_bb) _bb.style.display = 'none';
+      obRows = []; obPays = {}; obLoaded = false;
       mgIsAdmin = false; mgInited = false;
       var _na = document.getElementById('navAdmin'); if (_na) _na.style.display = 'none';
       var _ta = document.getElementById('tileAdmin'); if (_ta) _ta.style.display = 'none';
@@ -3590,6 +3666,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   const toolTimeclock = document.getElementById('toolTimeclock');
   const navMargins = document.getElementById('navMargins');
   const toolMargins = document.getElementById('toolMargins');
+  const navBilling = document.getElementById('navBilling');
+  const toolBilling = document.getElementById('toolBilling');
   const navHome = document.getElementById('navHome');
   const toolHome = document.getElementById('toolHome');
   const navOrders = document.getElementById('navOrders');
@@ -3604,7 +3682,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let ordAllUnits = [], ordAllBatches = [];   // list-level: every order, for serial search, RMAs and warranty
   let ordPerm = { view:false, manage:false, admin:false, catalog:false };
   function showTool(which){
-    const views = { home: [navHome, toolHome], orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], admin: [navAdmin, toolAdmin], rma: [navRma, toolRma] };
+    const views = { home: [navHome, toolHome], orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], billing: [navBilling, toolBilling], admin: [navAdmin, toolAdmin], rma: [navRma, toolRma] };
     if (!views[which]) which = 'home';
     if (which === 'orders') ordClearLinkParams('order');
     else if (which === 'rma') ordClearLinkParams('rma');
@@ -3616,6 +3694,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (which === 'inventory' && !invLoaded && SB && session){ invLoaded = true; loadInventory(); }
     if (which === 'timeclock' && SB && session){ tcOpen(); }
     if (which === 'margins' && SB && session){ mgOpen(); }
+    if (which === 'billing' && SB && session){ obOpen(); }
     if (which === 'orders' && SB && session){ ordOpen(); }
     if (which === 'admin' && SB && session){ admOpen(); }
     if (which === 'rma' && SB && session){ rmaOpen(); }
@@ -3623,7 +3702,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       b.classList.toggle('active', b.getAttribute('data-goto') === which);
     });
     var moreBtn = document.getElementById('tabMore');
-    if (moreBtn) moreBtn.classList.toggle('active', which === 'margins' || which === 'admin');
+    if (moreBtn) moreBtn.classList.toggle('active', which === 'margins' || which === 'admin' || which === 'billing');
     tabMoreClose();
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
   }
@@ -3640,16 +3719,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (s) s.classList.remove('on'); if (sc) sc.classList.remove('on');
   }
   (function(){
-    var tm = document.getElementById('tabMargins'), ta = document.getElementById('tabAdmin'), more = document.getElementById('tabMore');
+    var tm = document.getElementById('tabMargins'), ta = document.getElementById('tabAdmin'),
+        tbl = document.getElementById('tabBilling'), more = document.getElementById('tabMore');
     if (!tm || !ta || !more) return;
     function sync(){
-      var m = tm.style.display !== 'none', ad = ta.style.display !== 'none';
-      more.style.display = (m || ad) ? '' : 'none';
+      var m = tm.style.display !== 'none', ad = ta.style.display !== 'none',
+          bl = tbl && tbl.style.display !== 'none';
+      more.style.display = (m || ad || bl) ? '' : 'none';
       document.getElementById('tabMoreMargins').style.display = m ? '' : 'none';
       document.getElementById('tabMoreAdmin').style.display = ad ? '' : 'none';
+      var mb = document.getElementById('tabMoreBilling');
+      if (mb) mb.style.display = bl ? '' : 'none';
     }
     new MutationObserver(sync).observe(tm, { attributes:true, attributeFilter:['style'] });
     new MutationObserver(sync).observe(ta, { attributes:true, attributeFilter:['style'] });
+    if (tbl) new MutationObserver(sync).observe(tbl, { attributes:true, attributeFilter:['style'] });
     sync();
     more.addEventListener('click', function(){
       document.getElementById('tabMoreSheet').classList.toggle('on');
@@ -3658,6 +3742,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.getElementById('tabMoreScrim').addEventListener('click', tabMoreClose);
     document.getElementById('tabMoreMargins').addEventListener('click', function(){ showTool('margins'); });
     document.getElementById('tabMoreAdmin').addEventListener('click', function(){ showTool('admin'); });
+    var mbb = document.getElementById('tabMoreBilling');
+    if (mbb) mbb.addEventListener('click', function(){ showTool('billing'); });
   })();
 
   document.getElementById('tabbar').addEventListener('click', function(e){
@@ -3710,6 +3796,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   navInventory.addEventListener('click', function(e){ e.preventDefault(); showTool('inventory'); });
   navTimeclock.addEventListener('click', function(e){ e.preventDefault(); showTool('timeclock'); });
   navMargins.addEventListener('click', function(e){ e.preventDefault(); showTool('margins'); });
+  navBilling.addEventListener('click', function(e){ e.preventDefault(); showTool('billing'); });
 
   /* ================= INVENTORY ================= */
   /* Solar category marks. Source set: assets/solar-icons.json */
@@ -5612,6 +5699,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ordPerm.view    = !!(r.can_view_orders)   || ordPerm.manage;
     const na = document.getElementById('navAdmin');
     const ta = document.getElementById('tileAdmin');
+    const nBill = document.getElementById('navBilling');
+    const tBill = document.getElementById('tileBilling');
+    const bBill = document.getElementById('tabBilling');
+    if (nBill) nBill.style.display = ordPerm.admin ? '' : 'none';
+    if (tBill) tBill.style.display = ordPerm.admin ? '' : 'none';
+    if (bBill) bBill.style.display = ordPerm.admin ? '' : 'none';
     const canAdminPage = ordPerm.admin || ordPerm.catalog;
     if (na) na.style.display = canAdminPage ? '' : 'none';
     if (ta) ta.style.display = canAdminPage ? '' : 'none';
@@ -5766,21 +5859,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     obLoaded = true;
   }
 
+  async function obOpen(){
+    if (!ordPerm.admin){
+      if (!ordInited){ ordInited = true; await ordLoadPerms(); }
+      if (!ordPerm.admin) return;
+    }
+    if (!ordInited){ ordInited = true; await ordLoadPerms(); await ordLoadAll(); }
+    else if (!obLoaded) await obLoad();
+    obRender();
+  }
+
   function obRender(){
-    const card = document.getElementById('ordBilling'), tcard = document.getElementById('obTableCard');
-    if (!card) return;
-    if (!ordPerm.admin){ card.style.display = 'none'; if (tcard) tcard.style.display = 'none'; return; }
-    card.style.display = ''; if (tcard) tcard.style.display = '';
+    const body = document.getElementById('obBody'), sub = document.getElementById('obSub');
+    if (!body || !ordPerm.admin) return;
     document.querySelectorAll('#obTabs .chart-tab').forEach(function(b){
       b.classList.toggle('on', b.getAttribute('data-obr') === obRange);
     });
 
-    const body = document.getElementById('obBody'), sub = document.getElementById('obSub');
     if (!obLoaded){
       body.innerHTML = '<div class="empty" style="padding:var(--s5) 0;"><p>Billing is not switched on yet.</p>' +
         '<p class="muted-sm">Run <b>order-billing.sql</b> in Supabase, then reload.</p></div>';
       if (sub) sub.textContent = '';
       document.getElementById('obTable').innerHTML = '';
+      document.getElementById('obChart').innerHTML = '';
+      document.getElementById('obCust').innerHTML = '';
       return;
     }
 
@@ -5823,6 +5925,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         : '');
 
     /* the breakdown */
+    obRenderChart(rows);
+    obRenderCust(rows);
     const t = document.getElementById('obTable');
     if (!rows.length){
       t.innerHTML = '<div class="empty" style="padding:var(--s5) 0;"><p>Nothing in this period.</p></div>';
@@ -5870,6 +5974,88 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (row){ ordOpenOrder(row.getAttribute('data-obopen')); }
   });
 
+  /* Bars, not a line. With a handful of invoices a month a line chart invents
+     a trend that is not there; a column per period with the collected part
+     filled in states two facts and implies nothing. */
+  function obRenderChart(rows){
+    const host = document.getElementById('obChart'), sub = document.getElementById('obChartSub');
+    if (!host) return;
+    const byWeek = obRange === 'month';
+    const buckets = [];
+    const now = new Date(); now.setHours(0,0,0,0);
+
+    if (byWeek){
+      const start = new Date(now); start.setDate(start.getDate() - ((start.getDay()+6)%7) - 28);
+      for (let i = 0; i < 5; i++){
+        const a = new Date(start); a.setDate(a.getDate() + i*7);
+        const b = new Date(a); b.setDate(b.getDate() + 7);
+        buckets.push({ a:a, b:b, label:CH.fmtShort(a), inv:0, paid:0 });
+      }
+    } else {
+      const months = obRange === 'quarter' ? 3 : 12;
+      for (let i = months - 1; i >= 0; i--){
+        const a = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const b = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        buckets.push({ a:a, b:b, label:a.toLocaleDateString(undefined, { month:'short' }) +
+          (a.getMonth() === 0 || i === months - 1 ? ' \u2019' + String(a.getFullYear()).slice(2) : ''), inv:0, paid:0 });
+      }
+    }
+
+    rows.forEach(function(r){
+      if (r.invoice_total == null || !r.invoice_date) return;
+      const d = new Date(r.invoice_date + 'T12:00:00');
+      const b = buckets.find(function(x){ return d >= x.a && d < x.b; });
+      if (b){ b.inv += +r.invoice_total; b.paid += +r.paid || 0; }
+    });
+
+    const max = Math.max.apply(null, buckets.map(function(b){ return b.inv; }).concat([1]));
+    const anything = buckets.some(function(b){ return b.inv > 0; });
+    if (sub) sub.textContent = anything
+      ? (byWeek ? 'by week' : 'by month') + ', on invoice date'
+      : 'nothing invoiced in this window';
+
+    if (!anything){ host.innerHTML = '<div class="chart-empty">Nothing invoiced yet</div>'; return; }
+
+    host.innerHTML = '<div class="bill-bars">' + buckets.map(function(b){
+      const h = b.inv > 0 ? Math.max(4, b.inv / max * 100) : 4;
+      const fill = b.inv > 0 ? Math.min(100, b.paid / b.inv * 100) : 0;
+      return '<div class="bill-bar">' +
+        '<div class="bill-bar-t' + (b.inv > 0 ? '' : ' empty') + '" style="height:' + h + '%"' +
+          ' title="' + esc(b.label) + ' \u2014 invoiced ' + obMoney(b.inv) + ', collected ' + obMoney(b.paid) + '">' +
+          (fill > 0 ? '<i style="height:' + fill + '%"></i>' : '') +
+        '</div>' +
+        '<div class="bill-bar-x">' + esc(b.label) + '</div>' +
+      '</div>';
+    }).join('') + '</div>' +
+    '<div class="bill-legend">' +
+      '<span><i style="background:var(--soft);box-shadow:inset 0 0 0 1px var(--line-strong);"></i>Invoiced</span>' +
+      '<span><i style="background:var(--ok);"></i>Collected</span>' +
+    '</div>';
+  }
+
+  function obRenderCust(rows){
+    const host = document.getElementById('obCust');
+    if (!host) return;
+    const by = {};
+    rows.forEach(function(r){
+      if (r.invoice_total == null) return;
+      const bal = +r.invoice_total - (+r.paid || 0);
+      if (bal <= 0.005) return;
+      const k = r.customer_name || 'Unknown customer';
+      by[k] = (by[k] || 0) + bal;
+    });
+    const list = Object.keys(by).map(function(k){ return { name:k, amt:by[k] }; })
+      .sort(function(a, b){ return b.amt - a.amt; });
+    if (!list.length){ host.innerHTML = '<div class="chart-empty">Nothing outstanding</div>'; return; }
+    const max = list[0].amt;
+    host.innerHTML = '<div class="bill-cust">' + list.map(function(c){
+      return '<div class="bill-cust-r">' +
+        '<div class="bill-cust-h"><span>' + esc(c.name) + '</span><b>' + obMoney0(c.amt) + '</b></div>' +
+        '<div class="bill-cust-t"><i style="width:' + (c.amt / max * 100) + '%"></i></div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
   /* ---- billing on one invoice ---- */
   function obFor(orderId){ return obRows.find(function(r){ return String(r.order_id) === String(orderId); }); }
   /* held AND still short. Once payments cover the total the hold is spent, so a
@@ -5894,7 +6080,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return '<details class="card ord-pdf">' +
       '<summary>' +
         '<span>Billing</span>' +
-        '<span class="ord-pdf-sum-f">' + (tot == null ? 'no total set' : obMoney(tot) + (bal > 0.005 ? ' \u00b7 ' + obMoney(bal) + ' outstanding' : ' \u00b7 paid')) + '</span>' +
+        /* no figures in the summary: this section is on screen while you demo
+           the order, and a total is not yours to broadcast. Expand to see it. */
+        '<span class="ord-pdf-sum-f">' + (tot == null
+          ? '<span class="ord-chip neutral">No total set</span>'
+          : bal <= 0.005 ? '<span class="ord-chip ok">Paid</span>'
+          : pd > 0.005 ? '<span class="ord-chip info">Part paid</span>'
+          : '<span class="ord-chip warn">Unpaid</span>') + '</span>' +
         '<svg viewBox="0 0 24 24" class="ord-pdf-chev"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
       '</summary>' +
       '<div class="ord-pdf-in">' +
@@ -6021,7 +6213,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   function ordRenderList(){
     renderRunway();
-    obRender();
     const cust = {}; ordCustomers.forEach(function(c){ cust[c.id] = c.name; });
     const q = ordQuery.trim().toLowerCase();
     /* a serial in the search box finds the order it lives on, and the row
