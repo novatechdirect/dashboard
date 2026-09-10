@@ -308,6 +308,39 @@
   .rtile b{ display:block; font-size:24px; font-weight:600; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; line-height:1.2; }
   .rtile span{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--faint); }
   .rtile.hot b{ color:var(--warn-ink); }
+  /* ---- the two RMA charts, matching the ones Novatech sees ---- */
+  .rcharts{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--s4); margin-bottom:var(--s4); }
+  @media (max-width:900px){ .rcharts{ grid-template-columns:1fr; } }
+  .rchart{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); min-width:0; }
+  .rchart h2{ font-size:13px; font-weight:600; margin:0; }
+  .rchart-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s3); flex-wrap:wrap; }
+  .rchart-val{ font-size:28px; font-weight:600; line-height:1.25; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; margin-top:var(--s2); }
+  .rchart-sub{ font-size:12.5px; color:var(--muted); line-height:1.5; }
+  .rchart-plot{ position:relative; margin-top:var(--s4); }
+  .rchart-plot svg{ display:block; width:100%; }
+  .rchart-axis{ display:flex; justify-content:space-between; font-size:11px; color:var(--faint); margin-top:var(--s2); font-variant-numeric:tabular-nums; }
+  .rchart-tip{
+    position:absolute; transform:translate(-50%,-100%); pointer-events:none; opacity:0; transition:opacity var(--t);
+    background:var(--ink-deep); color:var(--on-ink); font-size:11.5px; line-height:1.4; white-space:nowrap;
+    padding:5px 9px; border-radius:var(--r-sm);
+  }
+  .rchart-tabs{ display:inline-flex; gap:4px; flex:0 0 auto; }
+  .rchart-tabs button{
+    font:inherit; font-size:12px; font-weight:500; padding:3px 11px; min-height:26px; cursor:pointer;
+    border-radius:var(--r-pill); border:1px solid var(--line); background:transparent; color:var(--muted);
+  }
+  .rchart-tabs button.on{ background:var(--ink-deep); color:var(--on-ink); border-color:var(--ink-deep); }
+  .rfail{ display:grid; gap:var(--s2); margin-top:var(--s4); }
+  .rfail-row{ display:grid; grid-template-columns:130px minmax(0,1fr) 40px; gap:var(--s3); align-items:center; font-size:13px; }
+  .rfail-row .nt-catline{ color:var(--muted); min-width:0; }
+  .rfail-bar{ height:8px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; }
+  .rfail-bar i{ display:block; height:100%; background:var(--accent); }
+  .rfail-row b{ text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+  @media (max-width:700px){
+    .rchart-val{ font-size:24px; }
+    .rchart-tabs{ width:100%; } .rchart-tabs button{ flex:1 1 auto; }
+    .rfail-row{ grid-template-columns:104px minmax(0,1fr) 40px; }
+  }
   .rchips{ display:flex; flex-wrap:wrap; gap:var(--s2); margin-bottom:var(--s4); }
   .rchips button{ font:inherit; font-size:12.5px; font-weight:500; padding:6px 14px; min-height:32px; border-radius:var(--r-pill) !important; border:1px solid var(--line); background:var(--paper); color:var(--muted); cursor:pointer; }
   .rchips button:hover{ border-color:var(--line-strong); color:var(--ink); }
@@ -1358,6 +1391,150 @@
       return rmaMatch(t, q);
     });
   }
+  /* ---------- the two charts the tech asked for, normalised per 100 units ----------
+     Raw RMA counts only ever climb, which makes a growing account look worse the
+     longer it runs. Dividing by units shipped is the number that actually says
+     whether quality is holding. */
+  const PCH = (function(){
+    function fmtShort(d){ return d.toLocaleDateString(undefined, { month:'short', day:'numeric' }); }
+    function smooth(pts){
+      const n = pts.length;
+      if (n < 3) return pts.map(function(p, i){ return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join('');
+      const dx = [], dy = [], m = [], t = [];
+      for (let i = 0; i < n-1; i++){ dx.push(pts[i+1][0]-pts[i][0]); dy.push(pts[i+1][1]-pts[i][1]); m.push(dy[i]/(dx[i]||1e-6)); }
+      t[0] = m[0]; t[n-1] = m[n-2];
+      for (let i = 1; i < n-1; i++){
+        if (m[i-1]*m[i] <= 0) t[i] = 0;
+        else { const w1 = 2*dx[i]+dx[i-1], w2 = dx[i]+2*dx[i-1]; t[i] = (w1+w2)/(w1/m[i-1]+w2/m[i]); }
+      }
+      let d = 'M' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1);
+      for (let i = 0; i < n-1; i++){
+        const h = dx[i]/3;
+        d += 'C' + (pts[i][0]+h).toFixed(1) + ' ' + (pts[i][1]+t[i]*h).toFixed(1) + ' ' +
+                   (pts[i+1][0]-h).toFixed(1) + ' ' + (pts[i+1][1]-t[i+1]*h).toFixed(1) + ' ' +
+                   pts[i+1][0].toFixed(1) + ' ' + pts[i+1][1].toFixed(1);
+      }
+      return d;
+    }
+    function area(host, series, o){
+      o = o || {};
+      const W = 600, H = o.h || 150, padT = 12, padB = 6, n = series.length;
+      if (!n){ host.innerHTML = ''; return; }
+      const max = Math.max(o.min || 0.001, Math.max.apply(null, series.map(function(p){ return p.y; })));
+      const pts = series.map(function(p, i){ return [ n === 1 ? W/2 : (i/(n-1))*W, padT + (1 - p.y/max) * (H - padT - padB) ]; });
+      const line = smooth(pts), gid = 'pg' + (o.id || Math.random().toString(36).slice(2));
+      host.innerHTML =
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="height:' + H + 'px">' +
+          '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0" style="stop-color:var(--accent)" stop-opacity=".28"/>' +
+            '<stop offset="1" style="stop-color:var(--accent)" stop-opacity="0"/></linearGradient></defs>' +
+          '<path d="' + line + 'L' + W + ' ' + H + 'L0 ' + H + 'Z" fill="url(#' + gid + ')"/>' +
+          '<path d="' + line + '" fill="none" style="stroke:var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>' +
+          '<line class="pch-x" x1="0" x2="0" y1="0" y2="' + H + '" style="stroke:var(--line-strong)" vector-effect="non-scaling-stroke" opacity="0"/>' +
+          '<circle class="pch-dot" r="4" style="fill:var(--accent);stroke:var(--paper)" stroke-width="2" vector-effect="non-scaling-stroke" opacity="0"/>' +
+        '</svg><div class="rchart-tip"></div>' +
+        '<div class="rchart-axis"><span>' + fmtShort(series[0].x) + '</span>' +
+          (n > 2 ? '<span>' + fmtShort(series[Math.floor((n-1)/2)].x) + '</span>' : '') +
+          '<span>' + fmtShort(series[n-1].x) + '</span></div>';
+      const svg = host.querySelector('svg'), tip = host.querySelector('.rchart-tip');
+      const xl = svg.querySelector('.pch-x'), dot = svg.querySelector('.pch-dot');
+      function move(ev){
+        const r = svg.getBoundingClientRect();
+        const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        const i = Math.max(0, Math.min(n-1, Math.round((cx - r.left)/r.width * (n-1))));
+        const p = pts[i];
+        xl.setAttribute('x1', p[0]); xl.setAttribute('x2', p[0]); xl.setAttribute('opacity', 1);
+        dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]); dot.setAttribute('opacity', 1);
+        tip.style.left = (p[0]/W*100) + '%'; tip.style.top = (p[1] - 10) + 'px';
+        tip.innerHTML = (o.fmt ? o.fmt(series[i]) : series[i].y);
+        tip.style.opacity = 1;
+      }
+      function leave(){ xl.setAttribute('opacity', 0); dot.setAttribute('opacity', 0); tip.style.opacity = 0; }
+      svg.addEventListener('mousemove', move); svg.addEventListener('touchmove', move, { passive:true });
+      svg.addEventListener('mouseleave', leave); svg.addEventListener('touchend', leave);
+    }
+    return { area:area };
+  })();
+
+  function rate100(rmas, shipped){ return shipped ? (rmas / shipped * 100) : null; }
+  function fmtRate(v){ return v == null ? '\u2014' : (v >= 10 ? v.toFixed(1) : v.toFixed(2)); }
+  /* a shipped unit's date comes from its batch; undated ones count as already
+     out there, which keeps the denominator honest rather than flattering */
+  function shippedUnitDates(){
+    const dated = [], undated = [];
+    units.forEach(function(u){
+      if (u.unit_status !== 'shipped') return;
+      const b = unitBatch(u);
+      if (b && b.ship_date) dated.push(new Date(String(b.ship_date) + 'T12:00:00'));
+      else undated.push(u);
+    });
+    return { dated: dated.sort(function(a, b){ return a - b; }), base: undated.length, total: dated.length + undated.length };
+  }
+  function renderRmaRate(){
+    const plot = $('rRatePlot'); if (!plot) return;
+    const ship = shippedUnitDates();
+    const live = rmaTickets.filter(function(t){ return t.status !== 'cancelled'; });
+    const overall = rate100(live.length, ship.total);
+
+    $('rRateVal').textContent = fmtRate(overall);
+    $('rRateSub').textContent = overall == null
+      ? 'No units shipped yet, so there is nothing to measure against.'
+      : num(live.length) + ' RMA' + (live.length === 1 ? '' : 's') + ' across ' + num(ship.total) + ' units shipped';
+
+    if (overall == null){ plot.innerHTML = ''; return; }
+
+    /* 12 week-ends; at each one, the rate to date */
+    const weeks = [], now = new Date(); now.setHours(23,59,59,999);
+    const monday = new Date(now); monday.setHours(0,0,0,0);
+    monday.setDate(monday.getDate() - ((monday.getDay()+6)%7));
+    for (let i = 11; i >= 0; i--){
+      const end = new Date(monday); end.setDate(end.getDate() - i*7 + 6); end.setHours(23,59,59,999);
+      weeks.push(end > now ? now : end);
+    }
+    const series = weeks.map(function(end){
+      const shipped = ship.base + ship.dated.filter(function(d){ return d <= end; }).length;
+      const opened  = live.filter(function(t){ return new Date(t.created_at) <= end; }).length;
+      const r = rate100(opened, shipped);
+      return { x: end, y: r == null ? 0 : r, rmas: opened, units: shipped };
+    });
+    PCH.area(plot, series, { h:150, id:'rrate', min:0.5, fmt:function(p){
+      return '<b>' + fmtRate(p.y) + ' per 100</b> ' + num(p.rmas) + ' of ' + num(p.units) + ' by ' +
+        p.x.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+    } });
+  }
+  let rFailRange = localStorage.getItem('ntPortalFailRange') || 'all';
+  function renderRmaFail(){
+    const el = $('rFail'); if (!el) return;
+    $('rFailTabs').querySelectorAll('[data-pfr]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-pfr') === rFailRange); });
+
+    let since = null;
+    if (rFailRange === '30'){ since = new Date(); since.setDate(since.getDate() - 30); since.setHours(0,0,0,0); }
+    else if (rFailRange === 'ytd'){ since = new Date(new Date().getFullYear(), 0, 1); }
+
+    const ship = shippedUnitDates();
+    /* the window applies to both sides of the ratio, or the rate means nothing */
+    const shipped = since ? ship.base + ship.dated.filter(function(d){ return d >= since; }).length : ship.total;
+
+    const byCat = {};
+    rmaTickets.filter(function(t){ return t.status !== 'cancelled' && (!since || new Date(t.created_at) >= since); })
+      .forEach(function(t){ const c = t.issue_category || 'other'; byCat[c] = (byCat[c] || 0) + 1; });
+    const cats = Object.keys(byCat).sort(function(a, b){ return byCat[b] - byCat[a]; }).slice(0, 7);
+
+    if (!cats.length || !shipped){
+      el.innerHTML = '<p class="muted" style="margin:0;">' +
+        (!shipped ? 'No units shipped in this period.' : (rFailRange === 'all' ? 'Nothing yet.' : 'No RMAs in this period.')) + '</p>';
+      return;
+    }
+    const max = rate100(byCat[cats[0]], shipped);
+    el.innerHTML = cats.map(function(c){
+      const r = rate100(byCat[c], shipped);
+      return '<div class="rfail-row" title="' + byCat[c] + ' RMA' + (byCat[c] === 1 ? '' : 's') + ' across ' + num(shipped) + ' units shipped">' +
+        '<span class="nt-catline">' + ntIco(NT_RMA_ICO[c]) + '<em>' + esc(rmaCat(c)) + '</em></span>' +
+        '<div class="rfail-bar"><i style="width:' + (r / max * 100) + '%"></i></div>' +
+        '<b>' + fmtRate(r) + '</b></div>';
+    }).join('');
+  }
+
   function renderRmaList(){
     setUrl(null); rmaCurrent = null;
     const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; });
@@ -1369,12 +1546,38 @@
       '<div class="rhead"><div><h1>RMAs</h1><p class="muted" style="margin:0;">Warranty parts for units on your orders. Every request is tied to a serial number.</p></div>' +
         '<button class="btn primary" id="rmaNew" type="button">Request an RMA</button></div>' +
       '<div class="rtiles">' + tile(open.length, 'Open') + tile(needs, 'Needs your reply', needs > 0) + tile(awaiting, 'Awaiting return', awaiting > 0) + tile(closed, 'Closed') + '</div>' +
+      (rmaTickets.length
+        ? '<div class="rcharts">' +
+            '<section class="rchart"><h2>RMAs per 100 units shipped</h2>' +
+              '<div class="rchart-val" id="rRateVal">&mdash;</div>' +
+              '<div class="rchart-sub" id="rRateSub"></div>' +
+              '<div class="rchart-plot" id="rRatePlot"></div></section>' +
+            '<section class="rchart">' +
+              '<div class="rchart-head"><h2>Failures by part</h2>' +
+                '<div class="rchart-tabs" id="rFailTabs">' +
+                  '<button type="button" data-pfr="30">30D</button>' +
+                  '<button type="button" data-pfr="ytd">YTD</button>' +
+                  '<button type="button" data-pfr="all">All</button></div></div>' +
+              '<div class="rchart-sub" style="margin-top:var(--s2);">Per 100 units shipped in the same period.</div>' +
+              '<div class="rfail" id="rFail"></div></section>' +
+          '</div>'
+        : '') +
       '<div class="card rlist-card">' +
         '<div class="toolbar"><input id="rSearch" type="text" class="searchbox" placeholder="Search by RMA # or serial number" value="' + esc(rQuery) + '" autocomplete="off"></div>' +
         '<div class="rchips">' + R_FILTERS.map(function(f){ return '<button type="button" data-rf="' + f[0] + '" class="' + (rFilter === f[0] ? 'on' : '') + '">' + f[1] + '</button>'; }).join('') + '</div>' +
         '<div id="rRows"></div>' +
       '</div>';
     renderRmaRows();
+    if (rmaTickets.length){
+      renderRmaRate(); renderRmaFail();
+      $('rFailTabs').querySelectorAll('[data-pfr]').forEach(function(b){
+        b.addEventListener('click', function(){
+          rFailRange = b.getAttribute('data-pfr');
+          localStorage.setItem('ntPortalFailRange', rFailRange);
+          renderRmaFail();
+        });
+      });
+    }
     $('rmaNew').addEventListener('click', function(){ newRmaModal('', null); });
     $('rSearch').addEventListener('input', function(){ rQuery = this.value; rPage = 0; renderRmaRows(); });
     $('listView').querySelectorAll('[data-rf]').forEach(function(b){
