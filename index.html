@@ -1678,6 +1678,47 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-sum-c.is-ok  .ord-sum-v{ color:var(--ok); }
   .ord-sum-c.is-rem .ord-sum-v{ color:var(--warn); }
 
+  /* skinny progress rail above the tiles */
+  .ord-prog-rail{ margin-bottom:var(--s4); }
+  .ord-prog-track{
+    display:flex; height:8px; overflow:hidden; background:var(--soft);
+    border:1px solid var(--line); border-radius:var(--r-pill);
+  }
+  .ord-prog-track i{ display:block; height:100%; transition:width var(--t-slow); }
+  .ord-prog-cap{
+    display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3);
+    margin-top:var(--s2); font-size:12px; color:var(--muted);
+  }
+  .ord-prog-cap b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+
+  /* ---- billing: admin-only money ---- */
+  .bill-kpis{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s4); margin-top:var(--s4); }
+  .bill-k{ min-width:0; }
+  .bill-kv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:-0.4px; font-variant-numeric:tabular-nums; line-height:1.2; }
+  .bill-kl{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); }
+  .bill-ks{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .bill-k.paid .bill-kv{ color:var(--ok); }
+  .bill-k.due .bill-kv{ color:var(--warn-ink); }
+  .bill-rail{ display:flex; height:8px; margin-top:var(--s4); overflow:hidden; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
+  .bill-rail i{ display:block; height:100%; background:var(--ok); transition:width var(--t-slow); }
+  .bill-cap{ display:flex; justify-content:space-between; gap:var(--s3); margin-top:var(--s2); font-size:12px; color:var(--muted); }
+  .bill-cap b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+  .bill-num{ font-family:var(--font-num); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+  .bill-none{ color:var(--faint); }
+  .bill-foot td{ border-top:1px solid var(--line-strong); font-weight:600; }
+  .bill-det{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s3) var(--s4); }
+  .bill-det-v{ font-family:var(--font-num); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .bill-det-l{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:2px; }
+  .bill-pay-row{ display:flex; align-items:baseline; gap:var(--s3); font-size:13px; padding:var(--s2) 0; border-bottom:1px solid var(--line); }
+  .bill-pay-row:last-child{ border-bottom:0; }
+  .bill-pay-a{ font-family:var(--font-num); font-weight:600; font-variant-numeric:tabular-nums; min-width:96px; }
+  .bill-pay-m{ color:var(--muted); flex:1; min-width:0; }
+  @media (max-width:700px){
+    .bill-kpis, .bill-det{ grid-template-columns:1fr 1fr; }
+    .bill-kv{ font-size:22px; }
+  }
+  @media (max-width:420px){ .bill-kpis, .bill-det{ grid-template-columns:1fr; } }
+
   .ord-line{
     display:grid; grid-template-columns:minmax(0,1fr) auto;
     align-items:center; gap:var(--s2) var(--s4);
@@ -2937,6 +2978,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <span class="chart-sub" id="rwSub"></span>
         </div>
         <div id="rwBody" style="margin-top:var(--s4);"></div>
+      </section>
+
+      <section class="card" id="ordBilling" style="display:none;">
+        <div class="chart-head">
+          <div class="chart-kpi">
+            <h2 class="card-title" style="margin:0;">Billing <span class="card-sub">admin only</span></h2>
+            <p class="muted-sm" style="margin:var(--s2) 0 0;" id="obSub"></p>
+          </div>
+          <div class="chart-tabs" id="obTabs">
+            <button type="button" class="chart-tab" data-obr="month">Month</button>
+            <button type="button" class="chart-tab" data-obr="quarter">Quarter</button>
+            <button type="button" class="chart-tab" data-obr="year">Year</button>
+            <button type="button" class="chart-tab on" data-obr="all">All time</button>
+          </div>
+        </div>
+        <div id="obBody"></div>
+      </section>
+
+      <section class="card" id="obTableCard" style="display:none;">
+        <h2 class="card-title">By invoice <span class="card-sub">what each one is worth, and what has landed</span></h2>
+        <div id="obTable"></div>
       </section>
 
       <section class="card ord-list-card">
@@ -5124,13 +5186,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
     const tot = toBuild + pool + batched + shipped;
     document.getElementById('hpVal').textContent = CH.nf(tot);
-    document.getElementById('hpSub').textContent = tot ? 'units across ' + open + ' open order' + (open === 1 ? '' : 's') : 'no open orders';
+    document.getElementById('hpSub').textContent = tot
+      ? 'units across ' + open + ' open order' + (open === 1 ? '' : 's') +
+        (toBuild ? ' \u00b7 ' + CH.nf(toBuild) + ' left to build' : ' \u00b7 all built')
+      : 'no open orders';
     if (!tot){ body.innerHTML = '<div class="chart-empty">Nothing in the pipeline</div>'; return; }
     const segs = [
-      { l:'To build', n:toBuild, c:'var(--line-strong)' },
-      { l:'Built, in pool', n:pool, c:'var(--accent)' },
-      { l:'In a batch', n:batched, c:'var(--warn)' },
-      { l:'Shipped', n:shipped, c:'var(--ok)' }
+      { l:'Shipped', n:shipped, c:'var(--ok)' },
+      { l:'In a batch', n:batched, c:'var(--info)' },
+      { l:'Ready to assign', n:pool, c:'var(--accent)' },
+      { l:'Remaining to build', n:toBuild, c:'var(--line-strong)' }
     ];
     body.innerHTML = '<div class="pipe-bar">' + segs.map(function(s){ return s.n ? '<i style="width:'+(s.n/tot*100)+'%;background:'+s.c+'" title="'+s.l+': '+s.n+'"></i>' : ''; }).join('') + '</div>'
       + '<div class="pipe-legend">' + segs.map(function(s){ return '<div class="pipe-item"><span class="pipe-dot" style="background:'+s.c+'"></span><span class="pipe-l">'+s.l+'</span><span class="pipe-n">'+CH.nf(s.n)+'</span></div>'; }).join('') + '</div>';
@@ -5631,6 +5696,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordLoading = false; return;
     }
     ordLoading = false;
+    if (ordPerm.admin) await obLoad();
     ordRenderList();
     renderHomeStatus();
   }
@@ -5654,8 +5720,283 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return { key:'building', cls:'neutral', label:'Building' };
   }
 
+  /* ---- Billing: invoice totals and payments (order admins only) ------------
+     Money is deliberately quarantined. It loads through an RPC that checks
+     the caller itself, it renders only behind ordPerm.admin, and none of it
+     exists in the customer portal. */
+  let obRows = [], obPays = {}, obRange = localStorage.getItem('obRange') || 'all', obLoaded = false;
+
+  function obMoney(n){
+    const r = Math.round((+n || 0) * 100) / 100;
+    return (r < 0 ? '-$' : '$') + Math.abs(r).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+  /* whole dollars for headline figures — cents in a six-figure total are noise */
+  function obMoney0(n){
+    const r = Math.round(+n || 0);
+    return (r < 0 ? '-$' : '$') + Math.abs(r).toLocaleString('en-US');
+  }
+  function obRangeStart(){
+    const d = new Date(); d.setHours(0,0,0,0);
+    if (obRange === 'month')   return new Date(d.getFullYear(), d.getMonth(), 1);
+    if (obRange === 'quarter') return new Date(d.getFullYear(), Math.floor(d.getMonth()/3)*3, 1);
+    if (obRange === 'year')    return new Date(d.getFullYear(), 0, 1);
+    return null;
+  }
+  const OB_RANGE_LBL = { month:'this month', quarter:'this quarter', year:'this year', all:'all time' };
+
+  async function obLoad(){
+    if (!ordPerm.admin) return;
+    const r = await SB.rpc('order_billing');
+    if (r.error){ obLoaded = false; obRows = []; return; }
+    obRows = r.data || [];
+    obLoaded = true;
+  }
+
+  function obRender(){
+    const card = document.getElementById('ordBilling'), tcard = document.getElementById('obTableCard');
+    if (!card) return;
+    if (!ordPerm.admin){ card.style.display = 'none'; if (tcard) tcard.style.display = 'none'; return; }
+    card.style.display = ''; if (tcard) tcard.style.display = '';
+    document.querySelectorAll('#obTabs .chart-tab').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-obr') === obRange);
+    });
+
+    const body = document.getElementById('obBody'), sub = document.getElementById('obSub');
+    if (!obLoaded){
+      body.innerHTML = '<div class="empty" style="padding:var(--s5) 0;"><p>Billing is not switched on yet.</p>' +
+        '<p class="muted-sm">Run <b>order-billing.sql</b> in Supabase, then reload.</p></div>';
+      if (sub) sub.textContent = '';
+      document.getElementById('obTable').innerHTML = '';
+      return;
+    }
+
+    const from = obRangeStart();
+    const rows = obRows.filter(function(r){
+      if (!from) return true;
+      const d = r.invoice_date ? new Date(r.invoice_date + 'T12:00:00') : null;
+      return d && d >= from;
+    });
+
+    let invoiced = 0, paid = 0, untotalled = 0;
+    rows.forEach(function(r){
+      if (r.invoice_total == null) untotalled++; else invoiced += +r.invoice_total;
+      paid += +r.paid || 0;
+    });
+    const due = Math.max(0, invoiced - paid);
+    const pct = invoiced > 0 ? Math.min(100, paid / invoiced * 100) : 0;
+    const openCnt = rows.filter(function(r){ return r.invoice_total != null && (+r.paid || 0) + 0.005 < +r.invoice_total; }).length;
+
+    if (sub) sub.textContent = rows.length
+      ? rows.length + ' invoice' + (rows.length === 1 ? '' : 's') + ' \u00b7 ' + OB_RANGE_LBL[obRange] +
+        (untotalled ? ' \u00b7 ' + untotalled + ' with no total set' : '')
+      : 'No invoices dated ' + OB_RANGE_LBL[obRange];
+
+    body.innerHTML =
+      '<div class="bill-kpis">' +
+        '<div class="bill-k"><div class="bill-kv">' + obMoney0(invoiced) + '</div><div class="bill-kl">Invoiced</div>' +
+          '<div class="bill-ks">' + (rows.length - untotalled) + ' with a total on file</div></div>' +
+        '<div class="bill-k paid"><div class="bill-kv">' + obMoney0(paid) + '</div><div class="bill-kl">Collected</div>' +
+          '<div class="bill-ks">' + (invoiced > 0 ? Math.round(pct) + '% of invoiced' : '\u2014') + '</div></div>' +
+        '<div class="bill-k due"><div class="bill-kv">' + obMoney0(due) + '</div><div class="bill-kl">Outstanding</div>' +
+          '<div class="bill-ks">' + (openCnt ? 'across ' + openCnt + ' invoice' + (openCnt === 1 ? '' : 's') : 'nothing open') + '</div></div>' +
+      '</div>' +
+      (invoiced > 0
+        ? '<div class="bill-rail"><i style="width:' + pct + '%"></i></div>' +
+          '<div class="bill-cap"><span><b>' + obMoney(paid) + '</b> collected</span>' +
+          '<span>' + (due > 0.005 ? '<b>' + obMoney(due) + '</b> still out' : 'paid in full') + '</span></div>'
+        : '');
+
+    /* the breakdown */
+    const t = document.getElementById('obTable');
+    if (!rows.length){
+      t.innerHTML = '<div class="empty" style="padding:var(--s5) 0;"><p>Nothing in this period.</p></div>';
+      return;
+    }
+    let tI = 0, tP = 0;
+    t.innerHTML = '<div class="table-wrap stack-wrap"><table class="hist-table stack">' +
+      '<thead><tr><th>Invoice</th><th>Customer</th><th>Dated</th><th class="bill-num">Total</th>' +
+      '<th class="bill-num">Paid</th><th class="bill-num">Balance</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(function(r){
+        const tot = r.invoice_total == null ? null : +r.invoice_total;
+        const pd = +r.paid || 0;
+        const bal = tot == null ? null : tot - pd;
+        if (tot != null) tI += tot; tP += pd;
+        const chip = tot == null ? '<span class="ord-chip neutral">No total</span>'
+          : bal <= 0.005 ? '<span class="ord-chip ok">Paid</span>'
+          : pd > 0.005 ? '<span class="ord-chip info">Part paid</span>'
+          : '<span class="ord-chip warn">Unpaid</span>';
+        return '<tr class="ord-clickrow" data-obopen="' + esc(r.order_id) + '">' +
+          '<td data-l="Invoice"><b>' + esc(r.invoice_no || '\u2014') + '</b></td>' +
+          '<td data-l="Customer">' + esc(r.customer_name || '\u2014') + '</td>' +
+          '<td data-l="Dated">' + (r.invoice_date ? esc(fmtDate(r.invoice_date)) : '\u2014') + '</td>' +
+          '<td class="bill-num" data-l="Total">' + (tot == null ? '<span class="bill-none">\u2014</span>' : obMoney(tot)) + '</td>' +
+          '<td class="bill-num" data-l="Paid">' + (pd ? obMoney(pd) : '<span class="bill-none">\u2014</span>') + '</td>' +
+          '<td class="bill-num" data-l="Balance">' + (bal == null ? '<span class="bill-none">\u2014</span>' : obMoney(bal)) + '</td>' +
+          '<td data-l="Status">' + chip + '</td></tr>';
+      }).join('') +
+      '<tr class="bill-foot"><td data-l="">Total</td><td></td><td></td>' +
+        '<td class="bill-num" data-l="Total">' + obMoney(tI) + '</td>' +
+        '<td class="bill-num" data-l="Paid">' + obMoney(tP) + '</td>' +
+        '<td class="bill-num" data-l="Balance">' + obMoney(Math.max(0, tI - tP)) + '</td><td></td></tr>' +
+      '</tbody></table></div>';
+  }
+
+  document.addEventListener('click', function(e){
+    const tab = e.target.closest('#obTabs .chart-tab');
+    if (tab){
+      obRange = tab.getAttribute('data-obr');
+      localStorage.setItem('obRange', obRange);
+      obRender();
+      return;
+    }
+    const row = e.target.closest('[data-obopen]');
+    if (row){ ordOpenOrder(row.getAttribute('data-obopen')); }
+  });
+
+  /* ---- billing on one invoice ---- */
+  function obFor(orderId){ return obRows.find(function(r){ return String(r.order_id) === String(orderId); }); }
+
+  function obDetailCard(o){
+    if (!ordPerm.admin) return '';
+    const r = obFor(o.id);
+    const tot = (r && r.invoice_total != null) ? +r.invoice_total : (o.invoice_total != null ? +o.invoice_total : null);
+    const pd = r ? (+r.paid || 0) : 0;
+    const bal = tot == null ? null : tot - pd;
+    const chip = tot == null ? '<span class="ord-chip neutral">No total set</span>'
+      : bal <= 0.005 ? '<span class="ord-chip ok">Paid</span>'
+      : pd > 0.005 ? '<span class="ord-chip info">Part paid</span>'
+      : '<span class="ord-chip warn">Unpaid</span>';
+    const pays = obPays[o.id] || [];
+    return '<details class="card ord-pdf">' +
+      '<summary>' +
+        '<span>Billing</span>' +
+        '<span class="ord-pdf-sum-f">' + (tot == null ? 'no total set' : obMoney(tot) + (bal > 0.005 ? ' \u00b7 ' + obMoney(bal) + ' outstanding' : ' \u00b7 paid')) + '</span>' +
+        '<svg viewBox="0 0 24 24" class="ord-pdf-chev"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
+      '</summary>' +
+      '<div class="ord-pdf-in">' +
+        '<div class="bill-det">' +
+          '<div><div class="bill-det-v">' + (tot == null ? '\u2014' : obMoney(tot)) + '</div><div class="bill-det-l">Invoice total</div></div>' +
+          '<div><div class="bill-det-v" style="color:var(--ok);">' + (pd ? obMoney(pd) : '\u2014') + '</div><div class="bill-det-l">Paid to date</div></div>' +
+          '<div><div class="bill-det-v">' + (bal == null ? '\u2014' : obMoney(bal)) + '</div><div class="bill-det-l">Balance</div></div>' +
+        '</div>' +
+        '<p style="margin:var(--s4) 0 0;">' + chip + '</p>' +
+        (pays.length
+          ? '<div style="margin-top:var(--s4);">' + pays.map(function(p){
+              return '<div class="bill-pay-row"><span class="bill-pay-a">' + obMoney(p.amount) + '</span>' +
+                '<span class="bill-pay-m">' + esc(fmtDate(p.paid_on)) +
+                (p.method ? ' \u00b7 ' + esc(p.method) : '') + (p.note ? ' \u00b7 ' + esc(p.note) : '') + '</span></div>';
+            }).join('') + '</div>'
+          : '<p class="muted-sm" style="margin-top:var(--s3);">No payments recorded.</p>') +
+        '<div style="margin-top:var(--s4);"><button class="ghost btn-sm" id="ordBillEdit" type="button">Edit billing</button></div>' +
+        '<p class="muted-sm" style="margin-top:var(--s3);">Only order admins see this. It never appears in the customer portal.</p>' +
+      '</div>' +
+    '</details>';
+  }
+
+  async function obLoadPays(orderId){
+    if (!ordPerm.admin) return;
+    const r = await SB.rpc('order_payments_for', { p_order: orderId });
+    obPays[orderId] = r.error ? [] : (r.data || []);
+  }
+
+  function obEditModal(o){
+    const r = obFor(o.id);
+    const tot = (r && r.invoice_total != null) ? +r.invoice_total : (o.invoice_total != null ? +o.invoice_total : null);
+    const pays = obPays[o.id] || [];
+    const paid = pays.reduce(function(a, p){ return a + (+p.amount || 0); }, 0);
+    const bal = tot == null ? null : tot - paid;
+    const bg = mgModal(
+      mgModalHead('Billing \u2014 ' + esc(o.invoice_no || 'invoice'),
+        'The total on the invoice, and every payment against it') +
+      '<div class="mg-modal-body">' +
+        '<div class="field"><label for="obTotal">Invoice total</label>' +
+          '<input id="obTotal" type="number" min="0" step="0.01" placeholder="0.00" value="' + (tot == null ? '' : tot) + '">' +
+          '<div class="muted-sm" style="margin-top:6px;">Leave it empty if the invoice has not been priced yet.</div></div>' +
+
+        '<h3 class="card-title" style="margin:var(--s5) 0 var(--s2);">Payments</h3>' +
+        (pays.length
+          ? '<div>' + pays.map(function(p){
+              return '<div class="bill-pay-row"><span class="bill-pay-a">' + obMoney(p.amount) + '</span>' +
+                '<span class="bill-pay-m">' + esc(fmtDate(p.paid_on)) +
+                  (p.method ? ' \u00b7 ' + esc(p.method) : '') + (p.note ? ' \u00b7 ' + esc(p.note) : '') + '</span>' +
+                '<button class="ghost mini del-btn" data-obpaydel="' + esc(p.id) + '" type="button" title="Remove">\u00d7</button></div>';
+            }).join('') + '</div>'
+          : '<p class="muted-sm" style="margin:0;">Nothing recorded yet.</p>') +
+
+        '<div class="spec-grid" style="margin-top:var(--s4);">' +
+          '<div class="field"><label for="obPayAmt">Add a payment</label>' +
+            '<input id="obPayAmt" type="number" min="0" step="0.01" placeholder="' + (bal && bal > 0 ? bal.toFixed(2) : '0.00') + '"></div>' +
+          '<div class="field"><label for="obPayOn">Received</label><input id="obPayOn" type="date" value="' + fmtYMD(new Date()) + '"></div>' +
+          '<div class="field"><label for="obPayMethod">Method <span class="mobo-hint">optional</span></label>' +
+            '<input id="obPayMethod" type="text" placeholder="Wire, ACH, Check #1042"></div>' +
+          '<div class="field"><label for="obPayNote">Note <span class="mobo-hint">optional</span></label>' +
+            '<input id="obPayNote" type="text" placeholder="Deposit, final payment"></div>' +
+          (bal != null && bal > 0.005
+            ? '<div class="field span2"><button class="ghost btn-sm" id="obPayFull" type="button">Fill the remaining ' + obMoney(bal) + '</button></div>'
+            : '') +
+        '</div>' +
+        '<div class="err" id="obErr"></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="obCancel" type="button">Back</button>' +
+      '<button class="primary" id="obSave" type="button">Save</button></div>');
+
+    const amt = bg.querySelector('#obPayAmt');
+    const full = bg.querySelector('#obPayFull');
+    if (full) full.addEventListener('click', function(){ amt.value = bal.toFixed(2); amt.focus(); });
+
+    bg.querySelector('#obCancel').addEventListener('click', mgCloseModal);
+
+    bg.addEventListener('click', async function(e){
+      const d = e.target.closest('[data-obpaydel]');
+      if (!d) return;
+      const id = d.getAttribute('data-obpaydel');
+      if (!confirm('Remove this payment?')) return;
+      const del = await SB.from('order_payments').delete().eq('id', id);
+      if (del.error){ bg.querySelector('#obErr').textContent = del.error.message; return; }
+      await obLoadPays(o.id); await obLoad();
+      mgCloseModal(); obEditModal(o);
+    });
+
+    bg.querySelector('#obSave').addEventListener('click', async function(){
+      const err = bg.querySelector('#obErr'); err.textContent = '';
+      const tv = bg.querySelector('#obTotal').value.trim();
+      const av = amt.value.trim();
+      if (tv !== '' && !(parseFloat(tv) >= 0)){ err.textContent = 'The total needs to be a number.'; return; }
+      if (av !== '' && !(parseFloat(av) > 0)){ err.textContent = 'A payment has to be more than zero.'; return; }
+      this.disabled = true; this.textContent = 'Saving\u2026';
+      try {
+        const newTotal = tv === '' ? null : Math.round(parseFloat(tv) * 100) / 100;
+        if (newTotal !== (tot == null ? null : tot)){
+          const up = await SB.from('orders').update({ invoice_total: newTotal }).eq('id', o.id);
+          if (up.error) throw up.error;
+          o.invoice_total = newTotal;
+        }
+        if (av !== ''){
+          const ins = await SB.from('order_payments').insert({
+            order_id: o.id,
+            amount: Math.round(parseFloat(av) * 100) / 100,
+            paid_on: bg.querySelector('#obPayOn').value || fmtYMD(new Date()),
+            method: bg.querySelector('#obPayMethod').value.trim() || null,
+            note: bg.querySelector('#obPayNote').value.trim() || null,
+            created_by: session.user.id
+          });
+          if (ins.error) throw ins.error;
+        }
+        await Promise.all([obLoad(), obLoadPays(o.id)]);
+        mgCloseModal();
+        toast('Billing updated', 'ok');
+        obRender();
+        ordRenderDetail(o);
+      } catch(ex){
+        this.disabled = false; this.textContent = 'Save';
+        err.textContent = ex.message || String(ex);
+      }
+    });
+  }
+
   function ordRenderList(){
     renderRunway();
+    obRender();
     const cust = {}; ordCustomers.forEach(function(c){ cust[c.id] = c.name; });
     const q = ordQuery.trim().toLowerCase();
     /* a serial in the search box finds the order it lives on, and the row
@@ -5767,6 +6108,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       else if (u.unit_status === 'assigned') ordCounts[id].assigned++;
       else ordCounts[id].built++;
     });
+    if (ordPerm.admin && !obPays[id]) await obLoadPays(id);
     ordRenderDetail(o);
     if (focusBatch){
       const card = document.querySelector('.ord-batch[data-bid="' + focusBatch + '"]');
@@ -5796,18 +6138,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const made = madeBy[l.config_id] || 0;
       const left = Math.max(0, (+l.qty_ordered || 0) - made);
       return '<div class="ord-line">' +
-        '<div class="ord-line-main"><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') + '</div>' +
-          (function(){
-            /* parts availability only matters while units are still to build */
-            const bp = left ? ordBuildable(ordCfgById(l.config_id)) : null;
-            if (!bp) return '';
-            return '<div class="ord-buildable' + (bp.n <= 0 ? ' out' : (bp.n <= 5 ? ' low' : '')) + '">' +
-              (bp.n <= 0
-                ? 'Out of ' + esc(bp.limiter)
-                : ordNum(bp.n) + ' buildable with parts on hand' +
-                  (bp.n <= 5 && bp.limiter ? ' \u00b7 limited by ' + esc(bp.limiter) : '')) +
-            '</div>';
-          })() + '</div>' +
+        '<div class="ord-line-main"><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') + '</div></div>' +
         (ordPerm.manage && left
           ? '<div class="ord-gen">' +
               '<span class="ord-gen-lbl">Qty</span>' +
@@ -5845,6 +6176,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '</div>' +
       '</div>' +
 
+      (st.ordered ? (function(){
+        const segs = [
+          ['Shipped', st.shipped, 'var(--ok)'],
+          ['In a batch', st.assigned, 'var(--info)'],
+          ['Ready to assign', st.built, 'var(--accent)'],
+          ['Remaining to build', st.remaining, 'var(--line-strong)']
+        ];
+        const done = Math.round(st.shipped / st.ordered * 100);
+        return '<div class="ord-prog-rail"><div class="ord-prog-track">' + segs.map(function(s){
+            return s[1] ? '<i style="width:' + (s[1]/st.ordered*100) + '%;background:' + s[2] + '" title="' + s[0] + ': ' + ordNum(s[1]) + '"></i>' : '';
+          }).join('') + '</div>' +
+          '<div class="ord-prog-cap"><span><b>' + done + '%</b> shipped</span>' +
+          '<span>' + (st.remaining ? '<b>' + ordNum(st.remaining) + '</b> left to build' : 'all ' + ordNum(st.ordered) + ' built') + '</span></div></div>';
+      })() : '') +
+
       '<div class="ord-sum">' +
         '<div class="ord-sum-c" title="Total quantity across every line item on this invoice"><div class="ord-sum-v">' + ordNum(st.ordered) + '</div><div class="ord-sum-l">' + ntIco('clipboard', 'nt-ico nt-ico-sm') + '<span>Ordered</span></div></div>' +
         '<div class="ord-sum-c is-rem" title="Ordered units with no serial number yet"><div class="ord-sum-v">' + ordNum(st.remaining) + '</div><div class="ord-sum-l">' + ntIco('checklist', 'nt-ico nt-ico-sm') + '<span>To build</span></div></div>' +
@@ -5864,6 +6210,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</div>' +
 
       ordPdfCard(o) +
+      obDetailCard(o) +
       '<section class="card">' +
         '<h2 class="card-title"><span class="ord-step s1">1</span>Line items <span class="card-sub">what was ordered, and how many are built</span></h2>' +
         lineHtml +
@@ -6577,6 +6924,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const bl = e.target.closest('[data-blink]');
     if (bl){ ordCopy(ordLinkFor(ordCurrentId, bl.getAttribute('data-blink')), 'Batch link'); return; }
+    if (e.target.id === 'ordBillEdit'){
+      const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+      if (o) obEditModal(o);
+      return;
+    }
     if (e.target.id === 'ordPdfPick'){ document.getElementById('ordPdfInput').click(); return; }
     if (e.target.id === 'ordPdfOpen'){
       const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
