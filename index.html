@@ -1751,6 +1751,29 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .bill-cust-h b{ font-family:var(--font-num); font-variant-numeric:tabular-nums; }
   .bill-cust-t{ height:6px; margin-top:5px; background:var(--soft); border-radius:var(--r-pill); overflow:hidden; }
   .bill-cust-t i{ display:block; height:100%; background:var(--warn); }
+  /* a row you can open on the spot */
+  .bill-chev{
+    display:inline-block; width:14px; font-family:var(--font-num); font-weight:600;
+    color:var(--faint); margin-right:6px;
+  }
+  .bill-row.open{ background:var(--soft); }
+  .bill-row.open .bill-chev{ color:var(--ink); }
+  .bill-exp > td{ padding:0 !important; background:var(--soft); }
+  .bill-exp-in{ padding:var(--s4) var(--s4b) var(--s4b); border-bottom:1px solid var(--line); }
+  .bill-exp-h{
+    font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--faint); margin:var(--s4) 0 var(--s2);
+  }
+  .bill-age{ font-size:13px; color:var(--muted); margin:var(--s3) 0 0; }
+  .bill-age b{ color:var(--warn-ink); font-weight:600; }
+  .bill-pays{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-sm); padding:var(--s2) var(--s3); }
+  .bill-exp-acts{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s4); }
+  @media (max-width:700px){
+    .bill-exp-acts > *{ flex:1 1 auto; min-height:38px; justify-content:center; }
+    .hist-table.stack.bill-table tr.bill-exp{ display:block; }
+    .hist-table.stack.bill-table tr.bill-exp > td{ display:block; width:100%; }
+    .hist-table.stack.bill-table tr.bill-exp > td::before{ content:none; }
+  }
   @media (max-width:700px){
     .bill-kpis, .bill-det{ grid-template-columns:1fr 1fr; }
     .bill-kv{ font-size:22px; }
@@ -5927,13 +5950,34 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     /* the breakdown */
     obRenderChart(rows);
     obRenderCust(rows);
+    obShown = rows;
+    obRenderTable();
+  }
+
+  /* The table is its own render so expanding a row does not redraw the charts. */
+  let obShown = [], obOpenRow = null;
+
+  function obAging(r, bal){
+    if (bal == null || bal <= 0.005) return '';
+    if (!r.due_date) return 'No due date on file.';
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due = new Date(r.due_date + 'T12:00:00');
+    const days = Math.round((today - due) / 86400000);
+    if (days > 0) return '<b>' + days + ' day' + (days === 1 ? '' : 's') + ' past due</b> \u00b7 was due ' + esc(fmtDate(r.due_date));
+    if (days === 0) return 'Due today.';
+    return 'Due in ' + (-days) + ' day' + (days === -1 ? '' : 's') + ' \u00b7 ' + esc(fmtDate(r.due_date));
+  }
+
+  function obRenderTable(){
     const t = document.getElementById('obTable');
+    if (!t) return;
+    const rows = obShown;
     if (!rows.length){
       t.innerHTML = '<div class="empty" style="padding:var(--s5) 0;"><p>Nothing in this period.</p></div>';
       return;
     }
     let tI = 0, tP = 0;
-    t.innerHTML = '<div class="table-wrap stack-wrap"><table class="hist-table stack">' +
+    t.innerHTML = '<div class="table-wrap stack-wrap"><table class="hist-table stack bill-table">' +
       '<thead><tr><th>Invoice</th><th>Customer</th><th>Dated</th><th class="bill-num">Total</th>' +
       '<th class="bill-num">Paid</th><th class="bill-num">Balance</th><th>Status</th></tr></thead><tbody>' +
       rows.map(function(r){
@@ -5946,14 +5990,47 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           : pd > 0.005 ? '<span class="ord-chip info">Part paid</span>'
           : '<span class="ord-chip warn">Unpaid</span>';
         const held = r.gated ? ' <span class="ord-chip warn" title="Hidden from the customer portal until it is paid">On hold</span>' : '';
-        return '<tr class="ord-clickrow" data-obopen="' + esc(r.order_id) + '">' +
-          '<td data-l="Invoice"><b>' + esc(r.invoice_no || '\u2014') + '</b></td>' +
+        const open = String(obOpenRow) === String(r.order_id);
+        const pays = obPays[r.order_id];
+        return '<tr class="ord-clickrow bill-row' + (open ? ' open' : '') + '" data-obrow="' + esc(r.order_id) + '">' +
+          '<td data-l="Invoice"><span class="bill-chev">' + (open ? '\u2212' : '+') + '</span><b>' + esc(r.invoice_no || '\u2014') + '</b></td>' +
           '<td data-l="Customer">' + esc(r.customer_name || '\u2014') + '</td>' +
           '<td data-l="Dated">' + (r.invoice_date ? esc(fmtDate(r.invoice_date)) : '\u2014') + '</td>' +
           '<td class="bill-num" data-l="Total">' + (tot == null ? '<span class="bill-none">\u2014</span>' : obMoney(tot)) + '</td>' +
           '<td class="bill-num" data-l="Paid">' + (pd ? obMoney(pd) : '<span class="bill-none">\u2014</span>') + '</td>' +
           '<td class="bill-num" data-l="Balance">' + (bal == null ? '<span class="bill-none">\u2014</span>' : obMoney(bal)) + '</td>' +
-          '<td data-l="Status">' + chip + held + '</td></tr>';
+          '<td data-l="Status">' + chip + held + '</td></tr>' +
+          (open
+            ? '<tr class="bill-exp"><td colspan="7">' +
+                '<div class="bill-exp-in">' +
+                  (tot != null
+                    ? '<div class="bill-rail" style="margin-top:0;"><i style="width:' + Math.min(100, pd / tot * 100) + '%"></i></div>' +
+                      '<div class="bill-cap"><span><b>' + obMoney(pd) + '</b> of ' + obMoney(tot) + ' collected</span>' +
+                      '<span>' + (bal > 0.005 ? '<b>' + obMoney(bal) + '</b> outstanding' : 'paid in full') + '</span></div>'
+                    : '<p class="muted-sm" style="margin:0;">No total set on this invoice yet.</p>') +
+
+                  (obAging(r, bal) ? '<p class="bill-age">' + obAging(r, bal) + '</p>' : '') +
+                  (r.gated ? '<p class="bill-age"><span class="ord-chip warn">On hold</span> Hidden from the customer portal until it is paid in full.</p>' : '') +
+
+                  '<h3 class="bill-exp-h">Payments</h3>' +
+                  (pays === undefined
+                    ? '<p class="muted-sm" style="margin:0;">Loading\u2026</p>'
+                    : pays.length
+                      ? '<div class="bill-pays">' + pays.map(function(p){
+                          return '<div class="bill-pay-row"><span class="bill-pay-a">' + obMoney(p.amount) + '</span>' +
+                            '<span class="bill-pay-m">' + esc(fmtDate(p.paid_on)) +
+                            (p.method ? ' \u00b7 ' + esc(p.method) : '') + (p.note ? ' \u00b7 ' + esc(p.note) : '') + '</span></div>';
+                        }).join('') + '</div>'
+                      : '<p class="muted-sm" style="margin:0;">Nothing recorded yet.</p>') +
+
+                  '<div class="bill-exp-acts">' +
+                    '<button class="primary btn-sm" data-obedit="' + esc(r.order_id) + '" type="button">' +
+                      (tot == null ? 'Set the total' : 'Record a payment') + '</button>' +
+                    '<button class="ghost btn-sm" data-obgo="' + esc(r.order_id) + '" type="button">Open the order</button>' +
+                  '</div>' +
+                '</div>' +
+              '</td></tr>'
+            : '');
       }).join('') +
       '<tr class="bill-foot"><td data-l="">Total</td><td></td><td></td>' +
         '<td class="bill-num" data-l="Total">' + obMoney(tI) + '</td>' +
@@ -5970,8 +6047,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       obRender();
       return;
     }
-    const row = e.target.closest('[data-obopen]');
-    if (row){ ordOpenOrder(row.getAttribute('data-obopen')); }
+    const row = e.target.closest('[data-obrow]');
+    if (row){
+      if (e.target.closest('[data-obedit]') || e.target.closest('[data-obgo]')) return;
+      const id = row.getAttribute('data-obrow');
+      obOpenRow = String(obOpenRow) === String(id) ? null : id;
+      obRenderTable();
+      if (obOpenRow && obPays[id] === undefined){
+        obLoadPays(id).then(function(){ if (String(obOpenRow) === String(id)) obRenderTable(); });
+      }
+      return;
+    }
+    const ed = e.target.closest('[data-obedit]');
+    if (ed){
+      const id = ed.getAttribute('data-obedit');
+      const r = obFor(id);
+      /* work from the billing row, so this does not depend on the orders list
+         having been loaded into memory */
+      const o = ordOrders.find(function(x){ return String(x.id) === String(id); }) ||
+                { id:id, invoice_no:(r && r.invoice_no) || '', invoice_total:(r && r.invoice_total) };
+      obEditModal(o);
+      return;
+    }
+    const go = e.target.closest('[data-obgo]');
+    if (go){ ordOpenOrder(go.getAttribute('data-obgo')); showTool('orders'); }
   });
 
   /* Bars, not a line. With a handful of invoices a month a line chart invents
@@ -6171,6 +6270,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const del = await SB.from('order_payments').delete().eq('id', id);
       if (del.error){ bg.querySelector('#obErr').textContent = del.error.message; return; }
       await obLoadPays(o.id); await obLoad();
+      obRender();
       mgCloseModal(); obEditModal(o);
     });
 
@@ -6203,7 +6303,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         mgCloseModal();
         toast('Billing updated', 'ok');
         obRender();
-        ordRenderDetail(o);
+        const live = ordOrders.find(function(x){ return String(x.id) === String(o.id); });
+        if (live){
+          live.invoice_total = o.invoice_total;
+          if (String(ordCurrentId) === String(o.id)) ordRenderDetail(live);
+        }
       } catch(ex){
         this.disabled = false; this.textContent = 'Save';
         err.textContent = ex.message || String(ex);
