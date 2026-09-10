@@ -363,6 +363,12 @@
   .rtl small{ display:block; color:var(--faint); font-size:11.5px; }
   .rlook{ margin-top:var(--s2); padding:var(--s3) var(--s4); border:1px solid var(--line); border-radius:var(--r-sm); background:var(--soft); font-size:13px; }
   .rlook .chip{ vertical-align:middle; }
+  /* the way out when a serial predates the portal */
+  .rlegacy{ display:flex; align-items:flex-start; gap:10px; margin-top:var(--s3); padding-top:var(--s3); border-top:1px solid var(--line); cursor:pointer; }
+  .rlegacy input{ width:16px; height:16px; margin-top:2px; flex:0 0 auto; cursor:pointer; }
+  .rlegacy span{ color:var(--muted); line-height:1.5; }
+  .rlegacy span b{ display:block; color:var(--ink); font-weight:600; }
+  .rlegacy-note{ font-size:13px; line-height:1.5; color:var(--warn-ink); background:var(--warn-bg); border:1px solid var(--warn-line); border-radius:var(--r-sm); padding:var(--s3) var(--s4); margin-bottom:var(--s4); }
   .field select{ width:100%; height:44px; padding:0 var(--s4); font:inherit; font-size:14px; border:1px solid var(--line-strong); background:var(--paper); color:var(--ink); }
   .modal.wide{ max-width:560px; }
   .modal-b.scroll{ max-height:70vh; overflow:auto; }
@@ -1398,7 +1404,7 @@
       const open = RMA_OPEN.indexOf(t.status) >= 0;
       return '<div class="rrow" role="button" tabindex="0" data-rmaid="' + esc(t.id) + '">' +
         '<div><div class="rno">' + rmaNo(t) + ' <span class="mono" style="color:var(--muted);font-weight:400;">' + esc(t.serial) + '</span></div>' +
-          '<div class="rsub">' + (cfg ? esc(cfg.name) : '') + '</div></div>' +
+          '<div class="rsub">' + (cfg ? esc(cfg.name) : (t.legacy ? '<span class="chip w">Legacy order</span>' : '')) + '</div></div>' +
         '<div class="rissue"><span class="nt-catline">' + ntIco(NT_RMA_ICO[t.issue_category]) + '<em>' + esc(rmaCat(t.issue_category)) + (t.part_requested ? ' \u00b7 ' + esc(t.part_requested) : '') + '</em></span></div>' +
         rmaChip(t.status) +
         '<div class="rdate">' + (open ? 'opened ' + esc(fmtDate(t.created_at)) : esc(fmtDate(t.closed_at || t.updated_at))) + '</div></div>';
@@ -1461,7 +1467,7 @@
       '<div class="back"><button class="btn" id="rmaBack" type="button">&larr; All RMAs</button>' +
         (editable ? '<button class="btn" id="rmaEdit" type="button">Edit request</button>' : '') +
         (t.status === 'new' ? '<button class="btn" id="rmaCancel" type="button">Cancel request</button>' : '') + '</div>' +
-      '<h1 class="inv-h1 rma-h1">' + rmaNo(t) + rmaChip(t.status) + (t.coverage ? '<span class="chip n">' + esc(RMA_COV[t.coverage] || t.coverage) + '</span>' : '') + '</h1>' +
+      '<h1 class="inv-h1 rma-h1">' + rmaNo(t) + rmaChip(t.status) + (t.coverage ? '<span class="chip n">' + esc(RMA_COV[t.coverage] || t.coverage) + '</span>' : '') + (t.legacy ? '<span class="chip w">Legacy order</span>' : '') + '</h1>' +
       '<p class="muted rhsub"><span>' + serialLink + '</span>' + (cfg ? '<span>' + esc(cfg.name) + '</span>' : '') + '<span>opened ' + esc(fmtDate(t.created_at)) + '</span></p>' +
       (st.next ? '<p class="rnext' + (t.status === 'needs_info' ? ' w' : '') + '">' + esc(st.next) + (editable ? ' You can still edit the request until it is approved.' : '') + '</p>' : '') +
       (t.status === 'denied' ? '<p class="rnext b"><b>Not covered.</b> ' + esc(t.denial_reason || '') + '</p>' : '') +
@@ -1492,7 +1498,17 @@
           '<dt>Invoice</dt><dd>' + (o ? '<a class="rlink" data-goorder="' + esc(o.id) + '">' + esc(o.invoice_no) + '</a>' : '\u2014') + '</dd>' +
           '<dt>Shipped</dt><dd>' + (b && b.ship_date ? esc(fmtDate(b.ship_date)) + (locOf(b) ? ' to ' + esc(locName(b)) : '') : 'not yet') + '</dd>' +
           '<dt>Warranty</dt><dd>' + rmaWarrantyChip(w) + (w.end ? '<div class="muted" style="margin-top:4px;">' + esc(fmtDate(w.start)) + ' \u2013 ' + esc(fmtDate(w.end)) + '</div>' : '') + '</dd>' +
-        '</dl>' : '<p class="muted" style="margin:0;">Serial <b class="mono">' + esc(t.serial) + '</b></p>') + '</div>' +
+        '</dl>' : (t.legacy
+          ? '<dl class="rdl">' +
+              '<dt>Serial</dt><dd><b class="mono">' + esc(t.serial) + '</b></dd>' +
+              (t.legacy_model ? '<dt>Model</dt><dd>' + esc(t.legacy_model) + '</dd>' : '') +
+              '<dt>Invoice</dt><dd><span class="chip w">Legacy order</span></dd>' +
+              (t.legacy_purchased_on ? '<dt>Bought</dt><dd>' + esc(fmtDate(t.legacy_purchased_on)) + ' <span class="muted">approx.</span></dd>' : '') +
+              (t.legacy_ref ? '<dt>Your ref</dt><dd>' + esc(t.legacy_ref) + '</dd>' : '') +
+              '<dt>Warranty</dt><dd><span class="chip w">Unknown \u2014 verify manually</span>' +
+                '<div class="muted" style="margin-top:4px;">This unit predates the portal, so we check coverage against our own records.</div></dd>' +
+            '</dl>'
+          : '<p class="muted" style="margin:0;">Serial <b class="mono">' + esc(t.serial) + '</b></p>')) + '</div>' +
         '<div class="card"><h2>Timeline</h2>' + (evts.length ? '<ul class="rtl">' + evts.slice().reverse().map(function(e){
           const isStatus = e.kind === 'status';
           const cls = isStatus ? (RMA_ST[e.to_val] || { c:'n' }).c : (e.to_val === 'return' ? 'k' : 'i');
@@ -1625,14 +1641,23 @@
   function newRmaModal(serial, edit){
     const isEdit = !!edit;
     const techs = rmaContacts.filter(function(c){ return c.active !== false; });
+    const hqAddr  = (customer && customer.hq_address) ? String(customer.hq_address).trim() : '';
+    const hqLabel = (customer && customer.hq_label) ? customer.hq_label : 'Head office';
     function shipOptions(sel){
       let h = '';
+      if (hqAddr) h += '<option value="hq"' + (sel === 'hq' ? ' selected' : '') + '>' + esc(hqLabel) + '</option>';
       if (techs.length) techs.forEach(function(c){ h += '<option value="tech:' + esc(c.id) + '"' + (sel === 'tech:' + c.id ? ' selected' : '') + '>Technician \u2014 ' + esc(c.name) + '</option>'; });
       else h += '<option value="tech:"' + (sel === 'tech:' ? ' selected' : '') + '>Technician</option>';
       locations.forEach(function(l){ h += '<option value="store:' + esc(l.id) + '"' + (sel === 'store:' + l.id ? ' selected' : '') + '>Store \u2014 ' + esc(l.store_name) + (l.store_number ? ' #' + esc(l.store_number) : '') + '</option>'; });
+      h += '<option value="new"' + (sel === 'new' ? ' selected' : '') + '>Another address\u2026</option>';
       return h;
     }
     function shipInfo(val){
+      if (val === 'hq') return { kind:'hq', loc:null, text: hqAddr || null, shown: hqAddr || '' };
+      if (val === 'new'){
+        const v = ((bg.querySelector('#rnNewAddr') || {}).value || '').trim();
+        return { kind:'custom', loc:null, text: v || null, shown:'' };
+      }
       if (val.indexOf('store:') === 0){
         const l = locations.find(function(x){ return String(x.id) === val.slice(6); });
         return { kind:'store', loc: l ? l.id : null, text: l ? [l.store_name + (l.store_number ? ' #' + l.store_number : ''), locAddr(l)].filter(Boolean).join('\n') : '', shown: l ? (locAddr(l) || 'No address on file for this store') : '' };
@@ -1640,29 +1665,64 @@
       const c = techs.find(function(x){ return String(x.id) === val.slice(5); });
       return { kind:'tech', loc: null, text: c ? [c.name, c.address].filter(Boolean).join('\n') : '', shown: c ? (c.address || 'No address on file \u2014 Novatech will confirm before shipping') : 'No technician on file \u2014 Novatech will confirm the address before shipping' };
     }
-    const defSel = isEdit && edit.ship_to_kind === 'store' && edit.store_location_id ? 'store:' + edit.store_location_id : (techs.length ? 'tech:' + techs[0].id : 'tech:');
+    const defSel = isEdit
+      ? (edit.ship_to_kind === 'store' && edit.store_location_id ? 'store:' + edit.store_location_id
+         : edit.ship_to_kind === 'hq'     ? 'hq'
+         : edit.ship_to_kind === 'custom' ? 'new'
+         : (techs.length ? 'tech:' + techs[0].id : 'tech:'))
+      : (hqAddr ? 'hq' : (techs.length ? 'tech:' + techs[0].id : 'tech:'));
     const bg = openModal(
-      '<div class="modal-h"><h3>' + (isEdit ? 'Edit ' + rmaNo(edit) : 'Request an RMA') + '</h3><p>' + (isEdit ? 'Changes are visible to Novatech straight away. Once the request is approved it locks.' : 'Start with the serial number on the unit. Every request is tied to one PC.') + '</p></div>' +
+      '<div class="modal-h"><h3>' + (isEdit ? 'Edit ' + rmaNo(edit) : 'Request an RMA') + '</h3><p>' + (isEdit ? 'Changes are visible to Novatech straight away. Once the request is approved it locks.' : 'Start with the serial number on the unit. If it predates this portal, say so and we will still take it.') + '</p></div>' +
       '<div class="modal-b scroll">' +
         '<div class="field"><label for="rnSerial">Serial number</label><div style="display:flex;gap:8px;"><input id="rnSerial" type="text" value="' + esc(serial || '') + '" placeholder="NT26001000" autocomplete="off" spellcheck="false" style="flex:1;"><button class="btn" id="rnLook" type="button">Look up</button></div>' +
           '<div class="rlook" id="rnUnit" style="display:none;"></div></div>' +
         '<div id="rnForm" style="display:none;">' +
+          '<div id="rnLegacyFields" style="display:none;">' +
+            '<div class="rlegacy-note">Tell us what you can about the unit. None of it is required \u2014 it just helps us find the build.</div>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 16px;">' +
+              '<div class="field"><label for="rnLegModel">Model or spec</label><input id="rnLegModel" type="text" placeholder="e.g. RTX 4060 gaming tower" value="' + esc(isEdit ? (edit.legacy_model || '') : '') + '"></div>' +
+              '<div class="field"><label for="rnLegDate">Bought around</label><input id="rnLegDate" type="month" value="' + esc(isEdit && edit.legacy_purchased_on ? String(edit.legacy_purchased_on).slice(0, 7) : '') + '"></div>' +
+            '</div>' +
+            '<div class="field"><label for="rnLegRef">Your invoice or PO number, if you have it</label><input id="rnLegRef" type="text" value="' + esc(isEdit ? (edit.legacy_ref || '') : '') + '"></div>' +
+          '</div>' +
           '<div class="field"><label for="rnCat">What is wrong</label><select id="rnCat">' + RMA_CATS.map(function(c){ return '<option value="' + c[0] + '"' + (isEdit && edit.issue_category === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>' +
           '<div class="field rfield"><label for="rnIssue">What you found</label><textarea id="rnIssue" placeholder="What the customer reported, what you tested, what you ruled out">' + esc(isEdit ? edit.issue : '') + '</textarea></div>' +
           '<div class="field"><label for="rnPart">Part you need</label><input id="rnPart" type="text" placeholder="e.g. 32GB DDR5 kit, 1TB NVMe, front glass" value="' + esc(isEdit ? (edit.part_requested || '') : '') + '"></div>' +
-          '<div class="field"><label for="rnShip">Where to ship part(s)</label><select id="rnShip">' + shipOptions(defSel) + '</select><div class="raddr" id="rnShipAddr"></div></div>' +
+          '<div class="field"><label for="rnShip">Where to ship part(s)</label><select id="rnShip">' + shipOptions(defSel) + '</select><div class="raddr" id="rnShipAddr"></div>' +
+            '<div id="rnNewAddrWrap" style="display:none;margin-top:8px;"><textarea id="rnNewAddr" placeholder="Name&#10;Street&#10;City, ST ZIP" style="width:100%;min-height:88px;resize:vertical;">' + esc(isEdit && edit.ship_to_kind === 'custom' ? (edit.ship_to_text || '') : '') + '</textarea></div></div>' +
           '<div class="field"><label>Photos (optional)</label><label class="btn filebtn" style="display:inline-flex;">Add photos or a PDF<input type="file" id="rnFiles" accept="image/*,application/pdf" multiple style="display:none;"></label> <span class="muted" id="rnFilesNote"></span></div>' +
         '</div>' +
       '</div>' +
       '<div class="modal-f"><button class="btn" id="rnClose" type="button">Cancel</button><button class="btn primary" id="rnGo" type="button" disabled>' + (isEdit ? 'Save changes' : 'Submit request') + '</button></div>');
     bg.querySelector('.modal').classList.add('wide');
-    let unit = null;
-    function showAddr(){ bg.querySelector('#rnShipAddr').textContent = shipInfo(bg.querySelector('#rnShip').value).shown; }
+    let unit = null, legacy = isEdit && !!edit.legacy;
+    function showAddr(){
+      const val = bg.querySelector('#rnShip').value;
+      bg.querySelector('#rnNewAddrWrap').style.display = val === 'new' ? '' : 'none';
+      bg.querySelector('#rnShipAddr').textContent = val === 'new' ? '' : shipInfo(val).shown;
+    }
+    function setLegacy(on){
+      legacy = on;
+      const form = bg.querySelector('#rnForm'), go = bg.querySelector('#rnGo');
+      bg.querySelector('#rnLegacyFields').style.display = on ? '' : 'none';
+      form.style.display = on ? '' : 'none';
+      go.disabled = !on;
+      if (on) showAddr();
+    }
     function look(){
       const v = bg.querySelector('#rnSerial').value.trim(), box = bg.querySelector('#rnUnit'), form = bg.querySelector('#rnForm'), go = bg.querySelector('#rnGo');
       unit = units.find(function(x){ return x.serial.toUpperCase() === v.toUpperCase(); }) || null;
       box.style.display = '';
-      if (!unit){ box.innerHTML = '<span class="chip w">Not found</span> <span class="muted">No unit with that serial on your orders.</span>'; form.style.display = 'none'; go.disabled = true; return; }
+      if (!unit){
+        box.innerHTML = '<span class="chip w">Not found</span> <span class="muted">No unit with that serial on your orders.</span>' +
+          (v ? '<label class="rlegacy"><input type="checkbox" id="rnLegacy"' + (legacy ? ' checked' : '') + '>' +
+               '<span><b>This is a legacy order</b>Bought before this portal existed. We will take the request on the serial number alone and check it against our own records.</span></label>' : '');
+        const lg = bg.querySelector('#rnLegacy');
+        if (lg) lg.addEventListener('change', function(){ setLegacy(this.checked); });
+        setLegacy(!!v && legacy);
+        return;
+      }
+      legacy = false; bg.querySelector('#rnLegacyFields').style.display = 'none';
       const o = orders.find(function(x){ return x.id === unit.order_id; }), cfg = cfgById(unit.config_id), b = unitBatch(unit), w = rmaWarranty(unit);
       const open = rmaTickets.filter(function(t){ return String(t.unit_id) === String(unit.id) && RMA_OPEN.indexOf(t.status) >= 0 && !(isEdit && t.id === edit.id); });
       box.innerHTML = '<b>' + esc(cfg ? cfg.name : 'Unit') + '</b>' + (o ? ' \u00b7 invoice ' + esc(o.invoice_no) : '') +
@@ -1680,15 +1740,29 @@
     bg.querySelector('#rnFiles').addEventListener('change', function(){ bg.querySelector('#rnFilesNote').textContent = this.files.length ? this.files.length + ' file' + (this.files.length === 1 ? '' : 's') + ' ready' : ''; });
     if (serial) look();
     bg.querySelector('#rnGo').addEventListener('click', async function(){
-      if (!unit) return;
+      if (!unit && !legacy) return;
       const issue = bg.querySelector('#rnIssue').value.trim(); if (!issue){ toast('Describe what you found.', 'bad'); return; }
-      const o = orders.find(function(x){ return x.id === unit.order_id; }), w = rmaWarranty(unit);
       const ship = shipInfo(bg.querySelector('#rnShip').value);
+      if (ship.kind === 'custom' && !ship.text){ toast('Type the address to ship the part to.', 'bad'); return; }
+      const common = { issue_category: bg.querySelector('#rnCat').value, issue: issue,
+        part_requested: bg.querySelector('#rnPart').value.trim() || null,
+        ship_to_kind: ship.kind, ship_to_text: ship.text || null, store_location_id: ship.loc };
+      let row;
+      if (legacy){
+        const ser = bg.querySelector('#rnSerial').value.trim();
+        if (!ser){ toast('Enter the serial number from the unit.', 'bad'); return; }
+        const pm = bg.querySelector('#rnLegDate').value;
+        row = Object.assign({ serial: ser, unit_id: null, order_id: null, legacy: true,
+          legacy_model: bg.querySelector('#rnLegModel').value.trim() || null,
+          legacy_purchased_on: pm ? pm + '-01' : null,
+          legacy_ref: bg.querySelector('#rnLegRef').value.trim() || null,
+          warranty_status_at_open: 'unknown', warranty_end: null }, common);
+      } else {
+        const o = orders.find(function(x){ return x.id === unit.order_id; }), w = rmaWarranty(unit);
+        row = Object.assign({ serial: unit.serial, unit_id: unit.id, order_id: o ? o.id : null, legacy: false,
+          warranty_status_at_open: w.key, warranty_end: w.end || null }, common);
+      }
       this.disabled = true; this.textContent = isEdit ? 'Saving\u2026' : 'Submitting\u2026';
-      const row = { serial: unit.serial, unit_id: unit.id, order_id: o ? o.id : null,
-        issue_category: bg.querySelector('#rnCat').value, issue: issue, part_requested: bg.querySelector('#rnPart').value.trim() || null,
-        ship_to_kind: ship.kind, ship_to_text: ship.text || null, store_location_id: ship.loc,
-        warranty_status_at_open: w.key, warranty_end: w.end || null };
       let r;
       if (isEdit){
         r = await SB.from('rma_tickets').update(row).eq('id', edit.id).select().single();

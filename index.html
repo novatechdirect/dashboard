@@ -2505,6 +2505,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .rma-sub{ display:flex; flex-wrap:wrap; align-items:center; gap:2px var(--s3); line-height:1.5; }
   .rma-sub > span{ display:inline-flex; align-items:center; gap:var(--s3); min-width:0; }
   .rma-sub > span + span::before{ content:"\00b7"; color:var(--faint); }
+  /* a legacy ticket has no unit behind it: say so once, at the top, and offer the two ways out */
+  .rma-legacy{
+    display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between;
+    gap:var(--s3) var(--s4); padding:var(--s4) var(--s4b); margin-bottom:var(--s4);
+    background:var(--warn-bg); border:1px solid var(--warn); border-radius:var(--r-md); color:var(--warn-ink);
+  }
+  .rma-legacy.done{ background:var(--soft); border-color:var(--line-strong); color:var(--muted); }
+  .rma-legacy-t{ flex:1 1 340px; min-width:0; font-size:13.5px; line-height:1.55; }
+  .rma-legacy-t b{ display:block; font-size:14.5px; font-weight:600; margin-bottom:2px; }
+  .rma-legacy-facts{ display:flex; flex-wrap:wrap; gap:2px var(--s3); margin-top:var(--s2); font-size:13px; opacity:.9; }
+  .rma-legacy-facts > span + span::before{ content:"\00b7"; margin-right:var(--s3); }
+  .rma-legacy-acts{ display:flex; gap:var(--s2); flex-wrap:wrap; align-items:center; }
+  @media (max-width:700px){
+    .rma-legacy-acts{ width:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .rma-legacy-acts > *{ width:100%; min-height:38px; justify-content:center; }
+  }
+  .adm-evts{ display:grid; gap:var(--s3); }
+  .adm-evt{ display:flex; align-items:flex-start; gap:var(--s3); font-size:13px; line-height:1.5; cursor:pointer; }
+  .adm-evt input{ width:16px; height:16px; margin-top:2px; flex:0 0 auto; cursor:pointer; }
+  .adm-evt span{ color:var(--muted); }
+  .adm-evt span b{ display:block; color:var(--ink); font-weight:600; }
+  .adm-evt-master{ margin-top:var(--s3); border-top:1px solid var(--line); padding-top:var(--s4); }
   .rma-contacts{ display:flex; flex-direction:column; gap:var(--s4); }
   .rma-contact{ display:flex; flex-direction:column; gap:3px; font-size:13.5px; line-height:1.55; min-width:0; overflow-wrap:anywhere; }
   .rma-contact + .rma-contact{ padding-top:var(--s4); border-top:1px solid var(--line); }
@@ -7946,7 +7968,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const stale = open && rmaBizDaysSince(t.updated_at || t.created_at) > 5;
     return '<div class="rma-row" role="button" tabindex="0" data-rmaid="' + esc(t.id) + '">' +
       '<div><div class="rma-no">' + rmaNo(t) + ' <span class="rma-ser ord-mono">' + esc(t.serial) + '</span></div>' +
-        '<div class="rma-ser">' + esc(rmaCustName(t.customer_id)) + (o ? ' \u00b7 ' + esc(o.invoice_no) : '') + '</div></div>' +
+        '<div class="rma-ser">' + esc(rmaCustName(t.customer_id)) + (o ? ' \u00b7 ' + esc(o.invoice_no) : (t.legacy ? ' \u00b7 <span class="ord-chip warn">Legacy order</span>' : '')) + '</div></div>' +
       '<div class="rma-issue">' + esc(rmaCatLabel(t.issue_category)) + (t.part_requested ? ' \u00b7 ' + esc(t.part_requested) : '') + '</div>' +
       rmaChip(t.status) +
       '<div class="rma-age' + (stale ? ' stale' : '') + '">' + (open ? rmaAgeDays(t) + 'd open' + (stale ? ' \u00b7 quiet' : '') : rmaDate(t.closed_at || t.updated_at)) + '</div>' +
@@ -8062,6 +8084,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* where the part goes: the snapshot on the ticket, else the store, else the technician on file */
   function rmaShipToText(t, u){
     if (t.ship_to_text) return t.ship_to_text;
+    if (t.ship_to_kind === 'hq'){
+      const c = ordCustomers.find(function(x){ return String(x.id) === String(t.customer_id); });
+      return c && c.hq_address ? c.hq_address : '';
+    }
     if (t.ship_to_kind === 'store'){
       const s = rmaStoreOf(t, u);
       return s ? [ordLocName(s) + (ordLocNum(s) ? ' #' + ordLocNum(s) : ''), ordLocAddress(s)].filter(Boolean).join('\n') : '';
@@ -8119,7 +8145,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="rma-unit-hist"><h2 class="card-title" style="margin:0 0 var(--s2);">History</h2>' +
           (others.length ? others.map(function(x){ return '<div class="rma-hist-row"><a class="rma-link" data-rmaopen="' + esc(x.id) + '">' + rmaNo(x) + '</a><span>' + esc(rmaCatLabel(x.issue_category)) + ' \u00b7 ' + rmaDate(x.created_at) + '</span>' + rmaChip(x.status) + '</div>'; }).join('')
                         : '<p class="muted-sm" style="margin:0;">First RMA on this unit.</p>') + '</div>'
-        : '<p class="muted-sm">Serial <b class="ord-mono">' + esc(t.serial) + '</b> is not in the unit list.</p>') +
+        : (t.legacy
+          ? '<div class="rma-unit-hero"><div class="rma-unit-serial"><span class="ord-mono">' + esc(t.serial) + '</span></div>' +
+              '<div class="rma-unit-build">' + esc(t.legacy_model || 'Model not given') + '</div></div>' +
+            '<dl class="rma-dl rma-dl-airy">' +
+              '<dt>Invoice</dt><dd><span class="ord-chip warn">Legacy order</span>' +
+                '<div class="muted-sm" style="margin-top:6px;">Predates the system, so there is no invoice to point at.</div></dd>' +
+              '<dt>Customer</dt><dd>' + esc(rmaCustName(t.customer_id)) + '</dd>' +
+              (t.legacy_ref ? '<dt>Their ref</dt><dd>' + esc(t.legacy_ref) + '</dd>' : '') +
+              '<dt>Bought</dt><dd>' + (t.legacy_purchased_on ? rmaDate(t.legacy_purchased_on) + ' <span class="muted-sm">approx.</span>' : '\u2014') + '</dd>' +
+              '<dt>Warranty</dt><dd><span class="ord-chip warn">Unknown \u2014 verify manually</span></dd>' +
+            '</dl>'
+          : '<p class="muted-sm">Serial <b class="ord-mono">' + esc(t.serial) + '</b> is not in the unit list.</p>')) +
       '</section>';
 
     const partsHtml = parts.length ? '<table class="rma-parts">' + parts.map(function(p){
@@ -8147,8 +8184,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const shipHtml = (out.length || ret.length)
       ? '<div class="rma-thread">' + out.map(shipRow).join('') + ret.map(shipRow).join('') + '</div>'
       : '<p class="muted-sm" style="margin:0;">Nothing shipped yet.</p>';
-    const shipToHtml = '<dl class="rma-dl" style="margin-top:var(--s3);"><dt>Ship to</dt><dd>' + (t.ship_to_kind === 'store' ? 'The store' : 'The technician') +
-      (shipTo ? '<div class="rma-addr">' + esc(shipTo) + '</div>' : '<div class="muted-sm" style="margin-top:4px;">No address on file \u2014 add the technician in Admin \u2192 RMA.</div>') + '</dd></dl>' +
+    const shipToHtml = '<dl class="rma-dl" style="margin-top:var(--s3);"><dt>Ship to</dt><dd>' +
+      ({ hq:'Their head office', store:'The store', custom:'An address the technician gave' }[t.ship_to_kind] || 'The technician') +
+      (shipTo ? '<div class="rma-addr">' + esc(shipTo) + '</div>' : '<div class="muted-sm" style="margin-top:4px;">No address on file \u2014 ' + (t.ship_to_kind === 'hq' ? 'set their head office in Admin \u2192 Customers.' : 'add the technician in Admin \u2192 RMA.') + '</div>') + '</dd></dl>' +
       (can && ['approved','shipped','return_received','closed'].indexOf(t.status) >= 0 ? '<div class="rma-slip-act"><button class="ghost btn-sm" data-rmaact="slip">Packing slip</button></div>' : '');
 
     const thread = cmts.length ? cmts.map(function(c){
@@ -8177,10 +8215,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         return '<li class="' + cls + '">' + txt + (e.detail && e.kind === 'status' ? '<div class="muted-sm">' + esc(e.detail) + '</div>' : '') + '<small>' + rmaWhen(e.created_at) + (e.actor_name ? ' \u00b7 ' + esc(e.actor_name) : '') + '</small></li>';
       }).join('') + '</ul>' : '<p class="muted-sm" style="margin:0;">No activity yet.</p>';
 
+    const legacyDone = !!t.legacy_accepted_at;
+    const legacyBanner = !t.legacy ? '' :
+      '<div class="rma-legacy' + (legacyDone ? ' done' : '') + '">' +
+        '<div class="rma-legacy-t"><b>' + (legacyDone ? 'Accepted as a legacy order' : 'Legacy order \u2014 not in the system') + '</b>' +
+          (legacyDone
+            ? 'Running as a normal RMA since ' + rmaDate(t.legacy_accepted_at) + '. It stays unlinked to an invoice, so the unit panel has no order or warranty to show.'
+            : 'The technician says this unit predates the database. Nothing here verifies the serial \u2014 check it against your own records before approving.') +
+          '<div class="rma-legacy-facts">' +
+            '<span>Serial <span class="ord-mono">' + esc(t.serial) + '</span></span>' +
+            (t.legacy_model ? '<span>' + esc(t.legacy_model) + '</span>' : '') +
+            (t.legacy_purchased_on ? '<span>bought ' + rmaDate(t.legacy_purchased_on) + ', approx.</span>' : '') +
+            (t.legacy_ref ? '<span>their ref ' + esc(t.legacy_ref) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+        (can ? '<div class="rma-legacy-acts">' +
+          (legacyDone ? '' : '<button class="primary btn-sm" data-rmaact="legacyaccept">Accept as legacy</button>') +
+          '<button class="ghost btn-sm" data-rmaact="legacylink">Link to an order</button></div>' : '') +
+      '</div>';
+
     host.innerHTML =
       '<div class="rma-head"><div><h1>' + rmaNo(t) + ' ' + rmaChip(t.status) + (t.coverage ? '<span class="ord-chip neutral">' + esc(RMA_COVERAGE[t.coverage] || t.coverage) + '</span>' : '') + '</h1>' +
         '<p class="tagline rma-sub"><span>' + esc(rmaCustName(t.customer_id)) + '</span><span>' + serialLink + '</span><span>opened ' + rmaDate(t.created_at) + (t.opened_by_type === 'staff' ? ' by Novatech' : ' by the technician') + '</span></p></div>' +
         '<div class="rma-actions"><a class="ghost btn-sm" href="' + esc(rmaCustomerLinkFor(t)) + '" target="_blank" rel="noopener" title="Open this ticket the way the technician sees it">Customer view \u2197</a>' + actions + '</div></div>' +
+      legacyBanner +
       (st.next && can ? '<p class="rma-next">' + esc(st.next) + '</p>' : '') +
       (t.status === 'denied' && t.denial_reason ? '<p class="rma-next" style="background:var(--bad-bg);color:var(--bad-ink);">Denied: ' + esc(t.denial_reason) + '</p>' : '') +
       (t.status === 'closed' && t.resolution ? '<p class="rma-next" style="background:var(--ok-bg);color:var(--ok-ink);">Resolution: ' + esc(t.resolution) + '</p>' : '') +
@@ -8325,6 +8383,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       rmaParts.push(r.data); rmaEditPart = false;
       await rmaEvent(t, 'part', null, 'added', desc + ' \u00d7 ' + qty); rmaRenderDetail(); return;
     }
+    if (act === 'legacyaccept'){
+      btn.disabled = true;
+      const patch = { legacy_accepted_at: new Date().toISOString(), legacy_accepted_by: session.user.id };
+      const r = await SB.from('rma_tickets').update(patch).eq('id', t.id);
+      if (r.error){ btn.disabled = false; toast(r.error.message, 'bad'); return; }
+      Object.assign(t, patch);
+      await rmaEvent(t, 'note', null, null, 'Accepted as a legacy order \u00b7 serial ' + t.serial + ' predates the system');
+      toast('Accepted \u2014 handle it like any other RMA', 'ok');
+      rmaRenderDetail(); rmaRenderList(); return;
+    }
+    if (act === 'legacylink') return rmaLinkOrderModal(t);
     if (act === 'slip'){ rmaPackingSlip(t); return; }
     if (act === 'approve') return rmaApproveModal(t);
     if (act === 'deny') return rmaReasonModal(t, 'Deny this RMA', 'Tell the technician why. They will see this on the ticket.', 'Deny', async function(reason){
@@ -8359,6 +8428,54 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
   });
+
+  /* a legacy ticket, once the serial turns up in the system after all */
+  function rmaLinkOrderModal(t){
+    const bg = mgModal(mgModalHead('Link ' + rmaNo(t) + ' to an order',
+      'Find the unit by serial. The ticket keeps its history and stops being legacy.') +
+      '<div class="mg-modal-body">' +
+        '<div class="field"><label for="rmaLnSer">Serial number</label>' +
+          '<div style="display:flex;gap:8px;"><input id="rmaLnSer" type="text" value="' + esc(t.serial) + '" autocomplete="off" spellcheck="false" style="flex:1;"><button class="ghost" id="rmaLnLook" type="button">Look up</button></div>' +
+          '<div class="muted-sm" id="rmaLnOut" style="margin-top:10px;">Type the serial exactly as it appears on the unit.</div></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="rmaLnCancel" type="button">Back</button>' +
+      '<button class="primary" id="rmaLnGo" type="button" disabled>Link it</button></div>');
+    let unit = null;
+    function look(){
+      const v = bg.querySelector('#rmaLnSer').value.trim();
+      const out = bg.querySelector('#rmaLnOut'), go = bg.querySelector('#rmaLnGo');
+      unit = rmaUnitBySerial(v);
+      if (!unit){
+        out.innerHTML = '<span class="ord-chip warn">Not found</span> No unit with that serial. Leave it as a legacy ticket.';
+        go.disabled = true; return;
+      }
+      const o = rmaOrder(unit.order_id), b = rmaUnitBatch(unit);
+      if (o && String(o.customer_id) !== String(t.customer_id)){
+        out.innerHTML = '<span class="ord-chip bad">Different customer</span> That serial belongs to ' + esc(rmaCustName(o.customer_id)) + '.';
+        go.disabled = true; unit = null; return;
+      }
+      out.innerHTML = '<span class="ord-chip ok">Found</span> ' + esc(rmaCfgName(unit.config_id)) +
+        (o ? ' \u00b7 invoice ' + esc(o.invoice_no) : '') + (b ? ' \u00b7 batch ' + b.batch_no : '');
+      go.disabled = false;
+    }
+    bg.querySelector('#rmaLnLook').addEventListener('click', look);
+    bg.querySelector('#rmaLnSer').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); look(); } });
+    bg.querySelector('#rmaLnCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#rmaLnGo').addEventListener('click', async function(){
+      if (!unit) return;
+      this.disabled = true; this.textContent = 'Linking\u2026';
+      const o = rmaOrder(unit.order_id), w = rmaWarranty(unit);
+      const patch = { unit_id: unit.id, order_id: o ? o.id : null, serial: unit.serial, legacy: false,
+        legacy_accepted_at: new Date().toISOString(), legacy_accepted_by: session.user.id,
+        warranty_status_at_open: w.key, warranty_end: w.end || null };
+      const r = await SB.from('rma_tickets').update(patch).eq('id', t.id);
+      if (r.error){ this.disabled = false; this.textContent = 'Link it'; toast(r.error.message, 'bad'); return; }
+      Object.assign(t, patch);
+      await rmaEvent(t, 'note', null, null, 'Linked to ' + (o ? 'invoice ' + o.invoice_no : 'a unit') + ' \u00b7 serial ' + unit.serial);
+      mgCloseModal(); toast('Linked \u2014 no longer a legacy ticket', 'ok');
+      rmaRenderDetail(); rmaRenderList();
+    });
+  }
 
   function rmaReasonModal(t, title, sub, cta, onSave){
     const bg = mgModal(mgModalHead(title, sub) +
@@ -8501,7 +8618,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="field"><label for="rmaNewCat">Issue</label><select id="rmaNewCat" class="spec-select">' + RMA_CATS.map(function(c){ return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('') + '</select></div>' +
         '<div class="field"><label for="rmaNewPart">Part requested</label><input id="rmaNewPart" type="text" placeholder="e.g. 32GB DDR5 kit, front glass"></div>' +
         '<div class="field span2"><label for="rmaNewIssue">What the technician found</label><textarea id="rmaNewIssue" style="min-height:80px;resize:vertical;"></textarea></div>' +
-        '<div class="field span2"><label>Ship the part to</label><div class="rma-radio" id="rmaNewShip"><label><input type="radio" name="rmaShipKind" value="tech" checked><div><b>The technician</b><small id="rmaNewTechAddr">Address on file, if any</small></div></label><label><input type="radio" name="rmaShipKind" value="store"><div><b>The store the PC lives at</b><small id="rmaNewStoreAddr">Known once the serial is looked up</small></div></label></div></div>' +
+        '<div class="field span2"><label>Ship the part to</label><div class="rma-radio" id="rmaNewShip"><label id="rmaNewHqOpt" style="display:none;"><input type="radio" name="rmaShipKind" value="hq"><div><b id="rmaNewHqName">Their head office</b><small id="rmaNewHqAddr">Known once the serial is looked up</small></div></label><label><input type="radio" name="rmaShipKind" value="tech" checked><div><b>The technician</b><small id="rmaNewTechAddr">Address on file, if any</small></div></label><label><input type="radio" name="rmaShipKind" value="store"><div><b>The store the PC lives at</b><small id="rmaNewStoreAddr">Known once the serial is looked up</small></div></label></div></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="rmaNewCancel" type="button">Back</button><button class="primary" id="rmaNewGo" type="button" disabled>Open RMA</button></div>', true);
     let unit = null;
@@ -8519,6 +8636,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const cts = rmaContacts.filter(function(c){ return o && String(c.customer_id) === String(o.customer_id) && c.active !== false && c.address; });
       bg.querySelector('#rmaNewTechAddr').textContent = cts.length ? cts[0].name + ' \u2014 ' + cts[0].address : 'No technician address on file (Admin \u2192 RMA)';
       bg.querySelector('#rmaNewStoreAddr').textContent = store ? ordLocName(store) + (ordLocNum(store) ? ' #' + ordLocNum(store) : '') + (ordLocAddress(store) ? ' \u2014 ' + ordLocAddress(store) : '') : 'Unknown \u2014 the unit has not shipped to a store';
+      const hqC = o ? ordCustomers.find(function(x){ return String(x.id) === String(o.customer_id); }) : null;
+      const hqOpt = bg.querySelector('#rmaNewHqOpt');
+      if (hqC && hqC.hq_address){
+        hqOpt.style.display = '';
+        bg.querySelector('#rmaNewHqName').textContent = hqC.hq_label || 'Their head office';
+        bg.querySelector('#rmaNewHqAddr').textContent = hqC.hq_address.replace(/\n+/g, ', ');
+        hqOpt.querySelector('input').checked = true;
+      } else hqOpt.style.display = 'none';
       bg.querySelector('#rmaNewGo').disabled = false;
     }
     bg.querySelector('#rmaNewLook').addEventListener('click', look);
@@ -8531,7 +8656,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const o = rmaOrder(unit.order_id), w = rmaWarranty(unit), store = rmaUnitStore(unit);
       const kind = (bg.querySelector('input[name="rmaShipKind"]:checked') || {}).value || 'tech';
       const cts = rmaContacts.filter(function(c){ return o && String(c.customer_id) === String(o.customer_id) && c.active !== false && c.address; });
-      const shipText = kind === 'store' ? (store ? [ordLocName(store) + (ordLocNum(store) ? ' #' + ordLocNum(store) : ''), ordLocAddress(store)].filter(Boolean).join('\n') : null) : (cts.length ? cts[0].name + '\n' + cts[0].address : null);
+      const shipText = kind === 'store'
+        ? (store ? [ordLocName(store) + (ordLocNum(store) ? ' #' + ordLocNum(store) : ''), ordLocAddress(store)].filter(Boolean).join('\n') : null)
+        : kind === 'hq'
+          ? (function(){ const hc = o ? ordCustomers.find(function(x){ return String(x.id) === String(o.customer_id); }) : null; return hc && hc.hq_address ? hc.hq_address : null; })()
+          : (cts.length ? cts[0].name + '\n' + cts[0].address : null);
       this.disabled = true;
       const row = { serial: unit.serial, unit_id: unit.id, customer_id: o.customer_id, order_id: o.id, status: 'new', issue_category: bg.querySelector('#rmaNewCat').value,
         issue: issue, part_requested: bg.querySelector('#rmaNewPart').value.trim() || null, ship_to_kind: kind, ship_to_text: shipText,
@@ -8590,8 +8719,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const host = document.getElementById('admBody');
     const tabs = ordPerm.admin
       ? [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],
-         ['people','People'],['logins','Customer logins']]
-      : [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA']];
+         ['notify','Order emails'],['people','People'],['logins','Customer logins']]
+      : [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],['notify','Order emails']];
     if (!tabs.some(function(t){ return t[0] === admTab; })) admTab = 'customers';
     host.innerHTML =
       '<div class="adm-tabs">' + tabs.map(function(t){
@@ -8623,12 +8752,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       dests:     'Ship-to stores. A new one saves itself when you type it on a batch, so near-duplicates build up \u2014 merge them here.',
       people:    'Employee logins are created in Supabase. This is where you set what each person can reach.',
       logins:    'Read-only portal access for a customer. Create the login in Supabase first, then map it here.',
-      rma:       'Who to reach at each customer about RMAs, where their parts ship, and who at Novatech is notified.'
+      rma:       'Who to reach at each customer about RMAs, where their parts ship, and who at Novatech is notified.',
+      notify:    'Who at each customer hears when an invoice opens, a batch is packed, a shipment leaves, or an order finishes.'
     }[admTab] || '';
     if (admTab === 'customers') return admPaneCustomers(p);
     if (admTab === 'configs')   return admPaneConfigs(p);
     if (admTab === 'dests')     return admPaneDests(p);
     if (admTab === 'rma')       return admPaneRma(p);
+    if (admTab === 'notify')    return admPaneOrderEmails(p);
     if (admTab === 'people'  && ordPerm.admin) return admPanePeople(p);
     if (admTab === 'logins'  && ordPerm.admin) return admPaneLogins(p);
   }
@@ -8914,6 +9045,163 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target && e.target.id === 'admRmaCust'){ admCustFilter = e.target.value; admRenderPane(); }
   });
 
+  /* ---- order notification recipients ----
+     Deliberately its own list. The people who want to know a shipment left
+     are rarely the people who fix a broken PC. */
+  const ORD_EVENTS = [
+    ['invoice',  'Invoice created',  'A new order lands in the system.'],
+    ['batch',    'Batch packed',     'Units are built, boxed and given a destination.'],
+    ['shipped',  'Batch shipped',    'The batch leaves, with carrier and tracking.'],
+    ['complete', 'Invoice complete', 'Every unit on the invoice has shipped.']
+  ];
+  let admOrderContacts = [], admOrderSettings = {}, admOrdState = 'idle';
+
+  async function admPaneOrderEmails(p){
+    if (admOrdState === 'idle'){
+      admOrdState = 'loading';
+      p.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:60%"></div></div>';
+      const [oc, st] = await Promise.all([
+        SB.from('order_contacts').select('*').order('name'),
+        SB.from('app_settings').select('*')
+      ]);
+      if (oc.error){ admOrdState = 'missing'; }
+      else {
+        admOrderContacts = oc.data || [];
+        admOrderSettings = {}; (st.data || []).forEach(function(s){ admOrderSettings[s.key] = s.value; });
+        admOrdState = 'ready';
+      }
+    }
+    if (admOrdState === 'missing'){
+      p.innerHTML = '<div class="empty"><div class="empty-ico">!</div><p>Order emails are not switched on yet.</p>' +
+        '<p class="muted-sm">Run <b>order-notify.sql</b> in Supabase, then reload this page.</p></div>';
+      return;
+    }
+    if (admOrdState !== 'ready') return;
+
+    const custName = {}; ordCustomers.forEach(function(c){ custName[c.id] = c.name; });
+    const list = admOrderContacts.filter(function(c){ return !admCustFilter || String(c.customer_id) === String(admCustFilter); });
+    const events = String(admOrderSettings.order_email_events || 'invoice,batch,shipped,complete').split(',');
+    const sendOn = (admOrderSettings.order_email_enabled || 'on') === 'on';
+
+    p.innerHTML =
+      '<div class="adm-bar"><div class="adm-bar-l"><label class="muted-sm" for="admOnCust">Customer</label>' +
+        admCustSelect('admOnCust', admCustFilter, 'All customers') + '</div>' +
+        (ordPerm.admin ? '<button class="primary btn-sm" id="admOnAdd" type="button">Add recipient</button>' : '') + '</div>' +
+      (list.length
+        ? '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr><th>Customer</th><th>Name</th><th>Email</th><th>Role</th><th>Notify</th><th></th></tr></thead><tbody>' +
+          list.map(function(c){
+            return '<tr><td data-l="Customer">' + esc(custName[c.customer_id] || '\u2014') + '</td>' +
+              '<td data-l="Name"><b>' + esc(c.name) + '</b></td>' +
+              '<td class="adm-spec" data-l="Email">' + esc(c.email || '\u2014') + '</td>' +
+              '<td data-l="Role">' + esc(c.role || '\u2014') + '</td>' +
+              '<td data-l="Notify">' + (c.notify && c.active !== false ? '\u2713' : '\u2014') + '</td>' +
+              '<td class="adm-act" data-l="">' + (ordPerm.admin
+                ? '<button class="ghost mini" data-admonedit="' + esc(c.id) + '" type="button">Edit</button>' +
+                  '<button class="ghost mini del-btn" data-admondel="' + esc(c.id) + '" type="button" title="Remove">\u00d7</button>'
+                : '') + '</td></tr>';
+          }).join('') + '</tbody></table></div>'
+        : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No order recipients' + (admCustFilter ? ' for this customer' : ' yet') + '.</p>' +
+          '<p class="muted-sm">Add everyone who should hear when an invoice opens or a shipment leaves. Separate from the RMA technicians.</p></div>') +
+      '<section class="card" style="margin-top:var(--s5);"><h2 class="card-title">What gets sent</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">Four moments in an order\u2019s life. Everyone above gets whichever you leave on.</p>' +
+        '<div class="adm-evts">' + ORD_EVENTS.map(function(ev){
+          return '<label class="adm-evt"><input type="checkbox" data-admonevt="' + ev[0] + '"' +
+            (events.indexOf(ev[0]) >= 0 ? ' checked' : '') + (ordPerm.admin ? '' : ' disabled') +
+            '><span><b>' + ev[1] + '</b>' + ev[2] + '</span></label>';
+        }).join('') + '</div>' +
+        '<label class="adm-evt adm-evt-master"><input type="checkbox" id="admOnEnabled"' +
+          (sendOn ? ' checked' : '') + (ordPerm.admin ? '' : ' disabled') +
+          '><span><b>Order email is on</b>Untick to stop every order email at once without losing the lists.</span></label>' +
+      '</section>' +
+      '<section class="card" style="margin-top:var(--s4);"><h2 class="card-title">Send a test</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">Goes out with the same Resend key and From address as the RMA mail, set under Admin \u2192 RMA.</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
+          '<input id="admOnTestTo" type="email" style="flex:1 1 300px;" placeholder="you@novatechgaming.com">' +
+          '<button class="ghost btn-sm" id="admOnTest" type="button">Send test</button></div>' +
+      '</section>';
+  }
+
+  function admOrderContactModal(c){
+    const isNew = !c;
+    c = c || { customer_id: admCustFilter || (ordCustomers[0] || {}).id, notify: true, active: true };
+    const bg = mgModal(mgModalHead(isNew ? 'Add order recipient' : 'Edit ' + esc(c.name),
+      'They hear about invoices, batches and shipments \u2014 not RMAs.') +
+      '<div class="spec-grid">' +
+        '<div class="field"><label for="admOcCust">Customer</label>' + admCustSelect('admOcCust', c.customer_id, '') + '</div>' +
+        '<div class="field"><label for="admOcName">Name</label><input id="admOcName" type="text" value="' + esc(c.name || '') + '"></div>' +
+        '<div class="field"><label for="admOcEmail">Email</label><input id="admOcEmail" type="email" value="' + esc(c.email || '') + '"></div>' +
+        '<div class="field"><label for="admOcRole">Role <span class="mobo-hint">optional</span></label><input id="admOcRole" type="text" placeholder="Purchasing, Ops, Store manager" value="' + esc(c.role || '') + '"></div>' +
+        '<div class="field span2"><label style="display:flex;align-items:center;gap:8px;"><input id="admOcNotify" type="checkbox"' + (c.notify !== false ? ' checked' : '') + '> Gets order notifications</label></div>' +
+      '</div><div class="mg-modal-foot"><button class="ghost" id="admOcCancel" type="button">Back</button>' +
+      '<button class="primary" id="admOcGo" type="button">Save</button></div>');
+    bg.querySelector('#admOcCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#admOcGo').addEventListener('click', async function(){
+      const row = { customer_id: bg.querySelector('#admOcCust').value,
+        name: bg.querySelector('#admOcName').value.trim(),
+        email: bg.querySelector('#admOcEmail').value.trim().toLowerCase() || null,
+        role: bg.querySelector('#admOcRole').value.trim() || null,
+        notify: bg.querySelector('#admOcNotify').checked, active: true };
+      if (!row.name){ toast('Name is required.', 'warn'); return; }
+      if (!row.email){ toast('An email address is the whole point \u2014 add one.', 'warn'); return; }
+      this.disabled = true;
+      const r = isNew ? await SB.from('order_contacts').insert(row).select().single()
+                      : await SB.from('order_contacts').update(row).eq('id', c.id).select().single();
+      if (r.error){ this.disabled = false; toast(r.error.message, 'bad'); return; }
+      if (isNew) admOrderContacts.push(r.data); else Object.assign(c, r.data);
+      mgCloseModal(); admRenderPane();
+    });
+  }
+
+  async function admSaveSetting(key, value){
+    const r = await SB.from('app_settings').upsert({ key: key, value: value, updated_at: new Date().toISOString() });
+    if (r.error){ toast(r.error.message, 'bad'); return false; }
+    admOrderSettings[key] = value; return true;
+  }
+
+  document.getElementById('admBody').addEventListener('click', async function(e){
+    if (e.target.closest('#admOnAdd')){ admOrderContactModal(); return; }
+    const oe = e.target.closest('[data-admonedit]');
+    if (oe){
+      const c = admOrderContacts.find(function(x){ return x.id === oe.getAttribute('data-admonedit'); });
+      if (c) admOrderContactModal(c);
+      return;
+    }
+    const od = e.target.closest('[data-admondel]');
+    if (od){
+      const c = admOrderContacts.find(function(x){ return x.id === od.getAttribute('data-admondel'); });
+      if (!c || !confirm('Stop sending order email to ' + c.name + '?')) return;
+      const r = await SB.from('order_contacts').delete().eq('id', c.id);
+      if (r.error){ toast(r.error.message, 'bad'); return; }
+      admOrderContacts = admOrderContacts.filter(function(x){ return x.id !== c.id; });
+      admRenderPane(); return;
+    }
+    const ot = e.target.closest('#admOnTest');
+    if (ot){
+      const to = document.getElementById('admOnTestTo').value.trim();
+      if (!to){ toast('Enter an address first.', 'warn'); return; }
+      ot.disabled = true; ot.textContent = 'Sending\u2026';
+      const r = await SB.rpc('order_email_test', { to_addr: to });
+      ot.disabled = false; ot.textContent = 'Send test';
+      toast(r.error ? r.error.message : 'Sent \u2014 check that inbox', r.error ? 'bad' : 'ok', r.error ? 8000 : 4000);
+      return;
+    }
+  });
+
+  document.getElementById('admBody').addEventListener('change', async function(e){
+    if (e.target.id === 'admOnCust'){ admCustFilter = e.target.value; admRenderPane(); return; }
+    if (e.target.id === 'admOnEnabled'){
+      if (await admSaveSetting('order_email_enabled', e.target.checked ? 'on' : 'off'))
+        toast(e.target.checked ? 'Order email on' : 'Order email off', 'ok');
+      return;
+    }
+    if (e.target.closest('[data-admonevt]')){
+      const on = Array.prototype.slice.call(document.querySelectorAll('[data-admonevt]'))
+        .filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute('data-admonevt'); });
+      if (await admSaveSetting('order_email_events', on.join(','))) toast('Saved', 'ok');
+      return;
+    }
+  });
+
   /* ---- people ---- */
   function admPanePeople(p){
     const me = session && session.user ? session.user.id : null;
@@ -9125,7 +9413,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<div class="mg-modal-body"><div class="ord-cfg-grid">' +
         '<div class="field"><label for="admUName">Name</label><input id="admUName" type="text" value="' + esc(c.name) + '" autocomplete="off"></div>' +
         '<div class="field"><label for="admUCode">Short code</label><input id="admUCode" type="text" value="' + esc(c.code || '') + '" autocomplete="off"></div>' +
-      '</div><div class="err" id="admUErr"></div></div>' +
+      '</div>' +
+      '<div class="field" style="margin-top:var(--s4);"><label for="admUHqLabel">Default ship-to label</label>' +
+        '<input id="admUHqLabel" type="text" placeholder="Head office" value="' + esc(c.hq_label || '') + '" autocomplete="off"></div>' +
+      '<div class="field" style="margin-top:var(--s3);"><label for="admUHq">Default ship-to address</label>' +
+        '<textarea id="admUHq" style="width:100%;min-height:88px;resize:vertical;" placeholder="Leopard Mobility\nAttn: Service\n123 Example St\nCity, ST 00000">' + esc(c.hq_address || '') + '</textarea>' +
+        '<div class="muted-sm" style="margin-top:6px;">Where RMA parts go unless the technician picks somewhere else. Leave it empty to hide the option.</div></div>' +
+      '<div class="err" id="admUErr"></div></div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="admUCancel">Cancel</button>' +
       '<button class="primary" id="admUSave" data-primary>Save</button></div>', true);
     bg.querySelector('#admUCancel').addEventListener('click', mgCloseModal);
@@ -9133,7 +9427,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const name = bg.querySelector('#admUName').value.trim();
       if (!name){ bg.querySelector('#admUErr').textContent = 'A name is required.'; return; }
       this.disabled = true; this.textContent = 'Saving\u2026';
-      const patch = { name: name, code: bg.querySelector('#admUCode').value.trim().toUpperCase() || null };
+      const patch = { name: name, code: bg.querySelector('#admUCode').value.trim().toUpperCase() || null,
+                      hq_address: bg.querySelector('#admUHq').value.trim() || null,
+                      hq_label: bg.querySelector('#admUHqLabel').value.trim() || null };
       const r = await SB.from('customers').update(patch).eq('id', c.id);
       if (r.error){
         this.disabled = false; this.textContent = 'Save';
