@@ -268,6 +268,19 @@
   .sumc.rem .sumv{ color:var(--warn); }
   .sumc.prep .sumv{ color:var(--info); }
 
+  /* skinny progress rail above the tiles */
+  .oprog{ margin-bottom:var(--s4); }
+  .oprog-bar{
+    display:flex; height:8px; overflow:hidden; background:var(--soft);
+    border:1px solid var(--line); border-radius:var(--r-pill);
+  }
+  .oprog-bar i{ display:block; height:100%; transition:width var(--t-slow); }
+  .oprog-l{
+    display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3);
+    margin-top:var(--s2); font-size:12px; color:var(--muted);
+  }
+  .oprog-l b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+
   /* ---------- pipeline summary ---------- */
   .pipev{ font-size:28px; font-weight:600; line-height:1.25; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
   .pipes{ font-size:13px; color:var(--muted); }
@@ -1095,15 +1108,16 @@
     const total = toBuild + built + prep + shipped;
     if (!open || !total) return '';
     const segs = [
-      { l:'To build',           n:toBuild, c:'var(--warn)' },
-      { l:'Built',              n:built,   c:'var(--line-strong)' },
-      { l:'Preparing to ship',  n:prep,    c:'var(--info)' },
-      { l:'Shipped',            n:shipped, c:'var(--ok)' }
+      { l:'Shipped',           n:shipped, c:'var(--ok)' },
+      { l:'Preparing to ship', n:prep,    c:'var(--info)' },
+      { l:'Ready to assign',   n:built,   c:'var(--accent)' },
+      { l:'Remaining to build',n:toBuild, c:'var(--line-strong)' }
     ];
     return '<div class="card">' +
       '<h2>Pipeline <span class="subtle">across your open orders</span></h2>' +
       '<div class="pipev">' + num(total) + '</div>' +
-      '<div class="pipes">units in ' + open + ' open order' + (open === 1 ? '' : 's') + '</div>' +
+      '<div class="pipes">units in ' + open + ' open order' + (open === 1 ? '' : 's') +
+        (toBuild ? ' \u00b7 ' + num(toBuild) + ' left to build' : ' \u00b7 all built') + '</div>' +
       '<div class="pipebar">' + segs.map(function(s){
         return s.n ? '<i style="width:' + (s.n/total*100) + '%;background:' + s.c + '" title="' +
                      s.l + ': ' + num(s.n) + '"></i>' : '';
@@ -1199,6 +1213,20 @@
       '<h1 class="inv-h1">Invoice <span class="mono">' + esc(o.invoice_no) + '</span><span class="chip ' + s.c + '">' + s.l + '</span></h1>' +
       '<p class="muted">' + (o.po_number ? 'PO ' + esc(o.po_number) + ' &middot; ' : '') +
         (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : '') + '</p>' +
+      (st.ordered ? (function(){
+        const segs = [
+          ['Shipped', st.shipped, 'var(--ok)'],
+          ['Preparing to ship', st.assigned, 'var(--info)'],
+          ['Ready to assign', st.built, 'var(--accent)'],
+          ['Remaining to build', st.remaining, 'var(--line-strong)']
+        ];
+        const done = Math.round(st.shipped / st.ordered * 100);
+        return '<div class="oprog"><div class="oprog-bar">' + segs.map(function(s){
+            return s[1] ? '<i style="width:' + (s[1]/st.ordered*100) + '%;background:' + s[2] + '" title="' + s[0] + ': ' + num(s[1]) + '"></i>' : '';
+          }).join('') + '</div>' +
+          '<div class="oprog-l"><span><b>' + done + '%</b> shipped</span>' +
+          '<span>' + (st.remaining ? '<b>' + num(st.remaining) + '</b> left to build' : 'all ' + num(st.ordered) + ' built') + '</span></div></div>';
+      })() : '') +
       '<div class="sum">' +
         '<div class="sumc" title="Total quantity on this invoice"><div class="sumv">' + num(st.ordered) + '</div><div class="suml">Ordered</div></div>' +
         '<div class="sumc rem" title="Still to be built"><div class="sumv">' + num(st.remaining) + '</div><div class="suml">To build</div></div>' +
