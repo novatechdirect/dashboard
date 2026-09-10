@@ -1691,6 +1691,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .ord-prog-cap b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
 
+  /* an order on hold: money first, machinery out of the way */
+  .ord-hold{
+    display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between;
+    gap:var(--s3) var(--s4); padding:var(--s4) var(--s4b); margin-bottom:var(--s4);
+    background:var(--warn-bg); border:1px solid var(--warn); border-radius:var(--r-md); color:var(--warn-ink);
+  }
+  .ord-hold-t{ flex:1 1 320px; min-width:0; font-size:13.5px; line-height:1.55; }
+  .ord-hold-t b{ display:block; font-size:14.5px; font-weight:600; margin-bottom:2px; }
+  .ord-hold-acts{ display:flex; gap:var(--s2); flex-wrap:wrap; align-items:center; }
+  @media (max-width:700px){
+    .ord-hold-acts{ width:100%; }
+    .ord-hold-acts > *{ flex:1 1 auto; min-height:38px; justify-content:center; }
+  }
+
   /* ---- billing: admin-only money ---- */
   .bill-kpis{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s4); margin-top:var(--s4); }
   .bill-k{ min-width:0; }
@@ -5777,10 +5791,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return d && d >= from;
     });
 
-    let invoiced = 0, paid = 0, untotalled = 0;
+    let invoiced = 0, paid = 0, untotalled = 0, heldAmt = 0, heldCnt = 0;
     rows.forEach(function(r){
       if (r.invoice_total == null) untotalled++; else invoiced += +r.invoice_total;
       paid += +r.paid || 0;
+      if (r.gated){ heldCnt++; heldAmt += Math.max(0, (+r.invoice_total || 0) - (+r.paid || 0)); }
     });
     const due = Math.max(0, invoiced - paid);
     const pct = invoiced > 0 ? Math.min(100, paid / invoiced * 100) : 0;
@@ -5798,7 +5813,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="bill-k paid"><div class="bill-kv">' + obMoney0(paid) + '</div><div class="bill-kl">Collected</div>' +
           '<div class="bill-ks">' + (invoiced > 0 ? Math.round(pct) + '% of invoiced' : '\u2014') + '</div></div>' +
         '<div class="bill-k due"><div class="bill-kv">' + obMoney0(due) + '</div><div class="bill-kl">Outstanding</div>' +
-          '<div class="bill-ks">' + (openCnt ? 'across ' + openCnt + ' invoice' + (openCnt === 1 ? '' : 's') : 'nothing open') + '</div></div>' +
+          '<div class="bill-ks">' + (openCnt ? 'across ' + openCnt + ' invoice' + (openCnt === 1 ? '' : 's') : 'nothing open') +
+            (heldCnt ? ' \u00b7 ' + obMoney0(heldAmt) + ' on hold' : '') + '</div></div>' +
       '</div>' +
       (invoiced > 0
         ? '<div class="bill-rail"><i style="width:' + pct + '%"></i></div>' +
@@ -5825,6 +5841,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           : bal <= 0.005 ? '<span class="ord-chip ok">Paid</span>'
           : pd > 0.005 ? '<span class="ord-chip info">Part paid</span>'
           : '<span class="ord-chip warn">Unpaid</span>';
+        const held = r.gated ? ' <span class="ord-chip warn" title="Hidden from the customer portal until it is paid">On hold</span>' : '';
         return '<tr class="ord-clickrow" data-obopen="' + esc(r.order_id) + '">' +
           '<td data-l="Invoice"><b>' + esc(r.invoice_no || '\u2014') + '</b></td>' +
           '<td data-l="Customer">' + esc(r.customer_name || '\u2014') + '</td>' +
@@ -5832,7 +5849,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<td class="bill-num" data-l="Total">' + (tot == null ? '<span class="bill-none">\u2014</span>' : obMoney(tot)) + '</td>' +
           '<td class="bill-num" data-l="Paid">' + (pd ? obMoney(pd) : '<span class="bill-none">\u2014</span>') + '</td>' +
           '<td class="bill-num" data-l="Balance">' + (bal == null ? '<span class="bill-none">\u2014</span>' : obMoney(bal)) + '</td>' +
-          '<td data-l="Status">' + chip + '</td></tr>';
+          '<td data-l="Status">' + chip + held + '</td></tr>';
       }).join('') +
       '<tr class="bill-foot"><td data-l="">Total</td><td></td><td></td>' +
         '<td class="bill-num" data-l="Total">' + obMoney(tI) + '</td>' +
@@ -5855,6 +5872,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* ---- billing on one invoice ---- */
   function obFor(orderId){ return obRows.find(function(r){ return String(r.order_id) === String(orderId); }); }
+  /* held AND still short. Once payments cover the total the hold is spent, so a
+     paid order never lingers on the list wearing an "awaiting payment" chip. */
+  function ordIsGated(o){
+    if (!o || !o.hold_until_paid) return false;
+    const r = obFor(o.id);
+    return !r || r.gated !== false;
+  }
 
   function obDetailCard(o){
     if (!ordPerm.admin) return '';
@@ -5879,7 +5903,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<div><div class="bill-det-v" style="color:var(--ok);">' + (pd ? obMoney(pd) : '\u2014') + '</div><div class="bill-det-l">Paid to date</div></div>' +
           '<div><div class="bill-det-v">' + (bal == null ? '\u2014' : obMoney(bal)) + '</div><div class="bill-det-l">Balance</div></div>' +
         '</div>' +
-        '<p style="margin:var(--s4) 0 0;">' + chip + '</p>' +
+        '<p style="margin:var(--s4) 0 0;">' + chip +
+          (ordIsGated(o) ? ' <span class="ord-chip warn">On hold \u00b7 hidden from the portal</span>' : '') + '</p>' +
         (pays.length
           ? '<div style="margin-top:var(--s4);">' + pays.map(function(p){
               return '<div class="bill-pay-row"><span class="bill-pay-a">' + obMoney(p.amount) + '</span>' +
@@ -6045,7 +6070,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             (hit ? '<span class="sep">\u00b7</span><span class="ord-mono ord-serial-hit">' + esc(hit.serial) + '</span> ' + (hitBatch ? 'in Batch ' + hitBatch.batch_no : (hit.unit_status === 'shipped' ? 'shipped' : 'in the pool')) : '') +
           '</div>' +
         '</div>' +
-        '<div class="ord-stat"><span class="ord-chip ' + sc.cls + '">' + sc.label + '</span></div>' +
+        '<div class="ord-stat"><span class="ord-chip ' + (ordIsGated(o) ? 'warn' : sc.cls) + '">' +
+          (ordIsGated(o) ? 'Awaiting payment' : sc.label) + '</span></div>' +
         '<div class="ord-prog-wrap">' +
           '<div class="ord-prog">' +
             '<i class="shipped"  style="width:' + pct(st.shipped) + '%"></i>' +
@@ -6129,6 +6155,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function ordRenderDetail(o){
     const cust = ordCustomers.find(function(c){ return c.id === o.customer_id; });
     const st = ordStats(o), sc = ordStatus(st);
+    const bill = ordPerm.admin ? obFor(o.id) : null;
+    /* held and not yet covered: the build machinery is noise until it is real work */
+    const gated = ordIsGated(o);
     const cfgName = {}; ordConfigs.forEach(function(c){ cfgName[c.id] = c.name; });
     const madeBy = {};
     ordUnits.forEach(function(u){ madeBy[u.config_id] = (madeBy[u.config_id] || 0) + 1; });
@@ -6139,7 +6168,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const left = Math.max(0, (+l.qty_ordered || 0) - made);
       return '<div class="ord-line">' +
         '<div class="ord-line-main"><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') + '</div></div>' +
-        (ordPerm.manage && left
+        (ordPerm.manage && left && !gated
           ? '<div class="ord-gen">' +
               '<span class="ord-gen-lbl">Qty</span>' +
               '<input type="number" min="1" max="1000" value="' + Math.min(left, 30) + '" data-genqty="' + esc(l.id) + '" aria-label="How many units to mark built">' +
@@ -6167,7 +6196,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             (o.due_date ? ' \u00b7 due ' + esc(fmtDate(o.due_date)) : ' \u00b7 no due date') + '</div>' +
         '</div>' +
         '<div class="ord-head-r">' +
-          '<span class="ord-chip ' + sc.cls + '">' + sc.label + '</span>' +
+          '<span class="ord-chip ' + (gated ? 'warn' : sc.cls) + '">' + (gated ? 'Awaiting payment' : sc.label) + '</span>' +
           '<button class="ghost btn-sm" id="ordCopyLink" type="button" title="Link to this order for the team">Copy link</button>' +
           '<button class="ghost btn-sm" id="ordCsvBtn" type="button" title="Every unit on this invoice with batch, tracking and RMA">Export CSV</button>' +
           (ordPerm.manage ? '<button class="ghost btn-sm" id="ordOpenCust" type="button" title="Open this invoice in the customer portal">Customer view</button>' : '') +
@@ -6176,7 +6205,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '</div>' +
       '</div>' +
 
-      (st.ordered ? (function(){
+      (gated
+        ? '<div class="ord-hold">' +
+            '<div class="ord-hold-t"><b>On hold until it is paid</b>' +
+              'Hidden from the customer portal entirely, and the build steps are put away until the money lands. ' +
+              (bill && bill.invoice_total != null
+                ? obMoney(Math.max(0, +bill.invoice_total - (+bill.paid || 0))) + ' of ' + obMoney(bill.invoice_total) + ' still outstanding.'
+                : 'Set the invoice total in Billing below so the balance can be tracked.') +
+              ' The hold lifts on its own once payments cover the total.' +
+            '</div>' +
+            (ordPerm.admin ? '<div class="ord-hold-acts">' +
+              '<button class="primary btn-sm" id="ordBillEdit" type="button">Record a payment</button>' +
+              '<button class="ghost btn-sm" id="ordHoldRelease" type="button">Release now</button></div>' : '') +
+          '</div>'
+        : '') +
+
+      (st.ordered && !gated ? (function(){
         const segs = [
           ['Shipped', st.shipped, 'var(--ok)'],
           ['In a batch', st.assigned, 'var(--info)'],
@@ -6199,6 +6243,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="ord-sum-c is-ok" title="In a batch that has been marked shipped"><div class="ord-sum-v">' + ordNum(st.shipped) + '</div><div class="ord-sum-l">' + ntIco('truck', 'nt-ico nt-ico-sm') + '<span>Shipped</span></div></div>' +
       '</div>' +
 
+      (gated ? '' :
       '<div class="ord-flow">' +
         '<span class="ord-flow-s s1"><b>1</b> Mark units built</span>' +
         '<span class="ord-flow-a">\u2192</span>' +
@@ -6207,20 +6252,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<span class="ord-flow-s s3"><b>3</b> Add tracking</span>' +
         '<span class="ord-flow-a">\u2192</span>' +
         '<span class="ord-flow-s s3"><b>4</b> Mark shipped</span>' +
-      '</div>' +
+      '</div>') +
 
-      ordPdfCard(o) +
       obDetailCard(o) +
+      (gated ? '' : ordPdfCard(o)) +
       '<section class="card">' +
-        '<h2 class="card-title"><span class="ord-step s1">1</span>Line items <span class="card-sub">what was ordered, and how many are built</span></h2>' +
+        '<h2 class="card-title">' + (gated ? '' : '<span class="ord-step s1">1</span>') + 'Line items <span class="card-sub">' +
+          (gated ? 'what this invoice covers' : 'what was ordered, and how many are built') + '</span></h2>' +
         lineHtml +
-        '<p class="card-note">Marking units built gives each one an NT serial number' +
+        (gated ? '' : '<p class="card-note">Marking units built gives each one an NT serial number' +
           (o.deduct_inventory === false
             ? ' and drops it into the unit pool below. <b>Inventory is not touched on this order</b> \u2014 change that with Edit.'
             : ', takes its parts out of inventory, and drops it into the unit pool below \u2014 ready to be labelled and put in a batch.') +
-        '</p>' +
+        '</p>') +
       '</section>' +
 
+      (gated ? '' :
       '<section class="card">' +
         '<h2 class="card-title"><span class="ord-step s2">2</span>Unit pool <span class="card-sub">units with serials but no destination yet \u00b7 select them to print labels or add them to a batch</span></h2>' +
         '<div class="ord-pool-tools">' +
@@ -6255,10 +6302,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<p class="card-note">Marking a batch shipped stamps the ship date and flips its units to shipped. ' +
         'The customer sees it in their portal straight away, tracking numbers included. ' +
         'A shipped serial number is retired for good \u2014 even if the order is deleted later, that number is never issued again.</p>' +
-      '</section>';
+      '</section>');
 
-    ordRenderPool();
-    ordRenderBatches();
+    if (!gated){ ordRenderPool(); ordRenderBatches(); }
   }
 
 
@@ -6411,6 +6457,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           ((pre.deduct_inventory === undefined || pre.deduct_inventory) ? ' checked' : '') + '> ' +
           'Deduct parts from inventory when units are marked built</label>' +
         '<p class="muted-sm" style="margin-top:0;">Leave this on for normal builds. Turn it off when the parts are already accounted for somewhere else.</p>' +
+        (ordPerm.admin
+          ? '<label class="ord-check ord-deduct"><input type="checkbox" id="ordNHold"' + (pre.hold_until_paid ? ' checked' : '') + '> ' +
+              'Hold until paid in full</label>' +
+            '<p class="muted-sm" style="margin-top:0;">The customer sees nothing \u2014 not the order, its units or its tracking \u2014 until recorded payments cover the invoice total. The hold lifts by itself, and the notification email goes out then instead of now.</p>'
+          : '') +
         '<div class="err" id="ordNErr" style="margin-top:var(--s3);"></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="ordNCancel">Cancel</button>' +
@@ -6459,6 +6510,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             due_date:   bg.querySelector('#ordNDue').value,
             notes:      bg.querySelector('#ordNNotes').value,
             deduct_inventory: bg.querySelector('#ordNDeduct').checked,
+            hold_until_paid: !!(bg.querySelector('#ordNHold') && bg.querySelector('#ordNHold').checked),
             lines: lines.map(function(l){ return { config_id:l.config_id, qty:l.qty }; })
           };
           const custForCfg = custEl.value;
@@ -6499,6 +6551,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         due_date: bg.querySelector('#ordNDue').value || null,
         notes: bg.querySelector('#ordNNotes').value.trim() || null,
         deduct_inventory: bg.querySelector('#ordNDeduct').checked,
+        hold_until_paid: !!(bg.querySelector('#ordNHold') && bg.querySelector('#ordNHold').checked),
         created_by: session.user.id
       }).select().limit(1);
 
@@ -6850,7 +6903,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
 
   /* ---------- detail-pane interactions (delegated, survives re-render) ---------- */
-  ordDetailBody.addEventListener('click', function(e){
+  ordDetailBody.addEventListener('click', async function(e){
     const gen = e.target.closest('[data-gen]');
     if (gen){
       const id = gen.getAttribute('data-gen');
@@ -6924,6 +6977,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const bl = e.target.closest('[data-blink]');
     if (bl){ ordCopy(ordLinkFor(ordCurrentId, bl.getAttribute('data-blink')), 'Batch link'); return; }
+    if (e.target.id === 'ordHoldRelease'){
+      const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+      if (!o) return;
+      if (!confirm('Release ' + (o.invoice_no || 'this order') + ' to the customer now, before it is paid in full?\n\nThe portal will show it immediately and the notification email goes out.')) return;
+      const up = await SB.from('orders').update({ hold_until_paid: false }).eq('id', o.id);
+      if (up.error){ toast(up.error.message, 'bad'); return; }
+      o.hold_until_paid = false;
+      await obLoad();
+      toast('Released \u2014 the customer can see it now', 'ok');
+      obRender(); ordRenderDetail(o);
+      return;
+    }
     if (e.target.id === 'ordBillEdit'){
       const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
       if (o) obEditModal(o);
@@ -7154,6 +7219,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<label class="ord-check ord-deduct"><input type="checkbox" id="ordEDeduct"' +
           (o.deduct_inventory === false ? '' : ' checked') + '> ' +
           'Deduct parts from inventory when units are marked built</label>' +
+        (ordPerm.admin
+          ? '<label class="ord-check ord-deduct"><input type="checkbox" id="ordEHold"' +
+              (o.hold_until_paid ? ' checked' : '') + '> Hold until paid in full</label>' +
+            '<p class="muted-sm" style="margin-top:0;">While held, the customer sees nothing of this order and the build steps stay put away. It releases itself once payments cover the total.</p>'
+          : '') +
         '<div class="err" id="ordEErr" style="margin-top:var(--s3);"></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="ordECancel">Cancel</button>' +
@@ -7230,7 +7300,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           po_number: bg.querySelector('#ordEPo').value.trim() || null,
           due_date: bg.querySelector('#ordEDue').value || null,
           notes: bg.querySelector('#ordENotes').value.trim() || null,
-          deduct_inventory: bg.querySelector('#ordEDeduct').checked
+          deduct_inventory: bg.querySelector('#ordEDeduct').checked,
+          hold_until_paid: bg.querySelector('#ordEHold')
+            ? bg.querySelector('#ordEHold').checked : !!o.hold_until_paid
         }).eq('id', o.id);
         if (up.error) throw up.error;
 
