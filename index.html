@@ -2960,59 +2960,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <div id="ordListBody"></div>
       </section>
 
-      <details class="card ord-legacy" id="ordLegacy">
-        <summary class="ord-legacy-sum">
-          <span>Legacy units</span>
-          <span class="ord-legacy-cnt" id="ordLegacyCnt"></span>
-        </summary>
-        <div class="ord-legacy-body">
-          <p class="muted-sm">Units logged before invoices existed. Read-only history.</p>
-  <section class="card" id="historyCard">
-    <h2 class="card-title">Legacy units <span class="ord-legacy-note">pre-invoice</span></h2>
-    <div id="historyBody">
-      <div class="hist-toolbar">
-        <input id="histSearch" type="text" placeholder="Filter by serial, customer, or reference">
-        <label class="date-lbl">From <input id="histFrom" type="date"></label>
-        <label class="date-lbl">To <input id="histTo" type="date"></label>
-      </div>
-      <div class="hist-actions">
-        <div class="hist-actions-left">
-          <select class="sel-sm" id="histBulkStatus" disabled title="Set status for selected rows">
-            <option value="">Set status&hellip;</option>
-            <option value="ordered">Ordered</option>
-            <option value="backordered">Backordered</option>
-            <option value="building">Building</option>
-            <option value="shipped">Shipped</option>
-            <option value="warranty">Warranty</option>
-            <option value="returned">Returned</option>
-          </select>
-          <button class="ghost danger btn-sm" id="histDelSel" disabled>Delete selected</button>
-        </div>
-        <div class="hist-actions-right">
-          <button class="ghost btn-sm" id="histRefresh">Refresh</button>
-          <button class="ghost btn-sm" id="histCsv">Export CSV</button>
-        </div>
-      </div>
-      <div class="table-wrap stack-wrap">
-        <table class="hist-table stack">
-          <thead><tr>
-            <th class="chk-col"><input type="checkbox" id="histSelectAll" title="Select all (filtered)"></th>
-            <th>Date</th><th>Customer</th><th>Order #</th><th>Serial</th><th>Status</th><th></th>
-          </tr></thead>
-          <tbody id="histBody"></tbody>
-        </table>
-      </div>
-      <div class="hist-pager" id="histPager">
-        <button class="ghost" id="histPrev">Prev</button>
-        <span id="histPageInfo"></span>
-        <button class="ghost" id="histNext">Next</button>
-      </div>
-      <div class="hist-note" id="histNote"></div>
-    </div>
-  </section>
-        </div>
-      </details>
-
     </div><!-- /ordListPane -->
 
     <div id="ordDetailPane" style="display:none;">
@@ -3540,23 +3487,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   const PAGE_SIZE = 50;
   let histPage = 0;
   let selectedIds = new Set();
+  /* Every unit now belongs to an invoice, so the pre-invoice log has no screen
+     of its own. The rows are still read here because the build-rate charts and
+     the home tile count them alongside ordered units. */
   async function loadHistory(){
     if (!SB || !session) return;
-    histNote.textContent = 'Loading\u2026';
     const { data, error } = await SB
       .from('pc_log')
       .select('*')
       .is('order_id', null)
       .order('created_at', { ascending: false })
       .limit(1000);
-    if (error){ histNote.textContent = 'Could not load history: ' + (error.message || 'error'); return; }
+    if (error) return;
     historyRows = data || [];
-    const _lc = document.getElementById('ordLegacyCnt');
-    if (_lc) _lc.textContent = historyRows.length ? (historyRows.length + ' unit' + (historyRows.length===1?'':'s')) : '';
     selectedIds.clear();
     histPage = 0;
-    histNote.textContent = '';
-    renderHistory();
     renderHomeStatus();
   }
   function esc(v){ return (v==null?'':String(v)).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
@@ -5537,47 +5482,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   signInBtn.addEventListener('click', signIn);
   authEmail.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); authPass.focus(); } });
   authPass.addEventListener('keydown', function(e){ if (e.key === 'Enter') signIn(); });
-  histRefresh.addEventListener('click', loadHistory);
-  histSearch.addEventListener('input', function(){ selectedIds.clear(); histPage = 0; renderHistory(); });
-  histFrom.addEventListener('change', function(){ selectedIds.clear(); histPage = 0; renderHistory(); });
-  histTo.addEventListener('change', function(){ selectedIds.clear(); histPage = 0; renderHistory(); });
-  histPrev.addEventListener('click', function(){ histPage--; renderHistory(); });
-  histNext.addEventListener('click', function(){ histPage++; renderHistory(); });
-  histBody.addEventListener('change', function(e){
-    const el = e.target;
-    if (el && el.classList && el.classList.contains('status-select')){
-      updateStatus(el.getAttribute('data-id'), el.value, el);
-    } else if (el && el.classList && el.classList.contains('row-chk')){
-      const id = el.getAttribute('data-id');
-      if (el.checked) selectedIds.add(id); else selectedIds.delete(id);
-      updateSelectionUI();
-    }
-  });
-  histSelectAll.addEventListener('change', function(){
-    const filteredIds = getFiltered().map(function(r){ return String(r.id); });
-    if (histSelectAll.checked) filteredIds.forEach(function(id){ selectedIds.add(id); });
-    else filteredIds.forEach(function(id){ selectedIds.delete(id); });
-    renderHistory();
-  });
-  histDelSel.addEventListener('click', deleteSelected);
-  histBulkStatus.addEventListener('change', function(){
-    const v = histBulkStatus.value;
-    histBulkStatus.value = '';
-    bulkStatus(v);
-  });
-  histBody.addEventListener('click', function(e){
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    if (btn.classList.contains('specs-btn')){
-      const dr = document.getElementById('detail-' + btn.getAttribute('data-id'));
-      if (dr) dr.style.display = (dr.style.display === 'none' ? '' : 'none');
-    } else if (btn.classList.contains('del-btn')){
-      const id = btn.getAttribute('data-id');
-      const sn = btn.getAttribute('data-serial') || 'this serial';
-      if (window.confirm('Delete ' + sn + ' from the log? This cannot be undone.')) deleteRow(id);
-    }
-  });
-  document.getElementById('histCsv').addEventListener('click', exportCsv);
   initAuth();
 
   // ---- NT serial generation ----
