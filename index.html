@@ -2064,6 +2064,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .adm-tabs .mg-pill[data-admtab="dests"]{     --tab-hue:var(--hue-inventory); }
   .adm-tabs .mg-pill[data-admtab="people"]{    --tab-hue:var(--hue-admin); }
   .adm-tabs .mg-pill[data-admtab="logins"]{    --tab-hue:var(--hue-timeclock); }
+  .adm-tabs .mg-pill[data-admtab="email"]{     --tab-hue:var(--hue-rma); }
+  .adm-sec{ margin-top:var(--s5); }
+  .adm-sub{
+    display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
+    margin:var(--s5) 0 var(--s3); font-size:13px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; color:var(--muted);
+  }
+  .adm-inline{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .adm-inline input{ flex:1 1 300px; }
+  .adm-prevs{ display:flex; gap:var(--s2); flex-wrap:wrap; }
+  .adm-evt .ghost.mini{ margin-top:6px; }
+  .adm-hist-foot{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); flex-wrap:wrap; margin-top:var(--s3); }
+  .adm-prev{ width:100%; height:min(62vh, 620px); border:1px solid var(--line); border-radius:var(--r-sm); background:#f4f4f2; }
   .adm-tabs .mg-pill:hover{ color:var(--ink); border-color:color-mix(in srgb, var(--tab-hue) 40%, var(--line-strong)); }
   .adm-tabs .mg-pill.on{
     color:var(--tab-hue);
@@ -9535,8 +9548,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const host = document.getElementById('admBody');
     const tabs = ordPerm.admin
       ? [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],
-         ['rmamail','RMA emails'],['notify','Order emails'],['people','People'],['logins','Customer logins']]
-      : [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],['rmamail','RMA emails'],['notify','Order emails']];
+         ['email','Email'],['people','People'],['logins','Customer logins']]
+      : [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],['email','Email']];
     if (!tabs.some(function(t){ return t[0] === admTab; })) admTab = 'customers';
     host.innerHTML =
       '<div class="adm-tabs">' + tabs.map(function(t){
@@ -9569,15 +9582,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       people:    'Employee logins are created in Supabase. This is where you set what each person can reach.',
       logins:    'Read-only portal access for a customer. Create the login in Supabase first, then map it here.',
       rma:       'The technician we talk to at each customer, where their parts ship, and the Discord channel inbound activity posts to.',
-      rmamail:   'Who at each customer hears when an RMA changes status, a part ships, or someone replies. Also where the Resend connection lives.',
-      notify:    'Who at each customer hears when an invoice opens, a batch is packed, a shipment leaves, or an order finishes.'
+      email:     'One Resend connection, two kinds of mail. Order notifications and RMA notifications keep their own recipients, their own From address and their own history.'
     }[admTab] || '';
     if (admTab === 'customers') return admPaneCustomers(p);
     if (admTab === 'configs')   return admPaneConfigs(p);
     if (admTab === 'dests')     return admPaneDests(p);
     if (admTab === 'rma')       return admPaneRma(p);
-    if (admTab === 'rmamail')   return admPaneRmaEmails(p);
-    if (admTab === 'notify')    return admPaneOrderEmails(p);
+    if (admTab === 'email')     return admPaneEmail(p);
+    if (admTab === 'rmamail')   return admPaneEmail(p);
+    if (admTab === 'notify')    return admPaneEmail(p);
     if (admTab === 'people'  && ordPerm.admin) return admPanePeople(p);
     if (admTab === 'logins'  && ordPerm.admin) return admPaneLogins(p);
   }
@@ -9689,7 +9702,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ? '<span class="ord-chip ok">Connected</span> webhook saved ' + esc(rmaDate(row.updated_at)) + '. Paste a new URL to replace it, or save an empty field to turn alerts off.'
       : '<span class="ord-chip neutral">Not set up</span> paste the webhook URL below.';
   }
-  async function admEmailState(){
+  async function admEmailConn(){
     const el = document.getElementById('admEmailState'); if (!el) return;
     const r = await SB.rpc('rma_secret_status', { k: 'resend_api_key' });
     if (r.error){ el.innerHTML = 'Not enabled yet \u2014 run <b>rma-email.sql</b> in Supabase first.'; return; }
@@ -9697,39 +9710,91 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     el.innerHTML = row && row.configured
       ? '<span class="ord-chip ok">Connected</span> API key saved ' + esc(rmaDate(row.updated_at)) + '. Paste a new key to replace it, or save an empty field to stop sending.'
       : '<span class="ord-chip neutral">Not set up</span> paste the Resend API key below.';
-    const log = document.getElementById('admEmailLog');
-    if (log){
-      const lr = await SB.rpc('rma_email_recent');
-      if (lr.error && /state|column|function/i.test(lr.error.message || '')){
-        log.innerHTML = '<p class="muted-sm" style="margin:12px 0 0;">Run <b>email-log-status.sql</b> in Supabase to record what Resend answered.</p>';
-        return;
-      }
-      const rows = (lr.error ? [] : (lr.data || []));
-      /* a send from more than a few hours ago has no pg_net response row left,
-         so "pending" used to mean two different things. Say which. */
-      const chip = {
-        accepted: ['ok', 'accepted'],
-        refused:  ['bad', 'refused'],
-        failed:   ['bad', 'failed'],
-        waiting:  ['neutral', 'waiting'],
-        unknown:  ['neutral', 'no response recorded']
-      };
-      log.innerHTML = rows.length
-        ? '<div class="table-wrap" style="margin-top:12px;"><table class="hist-table"><thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Result</th></tr></thead><tbody>' +
-            rows.map(function(x){
-              const s = chip[x.state] || chip.unknown;
-              const label = x.state === 'refused' && x.status_code ? x.status_code + ' refused' : s[1];
-              const code = '<span class="ord-chip ' + s[0] + '">' + esc(label) + '</span>' +
-                (x.state === 'refused' || x.state === 'failed'
-                  ? '<div class="muted-sm" style="margin-top:4px;">' + esc(x.detail || '') + '</div>'
-                  : '');
-              return '<tr><td>' + esc(rmaDate(x.created_at)) + '</td><td class="adm-spec">' + esc(x.to_addrs || '') + '</td><td>' + esc(x.subject || '') + '</td><td>' + code + '</td></tr>';
-            }).join('') +
-            '</tbody></table></div>' +
-            '<p class="muted-sm" style="margin:8px 0 0;">Accepted means Resend took the message. Delivery itself is in the Resend dashboard under Logs.</p>'
-        : '';
-    }
   }
+
+  /* A send older than pg_net's TTL has no response row left, so "pending"
+     used to mean two different things. Each state now says which. */
+  const EMAIL_CHIP = {
+    accepted: ['ok', 'accepted'],
+    refused:  ['bad', 'refused'],
+    failed:   ['bad', 'failed'],
+    waiting:  ['neutral', 'waiting'],
+    unknown:  ['neutral', 'no response recorded']
+  };
+  let admHistLimit = { order: 25, rma: 25 };
+
+  async function admEmailHist(kind){
+    const host = document.getElementById('admHist_' + kind); if (!host) return;
+    const lr = await SB.rpc('email_log_recent', {
+      p_kind: kind, p_customer: admCustFilter || null, p_limit: admHistLimit[kind] });
+    if (lr.error){
+      host.innerHTML = '<p class="muted-sm" style="margin:0;">Run <b>email-tabs.sql</b> in Supabase to split the log by kind.</p>';
+      return;
+    }
+    const rows = lr.data || [];
+    if (!rows.length){
+      host.innerHTML = '<p class="muted-sm" style="margin:0;">Nothing sent yet' + (admCustFilter ? ' for this customer' : '') + '.</p>';
+      return;
+    }
+    host.innerHTML =
+      '<div class="table-wrap"><table class="hist-table"><thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Result</th></tr></thead><tbody>' +
+      rows.map(function(x){
+        const c = EMAIL_CHIP[x.state] || EMAIL_CHIP.unknown;
+        const label = x.state === 'refused' && x.status_code ? x.status_code + ' refused' : c[1];
+        return '<tr><td>' + esc(rmaDate(x.created_at)) + '</td>' +
+          '<td class="adm-spec">' + esc(x.to_addrs || '') + '</td>' +
+          '<td>' + esc(x.subject || '') + '</td>' +
+          '<td><span class="ord-chip ' + c[0] + '">' + esc(label) + '</span>' +
+            (x.state === 'refused' || x.state === 'failed'
+              ? '<div class="muted-sm" style="margin-top:4px;">' + esc(x.detail || '') + '</div>' : '') +
+          '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<div class="adm-hist-foot">' +
+        (rows.length >= admHistLimit[kind]
+          ? '<button class="ghost btn-sm" data-admhistmore="' + kind + '" type="button">Show more</button>'
+          : '<span class="muted-sm">' + rows.length + (rows.length === 1 ? ' message' : ' messages') + '</span>') +
+        '<span class="muted-sm">Accepted means Resend took it. Delivery itself is in Resend \u2192 Logs.</span>' +
+      '</div>';
+  }
+
+  async function admEmailPreview(kind, evt, label){
+    const r = await SB.rpc(kind === 'order' ? 'order_email_preview' : 'rma_email_preview', { evt: evt });
+    if (r.error){ toast(r.error.message, 'bad', 7000); return; }
+    const bg = mgModal(mgModalHead('Preview \u2014 ' + esc(label),
+      'The real template with stand-in facts. Nothing is sent and nothing is logged.') +
+      '<div class="mg-modal-body"><iframe class="adm-prev" title="Email preview" sandbox=""></iframe></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="admPrevClose" type="button">Close</button></div>');
+    bg.querySelector('iframe').srcdoc = r.data || '';
+    bg.querySelector('#admPrevClose').addEventListener('click', mgCloseModal);
+  }
+
+  /* One table for both lists. The Notify tick writes straight through, so a
+     recipient can be muted without being deleted. */
+  function admEmailRecips(kind, list, custName, canEdit){
+    const tbl = kind === 'order' ? 'order_contacts' : 'rma_notify_contacts';
+    if (!list.length){
+      return '<p class="muted-sm" style="margin:0;">No ' + (kind === 'order' ? 'order' : 'RMA') + ' recipients' +
+        (admCustFilter ? ' for this customer' : ' yet') + '.</p>';
+    }
+    return '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr>' +
+      '<th>Customer</th><th>Name</th><th>Email</th><th>Role</th><th>Notify</th><th></th></tr></thead><tbody>' +
+      list.map(function(c){
+        return '<tr><td data-l="Customer">' + esc(custName[c.customer_id] || '\u2014') + '</td>' +
+          '<td data-l="Name"><b>' + esc(c.name) + '</b></td>' +
+          '<td class="adm-spec" data-l="Email">' + esc(c.email || '\u2014') + '</td>' +
+          '<td data-l="Role">' + esc(c.role || '\u2014') + '</td>' +
+          '<td data-l="Notify"><input type="checkbox" data-admnotify="' + kind + ':' + esc(c.id) + '"' +
+            (c.notify !== false && c.active !== false ? ' checked' : '') + (canEdit ? '' : ' disabled') + '></td>' +
+          '<td class="adm-act" data-l="">' + (canEdit
+            ? '<button class="ghost mini" data-' + (kind === 'order' ? 'admonedit' : 'admrnedit') + '="' + esc(c.id) + '" type="button">Edit</button>' +
+              '<button class="ghost mini del-btn" data-' + (kind === 'order' ? 'admondel' : 'admrndel') + '="' + esc(c.id) + '" type="button" title="Remove">\u00d7</button>'
+            : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<p class="muted-sm" style="margin:var(--s3) 0 0;">Untick Notify to mute someone without removing them from the list. ' +
+      (kind === 'order' ? 'Everyone ticked gets whichever events are on above.'
+                        : 'Whoever opened a ticket always hears about it, listed or not.') + '</p>';
+  }
+
   async function admPaneRma(p){
     if (!rmaContacts.length && !rmaInited){ try { const r = await SB.from('customer_contacts').select('*').order('name'); rmaContacts = r.data || []; } catch(e){} }
     if (admRmaSettings === null){ try { const r = await SB.from('app_settings').select('*'); admRmaSettings = {}; (r.data || []).forEach(function(s){ admRmaSettings[s.key] = s.value; }); } catch(e){ admRmaSettings = {}; } }
@@ -9830,7 +9895,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const r = await SB.rpc('rma_set_secret', { k: 'resend_api_key', v: v });
       if (r.error){ toast(r.error.message, 'bad'); return; }
       document.getElementById('admResendKey').value = '';
-      toast(v ? 'API key saved' : 'API key removed', 'ok'); admEmailState(); return;
+      toast(v ? 'API key saved' : 'API key removed', 'ok'); admEmailConn(); return;
     }
     if (e.target.closest('#admEmailTest')){
       const to = document.getElementById('admEmailTestTo').value.trim();
@@ -9863,69 +9928,141 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      is the technician parts get shipped to. Those are different lists. */
   let admRmaNotify = [], admRmaNotifyState = 'idle';
 
-  async function admPaneRmaEmails(p){
-    if (admRmaSettings === null){
-      try { const r = await SB.from('app_settings').select('*'); admRmaSettings = {}; (r.data || []).forEach(function(s){ admRmaSettings[s.key] = s.value; }); }
-      catch(e){ admRmaSettings = {}; }
-    }
-    if (admRmaNotifyState === 'idle'){
-      admRmaNotifyState = 'loading';
+  const RMA_EVENTS = [
+    ['opened',  'Request opened'],
+    ['status',  'Status changed'],
+    ['shipped', 'Part shipped'],
+    ['reply',   'New reply']
+  ];
+
+  async function admPaneEmail(p){
+    if (admEmLoad === 'idle'){
+      admEmLoad = 'loading';
       p.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:60%"></div></div>';
-      const r = await SB.from('rma_notify_contacts').select('*').order('name');
-      if (r.error) admRmaNotifyState = 'missing';
-      else { admRmaNotify = r.data || []; admRmaNotifyState = 'ready'; }
+      const [st, rn, oc] = await Promise.all([
+        SB.from('app_settings').select('*'),
+        SB.from('rma_notify_contacts').select('*').order('name'),
+        SB.from('order_contacts').select('*').order('name')
+      ]);
+      admRmaSettings = {}; admOrderSettings = {};
+      (st.data || []).forEach(function(x){ admRmaSettings[x.key] = x.value; admOrderSettings[x.key] = x.value; });
+      admRmaNotifyState = rn.error ? 'missing' : 'ready';
+      admRmaNotify = rn.data || [];
+      admOrdState = oc.error ? 'missing' : 'ready';
+      admOrderContacts = oc.data || [];
+      admEmLoad = 'ready';
     }
+    if (admEmLoad !== 'ready') return;
 
     const custName = {}; ordCustomers.forEach(function(c){ custName[c.id] = c.name; });
-    const list = admRmaNotify.filter(function(c){ return !admCustFilter || String(c.customer_id) === String(admCustFilter); });
+    const mine = function(c){ return !admCustFilter || String(c.customer_id) === String(admCustFilter); };
+    const ordList = admOrderContacts.filter(mine);
+    const rmaList = admRmaNotify.filter(mine);
+    const events  = String(admOrderSettings.order_email_events || 'invoice,batch,shipped,complete').split(',');
+    const ordOn   = (admOrderSettings.order_email_enabled || 'on') === 'on';
+    const rmaOn   = (admRmaSettings.rma_email_enabled || 'on') === 'on';
+    const admin   = ordPerm.admin;
 
-    const recipients = admRmaNotifyState === 'missing'
-      ? '<div class="empty"><div class="empty-ico">!</div><p>The RMA notification list is not switched on yet.</p>' +
-        '<p class="muted-sm">Run <b>email-polish.sql</b> in Supabase, then reload this page. Your existing technicians carry across automatically.</p></div>'
-      : '<div class="adm-bar"><div class="adm-bar-l"><label class="muted-sm" for="admRnCust">Customer</label>' +
-          admCustSelect('admRnCust', admCustFilter, 'All customers') + '</div>' +
-          (ordPerm.rma ? '<button class="primary btn-sm" id="admRnAdd" type="button">Add recipient</button>' : '') + '</div>' +
-        (list.length
-          ? '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr><th>Customer</th><th>Name</th><th>Email</th><th>Role</th><th>Notify</th><th></th></tr></thead><tbody>' +
-            list.map(function(c){
-              return '<tr><td data-l="Customer">' + esc(custName[c.customer_id] || '\u2014') + '</td>' +
-                '<td data-l="Name"><b>' + esc(c.name) + '</b></td>' +
-                '<td class="adm-spec" data-l="Email">' + esc(c.email || '\u2014') + '</td>' +
-                '<td data-l="Role">' + esc(c.role || '\u2014') + '</td>' +
-                '<td data-l="Notify">' + (c.notify && c.active !== false ? '\u2713' : '\u2014') + '</td>' +
-                '<td class="adm-act" data-l="">' + (ordPerm.rma
-                  ? '<button class="ghost mini" data-admrnedit="' + esc(c.id) + '" type="button">Edit</button>' +
-                    '<button class="ghost mini del-btn" data-admrndel="' + esc(c.id) + '" type="button" title="Remove">\u00d7</button>'
-                  : '') + '</td></tr>';
-            }).join('') + '</tbody></table></div>' +
-            '<p class="muted-sm" style="margin-top:var(--s3);">Everyone ticked hears about status changes, parts shipping and replies. Whoever opened a ticket always hears about it, listed or not.</p>'
-          : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No RMA recipients' + (admCustFilter ? ' for this customer' : ' yet') + '.</p>' +
-            '<p class="muted-sm">Add everyone who should hear about RMA progress. Separate from where parts get shipped, which lives under Admin \u2192 RMA.</p></div>');
+    p.innerHTML =
+      '<div class="adm-bar"><div class="adm-bar-l"><label class="muted-sm" for="admEmCust">Customer</label>' +
+        admCustSelect('admEmCust', admCustFilter, 'All customers') + '</div>' +
+        '<span class="muted-sm">Filters recipients and history in both sections.</span></div>' +
 
-    p.innerHTML = recipients +
-      '<section class="card" style="margin-top:var(--s5);"><h2 class="card-title">Novatech notifications</h2>' +
-        '<p class="muted-sm" style="margin-top:0;">Who on your side gets an email when a technician opens an RMA or replies. Comma-separated.</p>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><input id="admRmaEmails" type="text" style="flex:1 1 320px;" placeholder="one@novatechgaming.com, two@novatechgaming.com" value="' + esc(admRmaSettings.rma_notify_emails || '') + '"' + (ordPerm.admin ? '' : ' disabled') + '>' +
-        (ordPerm.admin ? '<button class="ghost btn-sm" id="admRmaEmailsSave" type="button">Save</button>' : '') + '</div></section>' +
-      '<section class="card" style="margin-top:var(--s4);"><h2 class="card-title">The email connection</h2>' +
-        '<p class="muted-sm" style="margin-top:0;">Sent through Resend, and shared with order notifications. The From address must be on the domain you verified in Resend.</p>' +
+      /* ---- 1. the connection, shared by both ---- */
+      '<section class="card adm-sec"><h2 class="card-title">Connection</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">One Resend account sends both kinds of mail. Each section below has its own From address, which must be on a domain you verified in Resend.</p>' +
         '<p class="muted-sm" id="admEmailState">Checking\u2026</p>' +
-        (ordPerm.admin
-          ? '<div class="spec-grid" style="margin-top:4px;">' +
-              '<div class="field"><label for="admEmailFrom">From</label><input id="admEmailFrom" type="text" placeholder="Novatech Gaming &lt;rma@novatechgaming.com&gt;" value="' + esc(admRmaSettings.rma_email_from || '') + '"></div>' +
-              '<div class="field"><label for="admEmailReply">Reply-to <span class="mobo-hint">optional</span></label><input id="admEmailReply" type="text" placeholder="support@novatechgaming.com" value="' + esc(admRmaSettings.rma_email_reply_to || '') + '"></div>' +
-              '<div class="field span2"><div style="margin-top:4px;"><button class="ghost btn-sm" id="admEmailFromSave" type="button">Save addresses</button></div></div>' +
-              '<div class="field span2"><label for="admResendKey">Resend API key</label>' +
-                '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><input id="admResendKey" type="password" autocomplete="off" style="flex:1 1 300px;" placeholder="re_\u2026">' +
-                '<button class="ghost btn-sm" id="admResendSave" type="button">Save key</button></div></div>' +
-              '<div class="field span2"><label for="admEmailTestTo">Send a test to</label>' +
-                '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><input id="admEmailTestTo" type="email" style="flex:1 1 300px;" placeholder="you@novatechgaming.com">' +
-                '<button class="ghost btn-sm" id="admEmailTest" type="button">Send test</button></div></div>' +
-            '</div>'
+        (admin
+          ? '<div class="field" style="margin-top:4px;"><label for="admResendKey">Resend API key</label>' +
+              '<div class="adm-inline"><input id="admResendKey" type="password" autocomplete="off" placeholder="re_\u2026">' +
+              '<button class="ghost btn-sm" id="admResendSave" type="button">Save key</button></div></div>'
           : '') +
-        '<div id="admEmailLog"></div>' +
+      '</section>' +
+
+      /* ---- 2. order notifications ---- */
+      '<section class="card adm-sec"><h2 class="card-title">Order notifications</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">Invoices, batches, shipments and completion. Sent to the people below, per customer.</p>' +
+        (admOrdState === 'missing'
+          ? '<p class="muted-sm">Run <b>order-notify.sql</b> in Supabase, then reload.</p>'
+          : (admin
+              ? '<div class="spec-grid">' +
+                  '<div class="field"><label for="admOrdFrom">From</label>' +
+                    '<input id="admOrdFrom" type="text" placeholder="Novatech Gaming &lt;orders@novatechgaming.com&gt;" value="' + esc(admOrderSettings.order_email_from || '') + '"></div>' +
+                  '<div class="field"><label for="admOrdReply">Reply-to <span class="mobo-hint">optional</span></label>' +
+                    '<input id="admOrdReply" type="text" placeholder="sales@novatechgaming.com" value="' + esc(admOrderSettings.order_email_reply_to || '') + '"></div>' +
+                  '<div class="field span2"><div class="adm-inline"><button class="ghost btn-sm" id="admOrdFromSave" type="button">Save addresses</button>' +
+                    '<span class="muted-sm">Leave both empty to use the RMA addresses.</span></div></div>' +
+                '</div>'
+              : '') +
+            '<h3 class="adm-sub">What gets sent</h3>' +
+            '<div class="adm-evts">' + ORD_EVENTS.map(function(ev){
+              return '<label class="adm-evt"><input type="checkbox" data-admonevt="' + ev[0] + '"' +
+                (events.indexOf(ev[0]) >= 0 ? ' checked' : '') + (admin ? '' : ' disabled') +
+                '><span><b>' + ev[1] + '</b>' + ev[2] +
+                '<button class="ghost mini" data-admprev="order:' + ev[0] + ':' + esc(ev[1]) + '" type="button">Preview</button></span></label>';
+            }).join('') + '</div>' +
+            '<label class="adm-evt adm-evt-master"><input type="checkbox" id="admOnEnabled"' +
+              (ordOn ? ' checked' : '') + (admin ? '' : ' disabled') +
+              '><span><b>Order email is on</b>Untick to stop every order email at once without losing the lists.</span></label>' +
+
+            '<h3 class="adm-sub">Recipients' + (admin ? '<button class="ghost btn-sm" id="admOnAdd" type="button">Add recipient</button>' : '') + '</h3>' +
+            admEmailRecips('order', ordList, custName, admin) +
+
+            (admin
+              ? '<h3 class="adm-sub">Send a test</h3>' +
+                '<div class="adm-inline"><input id="admOnTestTo" type="email" placeholder="you@novatechgaming.com">' +
+                '<button class="ghost btn-sm" id="admOnTest" type="button">Send test</button></div>'
+              : '') +
+
+            '<h3 class="adm-sub">Order mail history</h3>' +
+            '<div id="admHist_order"><p class="muted-sm" style="margin:0;">Loading\u2026</p></div>') +
+      '</section>' +
+
+      /* ---- 3. RMA notifications ---- */
+      '<section class="card adm-sec"><h2 class="card-title">RMA notifications</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">Requests opened, status changes, parts shipping and replies.</p>' +
+        (admRmaNotifyState === 'missing'
+          ? '<p class="muted-sm">Run <b>email-polish.sql</b> in Supabase, then reload. Existing technicians carry across automatically.</p>'
+          : (admin
+              ? '<div class="spec-grid">' +
+                  '<div class="field"><label for="admEmailFrom">From</label>' +
+                    '<input id="admEmailFrom" type="text" placeholder="Novatech Gaming &lt;rma@novatechgaming.com&gt;" value="' + esc(admRmaSettings.rma_email_from || '') + '"></div>' +
+                  '<div class="field"><label for="admEmailReply">Reply-to <span class="mobo-hint">optional</span></label>' +
+                    '<input id="admEmailReply" type="text" placeholder="support@novatechgaming.com" value="' + esc(admRmaSettings.rma_email_reply_to || '') + '"></div>' +
+                  '<div class="field span2"><div class="adm-inline"><button class="ghost btn-sm" id="admEmailFromSave" type="button">Save addresses</button>' +
+                    '<span class="muted-sm">Also the fallback for order mail.</span></div></div>' +
+                '</div>'
+              : '') +
+            '<h3 class="adm-sub">What gets sent</h3>' +
+            '<div class="adm-prevs">' + RMA_EVENTS.map(function(ev){
+              return '<button class="ghost btn-sm" data-admprev="rma:' + ev[0] + ':' + esc(ev[1]) + '" type="button">' + ev[1] + '</button>';
+            }).join('') + '</div>' +
+            '<p class="muted-sm" style="margin:var(--s2) 0 0;">All four go out whenever RMA email is on. Click one to read it.</p>' +
+            '<label class="adm-evt adm-evt-master"><input type="checkbox" id="admRmaEnabled"' +
+              (rmaOn ? ' checked' : '') + (admin ? '' : ' disabled') +
+              '><span><b>RMA email is on</b>Untick to stop every RMA email at once without losing the lists.</span></label>' +
+
+            '<h3 class="adm-sub">Recipients' + (ordPerm.rma ? '<button class="ghost btn-sm" id="admRnAdd" type="button">Add recipient</button>' : '') + '</h3>' +
+            admEmailRecips('rma', rmaList, custName, ordPerm.rma) +
+
+            '<h3 class="adm-sub">Novatech copies</h3>' +
+            '<p class="muted-sm" style="margin:0 0 var(--s2);">Who on your side hears when a technician opens an RMA or replies. Comma-separated.</p>' +
+            '<div class="adm-inline"><input id="admRmaEmails" type="text" placeholder="one@novatechgaming.com, two@novatechgaming.com" value="' + esc(admRmaSettings.rma_notify_emails || '') + '"' + (admin ? '' : ' disabled') + '>' +
+              (admin ? '<button class="ghost btn-sm" id="admRmaEmailsSave" type="button">Save</button>' : '') + '</div>' +
+
+            (admin
+              ? '<h3 class="adm-sub">Send a test</h3>' +
+                '<div class="adm-inline"><input id="admEmailTestTo" type="email" placeholder="you@novatechgaming.com">' +
+                '<button class="ghost btn-sm" id="admEmailTest" type="button">Send test</button></div>'
+              : '') +
+
+            '<h3 class="adm-sub">RMA mail history</h3>' +
+            '<div id="admHist_rma"><p class="muted-sm" style="margin:0;">Loading\u2026</p></div>') +
       '</section>';
-    admEmailState();
+
+    admEmailConn();
+    if (admOrdState === 'ready')      admEmailHist('order');
+    if (admRmaNotifyState === 'ready') admEmailHist('rma');
   }
 
   function admRmaNotifyModal(c){
@@ -9978,9 +10115,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
   });
 
-  document.getElementById('admBody').addEventListener('change', function(e){
-    if (e.target.id === 'admRnCust'){ admCustFilter = e.target.value; admRenderPane(); }
-  });
 
   /* ---- order notification recipients ----
      Deliberately its own list. The people who want to know a shipment left
@@ -9991,72 +10125,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ['shipped',  'Batch shipped',    'The batch leaves, with carrier and tracking.'],
     ['complete', 'Invoice complete', 'Every unit on the invoice has shipped.']
   ];
-  let admOrderContacts = [], admOrderSettings = {}, admOrdState = 'idle';
-
-  async function admPaneOrderEmails(p){
-    if (admOrdState === 'idle'){
-      admOrdState = 'loading';
-      p.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:60%"></div></div>';
-      const [oc, st] = await Promise.all([
-        SB.from('order_contacts').select('*').order('name'),
-        SB.from('app_settings').select('*')
-      ]);
-      if (oc.error){ admOrdState = 'missing'; }
-      else {
-        admOrderContacts = oc.data || [];
-        admOrderSettings = {}; (st.data || []).forEach(function(s){ admOrderSettings[s.key] = s.value; });
-        admOrdState = 'ready';
-      }
-    }
-    if (admOrdState === 'missing'){
-      p.innerHTML = '<div class="empty"><div class="empty-ico">!</div><p>Order emails are not switched on yet.</p>' +
-        '<p class="muted-sm">Run <b>order-notify.sql</b> in Supabase, then reload this page.</p></div>';
-      return;
-    }
-    if (admOrdState !== 'ready') return;
-
-    const custName = {}; ordCustomers.forEach(function(c){ custName[c.id] = c.name; });
-    const list = admOrderContacts.filter(function(c){ return !admCustFilter || String(c.customer_id) === String(admCustFilter); });
-    const events = String(admOrderSettings.order_email_events || 'invoice,batch,shipped,complete').split(',');
-    const sendOn = (admOrderSettings.order_email_enabled || 'on') === 'on';
-
-    p.innerHTML =
-      '<div class="adm-bar"><div class="adm-bar-l"><label class="muted-sm" for="admOnCust">Customer</label>' +
-        admCustSelect('admOnCust', admCustFilter, 'All customers') + '</div>' +
-        (ordPerm.admin ? '<button class="primary btn-sm" id="admOnAdd" type="button">Add recipient</button>' : '') + '</div>' +
-      (list.length
-        ? '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr><th>Customer</th><th>Name</th><th>Email</th><th>Role</th><th>Notify</th><th></th></tr></thead><tbody>' +
-          list.map(function(c){
-            return '<tr><td data-l="Customer">' + esc(custName[c.customer_id] || '\u2014') + '</td>' +
-              '<td data-l="Name"><b>' + esc(c.name) + '</b></td>' +
-              '<td class="adm-spec" data-l="Email">' + esc(c.email || '\u2014') + '</td>' +
-              '<td data-l="Role">' + esc(c.role || '\u2014') + '</td>' +
-              '<td data-l="Notify">' + (c.notify && c.active !== false ? '\u2713' : '\u2014') + '</td>' +
-              '<td class="adm-act" data-l="">' + (ordPerm.admin
-                ? '<button class="ghost mini" data-admonedit="' + esc(c.id) + '" type="button">Edit</button>' +
-                  '<button class="ghost mini del-btn" data-admondel="' + esc(c.id) + '" type="button" title="Remove">\u00d7</button>'
-                : '') + '</td></tr>';
-          }).join('') + '</tbody></table></div>'
-        : '<div class="empty"><div class="empty-ico">\u25a2</div><p>No order recipients' + (admCustFilter ? ' for this customer' : ' yet') + '.</p>' +
-          '<p class="muted-sm">Add everyone who should hear when an invoice opens or a shipment leaves. Separate from the RMA technicians.</p></div>') +
-      '<section class="card" style="margin-top:var(--s5);"><h2 class="card-title">What gets sent</h2>' +
-        '<p class="muted-sm" style="margin-top:0;">Four moments in an order\u2019s life. Everyone above gets whichever you leave on.</p>' +
-        '<div class="adm-evts">' + ORD_EVENTS.map(function(ev){
-          return '<label class="adm-evt"><input type="checkbox" data-admonevt="' + ev[0] + '"' +
-            (events.indexOf(ev[0]) >= 0 ? ' checked' : '') + (ordPerm.admin ? '' : ' disabled') +
-            '><span><b>' + ev[1] + '</b>' + ev[2] + '</span></label>';
-        }).join('') + '</div>' +
-        '<label class="adm-evt adm-evt-master"><input type="checkbox" id="admOnEnabled"' +
-          (sendOn ? ' checked' : '') + (ordPerm.admin ? '' : ' disabled') +
-          '><span><b>Order email is on</b>Untick to stop every order email at once without losing the lists.</span></label>' +
-      '</section>' +
-      '<section class="card" style="margin-top:var(--s4);"><h2 class="card-title">Send a test</h2>' +
-        '<p class="muted-sm" style="margin-top:0;">Goes out with the same Resend key and From address as the RMA mail, set under Admin \u2192 RMA emails.</p>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
-          '<input id="admOnTestTo" type="email" style="flex:1 1 300px;" placeholder="you@novatechgaming.com">' +
-          '<button class="ghost btn-sm" id="admOnTest" type="button">Send test</button></div>' +
-      '</section>';
-  }
+  let admOrderContacts = [], admOrderSettings = {}, admOrdState = 'idle', admEmLoad = 'idle';
 
   function admOrderContactModal(c){
     const isNew = !c;
@@ -10125,7 +10194,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   });
 
   document.getElementById('admBody').addEventListener('change', async function(e){
-    if (e.target.id === 'admOnCust'){ admCustFilter = e.target.value; admRenderPane(); return; }
     if (e.target.id === 'admOnEnabled'){
       if (await admSaveSetting('order_email_enabled', e.target.checked ? 'on' : 'off'))
         toast(e.target.checked ? 'Order email on' : 'Order email off', 'ok');
@@ -10135,6 +10203,63 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const on = Array.prototype.slice.call(document.querySelectorAll('[data-admonevt]'))
         .filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute('data-admonevt'); });
       if (await admSaveSetting('order_email_events', on.join(','))) toast('Saved', 'ok');
+      return;
+    }
+  });
+
+  /* ---- email tab: preview, mute, more history, per-kind addresses ---- */
+  document.getElementById('admBody').addEventListener('click', async function(e){
+    const pv = e.target.closest('[data-admprev]');
+    if (pv){
+      const parts = pv.getAttribute('data-admprev').split(':');
+      admEmailPreview(parts[0], parts[1], parts.slice(2).join(':'));
+      return;
+    }
+    const more = e.target.closest('[data-admhistmore]');
+    if (more){
+      const k = more.getAttribute('data-admhistmore');
+      admHistLimit[k] = Math.min(200, (admHistLimit[k] || 25) + 75);
+      more.disabled = true; more.textContent = 'Loading\u2026';
+      admEmailHist(k);
+      return;
+    }
+    if (e.target.id === 'admOrdFromSave'){
+      const from = document.getElementById('admOrdFrom').value.trim();
+      const reply = document.getElementById('admOrdReply').value.trim();
+      if (from && !/.+@.+\..+/.test(from)){ toast('That From address does not look like an address.', 'warn'); return; }
+      const now = new Date().toISOString();
+      const r = await SB.from('app_settings').upsert([
+        { key: 'order_email_from', value: from, updated_at: now },
+        { key: 'order_email_reply_to', value: reply, updated_at: now }
+      ]);
+      if (r.error){ toast(r.error.message, 'bad'); return; }
+      admOrderSettings.order_email_from = from; admOrderSettings.order_email_reply_to = reply;
+      toast(from ? 'Order mail will send from that address' : 'Order mail falls back to the RMA address', 'ok');
+      return;
+    }
+  });
+
+  document.getElementById('admBody').addEventListener('change', async function(e){
+    if (e.target.id === 'admEmCust'){ admCustFilter = e.target.value; admRenderPane(); return; }
+    if (e.target.id === 'admRmaEnabled'){
+      const on = e.target.checked;
+      const r = await SB.from('app_settings').upsert({ key: 'rma_email_enabled', value: on ? 'on' : 'off', updated_at: new Date().toISOString() });
+      if (r.error){ toast(r.error.message, 'bad'); e.target.checked = !on; return; }
+      admRmaSettings.rma_email_enabled = on ? 'on' : 'off';
+      toast(on ? 'RMA email on' : 'RMA email off', 'ok');
+      return;
+    }
+    const nt = e.target.closest('[data-admnotify]');
+    if (nt){
+      const parts = nt.getAttribute('data-admnotify').split(':');
+      const kind = parts[0], id = parts[1], on = nt.checked;
+      const tbl = kind === 'order' ? 'order_contacts' : 'rma_notify_contacts';
+      const r = await SB.from(tbl).update({ notify: on, active: true }).eq('id', id).select().single();
+      if (r.error){ nt.checked = !on; toast(r.error.message, 'bad'); return; }
+      const bag = kind === 'order' ? admOrderContacts : admRmaNotify;
+      const row = bag.find(function(x){ return String(x.id) === String(id); });
+      if (row) Object.assign(row, r.data);
+      toast(on ? 'They will get these emails' : 'Muted \u2014 still on the list', 'ok');
       return;
     }
   });
