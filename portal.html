@@ -296,6 +296,58 @@
   .pipen{ margin-left:auto; font-weight:600; font-variant-numeric:tabular-nums; }
   @media (max-width:640px){ .pipeleg{ grid-template-columns:1fr; gap:var(--s2); } .pipev{ font-size:24px; } }
 
+  /* ---------- billing ---------- */
+  .bstats{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s3); }
+  .bstat{ padding:var(--s4); border:1px solid var(--line); border-radius:var(--r-md); background:var(--paper); min-width:0; }
+  .bstat-k{ font-size:12px; color:var(--muted); }
+  .bstat-v{ margin-top:2px; font-size:26px; font-weight:600; line-height:1.2; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+  .bstat-s{ font-size:12px; color:var(--muted); }
+  .bstat.due .bstat-v{ color:var(--bad, #b3261e); }
+  .bage{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:var(--s2); margin-top:var(--s4); }
+  .bage-c{ padding:var(--s3); border:1px solid var(--line); border-radius:var(--r-sm); background:var(--soft); min-width:0; }
+  .bage-c.hot{ border-color:var(--bad, #b3261e); }
+  .bage-k{ font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+  .bage-v{ margin-top:2px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .bchart{ display:flex; align-items:flex-end; gap:var(--s2); height:120px; margin-top:var(--s4); }
+  .bchart-col{ flex:1 1 0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:6px; min-width:0; }
+  .bchart-bar{ width:100%; max-width:34px; background:var(--accent); border-radius:var(--r-sm) var(--r-sm) 0 0; min-height:2px; }
+  .bchart-l{ font-size:11px; color:var(--muted); white-space:nowrap; }
+  .btabs{ display:flex; gap:var(--s2); }
+  .binv{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s2); overflow:hidden; background:var(--paper); }
+  .binv-h{
+    display:grid; grid-template-columns:minmax(0,1.4fr) repeat(3, minmax(0,1fr)) auto;
+    gap:var(--s3); align-items:center; padding:var(--s4); cursor:pointer;
+    transition:background var(--t);
+  }
+  .binv-h:hover{ background:var(--soft); }
+  .binv-h:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .binv-no{ font-weight:600; }
+  .binv-sub{ font-size:12px; color:var(--muted); }
+  .binv-n{ text-align:right; font-variant-numeric:tabular-nums; }
+  .binv-n b{ display:block; }
+  .binv-n span{ font-size:11px; color:var(--muted); letter-spacing:.04em; text-transform:uppercase; }
+  .binv-b{ padding:0 var(--s4) var(--s4); border-top:1px solid var(--line); }
+  .binv-sec{ margin:var(--s4) 0 var(--s2); font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+  .bpay{ display:grid; grid-template-columns:auto auto minmax(0,1fr); gap:var(--s3); padding:var(--s2) 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .bpay:last-child{ border-bottom:none; }
+  .bpay-a{ font-weight:600; font-variant-numeric:tabular-nums; }
+  .bpay-d{ color:var(--muted); }
+  .bdoc{ display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:var(--s3); align-items:center; padding:var(--s2) 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .bdoc:last-child{ border-bottom:none; }
+  .bdoc-n{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+  .bdoc-m{ color:var(--muted); font-size:12px; white-space:nowrap; }
+  .bacts{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s4); }
+  @media (max-width:820px){
+    .bstats{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .bage{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .binv-h{ grid-template-columns:minmax(0,1fr) auto; }
+    .binv-n.hide-sm{ display:none; }
+  }
+  @media (max-width:560px){
+    .bstats{ grid-template-columns:1fr; }
+    .bage{ grid-template-columns:1fr; }
+  }
+
   /* ---------- RMAs ---------- */
   .rhead{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; margin-bottom:var(--s4); }
   .rhead h1{ margin:0; }
@@ -737,6 +789,7 @@
   <nav class="pmenu" id="pmenu" aria-label="Sections">
     <a data-pview="orders" class="on" role="button" tabindex="0">Orders</a>
     <a data-pview="rmas" role="button" tabindex="0">RMAs<span class="pbadge" id="pmenuBadge" style="display:none;"></span></a>
+    <a data-pview="billing" id="navBilling" role="button" tabindex="0" style="display:none;">Billing</a>
   </nav>
   <div class="who">
     <span class="who-em" id="whoEmail"></span>
@@ -895,6 +948,8 @@
   let orders = [], lines = [], configs = [], batches = [], tracking = [], units = [], locations = [];
   let currentId = null, query = '';
   let pview = 'orders';
+  let canBill = false, billState = 'idle', billErr = '', billSum = null, billInv = [], billSeries = [];
+  let billPays = {}, billDocs = {}, billOpen = null, billTab = 'open';
   let rmaTickets = [], rmaParts = [], rmaShipments = [], rmaComments = [], rmaAttachments = [], rmaEvents = [], rmaContacts = [];
   let rmaCurrent = null, rmaReturnAddress = '';
 
@@ -925,6 +980,7 @@
     $('whoEmail').textContent = session.user.email || '';
     const cu = await SB.from('customer_users').select('*').eq('user_id', session.user.id).limit(1);
     me = (cu.data || [])[0];
+    canBill = !!(me && me.can_view_billing);
 
     if (!me || !me.active){
       /* Not a customer login. NovaTech staff can still open this page to see
@@ -1188,6 +1244,7 @@
   function syncMenu(){
     const menu = $('pmenu'); if (!menu) return;
     menu.querySelectorAll('[data-pview]').forEach(function(a){ a.classList.toggle('on', a.getAttribute('data-pview') === pview); });
+    const nb = $('navBilling'); if (nb) nb.style.display = canBill ? '' : 'none';
     const needs = rmaTickets.filter(function(t){ return t.status === 'needs_info'; }).length;
     const b = $('pmenuBadge'); if (b){ b.textContent = String(needs); b.style.display = needs ? '' : 'none'; }
   }
@@ -1204,6 +1261,7 @@
     setUrl(null);
     $('detailView').style.display = 'none';
     $('listView').style.display = '';
+    if (pview === 'billing') return renderBilling();
     if (pview === 'rmas') return renderRmaList();
     $('listView').style.display = '';
     const q = query.trim().toLowerCase();
@@ -1247,6 +1305,426 @@
     const lk = $('lookup');
     if (lk) lk.addEventListener('click', serialLookup);
   }
+
+  /* ---------- billing ----------
+     Read-only money. The only things they can change are the PO number and
+     documents they attach themselves; both go through their own function or
+     their own bucket. Figures come from security-definer functions, so an
+     invoice held back from the portal still shows what is owed on it while
+     the order, units and tracking stay hidden. */
+  function bmoney(n){
+    if (n == null || n === '') return '\u2014';
+    const v = Number(n);
+    return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+  function bmoneyBig(n){ return '$' + Math.round(Number(n || 0)).toLocaleString(); }
+  function bsize(n){
+    const b = +n || 0; if (!b) return '';
+    return b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+  }
+  const BILL_CHIP = { paid:'ok', overdue:'bad', 'part paid':'warn', open:'', unpriced:'' };
+
+  async function loadBilling(){
+    if (billState === 'loading') return;
+    billState = 'loading';
+    const [sm, iv, sr] = await Promise.all([
+      SB.rpc('portal_billing_summary'),
+      SB.rpc('portal_billing_invoices'),
+      SB.rpc('portal_billing_paid_series', { p_months: 12 })
+    ]);
+    if (sm.error || iv.error){
+      billState = 'error';
+      billErr = ((sm.error || iv.error) || {}).message || 'Could not load billing.';
+      return;
+    }
+    billSum = (sm.data || [])[0] || null;
+    billInv = iv.data || [];
+    billSeries = sr.error ? [] : (sr.data || []);
+    billState = 'ready';
+  }
+
+  function renderBilling(){
+    if (!canBill){ pview = 'orders'; return renderList(); }
+    const host = $('listView');
+    if (billState === 'idle'){
+      host.innerHTML = pnavHtml() + '<h1>Billing</h1>' +
+        '<div class="skel-card"><div class="skel skel-line" style="width:30%"></div>' +
+        '<div class="skel skel-line" style="width:60%"></div></div>';
+      loadBilling().then(function(){ if (pview === 'billing') renderBilling(); });
+      return;
+    }
+    if (billState === 'loading') return;
+    if (billState === 'error'){
+      host.innerHTML = pnavHtml() + '<h1>Billing</h1>' +
+        '<div class="card"><p class="muted">' + esc(billErr) + '</p></div>';
+      return;
+    }
+
+    const sum = billSum || {};
+    const open = billInv.filter(function(x){ return Number(x.balance || 0) > 0.005 || x.invoice_total == null; });
+    const paid = billInv.filter(function(x){ return x.invoice_total != null && Number(x.balance || 0) <= 0.005; });
+    const rows = billTab === 'paid' ? paid : open;
+    const maxPaid = billSeries.reduce(function(m, x){ return Math.max(m, Number(x.paid || 0)); }, 0);
+
+    host.innerHTML = pnavHtml() +
+      '<h1>Billing</h1>' +
+      '<p class="muted" style="margin-top:0;">What you have paid, what is still owed, and when it is due. Everything here is read-only except your PO numbers and documents you attach.</p>' +
+
+      '<div class="bstats">' +
+        '<div class="bstat"><div class="bstat-k">Outstanding</div>' +
+          '<div class="bstat-v">' + bmoneyBig(sum.outstanding) + '</div>' +
+          '<div class="bstat-s">' + num(sum.open_count || 0) + (Number(sum.open_count) === 1 ? ' open invoice' : ' open invoices') + '</div></div>' +
+        '<div class="bstat' + (Number(sum.overdue || 0) > 0.005 ? ' due' : '') + '"><div class="bstat-k">Past due</div>' +
+          '<div class="bstat-v">' + bmoneyBig(sum.overdue) + '</div>' +
+          '<div class="bstat-s">' + (Number(sum.overdue || 0) > 0.005 ? 'needs attention' : 'nothing overdue') + '</div></div>' +
+        '<div class="bstat"><div class="bstat-k">Next due</div>' +
+          '<div class="bstat-v">' + (sum.next_due_date ? bmoneyBig(sum.next_due_amount) : '\u2014') + '</div>' +
+          '<div class="bstat-s">' + (sum.next_due_date ? esc(fmtDate(sum.next_due_date)) : 'no dated invoices open') + '</div></div>' +
+        '<div class="bstat"><div class="bstat-k">Paid to date</div>' +
+          '<div class="bstat-v">' + bmoneyBig(sum.paid) + '</div>' +
+          '<div class="bstat-s">of ' + bmoneyBig(sum.invoiced) + ' invoiced</div></div>' +
+      '</div>' +
+
+      '<div class="card" style="margin-top:var(--s4);"><h2 style="margin:0;font-size:15px;">How the balance ages</h2>' +
+        '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">Only invoices with something still owing.</p>' +
+        '<div class="bage">' +
+          [['Current', sum.b_current, false], ['1\u201330 days', sum.b_1_30, true],
+           ['31\u201360', sum.b_31_60, true], ['61\u201390', sum.b_61_90, true],
+           ['90+', sum.b_90_plus, true]].map(function(b){
+            const hot = b[2] && Number(b[1] || 0) > 0.005;
+            return '<div class="bage-c' + (hot ? ' hot' : '') + '"><div class="bage-k">' + b[0] + '</div>' +
+              '<div class="bage-v">' + bmoney(b[1] || 0) + '</div></div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+
+      (billSeries.length
+        ? '<div class="card" style="margin-top:var(--s4);"><h2 style="margin:0;font-size:15px;">What you have paid</h2>' +
+            '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">By month, payments we have recorded.</p>' +
+            '<div class="bchart">' + billSeries.map(function(x){
+              const h = maxPaid ? Math.max(2, Number(x.paid || 0) / maxPaid * 96) : 2;
+              return '<div class="bchart-col" title="' + esc(bmoney(x.paid)) + '">' +
+                '<div class="bchart-bar" style="height:' + h + 'px"></div>' +
+                '<div class="bchart-l">' + esc(fmtDate(x.month).replace(/,.*$/, '')) + '</div></div>';
+            }).join('') + '</div>' +
+          '</div>'
+        : '') +
+
+      '<div class="card" style="margin-top:var(--s4);">' +
+        '<div class="toolbar"><div class="btabs">' +
+          '<button class="btn sm' + (billTab === 'open' ? ' primary' : '') + '" data-btab="open" type="button">Open (' + open.length + ')</button>' +
+          '<button class="btn sm' + (billTab === 'paid' ? ' primary' : '') + '" data-btab="paid" type="button">Paid in full (' + paid.length + ')</button>' +
+        '</div>' +
+        '<button class="btn sm" id="bStmt" type="button">Statement</button>' +
+        '<button class="btn sm" id="bCsv" type="button">Download CSV</button></div>' +
+
+        (rows.length ? rows.map(function(r){
+          const isOpen = String(billOpen) === String(r.order_id);
+          const chip = BILL_CHIP[r.state] === undefined ? '' : BILL_CHIP[r.state];
+          return '<div class="binv" data-binv="' + esc(r.order_id) + '">' +
+            '<div class="binv-h" role="button" tabindex="0" title="Click for payments and documents">' +
+              '<div><div class="binv-no mono">' + esc(r.invoice_no || '\u2014') + '</div>' +
+                '<div class="binv-sub">' + (r.po_number ? 'PO ' + esc(r.po_number) + ' \u00b7 ' : '') +
+                  (r.due_date ? 'due ' + esc(fmtDate(r.due_date)) : 'no due date') +
+                  (r.days_late > 0 ? ' \u00b7 ' + num(r.days_late) + ' days late' : '') + '</div></div>' +
+              '<div class="binv-n hide-sm"><b>' + bmoney(r.invoice_total) + '</b><span>invoiced</span></div>' +
+              '<div class="binv-n hide-sm"><b>' + bmoney(r.paid) + '</b><span>paid</span></div>' +
+              '<div class="binv-n"><b>' + (r.invoice_total == null ? '\u2014' : bmoney(r.balance)) + '</b><span>balance</span></div>' +
+              '<div><span class="chip ' + chip + '">' + esc(r.state) + '</span></div>' +
+            '</div>' +
+            (isOpen
+              ? '<div class="binv-b">' +
+                  (r.held ? '<p class="muted" style="margin:var(--s3) 0 0;font-size:13px;">This invoice is awaiting payment in full. The build details stay hidden until it is settled.</p>' : '') +
+                  '<div class="binv-sec">Payments</div>' +
+                  (billPays[r.order_id] === undefined
+                    ? '<p class="muted" style="margin:0;font-size:13px;">Loading\u2026</p>'
+                    : billPays[r.order_id].length
+                      ? billPays[r.order_id].map(function(p){
+                          return '<div class="bpay"><span class="bpay-a">' + bmoney(p.amount) + '</span>' +
+                            '<span class="bpay-d">' + esc(fmtDate(p.paid_on)) + '</span>' +
+                            '<span class="bpay-d">' + esc([p.method, p.note].filter(Boolean).join(' \u00b7 ')) + '</span></div>';
+                        }).join('')
+                      : '<p class="muted" style="margin:0;font-size:13px;">Nothing recorded against this invoice yet.</p>') +
+
+                  '<div class="binv-sec">Your documents</div>' +
+                  (billDocs[r.order_id] === undefined
+                    ? '<p class="muted" style="margin:0;font-size:13px;">Loading\u2026</p>'
+                    : billDocs[r.order_id].length
+                      ? billDocs[r.order_id].map(function(d){
+                          return '<div class="bdoc"><span class="bdoc-n" title="' + esc(d.filename) + '">' + esc(d.filename) + '</span>' +
+                            '<span class="bdoc-m">' + esc(fmtDate(d.created_at)) + (bsize(d.size_bytes) ? ' \u00b7 ' + bsize(d.size_bytes) : '') + '</span>' +
+                            '<span style="display:flex;gap:6px;">' +
+                              '<button class="btn sm" data-bdocopen="' + esc(d.id) + '" type="button">Open</button>' +
+                              '<button class="btn sm" data-bdocdel="' + esc(d.id) + '" type="button">Remove</button>' +
+                            '</span></div>';
+                        }).join('')
+                      : '<p class="muted" style="margin:0;font-size:13px;">Nothing attached. Add a PO copy, a remittance advice, anything we should have on file.</p>') +
+
+                  '<div class="bacts">' +
+                    '<button class="btn sm" data-bpo="' + esc(r.order_id) + '" type="button">' + (r.po_number ? 'Change PO number' : 'Add a PO number') + '</button>' +
+                    '<button class="btn sm" data-bupload="' + esc(r.order_id) + '" type="button">Attach a document</button>' +
+                    (r.has_pdf ? '<button class="btn sm" data-bpdf="' + esc(r.order_id) + '" type="button">Invoice PDF</button>' : '') +
+                    (Number(r.balance || 0) > 0.005 ? '<button class="btn sm primary" data-brem="' + esc(r.order_id) + '" type="button">I have sent payment</button>' : '') +
+                  '</div>' +
+                  '<input type="file" data-bfile="' + esc(r.order_id) + '" multiple style="display:none;">' +
+                '</div>'
+              : '') +
+          '</div>';
+        }).join('')
+        : '<div class="empty"><p>' + (billTab === 'paid' ? 'Nothing paid in full yet.' : 'Nothing outstanding.') + '</p>' +
+          '<p class="muted">' + (billTab === 'paid' ? 'Settled invoices move here.' : 'Invoices appear here as NovaTech issues them.') + '</p></div>') +
+      '</div>';
+  }
+
+  async function billOpenRow(id){
+    billOpen = String(billOpen) === String(id) ? null : id;
+    renderBilling();
+    if (!billOpen) return;
+    if (billPays[id] === undefined){
+      const r = await SB.rpc('portal_billing_payments', { p_order: id });
+      billPays[id] = r.error ? [] : (r.data || []);
+      if (String(billOpen) === String(id)) renderBilling();
+    }
+    if (billDocs[id] === undefined){
+      const d = await SB.from('order_customer_docs').select('*').eq('order_id', id).order('created_at', { ascending:false });
+      billDocs[id] = d.error ? [] : (d.data || []);
+      if (String(billOpen) === String(id)) renderBilling();
+    }
+  }
+
+  async function billRefresh(){
+    billState = 'idle'; billPays = {}; billDocs = {};
+    renderBilling();
+  }
+
+  function billPoModal(r){
+    const bg = openModal(
+      '<div class="modal-h"><h2>PO number</h2><p>Invoice ' + esc(r.invoice_no || '') + '. Yours to set \u2014 it appears on our copy too.</p></div>' +
+      '<div class="modal-b"><div class="field"><label for="bPoIn">PO number</label>' +
+        '<input id="bPoIn" type="text" maxlength="60" autocomplete="off" value="' + esc(r.po_number || '') + '" placeholder="e.g. 4500123987"></div></div>' +
+      '<div class="modal-f"><button class="btn" id="bPoCancel" type="button">Cancel</button>' +
+      '<button class="btn primary" id="bPoSave" type="button">Save</button></div>');
+    const inp = bg.querySelector('#bPoIn'); inp.focus(); inp.select();
+    bg.querySelector('#bPoCancel').addEventListener('click', closeModal);
+    inp.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); bg.querySelector('#bPoSave').click(); } });
+    bg.querySelector('#bPoSave').addEventListener('click', async function(){
+      this.disabled = true; this.textContent = 'Saving\u2026';
+      const v = inp.value.trim();
+      const res = await SB.rpc('portal_set_po_number', { p_order: r.order_id, p_po: v || null });
+      if (res.error){ this.disabled = false; this.textContent = 'Save'; toast(res.error.message, 'bad', 7000); return; }
+      r.po_number = v || null;
+      const o = orders.find(function(x){ return x.id === r.order_id; }); if (o) o.po_number = r.po_number;
+      closeModal(); renderBilling(); toast(v ? 'PO number saved' : 'PO number cleared', 'ok');
+    });
+  }
+
+  function billRemitModal(r){
+    const today = new Date().toISOString().slice(0, 10);
+    const bg = openModal(
+      '<div class="modal-h"><h2>Tell us you have sent payment</h2>' +
+        '<p>This emails NovaTech. Nothing is recorded against the invoice until they confirm it against the bank.</p></div>' +
+      '<div class="modal-b">' +
+        '<div class="field"><label for="bRmAmt">Amount sent</label><input id="bRmAmt" type="number" min="0" step="0.01" placeholder="' + Number(r.balance || 0).toFixed(2) + '"></div>' +
+        '<div class="field"><label for="bRmOn">Date sent</label><input id="bRmOn" type="date" value="' + today + '"></div>' +
+        '<div class="field"><label for="bRmMethod">Method</label><input id="bRmMethod" type="text" placeholder="Wire, ACH, check"></div>' +
+        '<div class="field"><label for="bRmRef">Reference</label><input id="bRmRef" type="text" placeholder="Check number, wire reference"></div>' +
+        '<div class="field"><label for="bRmNote">Note</label><input id="bRmNote" type="text" placeholder="Anything else we should know"></div>' +
+        '<div class="err" id="bRmErr"></div>' +
+      '</div>' +
+      '<div class="modal-f"><button class="btn" id="bRmCancel" type="button">Cancel</button>' +
+      '<button class="btn primary" id="bRmGo" type="button">Send the notice</button></div>');
+    bg.querySelector('#bRmCancel').addEventListener('click', closeModal);
+    bg.querySelector('#bRmGo').addEventListener('click', async function(){
+      const err = bg.querySelector('#bRmErr'); err.textContent = '';
+      const amt = parseFloat(bg.querySelector('#bRmAmt').value);
+      if (!(amt > 0)){ err.textContent = 'Enter the amount you sent.'; return; }
+      this.disabled = true; this.textContent = 'Sending\u2026';
+      const res = await SB.rpc('portal_remittance_notice', {
+        p_order: r.order_id, p_amount: amt,
+        p_paid_on: bg.querySelector('#bRmOn').value || null,
+        p_method: bg.querySelector('#bRmMethod').value.trim() || null,
+        p_ref: bg.querySelector('#bRmRef').value.trim() || null,
+        p_note: bg.querySelector('#bRmNote').value.trim() || null
+      });
+      if (res.error){ this.disabled = false; this.textContent = 'Send the notice'; err.textContent = res.error.message; return; }
+      closeModal(); toast('Thanks \u2014 NovaTech has been told', 'ok', 5000);
+    });
+  }
+
+  async function billUpload(id, files){
+    let ok = 0;
+    for (const f of Array.from(files)){
+      if (f.size > 25 * 1024 * 1024){ toast(f.name + ' is over the 25 MB limit.', 'bad', 7000); continue; }
+      const safe = f.name.replace(/[^\w.\-]+/g, '_').slice(-80);
+      const path = id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '-' + safe;
+      const up = await SB.storage.from('customer-docs').upload(path, f, { upsert:false, contentType: f.type || 'application/octet-stream' });
+      if (up.error){ toast('Could not upload ' + f.name + ': ' + up.error.message, 'bad', 7000); continue; }
+      const ins = await SB.from('order_customer_docs').insert({
+        order_id: id, filename: f.name, path: path, size_bytes: f.size,
+        content_type: f.type || null, created_by: session.user.id
+      });
+      if (ins.error){
+        await SB.storage.from('customer-docs').remove([path]);
+        toast('Uploaded but not recorded: ' + ins.error.message, 'bad', 7000);
+        continue;
+      }
+      ok++;
+    }
+    if (ok){
+      const d = await SB.from('order_customer_docs').select('*').eq('order_id', id).order('created_at', { ascending:false });
+      billDocs[id] = d.error ? [] : (d.data || []);
+      const row = billInv.find(function(x){ return String(x.order_id) === String(id); });
+      if (row) row.docs = (billDocs[id] || []).length;
+      renderBilling();
+      toast(ok + (ok === 1 ? ' document attached' : ' documents attached'), 'ok');
+    }
+  }
+
+  async function billSignedOpen(bucket, path){
+    const r = await SB.storage.from(bucket).createSignedUrl(path, 120);
+    if (r.error || !r.data || !r.data.signedUrl){
+      toast('Could not open that file: ' + ((r.error && r.error.message) || 'no link returned'), 'bad', 7000);
+      return;
+    }
+    window.open(r.data.signedUrl, '_blank', 'noopener');
+  }
+
+  function billCsv(){
+    const head = ['Invoice', 'PO', 'Due', 'Status', 'Invoiced', 'Paid', 'Balance', 'Days late'];
+    const q = function(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+    const body = billInv.map(function(r){
+      return [r.invoice_no, r.po_number, r.due_date, r.state,
+        r.invoice_total == null ? '' : Number(r.invoice_total).toFixed(2),
+        Number(r.paid || 0).toFixed(2),
+        r.balance == null ? '' : Number(r.balance).toFixed(2),
+        r.days_late || 0].map(q).join(',');
+    });
+    const csv = [head.map(q).join(',')].concat(body).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'statement-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  }
+
+  const STMT_CSS = 'body{font:13px/1.55 -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;color:#1a1a1a;margin:0;padding:40px;max-width:780px}' +
+    'h1{font-size:24px;margin:0 0 2px;letter-spacing:-0.4px}.sub{color:#6b6b6b;margin:0 0 26px}' +
+    'table{width:100%;border-collapse:collapse;margin:0 0 22px}th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#6b6b6b;border-bottom:1px solid #d8d8d8;padding:0 8px 6px}' +
+    'td{padding:7px 8px;border-bottom:1px solid #ececec;vertical-align:top}.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}' +
+    'tfoot td{font-weight:700;border-top:1px solid #d8d8d8;border-bottom:none}' +
+    '.age{display:flex;gap:18px;margin:0 0 24px;flex-wrap:wrap}.age div{font-size:12px}.age b{display:block;font-size:15px;font-variant-numeric:tabular-nums}' +
+    '.late{color:#b3261e}.foot{color:#8a8a8a;font-size:11px;margin-top:30px}';
+
+  function billStatement(){
+    const sum = billSum || {};
+    const owed = billInv.filter(function(x){ return Number(x.balance || 0) > 0.005; });
+    const w = window.open('', '_blank');
+    if (!w){ toast('Allow pop-ups to print a statement.', 'warn', 6000); return; }
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Statement</title>' +
+      '<style>' + STMT_CSS + '</style></head><body>' +
+      '<h1>Statement of account</h1>' +
+      '<p class="sub">' + esc(customer ? customer.name : '') + ' \u00b7 ' + esc(fmtDate(new Date().toISOString())) + '</p>' +
+      '<div class="age">' +
+        '<div>Outstanding<b>' + bmoney(sum.outstanding) + '</b></div>' +
+        '<div class="' + (Number(sum.overdue || 0) > 0.005 ? 'late' : '') + '">Past due<b>' + bmoney(sum.overdue) + '</b></div>' +
+        '<div>Current<b>' + bmoney(sum.b_current) + '</b></div>' +
+        '<div>1\u201330<b>' + bmoney(sum.b_1_30) + '</b></div>' +
+        '<div>31\u201360<b>' + bmoney(sum.b_31_60) + '</b></div>' +
+        '<div>61\u201390<b>' + bmoney(sum.b_61_90) + '</b></div>' +
+        '<div>90+<b>' + bmoney(sum.b_90_plus) + '</b></div>' +
+      '</div>' +
+      '<table><thead><tr><th>Invoice</th><th>PO</th><th>Due</th><th class="n">Invoiced</th><th class="n">Paid</th><th class="n">Balance</th></tr></thead><tbody>' +
+      (owed.length ? owed.map(function(r){
+        return '<tr><td>' + esc(r.invoice_no || '') + '</td><td>' + esc(r.po_number || '') + '</td>' +
+          '<td class="' + (r.days_late > 0 ? 'late' : '') + '">' + esc(r.due_date ? fmtDate(r.due_date) : '\u2014') +
+            (r.days_late > 0 ? ' (' + r.days_late + 'd late)' : '') + '</td>' +
+          '<td class="n">' + bmoney(r.invoice_total) + '</td><td class="n">' + bmoney(r.paid) + '</td>' +
+          '<td class="n">' + bmoney(r.balance) + '</td></tr>';
+      }).join('') : '<tr><td colspan="6">Nothing outstanding.</td></tr>') +
+      '</tbody><tfoot><tr><td colspan="5">Total outstanding</td><td class="n">' + bmoney(sum.outstanding) + '</td></tr></tfoot></table>' +
+      '<p class="foot">Figures as recorded by NovaTech Gaming on ' + esc(fmtDate(new Date().toISOString())) +
+      '. Payments in transit may not appear yet.</p>' +
+      '</body></html>');
+    w.document.close();
+    setTimeout(function(){ w.focus(); w.print(); }, 350);
+  }
+
+  document.addEventListener('click', function(e){
+    if (pview !== 'billing') return;
+    const tab = e.target.closest('[data-btab]');
+    if (tab){ billTab = tab.getAttribute('data-btab'); billOpen = null; renderBilling(); return; }
+    if (e.target.closest('#bCsv')){ billCsv(); return; }
+    if (e.target.closest('#bStmt')){ billStatement(); return; }
+
+    const po = e.target.closest('[data-bpo]');
+    if (po){
+      const r = billInv.find(function(x){ return String(x.order_id) === po.getAttribute('data-bpo'); });
+      if (r) billPoModal(r);
+      return;
+    }
+    const rem = e.target.closest('[data-brem]');
+    if (rem){
+      const r = billInv.find(function(x){ return String(x.order_id) === rem.getAttribute('data-brem'); });
+      if (r) billRemitModal(r);
+      return;
+    }
+    const up = e.target.closest('[data-bupload]');
+    if (up){
+      const id = up.getAttribute('data-bupload');
+      const inp = document.querySelector('[data-bfile="' + id + '"]');
+      if (inp) inp.click();
+      return;
+    }
+    const pdf = e.target.closest('[data-bpdf]');
+    if (pdf){ billSignedOpen('order-invoices', pdf.getAttribute('data-bpdf') + '/invoice.pdf'); return; }
+
+    const dop = e.target.closest('[data-bdocopen]');
+    if (dop){
+      const d = (billDocs[billOpen] || []).find(function(x){ return x.id === dop.getAttribute('data-bdocopen'); });
+      if (d) billSignedOpen('customer-docs', d.path);
+      return;
+    }
+    const ddel = e.target.closest('[data-bdocdel]');
+    if (ddel){
+      const id = billOpen;
+      const d = (billDocs[id] || []).find(function(x){ return x.id === ddel.getAttribute('data-bdocdel'); });
+      if (!d || !confirm('Remove ' + d.filename + '?')) return;
+      ddel.disabled = true;
+      (async function(){
+        const rm = await SB.storage.from('customer-docs').remove([d.path]);
+        const del = rm.error ? null : await SB.from('order_customer_docs').delete().eq('id', d.id);
+        const bad = rm.error || (del && del.error);
+        if (bad){ ddel.disabled = false; toast(bad.message, 'bad', 7000); return; }
+        billDocs[id] = (billDocs[id] || []).filter(function(x){ return x.id !== d.id; });
+        renderBilling(); toast('Document removed', 'ok');
+      })();
+      return;
+    }
+    const head = e.target.closest('.binv-h');
+    if (head && !e.target.closest('button')){
+      const card = head.closest('[data-binv]');
+      if (card) billOpenRow(card.getAttribute('data-binv'));
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (pview !== 'billing') return;
+    const head = e.target.closest && e.target.closest('.binv-h');
+    if (head && (e.key === 'Enter' || e.key === ' ')){
+      e.preventDefault();
+      const card = head.closest('[data-binv]');
+      if (card) billOpenRow(card.getAttribute('data-binv'));
+    }
+  });
+
+  document.addEventListener('change', function(e){
+    const f = e.target.closest && e.target.closest('[data-bfile]');
+    if (!f || !f.files.length) return;
+    const id = f.getAttribute('data-bfile');
+    const files = f.files;
+    billUpload(id, files).then(function(){ f.value = ''; });
+  });
 
   /* ---------- detail ---------- */
   function openOrder(id){

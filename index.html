@@ -1721,6 +1721,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .bill-doc-n{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
   .bill-doc-m{ font-size:12px; color:var(--muted); white-space:nowrap; }
   .bill-doc-b{ display:flex; gap:6px; }
+  .bill-doc-cust{ margin-top:var(--s3); padding-top:var(--s3); border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:var(--s2); }
+  .bill-doc-cust-h{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
   .bill-doc-add{ display:flex; gap:var(--s2); align-items:center; margin-top:var(--s3); flex-wrap:wrap; }
   /* width:auto and background-color, not the shorthand — the global select
      rule sets width:100%, and the shorthand would wipe the chevron image */
@@ -3680,7 +3682,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var _nb = document.getElementById('navBilling'); if (_nb) _nb.style.display = 'none';
       var _tb2 = document.getElementById('tileBilling'); if (_tb2) _tb2.style.display = 'none';
       var _bb = document.getElementById('tabBilling'); if (_bb) _bb.style.display = 'none';
-      obRows = []; obPays = {}; obDocs = {}; obLoaded = false;
+      obRows = []; obPays = {}; obDocs = {}; obCustDocs = {}; obLoaded = false;
       mgIsAdmin = false; mgInited = false;
       var _na = document.getElementById('navAdmin'); if (_na) _na.style.display = 'none';
       var _ta = document.getElementById('tileAdmin'); if (_ta) _ta.style.display = 'none';
@@ -5916,7 +5918,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      Money is deliberately quarantined. It loads through an RPC that checks
      the caller itself, it renders only behind ordPerm.admin, and none of it
      exists in the customer portal. */
-  let obRows = [], obPays = {}, obDocs = {}, obRange = localStorage.getItem('obRange') || 'all', obLoaded = false;
+  let obRows = [], obPays = {}, obDocs = {}, obCustDocs = {}, obRange = localStorage.getItem('obRange') || 'all', obLoaded = false;
 
   function obMoney(n){
     const r = Math.round((+n || 0) * 100) / 100;
@@ -6087,7 +6089,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
                   '<h3 class="bill-exp-h">Documents</h3>' +
                   '<p class="muted-sm" style="margin:0 0 var(--s3);">Order admins only. Not visible in the customer portal.</p>' +
-                  '<div id="obDocsBox">' + obDocsHtml(r.order_id) + '</div>' +
+                  '<div id="obDocsBox">' + obDocsHtml(r.order_id) + obCustDocsHtml(r.order_id) + '</div>' +
                   '<div class="bill-doc-add">' +
                     '<select id="obDocKind">' + OB_DOC_KINDS.map(function(k){
                       return '<option value="' + k[0] + '">' + k[1] + '</option>';
@@ -6154,6 +6156,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   document.addEventListener('click', async function(e){
     if (e.target.closest('#obDocPick')){
       const inp = document.getElementById('obDocInput'); if (inp) inp.click();
+      return;
+    }
+    const cd = e.target.closest('[data-obcustdoc]');
+    if (cd){
+      const d = (obCustDocs[obOpenRow] || []).find(function(x){ return x.id === cd.getAttribute('data-obcustdoc'); });
+      if (d){
+        const r = await SB.storage.from('customer-docs').createSignedUrl(d.path, 120);
+        if (r.error || !r.data){ toast('Could not open the file: ' + ((r.error && r.error.message) || 'no link'), 'bad', 7000); return; }
+        window.open(r.data.signedUrl, '_blank', 'noopener');
+      }
       return;
     }
     const op = e.target.closest('[data-obdocopen]');
@@ -6355,9 +6367,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   async function obLoadDocs(orderId){
     if (!ordPerm.admin) return;
-    const r = await SB.rpc('order_docs_for', { p_order: orderId });
+    const [r, c] = await Promise.all([
+      SB.rpc('order_docs_for', { p_order: orderId }),
+      SB.from('order_customer_docs').select('*').eq('order_id', orderId).order('created_at', { ascending:false })
+    ]);
     obDocs[orderId] = r.error ? [] : (r.data || []);
+    obCustDocs[orderId] = c.error ? [] : (c.data || []);
     return obDocs[orderId];
+  }
+
+  /* What the customer attached, from their own bucket. Read-only here: it is
+     their record, and removing it is theirs to do. */
+  function obCustDocsHtml(orderId){
+    const list = obCustDocs[orderId];
+    if (!list || !list.length) return '';
+    return '<div class="bill-doc-cust"><div class="bill-doc-cust-h">From the customer</div>' +
+      list.map(function(d){
+        return '<div class="bill-doc">' +
+          '<span class="bill-doc-k">uploaded</span>' +
+          '<span class="bill-doc-n" title="' + esc(d.filename) + '">' + esc(d.filename) + '</span>' +
+          '<span class="bill-doc-m">' + esc(fmtDate(d.created_at)) +
+            (obDocSize(d.size_bytes) ? ' \u00b7 ' + obDocSize(d.size_bytes) : '') + '</span>' +
+          '<span class="bill-doc-b"><button class="ghost btn-sm" data-obcustdoc="' + esc(d.id) + '" type="button">Open</button></span>' +
+        '</div>';
+      }).join('') + '</div>';
   }
 
   function obDocsHtml(orderId){
@@ -8142,7 +8175,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             '<div class="ord-sub ord-batch-ship">' +
               (batchWide.length
                 ? '<span class="ord-trk-grp">' + ordCarrierBadge(b.carrier) +
-                  ordTrackHtml(b.carrier, [batchWide[0]]) + ordTrkTag(true) +
+                  ordTrackHtml(b.carrier, [batchWide[0]]) +
                   (batchWide.length > 1
                     ? '<span class="ord-trk-hint">+' + ordNum(batchWide.length - 1) + '</span>'
                     : '') +
@@ -10317,13 +10350,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<div class="adm-bar"><button class="primary btn-sm" id="admAddLogin" type="button">Add a customer login</button></div>' +
       '<p class="muted-sm">Create the login itself in the Supabase dashboard first (Authentication \u2192 Add user), ' +
       'then map that email to a customer here. A mapped login can read that customer\u2019s orders and nothing else.</p>' +
+      '<p class="muted-sm">Billing gives that login a Billing section in the portal: invoice balances, due dates, ' +
+      'payments and aged totals, plus the ability to set a PO number and attach documents. It is read-only money, ' +
+      'and it also lets them see the balance on an invoice you are holding back — without exposing the build itself.</p>' +
       (admLogins.length
         ? '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr>' +
-            '<th>Email</th><th>Customer</th><th>Status</th><th></th></tr></thead><tbody>' +
+            '<th>Email</th><th>Customer</th><th>Status</th><th title="Sees the Billing section in the portal: balances, due dates, payments">Billing</th><th></th></tr></thead><tbody>' +
           admLogins.map(function(u){
             return '<tr><td class="adm-spec" data-l="Email">' + esc(u.email || u.user_id) + '</td>' +
               '<td data-l="Customer">' + esc(custName[u.customer_id] || '\u2014') + '</td>' +
               '<td data-l="Status">' + (u.active ? '<span class="ord-chip ok">Active</span>' : '<span class="ord-chip neutral">Off</span>') + '</td>' +
+              '<td class="adm-chk" data-l="Billing"><input type="checkbox" data-admlogbill="' + esc(u.id) + '"' +
+                (u.can_view_billing ? ' checked' : '') + (ordPerm.admin ? '' : ' disabled') + '></td>' +
               '<td class="adm-act" data-l="">' +
                 '<button class="ghost mini" data-admlogtog="' + esc(u.id) + '" type="button">' + (u.active ? 'Disable' : 'Enable') + '</button>' +
                 '<button class="ghost mini danger" data-admlogdel="' + esc(u.id) + '" type="button">Remove</button>' +
@@ -10343,6 +10381,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target.id === 'admAddLogin'){
       if (!ordPerm.admin){ toast('Only an order admin can manage customer logins.', 'bad', 6000); return; }
       admLoginModal(); return;
+    }
+    const lb = e.target.closest('[data-admlogbill]');
+    if (lb && lb.tagName === 'INPUT'){
+      const u = admLogins.find(function(x){ return String(x.id) === lb.getAttribute('data-admlogbill'); });
+      if (!u) return;
+      const on = lb.checked;
+      const r = await SB.from('customer_users').update({ can_view_billing: on }).eq('id', u.id);
+      if (r.error){ lb.checked = !on; toast(r.error.message, 'bad', 7000); return; }
+      u.can_view_billing = on;
+      toast(on ? 'Billing switched on for ' + (u.email || 'that login') : 'Billing switched off', 'ok');
+      return;
     }
 
     const ce2 = e.target.closest('[data-admcustedit]');
