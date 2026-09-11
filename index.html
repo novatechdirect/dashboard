@@ -481,7 +481,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     /* per-surface tile hues, each drawn from the brand spectrum so its
        color-mix tint lands on one of the pastel card tints */
     --hue-orders:#5645d4;
-    --hue-inventory:#2a9d99;
+    --hue-inventory:#8a5a2b;   /* cardboard */
     --hue-timeclock:#ff64c8;
     --hue-margins:#dd5b00;
     --hue-billing:#1f7a5a;
@@ -522,7 +522,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     --e3:0 2px 6px rgba(0,0,0,.4), 0 20px 48px rgba(0,0,0,.55);
     --e4:rgba(0,0,0,.5) 0 16px 48px -8px;
     --scrim:rgba(4,6,9,.66);
-    --hue-orders:#d6b6f6; --hue-inventory:#2a9d99; --hue-timeclock:#ff64c8;
+    --hue-orders:#d6b6f6; --hue-inventory:#8a5a2b;   /* cardboard */ --hue-timeclock:#ff64c8;
     --hue-margins:#dd5b00; --hue-admin:#f5d75e; --hue-rma:#dcecfa;
     --hue-billing:#5fd2a8;
     --ring:0 0 0 2px var(--accent-hover);
@@ -560,7 +560,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       --e3:0 2px 6px rgba(0,0,0,.4), 0 20px 48px rgba(0,0,0,.55);
       --e4:rgba(0,0,0,.5) 0 16px 48px -8px;
       --scrim:rgba(4,6,9,.66);
-      --hue-orders:#d6b6f6; --hue-inventory:#2a9d99; --hue-timeclock:#ff64c8;
+      --hue-orders:#d6b6f6; --hue-inventory:#8a5a2b;   /* cardboard */ --hue-timeclock:#ff64c8;
       --hue-margins:#dd5b00; --hue-admin:#f5d75e; --hue-rma:#dcecfa;
       --hue-billing:#5fd2a8;
       --ring:0 0 0 2px var(--accent-hover);
@@ -2181,6 +2181,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .adm-tabs .mg-pill.on{ background:var(--accent-soft); color:var(--accent-fg); }
   }
   .adm-bar{ display:flex; gap:var(--s3); align-items:center; flex-wrap:wrap; margin-bottom:var(--s4); }
+  .adm-bar > button{ white-space:nowrap; }
   .adm-bar .muted-sm{ flex:1 1 240px; }
   .adm-act{ white-space:nowrap; text-align:right; }
   .adm-act button{ margin-left:var(--s1); }
@@ -3025,7 +3026,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <span>Orders</span>
   </button>
   <button type="button" class="tab-btn" data-goto="rma" id="tabRma"><span class="tab-badge" id="tabRmaBadge" style="display:none;"></span>
-    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><rect width="12.051" height="20" x="2" y="18.051" rx="3" transform="rotate(-90 2 18.051)"/><path d="M16.52 6C16.52 6.00944 16.52 5.99056 16.52 6ZM16.52 6C16.52 4.11438 16.52 3.17157 15.9342 2.58579C15.3484 2 14.4056 2 12.52 2H11.4795C9.59387 2 8.65107 2 8.06528 2.58579C7.47949 3.17157 7.47949 4.11438 7.47949 6"/><path d="M2 12C2.81331 12 4.18669 12 5 12"/><path d="M18.7839 12C19.6644 12 21.1196 12 22 12"/><path d="M8.78388 12C11.2342 12 12.5494 12 14.9997 12"/><path d="M8.40549 11H5.37839C5.16941 11 5 11.1694 5 11.3784V13.0141C5 13.1689 5.0942 13.308 5.23786 13.3655L5.7677 13.5774C6.4894 13.8661 7.29449 13.8661 8.01618 13.5774L8.54602 13.3655C8.68968 13.308 8.78388 13.1689 8.78388 13.0141V11.3784C8.78388 11.1694 8.61447 11 8.40549 11Z"/><path d="M18.4055 11H15.3784C15.1694 11 15 11.1694 15 11.3784V13.0141C15 13.1689 15.0942 13.308 15.2379 13.3655L15.7677 13.5774C16.4894 13.8661 17.2945 13.8661 18.0162 13.5774L18.546 13.3655C18.6897 13.308 18.7839 13.1689 18.7839 13.0141V11.3784C18.7839 11.1694 18.6145 11 18.4055 11Z"/></g></svg>
+    <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>
     <span>RMA</span>
   </button>
   <button type="button" class="tab-btn" data-goto="inventory">
@@ -3037,7 +3038,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <span>Timeclock</span>
   </button>
   <button type="button" class="tab-btn" data-goto="billing" id="tabBilling" style="display:none;">
-    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M3 22H21"/><path d="M2 12C2 10.5858 2 9.87868 2.43934 9.43934C2.87868 9 3.58579 9 5 9C6.41421 9 7.12132 9 7.56066 9.43934C8 9.87868 8 10.5858 8 12V18C8 19.4142 8 20.1213 7.56066 20.5607C7.12132 21 6.41421 21 5 21C3.58579 21 2.87868 21 2.43934 20.5607C2 20.1213 2 19.4142 2 18V12Z"/><path d="M9 5C9 3.58579 9 2.87868 9.43934 2.43934C9.87868 2 10.5858 2 12 2C13.4142 2 14.1213 2 14.5607 2.43934C15 2.87868 15 3.58579 15 5V18C15 19.4142 15 20.1213 14.5607 20.5607C14.1213 21 13.4142 21 12 21C10.5858 21 9.87868 21 9.43934 20.5607C9 20.1213 9 19.4142 9 18V5Z"/><path d="M16 9C16 7.58579 16 6.87868 16.4393 6.43934C16.8787 6 17.5858 6 19 6C20.4142 6 21.1213 6 21.5607 6.43934C22 6.87868 22 7.58579 22 9V18C22 19.4142 22 20.1213 21.5607 20.5607C21.1213 21 20.4142 21 19 21C17.5858 21 16.8787 21 16.4393 20.5607C16 20.1213 16 19.4142 16 18V9Z"/></g></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg>
     <span>Billing</span>
   </button>
   <button type="button" class="tab-btn" data-goto="margins" id="tabMargins" style="display:none;">
@@ -3055,7 +3056,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 </nav>
 <div class="tab-more-scrim" id="tabMoreScrim"></div>
 <div class="tab-more-sheet" id="tabMoreSheet">
-  <button type="button" id="tabMoreBilling" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M3 22H21"/><path d="M2 12C2 10.5858 2 9.87868 2.43934 9.43934C2.87868 9 3.58579 9 5 9C6.41421 9 7.12132 9 7.56066 9.43934C8 9.87868 8 10.5858 8 12V18C8 19.4142 8 20.1213 7.56066 20.5607C7.12132 21 6.41421 21 5 21C3.58579 21 2.87868 21 2.43934 20.5607C2 20.1213 2 19.4142 2 18V12Z"/><path d="M9 5C9 3.58579 9 2.87868 9.43934 2.43934C9.87868 2 10.5858 2 12 2C13.4142 2 14.1213 2 14.5607 2.43934C15 2.87868 15 3.58579 15 5V18C15 19.4142 15 20.1213 14.5607 20.5607C14.1213 21 13.4142 21 12 21C10.5858 21 9.87868 21 9.43934 20.5607C9 20.1213 9 19.4142 9 18V5Z"/><path d="M16 9C16 7.58579 16 6.87868 16.4393 6.43934C16.8787 6 17.5858 6 19 6C20.4142 6 21.1213 6 21.5607 6.43934C22 6.87868 22 7.58579 22 9V18C22 19.4142 22 20.1213 21.5607 20.5607C21.1213 21 20.4142 21 19 21C17.5858 21 16.8787 21 16.4393 20.5607C16 20.1213 16 19.4142 16 18V9Z"/></g></svg>Billing</button>
+  <button type="button" id="tabMoreBilling" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg>Billing</button>
   <button type="button" id="tabMoreMargins"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg>Cost &amp; Margins</button>
   <button type="button" id="tabMoreAdmin"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg>Admin</button>
 </div>
@@ -3159,7 +3160,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
       <a class="tile" href="#" data-goto="rma">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><rect width="12.051" height="20" x="2" y="18.051" rx="3" transform="rotate(-90 2 18.051)"/><path d="M16.52 6C16.52 6.00944 16.52 5.99056 16.52 6ZM16.52 6C16.52 4.11438 16.52 3.17157 15.9342 2.58579C15.3484 2 14.4056 2 12.52 2H11.4795C9.59387 2 8.65107 2 8.06528 2.58579C7.47949 3.17157 7.47949 4.11438 7.47949 6"/><path d="M2 12C2.81331 12 4.18669 12 5 12"/><path d="M18.7839 12C19.6644 12 21.1196 12 22 12"/><path d="M8.78388 12C11.2342 12 12.5494 12 14.9997 12"/><path d="M8.40549 11H5.37839C5.16941 11 5 11.1694 5 11.3784V13.0141C5 13.1689 5.0942 13.308 5.23786 13.3655L5.7677 13.5774C6.4894 13.8661 7.29449 13.8661 8.01618 13.5774L8.54602 13.3655C8.68968 13.308 8.78388 13.1689 8.78388 13.0141V11.3784C8.78388 11.1694 8.61447 11 8.40549 11Z"/><path d="M18.4055 11H15.3784C15.1694 11 15 11.1694 15 11.3784V13.0141C15 13.1689 15.0942 13.308 15.2379 13.3655L15.7677 13.5774C16.4894 13.8661 17.2945 13.8661 18.0162 13.5774L18.546 13.3655C18.6897 13.308 18.7839 13.1689 18.7839 13.0141V11.3784C18.7839 11.1694 18.6145 11 18.4055 11Z"/></g></svg></span>
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></span>
         <span class="tile-body">
           <span class="tile-title">RMA</span>
           <span class="tile-desc">Warranty parts, by serial number</span>
@@ -3195,7 +3196,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
       </a>
       <a class="tile" href="#" data-goto="billing" id="tileBilling" style="display:none;">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M3 22H21"/><path d="M2 12C2 10.5858 2 9.87868 2.43934 9.43934C2.87868 9 3.58579 9 5 9C6.41421 9 7.12132 9 7.56066 9.43934C8 9.87868 8 10.5858 8 12V18C8 19.4142 8 20.1213 7.56066 20.5607C7.12132 21 6.41421 21 5 21C3.58579 21 2.87868 21 2.43934 20.5607C2 20.1213 2 19.4142 2 18V12Z"/><path d="M9 5C9 3.58579 9 2.87868 9.43934 2.43934C9.87868 2 10.5858 2 12 2C13.4142 2 14.1213 2 14.5607 2.43934C15 2.87868 15 3.58579 15 5V18C15 19.4142 15 20.1213 14.5607 20.5607C14.1213 21 13.4142 21 12 21C10.5858 21 9.87868 21 9.43934 20.5607C9 20.1213 9 19.4142 9 18V5Z"/><path d="M16 9C16 7.58579 16 6.87868 16.4393 6.43934C16.8787 6 17.5858 6 19 6C20.4142 6 21.1213 6 21.5607 6.43934C22 6.87868 22 7.58579 22 9V18C22 19.4142 22 20.1213 21.5607 20.5607C21.1213 21 20.4142 21 19 21C17.5858 21 16.8787 21 16.4393 20.5607C16 20.1213 16 19.4142 16 18V9Z"/></g></svg></span>
+        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg></span>
         <span class="tile-body">
           <span class="tile-title">Billing</span>
           <span class="tile-desc">Invoice totals, payments and what is outstanding</span>
@@ -4479,6 +4480,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* ================= INVENTORY ================= */
   /* Solar category marks. Source set: assets/solar-icons.json */
   window.NT_ICO = {
+    "wrench":"<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z\"/>",
     "truck":"<path fill=\"currentColor\" d=\"m255.42 117l-14-35a15.93 15.93 0 0 0-14.84-10H192v-8a8 8 0 0 0-8-8H32a16 16 0 0 0-16 16v112a16 16 0 0 0 16 16h17a32 32 0 0 0 62 0h50a32 32 0 0 0 62 0h17a16 16 0 0 0 16-16v-64a7.9 7.9 0 0 0-.58-3M192 88h34.58l9.6 24H192ZM32 72h144v64H32Zm48 136a16 16 0 1 1 16-16a16 16 0 0 1-16 16m81-24h-50a32 32 0 0 0-62 0H32v-32h144v12.31A32.1 32.1 0 0 0 161 184m31 24a16 16 0 1 1 16-16a16 16 0 0 1-16 16m48-24h-17a32.06 32.06 0 0 0-31-24v-32h48Z\"/>",
     "tower":"<path fill=\"currentColor\" d=\"M88 72a8 8 0 0 1 8-8h64a8 8 0 0 1 0 16H96a8 8 0 0 1-8-8m8 40h64a8 8 0 0 0 0-16H96a8 8 0 0 0 0 16m112-72v176a16 16 0 0 1-16 16H64a16 16 0 0 1-16-16V40a16 16 0 0 1 16-16h128a16 16 0 0 1 16 16m-16 0H64v176h128Zm-64 128a12 12 0 1 0 12 12a12 12 0 0 0-12-12\"/>",
     "gpu":"<path fill=\"currentColor\" d=\"M232 48H16a8 8 0 0 0-8 8v152a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h16v16a8 8 0 0 0 16 0v-16h112a16 16 0 0 0 16-16V64a16 16 0 0 0-16-16m0 128H24V64h208Zm-56-16a40 40 0 1 0-40-40a40 40 0 0 0 40 40m-24-40a23.74 23.74 0 0 1 2.35-10.34l32 32A23.74 23.74 0 0 1 176 144a24 24 0 0 1-24-24m48 0a23.74 23.74 0 0 1-2.35 10.34l-32-32A23.74 23.74 0 0 1 176 96a24 24 0 0 1 24 24M80 160a40 40 0 1 0-40-40a40 40 0 0 0 40 40m-24-40a23.74 23.74 0 0 1 2.35-10.34l32 32A23.74 23.74 0 0 1 80 144a24 24 0 0 1-24-24m48 0a23.74 23.74 0 0 1-2.35 10.34l-32-32A23.74 23.74 0 0 1 80 96a24 24 0 0 1 24 24\"/>",
@@ -9663,7 +9665,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     rmaRenderKpis();
     const rows = rmaFiltered();
     if (!rows.length){
-      body.innerHTML = '<div class="empty"><div class="empty-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><rect width="12.051" height="20" x="2" y="18.051" rx="3" transform="rotate(-90 2 18.051)"/><path d="M16.52 6C16.52 6.00944 16.52 5.99056 16.52 6ZM16.52 6C16.52 4.11438 16.52 3.17157 15.9342 2.58579C15.3484 2 14.4056 2 12.52 2H11.4795C9.59387 2 8.65107 2 8.06528 2.58579C7.47949 3.17157 7.47949 4.11438 7.47949 6"/><path d="M2 12C2.81331 12 4.18669 12 5 12"/><path d="M18.7839 12C19.6644 12 21.1196 12 22 12"/><path d="M8.78388 12C11.2342 12 12.5494 12 14.9997 12"/><path d="M8.40549 11H5.37839C5.16941 11 5 11.1694 5 11.3784V13.0141C5 13.1689 5.0942 13.308 5.23786 13.3655L5.7677 13.5774C6.4894 13.8661 7.29449 13.8661 8.01618 13.5774L8.54602 13.3655C8.68968 13.308 8.78388 13.1689 8.78388 13.0141V11.3784C8.78388 11.1694 8.61447 11 8.40549 11Z"/><path d="M18.4055 11H15.3784C15.1694 11 15 11.1694 15 11.3784V13.0141C15 13.1689 15.0942 13.308 15.2379 13.3655L15.7677 13.5774C16.4894 13.8661 17.2945 13.8661 18.0162 13.5774L18.546 13.3655C18.6897 13.308 18.7839 13.1689 18.7839 13.0141V11.3784C18.7839 11.1694 18.6145 11 18.4055 11Z"/></g></svg></div>' +
+      body.innerHTML = '<div class="empty"><div class="empty-ico"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></div>' +
         '<p>' + (rmaTickets.length ? 'No RMAs match.' : 'No RMAs yet.') + '</p>' +
         (rmaTickets.length ? '' : '<p class="muted-sm">Technicians open them from the customer portal, or start one here from a serial number.</p>') + '</div>';
       return;
