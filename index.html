@@ -752,7 +752,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* 44px targets on touch */
   @media (hover:none) and (pointer:coarse){
     button, .pill{ min-height:36px; }
-    .mini, .btn-sm{ min-height:30px; }
+    .mini, .btn-sm{ min-height:36px; }
     .qbtn, .cat-add{ min-height:0; }
   }
 
@@ -896,6 +896,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   @media (max-width:1240px){ .chip-email{ display:none; } }
   @media (max-width:1180px){ .nav-inner{ gap:var(--s4); } .nav-brand::after{ margin-left:var(--s4); } .nav-item{ padding:8px 12px; } }
   @media (max-width:1040px){ .version{ display:none; } }
+  @media (max-width:1000px){ .nav-inner{ gap:var(--s3); } .nav-item{ padding:8px 8px; font-size:13px; } .nav-right{ gap:var(--s2); } }
   .status-select{ border:1px solid transparent; border-radius:var(--r-pill); height:26px; min-height:26px; width:auto; padding:0 28px 0 10px; font-size:11.5px; font-weight:600; line-height:1; cursor:pointer; -webkit-appearance:none; appearance:none; }
 
   /* --- v8: full-site login gate --- */
@@ -908,6 +909,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .login-card .field input{ margin-bottom:0; }
   .login-card input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
   .login-card button{ width:100%; }
+  .login-card .pw-see{ width:40px; }
+  /* password reveal: the eye sits inside the field, so the field keeps its width */
+  .pw-wrap{ position:relative; display:block; }
+  .pw-wrap input{ padding-right:44px !important; }
+  .pw-see{
+    position:absolute; top:0; right:0; height:100%; width:40px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:0; padding:0; margin:0; cursor:pointer;
+    color:var(--muted); border-radius:0; min-height:0;
+  }
+  .pw-see:hover{ color:var(--ink); }
+  .pw-see:focus-visible{ outline:none; box-shadow:var(--ring); border-radius:var(--r-sm); }
+  .pw-see svg{ width:19px; height:19px; display:block; }
+  .pw-see .pw-eye-off{ display:none; }
+  .pw-see.on .pw-eye{ display:none; }
+  .pw-see.on .pw-eye-off{ display:block; }
 
   /* --- v10: table actions + detail --- */
   .row-actions{ white-space:nowrap; }
@@ -1101,6 +1118,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* --- v23: mobile polish --- */
   @media (max-width:700px){
+    /* fingers, not pointers: 36px is the floor for anything tappable */
+    .btn-sm{ min-height:36px !important; padding:6px 12px !important; }
+    .ghost.mini, .mini{ min-height:34px; padding:4px 10px; }
+    .sel-sm{ height:36px; }
+    .ord-rows .sel-sm{ height:32px; }
+    .chart-tab, .mg-pill{ min-height:34px; }
     input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], select, textarea{ font-size:16px !important; }
     .nav-inner{ gap:12px; padding:0 12px; height:52px; }
     .nav-menu{ flex:1; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
@@ -1766,7 +1789,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .bill-bar-t i{ display:block; width:100%; background:var(--ok); }
   .bill-bar-t.empty{ background:transparent; border-style:dashed; }
-  .bill-bar-x{ font-size:10.5px; color:var(--faint); text-align:center; margin-top:var(--s2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bill-bar-x{ font-size:10.5px; color:var(--faint); text-align:center; margin-top:var(--s2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  #obChartCard, #obChart, .bill-bars, .bill-bar{ min-width:0; max-width:100%; }
+  @media (max-width:700px){
+    #obChartCard .chart-head{ flex-wrap:wrap; gap:var(--s2); }
+    #obChartCard .chart-head > *{ min-width:0; }
+    #obTabs{ flex-wrap:wrap; }
+    .bill-bars{ gap:6px; height:140px; overflow:hidden; }
+    .bill-bar-x{ font-size:9.5px; }
+  }
+  @media (max-width:420px){ .bill-bar:nth-child(even) .bill-bar-x{ visibility:hidden; } }
   .bill-legend{ display:flex; gap:var(--s4); margin-top:var(--s4); font-size:12px; color:var(--muted); flex-wrap:wrap; }
   .bill-legend span{ display:flex; align-items:center; gap:6px; }
   .bill-legend i{ width:9px; height:9px; border-radius:2px; display:block; }
@@ -1992,19 +2024,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-check{ display:flex; align-items:center; gap:var(--s2); font-size:13.5px; margin:var(--s3) 0; cursor:pointer; }
 
   @media (max-width:700px){
-    .ord-batch-head{ grid-template-columns:1fr; gap:var(--s2); min-height:0; }
-    /* the status shares the batch-number line instead of stacking under it */
-    .ord-batch-id{ flex-direction:row; align-items:center; justify-content:space-between; width:100%; gap:var(--s3); }
-    .ord-batch-meta{ text-align:left; }
-    .ord-batch-btns{ width:100%; gap:var(--s2); flex-wrap:wrap; margin-left:0; }
-    /* batch controls are secondary to the shipment itself \u2014 keep them compact */
-    .ord-batch-btns button{ flex:1 1 auto; min-height:32px; }
+    /* Batch number and status left, unit count and shipment right, then the
+       store, then the buttons. The street address is in the details; with
+       forty batches on an order, every line in the header is paid for forty
+       times over. */
+    .ord-batch-head{
+      grid-template-columns:max-content minmax(0,1fr); grid-template-areas:"id meta" "dest dest" "btns btns";
+      gap:var(--s1) var(--s3); min-height:0; padding:10px 12px;
+    }
+    .ord-batch-id{ grid-area:id; flex-direction:row; align-items:center; justify-content:flex-start; gap:var(--s2); flex-wrap:nowrap; }
+    /* tracking lives in the details; the header keeps units and the ship date */
+    .ord-batch-meta .ord-trk-grp, .ord-batch-meta .ord-batch-dot{ display:none; }
+    .ord-batch-meta .ord-batch-ship{ flex-wrap:nowrap; }
+    .ord-batch-meta{ grid-area:meta; text-align:right; }
+    .ord-batch-meta .ord-batch-ship{ justify-content:flex-end; }
+    .ord-batch-dest{ grid-area:dest; }
+    .ord-batch-dest .ord-sub{ display:none; }
+    .ord-batch-btns{ grid-area:btns; width:100%; gap:var(--s2); flex-wrap:wrap; margin-left:0; }
+    .ord-batch-btns button{ flex:1 1 auto; min-height:36px; }
     .ord-batch-foot{ gap:var(--s2); }
     /* three label/utility actions, one row \u2014 they are the batch's fine print */
     /* the danger action has the longest label, so it gets the wider column */
     .ord-batch-foot{ display:grid; grid-template-columns:1fr 1fr 1.3fr; flex-wrap:nowrap; align-items:stretch; }
     .ord-batch-foot button{
-      width:100%; height:30px; min-height:30px !important; padding:0 8px !important;
+      width:100%; height:36px; min-height:36px !important; padding:0 8px !important;
       font-size:10.5px !important; letter-spacing:0; line-height:1; white-space:nowrap;
     }
     .ord-track-mode{ flex-direction:column; gap:var(--s2); }
@@ -2112,7 +2155,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-buildable.low{ color:var(--warn); }
   .ord-buildable.out{ color:var(--bad); font-weight:600; }
 
-  .ord-pager{ display:flex; align-items:center; justify-content:center; gap:var(--s3); margin-top:var(--s3); }
+  .ord-pager{ display:flex; align-items:center; justify-content:center; gap:var(--s3); margin-top:var(--s3); flex-wrap:wrap; }
+  .ord-rows{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+  /* right pad clears the chevron the global select rule paints there */
+  .ord-rows .sel-sm{ height:24px; padding:0 26px 0 8px; font-size:11.5px; }
   .ord-pager-info{ font-family:var(--font-num); font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
 
   .ord-due-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--s2); align-items:center; }
@@ -2226,9 +2272,25 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-flow-s.s2 b{ border-color:var(--accent-line); color:var(--accent-fg); background:var(--accent-soft); }
   .ord-flow-s.s3 b{ border-color:var(--ok-line); color:var(--ok); background:var(--ok-bg); }
 
+  /* Paging already keeps this short, so no inner scrollbox: one scroll, and
+     the pager stays where the table ends. Sideways scroll stays for phones. */
+  .ord-batch-wrap{ max-height:none; overflow-y:visible; }
+  @media (max-width:700px){
+    /* serial and tracking on one line, config small beneath: ~50px a unit
+       instead of the labelled three-line card the generic stack gives */
+    .ord-batch-wrap .hist-table.stack tr{
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0 var(--s3);
+      align-items:center; padding:6px 10px; margin-bottom:var(--s1);
+    }
+    .ord-batch-wrap .hist-table.stack td{ display:block; padding:0; text-align:left; line-height:1.3; }
+    .ord-batch-wrap .hist-table.stack td::before{ content:none; }
+    .ord-batch-wrap .hist-table.stack td[data-l="Serial"]{ grid-column:1; grid-row:1; font-weight:600; }
+    .ord-batch-wrap .hist-table.stack td[data-l="Config"]{ grid-column:1; grid-row:2; font-size:12px; color:var(--muted); }
+    .ord-batch-wrap .hist-table.stack td[data-l="Tracking"]{ grid-column:2; grid-row:1 / span 2; text-align:right; font-size:12px; }
+  }
+
   /* a taller pool so more rows are visible without a giant page */
-  .ord-pool-wrap{ max-height:min(62vh, 620px); overflow-y:auto; }
-  .ord-pool-wrap thead th{ position:sticky; top:0; z-index:2; background:var(--paper); }
+  .ord-pool-wrap{ max-height:none; overflow-y:visible; }
   .ord-pool-table td{ padding-top:12px; padding-bottom:12px; }
 
   /* select N */
@@ -2271,8 +2333,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .primary, .ghost, .soft, .green, .danger{
       min-height:36px; padding-top:8px; padding-bottom:8px;
     }
-    .btn-sm{ min-height:30px !important; padding-top:4px !important; padding-bottom:4px !important; }
-    button.mini{ min-height:28px; }
+    .btn-sm{ min-height:36px !important; padding-top:6px !important; padding-bottom:6px !important; }
+    button.mini{ min-height:34px; }
     /* small circle in the nav — the bar is only 52px tall */
     .theme-btn{ width:32px; height:32px; min-height:32px; padding:0; border-radius:50%; }
     .theme-btn svg{ width:15px; height:15px; }
@@ -2420,7 +2482,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       .ord-bar{ grid-template-columns:repeat(3, minmax(0,1fr)); }
       #rmaListPane .ord-bar{ grid-template-columns:minmax(0,1fr) auto; }
       .ord-bar-l button, .ord-bar-r button{
-        min-height:30px !important; padding:4px 8px !important;
+        min-height:36px !important; padding:4px 8px !important;
         font-size:11.5px !important; line-height:1.2;
       }
       .ord-list-card{ background:transparent; border:none; box-shadow:none; padding:0; }
@@ -2457,7 +2519,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     /* three compact controls across one row — they are navigation, not actions */
     #tcAdminCard .inv-topbar-right{ width:100%; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
     #tcAdminCard .inv-topbar-right button{
-      width:100%; height:30px; min-height:30px !important;
+      width:100%; height:36px; min-height:36px !important;
       padding:0 8px !important; font-size:11.5px !important; line-height:1;
     }
 
@@ -2495,7 +2557,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       scrollbar-width:none; justify-content:stretch;
     }
     .tabbar.on::-webkit-scrollbar{ display:none; }
-    .tab-btn{ min-width:56px; flex:1 1 0; padding:8px 2px 8px; font-size:9.5px; }
+    .tab-btn{ min-width:56px; flex:1 1 0; padding:8px 2px 8px; font-size:10.5px; }
     .tab-btn svg{ width:20px; height:20px; }
 
     /* base card is 24px padding / 16px gap. On a phone the padding can come in
@@ -2938,7 +3000,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       </div>
       <div class="field">
         <label for="authPass">Password</label>
-        <input id="authPass" type="password" placeholder="Password" autocomplete="current-password" enterkeyhint="go">
+        <span class="pw-wrap">
+          <input id="authPass" type="password" placeholder="Password" autocomplete="current-password" enterkeyhint="go">
+          <button type="button" class="pw-see" id="authPassSee" aria-label="Show password" title="Show password"></button>
+        </span>
       </div>
       <button class="primary" id="signInBtn">Sign in</button>
       <div class="auth-err" id="authErr"></div>
@@ -4178,14 +4243,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       invOpenAdjust = null; renderInventory();
     } else if (btn.hasAttribute('data-archive')){
       const it = findItem(btn.getAttribute('data-archive')); if (!it) return;
-      if (!window.confirm('Archive ' + it.name + '? It disappears from the list but keeps its history.')) return;
+      if (!(await mgConfirm('Archive ' + it.name + '? It disappears from the list but keeps its history.'))) return;
       const u = await SB.from('inv_items').update({ archived: true }).eq('id', it.id);
       if (u.error){ toast('Archive failed: ' + (u.error.message||'error'), 'err'); return; }
       invItems = invItems.filter(function(x){ return String(x.id) !== String(it.id); });
       invOpenAdjust = null; renderInventory();
     } else if (btn.hasAttribute('data-delete')){
       const it = findItem(btn.getAttribute('data-delete')); if (!it) return;
-      if (!window.confirm('Permanently delete ' + it.name + ' AND its history? (Use Archive to keep the history.)')) return;
+      if (!(await mgConfirm('Permanently delete ' + it.name + ' AND its history? (Use Archive to keep the history.)'))) return;
       const del = await SB.from('inv_items').delete().eq('id', it.id);
       if (del.error){ toast('Delete failed: ' + (del.error.message||'error'), 'err'); return; }
       invItems = invItems.filter(function(x){ return String(x.id) !== String(it.id); });
@@ -4522,7 +4587,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (del){
       const uid = del.getAttribute('data-tchdel'), pe = tcPeriodEndEl.value;
       const who = (tcEmployees.find(function(x){ return x.user_id === uid; }) || {}).name || 'this employee';
-      if (!confirm('Delete ' + who + '\u2019s hours for ' + fmtPeriodRange(pe) + '?')) return;
+      if (!(await mgConfirm('Delete ' + who + '\u2019s hours for ' + fmtPeriodRange(pe) + '?'))) return;
       const noteEl = document.getElementById('tcSummaryNote');
       noteEl.textContent = 'Deleting\u2026';
       const { error } = await SB.from('tc_hours').delete().eq('user_id', uid).eq('period_ending', pe);
@@ -4950,7 +5015,36 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (first) setTimeout(function(){ first.focus(); }, 30);
     return bg;
   }
-  function mgCloseModal(){ var m = document.getElementById('mgModalBg'); if (m) m.remove(); }
+  var mgConfirmResolve = null;
+  function mgCloseModal(){
+    var m = document.getElementById('mgModalBg'); if (m) m.remove();
+    /* a confirm dismissed any other way (backdrop, Escape) answers no */
+    if (mgConfirmResolve){ var r = mgConfirmResolve; mgConfirmResolve = null; r(false); }
+  }
+  /* Replaces window.confirm. First line is the question, anything after a
+     blank line is the explanation. The verb the question opens with becomes
+     the button: "Delete …?" → Delete. */
+  function mgConfirm(text){
+    var parts = String(text || '').split(/\n\s*\n/);
+    var title = parts[0].trim(), body = parts.slice(1).join(' ').trim();
+    var first = (title.match(/^([A-Z][a-z]+)/) || [])[1] || '';
+    var verbs = { Delete:1, Remove:1, Archive:1, Cancel:1, Release:1, Stop:1, Permanently:1, Return:1, Clear:1, Reset:1 };
+    var cta = verbs[first] ? (first === 'Permanently' ? 'Delete' : first) : 'Yes';
+    var danger = /^(Delete|Remove|Permanently|Cancel|Stop|Return)/.test(first);
+    return new Promise(function(resolve){
+      var bg = mgModal(
+        mgModalHead(esc(title), '') +
+        (body ? '<div class="mg-modal-body"><p style="margin:0;">' + esc(body) + '</p></div>' : '') +
+        '<div class="mg-modal-foot"><button class="ghost" id="mgCfNo" type="button">' + (first === 'Cancel' ? 'Keep it' : 'Go back') + '</button>' +
+        '<button class="' + (danger ? 'ghost danger' : 'primary') + '" id="mgCfYes" data-primary type="button">' + esc(cta) + '</button></div>');
+      mgConfirmResolve = resolve;
+      bg.querySelector('#mgCfNo').addEventListener('click', mgCloseModal);
+      bg.querySelector('#mgCfYes').addEventListener('click', function(){
+        mgConfirmResolve = null; mgCloseModal(); resolve(true);
+      });
+      setTimeout(function(){ var b = bg.querySelector('#mgCfNo'); if (b) b.focus(); }, 30);
+    });
+  }
   function mgModalHead(title, sub){
     return '<div class="mg-modal-head"><div><h2>' + title + '</h2>' + (sub ? '<p class="sub">' + sub + '</p>' : '') + '</div>' +
       '<button class="mg-x" id="mgModalClose" title="Close" aria-label="Close">&times;</button></div>';
@@ -5702,7 +5796,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   async function deleteSelected(){
     if (!SB || !session || selectedIds.size === 0) return;
     const ids = Array.from(selectedIds);
-    if (!window.confirm('Delete ' + ids.length + ' selected serial' + (ids.length===1?'':'s') + ' from the log? This cannot be undone.')) return;
+    if (!(await mgConfirm('Delete ' + ids.length + ' selected serial' + (ids.length===1?'':'s') + ' from the log? This cannot be undone.'))) return;
     histNote.textContent = 'Deleting\u2026';
     for (let i = 0; i < ids.length; i += 100){
       const chunk = ids.slice(i, i + 100).map(function(x){ return isNaN(+x) ? x : +x; });
@@ -5732,6 +5826,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
 
+  /* show the password, because a mistyped one is the commonest sign-in failure */
+  function wirePwSee(btn, input){
+    if (!btn || !input) return;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" class="pw-eye" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></g></svg>' +
+      '<svg viewBox="0 0 24 24" class="pw-eye-off" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4L20 20"/><path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5C18 5.5 21.5 12 21.5 12a16 16 0 0 1-2.6 3.3"/><path d="M6.6 7.7A16.4 16.4 0 0 0 2.5 12S6 18.5 12 18.5a9.7 9.7 0 0 0 3.1-.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></g></svg>';
+    btn.addEventListener('click', function(){
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.classList.toggle('on', show);
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      btn.setAttribute('title', show ? 'Hide password' : 'Show password');
+      input.focus();
+    });
+  }
+  wirePwSee(document.getElementById('authPassSee'), authPass);
+
   signInBtn.addEventListener('click', signIn);
   authEmail.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); authPass.focus(); } });
   authPass.addEventListener('keydown', function(e){ if (e.key === 'Enter') signIn(); });
@@ -5752,9 +5862,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let ordUnits = [], ordBatches = [], ordTracking = [], ordLines = [];
   let ordFilter = '', ordQuery = '';
   let ordSel = new Set(), ordPoolCfg = '';
-  /* rows per page in the pool and batch tables. A phone stacks each row into
-     a card, so it gets a much shorter page than the desktop table. */
-  function ordPageSize(){ return window.matchMedia('(max-width:700px)').matches ? 15 : 100; }
+  /* Rows per page in the pool and batch tables. Thirty keeps a 150-unit batch
+     from turning the page into a mile of scrolling; the picker at the foot of
+     each table raises it, and the choice sticks. */
+  const ORD_ROW_OPTS = [30, 60, 120, 0];
+  let ordRows = (function(){
+    const v = parseInt(localStorage.getItem('ordRows') || '', 10);
+    return ORD_ROW_OPTS.indexOf(v) >= 0 ? v : 30;
+  })();
+  function ordPageSize(){ return ordRows === 0 ? Infinity : ordRows; }
+  function ordRowsPicker(){
+    return '<label class="ord-rows"><span>Show</span>' +
+      '<select class="sel-sm" data-ordrows aria-label="Rows per page">' +
+      ORD_ROW_OPTS.map(function(n){
+        return '<option value="' + n + '"' + (n === ordRows ? ' selected' : '') + '>' + (n === 0 ? 'All' : n) + '</option>';
+      }).join('') + '</select></label>';
+  }
   let ordPoolPage = 0, ordBatchPage = {};
 
   const ordListPane   = document.getElementById('ordListPane');
@@ -6178,7 +6301,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (dl){
       const oid = obOpenRow;
       const d = (obDocs[oid] || []).find(function(x){ return x.id === dl.getAttribute('data-obdocdel'); });
-      if (!d || !confirm('Remove ' + d.filename + '?')) return;
+      if (!d || !(await mgConfirm('Remove ' + d.filename + '?'))) return;
       dl.disabled = true;
       const st = document.getElementById('obDocStatus');
       const rm = await SB.storage.from(OB_DOC_BUCKET).remove([d.path]);
@@ -6505,7 +6628,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const d = e.target.closest('[data-obpaydel]');
       if (!d) return;
       const id = d.getAttribute('data-obpaydel');
-      if (!confirm('Remove this payment?')) return;
+      if (!(await mgConfirm('Remove this payment?'))) return;
       const del = await SB.from('order_payments').delete().eq('id', id);
       if (del.error){ bg.querySelector('#obErr').textContent = del.error.message; return; }
       await obLoadPays(o.id); await obLoad();
@@ -7371,14 +7494,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '</tr>';
       }).join('') +
       '</tbody></table></div>' +
-      (pages > 1
-        ? '<div class="ord-pager">' +
-            '<button class="ghost btn-sm" id="ordPoolPrev" type="button"' + (ordPoolPage === 0 ? ' disabled' : '') + '>Previous</button>' +
-            '<span class="ord-pager-info">' + ordNum(from + 1) + '\u2013' + ordNum(Math.min(from + ordPageSize(), pool.length)) +
-              ' of ' + ordNum(pool.length) + '</span>' +
-            '<button class="ghost btn-sm" id="ordPoolNext" type="button"' + (ordPoolPage >= pages - 1 ? ' disabled' : '') + '>Next</button>' +
-          '</div>'
-        : '');
+      '<div class="ord-pager">' +
+        (pages > 1
+          ? '<button class="ghost btn-sm" id="ordPoolPrev" type="button"' + (ordPoolPage === 0 ? ' disabled' : '') + '>Previous</button>'
+          : '') +
+        '<span class="ord-pager-info">' + ordNum(from + 1) + '\u2013' + ordNum(Math.min(from + ordPageSize(), pool.length)) +
+          ' of ' + ordNum(pool.length) + '</span>' +
+        (pages > 1
+          ? '<button class="ghost btn-sm" id="ordPoolNext" type="button"' + (ordPoolPage >= pages - 1 ? ' disabled' : '') + '>Next</button>'
+          : '') +
+        ordRowsPicker() +
+      '</div>';
     const all = document.getElementById('ordPoolAll');
     if (all) all.checked = shown.length > 0 && shown.every(function(u){ return ordSel.has(u.id); });
     ordRenderPoolBar();
@@ -7514,7 +7640,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target.id === 'ordHoldRelease'){
       const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
       if (!o) return;
-      if (!confirm('Release ' + (o.invoice_no || 'this order') + ' to the customer now, before it is paid in full?\n\nThe portal will show it immediately and the notification email goes out.')) return;
+      if (!(await mgConfirm('Release ' + (o.invoice_no || 'this order') + ' to the customer now, before it is paid in full?\n\nThe portal will show it immediately and the notification email goes out.'))) return;
       const up = await SB.from('orders').update({ hold_until_paid: false }).eq('id', o.id);
       if (up.error){ toast(up.error.message, 'bad'); return; }
       o.hold_until_paid = false;
@@ -7589,6 +7715,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordRenderPool();
       return;
     }
+  });
+  /* one preference, both tables; the open batch stays open across the change */
+  ordDetailBody.addEventListener('change', function(e){
+    const sel = e.target.closest('[data-ordrows]');
+    if (!sel) return;
+    const open = [];
+    document.querySelectorAll('.ord-batch-body').forEach(function(b){
+      if (b.style.display !== 'none') open.push(b.id);
+    });
+    const n = parseInt(sel.value, 10);
+    ordRows = ORD_ROW_OPTS.indexOf(n) >= 0 ? n : 30;   /* 0 means All, and 0 is falsy */
+    try { localStorage.setItem('ordRows', String(ordRows)); } catch(err){}
+    ordPoolPage = 0; ordBatchPage = {};
+    ordRenderPool(); ordRenderBatches();
+    open.forEach(function(id){
+      const b = document.getElementById(id);
+      if (b){
+        b.style.display = '';
+        const btn = document.querySelector('[data-bexpand="' + id.replace('ordBatchBody_', '') + '"]');
+        if (btn) btn.textContent = 'Hide';
+      }
+    });
   });
   ordDetailBody.addEventListener('keydown', function(e){
     if (e.target.id === 'ordSelN' && e.key === 'Enter'){
@@ -8191,7 +8339,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '</div>' +
         '</div>' +
         '<div class="ord-batch-body" id="ordBatchBody_' + esc(b.id) + '" style="display:none;">' +
-          '<div class="ord-batch-bar"><button class="ghost btn-sm" data-bcopy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy All</button></div>' +
+          '<div class="ord-batch-bar"><button class="ghost btn-sm" data-bcopy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy Serial Numbers</button></div>' +
           (batchWide.length
             ? '<p class="muted-sm ord-batch-trk">Master tracking: ' + ordCarrierBadge(b.carrier) + '<span class="ord-mono">' + ordTrackHtml(b.carrier, batchWide) + '</span>' +
               '<span class="ord-trk-hint"> \u00b7 covers every unit below</span>' +
@@ -8203,7 +8351,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             if (bp > bpages - 1) bp = bpages - 1;
             const bfrom = bp * ordPageSize();
             const bshown = units.slice(bfrom, bfrom + ordPageSize());
-            return '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr>' +
+            return '<div class="table-wrap stack-wrap ord-batch-wrap"><table class="hist-table stack"><thead><tr>' +
             '<th>Serial</th><th>Config</th><th>Tracking</th>' +
           '</tr></thead><tbody>' +
           bshown.map(function(u){
@@ -8213,14 +8361,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                 (perUnit[u.id] ? '' : (batchWide.length ? ordTrkTag(true) : '')) + '</td></tr>';
           }).join('') +
           '</tbody></table></div>' +
-          (bpages > 1
-            ? '<div class="ord-pager">' +
-                '<button class="ghost btn-sm" data-bprev="' + esc(b.id) + '" type="button"' + (bp === 0 ? ' disabled' : '') + '>Previous</button>' +
-                '<span class="ord-pager-info">' + ordNum(bfrom + 1) + '\u2013' + ordNum(Math.min(bfrom + ordPageSize(), units.length)) +
-                  ' of ' + ordNum(units.length) + '</span>' +
-                '<button class="ghost btn-sm" data-bnext="' + esc(b.id) + '" type="button"' + (bp >= bpages - 1 ? ' disabled' : '') + '>Next</button>' +
-              '</div>'
-            : '');
+          '<div class="ord-pager">' +
+            (bpages > 1
+              ? '<button class="ghost btn-sm" data-bprev="' + esc(b.id) + '" type="button"' + (bp === 0 ? ' disabled' : '') + '>Previous</button>'
+              : '') +
+            '<span class="ord-pager-info">' + ordNum(bfrom + 1) + '\u2013' + ordNum(Math.min(bfrom + ordPageSize(), units.length)) +
+              ' of ' + ordNum(units.length) + '</span>' +
+            (bpages > 1
+              ? '<button class="ghost btn-sm" data-bnext="' + esc(b.id) + '" type="button"' + (bp >= bpages - 1 ? ' disabled' : '') + '>Next</button>'
+              : '') +
+            ordRowsPicker() +
+          '</div>';
           })() +
           '<div class="ord-batch-foot">' +
             '<button class="ghost btn-sm" data-bprint46="' + esc(b.id) + '" type="button">4\u00d76 box PDF</button>' +
@@ -9282,7 +9433,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (!r.error && r.data) rmaComments.push(r.data);
       await rmaSetStatus(t, 'needs_info', null, null);
     });
-    if (act === 'cancel'){ if (!confirm('Cancel ' + rmaNo(t) + '?')) return; await rmaSetStatus(t, 'cancelled', null, null); return; }
+    if (act === 'cancel'){ if (!(await mgConfirm('Cancel ' + rmaNo(t) + '?'))) return; await rmaSetStatus(t, 'cancelled', null, null); return; }
     if (act === 'ship') return rmaShipModal(t, 'outbound');
     if (act === 'returned') return rmaShipModal(t, 'return');
     if (act === 'close') return rmaReasonModal(t, 'Close ' + rmaNo(t), (t.status === 'return_received' ? 'One line on what fixed it.' : 'The failed part is not back yet \u2014 say why this is closing.') + ' The technician sees this.', 'Close RMA', async function(res){
@@ -9290,7 +9441,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
     if (act === 'reopen'){ await rmaSetStatus(t, t.coverage ? 'approved' : 'new', { closed_at: null }, 'Reopened'); return; }
     if (act === 'delete'){
-      if (!confirm('Delete ' + rmaNo(t) + '?\n\nThis removes its parts, shipments, comments, attachments and history. It cannot be undone.')) return;
+      if (!(await mgConfirm('Delete ' + rmaNo(t) + '?\n\nThis removes its parts, shipments, comments, attachments and history. It cannot be undone.'))) return;
       btn.disabled = true;
       const atts = rmaAttachments.filter(function(x){ return x.rma_id === t.id; });
       if (atts.length){ try { await SB.storage.from(RMA_BUCKET).remove(atts.map(function(x){ return x.path; })); } catch(e){} }
@@ -9786,14 +9937,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
     host.innerHTML =
-      '<div class="table-wrap"><table class="hist-table"><thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Result</th></tr></thead><tbody>' +
+      '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Result</th></tr></thead><tbody>' +
       rows.map(function(x){
         const c = EMAIL_CHIP[x.state] || EMAIL_CHIP.unknown;
         const label = x.state === 'refused' && x.status_code ? x.status_code + ' refused' : c[1];
-        return '<tr><td>' + esc(rmaDate(x.created_at)) + '</td>' +
-          '<td class="adm-spec">' + esc(x.to_addrs || '') + '</td>' +
-          '<td>' + esc(x.subject || '') + '</td>' +
-          '<td><span class="ord-chip ' + c[0] + '">' + esc(label) + '</span>' +
+        return '<tr><td data-l="Sent">' + esc(rmaDate(x.created_at)) + '</td>' +
+          '<td class="adm-spec" data-l="To">' + esc(x.to_addrs || '') + '</td>' +
+          '<td data-l="Subject">' + esc(x.subject || '') + '</td>' +
+          '<td data-l="Result"><span class="ord-chip ' + c[0] + '">' + esc(label) + '</span>' +
             (x.state === 'refused' || x.state === 'failed'
               ? '<div class="muted-sm" style="margin-top:4px;">' + esc(x.detail || '') + '</div>' : '') +
           '</td></tr>';
@@ -9902,7 +10053,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (ed){ admRmaContactModal(rmaContacts.find(function(c){ return c.id === ed.getAttribute('data-admrmaedit'); })); return; }
     const dl = e.target.closest('[data-admrmadel]');
     if (dl){
-      const c = rmaContacts.find(function(x){ return x.id === dl.getAttribute('data-admrmadel'); }); if (!c || !confirm('Remove ' + c.name + '?')) return;
+      const c = rmaContacts.find(function(x){ return x.id === dl.getAttribute('data-admrmadel'); }); if (!c || !(await mgConfirm('Remove ' + c.name + '?'))) return;
       const r = await SB.from('customer_contacts').delete().eq('id', c.id); if (r.error){ toast(r.error.message, 'bad'); return; }
       rmaContacts = rmaContacts.filter(function(x){ return x.id !== c.id; }); admRenderPane(); return;
     }
@@ -10096,7 +10247,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
             '<h3 class="adm-sub">Novatech copies</h3>' +
             '<p class="muted-sm" style="margin:0 0 var(--s2);">Who on your side hears when a technician opens an RMA or replies. Comma-separated.</p>' +
-            '<div class="adm-inline"><input id="admRmaEmails" type="text" placeholder="one@novatechgaming.com, two@novatechgaming.com" value="' + esc(admRmaSettings.rma_notify_emails || '') + '"' + (admin ? '' : ' disabled') + '>' +
+            '<div class="adm-inline"><input id="admRmaEmails" type="text" placeholder="you@novatechgaming.com, \u2026" value="' + esc(admRmaSettings.rma_notify_emails || '') + '"' + (admin ? '' : ' disabled') + '>' +
               (admin ? '<button class="ghost btn-sm" id="admRmaEmailsSave" type="button">Save</button>' : '') + '</div>' +
 
             (admin
@@ -10156,7 +10307,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const rd = e.target.closest('[data-admrndel]');
     if (rd){
       const c = admRmaNotify.find(function(x){ return x.id === rd.getAttribute('data-admrndel'); });
-      if (!c || !confirm('Stop sending RMA email to ' + c.name + '?')) return;
+      if (!c || !(await mgConfirm('Stop sending RMA email to ' + c.name + '?'))) return;
       const r = await SB.from('rma_notify_contacts').delete().eq('id', c.id);
       if (r.error){ toast(r.error.message, 'bad'); return; }
       admRmaNotify = admRmaNotify.filter(function(x){ return x.id !== c.id; });
@@ -10224,7 +10375,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const od = e.target.closest('[data-admondel]');
     if (od){
       const c = admOrderContacts.find(function(x){ return x.id === od.getAttribute('data-admondel'); });
-      if (!c || !confirm('Stop sending order email to ' + c.name + '?')) return;
+      if (!c || !(await mgConfirm('Stop sending order email to ' + c.name + '?'))) return;
       const r = await SB.from('order_contacts').delete().eq('id', c.id);
       if (r.error){ toast(r.error.message, 'bad'); return; }
       admOrderContacts = admOrderContacts.filter(function(x){ return x.id !== c.id; });

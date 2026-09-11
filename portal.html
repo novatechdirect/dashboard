@@ -296,6 +296,45 @@
   .pipen{ margin-left:auto; font-weight:600; font-variant-numeric:tabular-nums; }
   @media (max-width:640px){ .pipeleg{ grid-template-columns:1fr; gap:var(--s2); } .pipev{ font-size:24px; } }
 
+  /* Paging redraws the whole detail view, so remember which batches were
+     open and put them back. */
+  function batchesOpen(){
+    const ids = [];
+    document.querySelectorAll('.bbody').forEach(function(b){
+      if (b.style.display !== 'none') ids.push(b.id.replace(/^bb_/, ''));
+    });
+    return ids;
+  }
+  function reopenBatches(ids){
+    ids.forEach(function(id){
+      const bd = document.getElementById('bb_' + id);
+      if (!bd) return;
+      bd.style.display = '';
+      const btn = document.querySelector('[data-x="' + id + '"]');
+      if (btn) btn.textContent = 'Hide';
+    });
+  }
+  document.addEventListener('click', function(e){
+    const pv = e.target.closest('[data-bprev]'), nx = e.target.closest('[data-bnext]');
+    if (!pv && !nx) return;
+    const id = (pv || nx).getAttribute(pv ? 'data-bprev' : 'data-bnext');
+    batchPage[id] = (batchPage[id] || 0) + (pv ? -1 : 1);
+    const open = batchesOpen();
+    if (currentId) openOrder(currentId);
+    reopenBatches(open);
+  });
+  document.addEventListener('change', function(e){
+    const sel = e.target.closest('[data-rows]');
+    if (!sel) return;
+    const n = parseInt(sel.value, 10);
+    rowsPer = ROW_OPTS.indexOf(n) >= 0 ? n : 30;   /* 0 means All, and 0 is falsy */
+    try { localStorage.setItem('portalRows', String(rowsPer)); } catch(err){}
+    batchPage = {};
+    const open = batchesOpen();
+    if (currentId) openOrder(currentId);
+    reopenBatches(open);
+  });
+
   /* ---------- billing ---------- */
   .bstats{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s3); }
   .bstat{ padding:var(--s4); border:1px solid var(--line); border-radius:var(--r-md); background:var(--paper); min-width:0; }
@@ -583,6 +622,27 @@
     border-radius:var(--r-pill); padding:2px 8px; vertical-align:middle;
   }
   .bbody{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line); background:var(--soft); }
+  .pager{ display:flex; align-items:center; justify-content:center; gap:var(--s3); margin-top:var(--s3); flex-wrap:wrap; }
+  .pager-i{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .pager-rows{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+  .pager-rows select{ height:24px; padding:0 24px 0 6px; font-size:11.5px; width:auto; }
+
+
+  /* password reveal: the eye sits inside the field, so the field keeps its width */
+  .pw-wrap{ position:relative; display:block; }
+  .pw-wrap input{ padding-right:44px !important; }
+  .pw-see{
+    position:absolute; top:0; right:0; height:100%; width:40px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:0; padding:0; margin:0; cursor:pointer;
+    color:var(--muted); border-radius:0; min-height:0;
+  }
+  .pw-see:hover{ color:var(--ink); }
+  .pw-see:focus-visible{ outline:none; box-shadow:var(--ring); border-radius:var(--r-sm); }
+  .pw-see svg{ width:19px; height:19px; display:block; }
+  .pw-see .pw-eye-off{ display:none; }
+  .pw-see.on .pw-eye{ display:none; }
+  .pw-see.on .pw-eye-off{ display:block; }
 
   /* ---------- tables ---------- */
   .twrap{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--paper); }
@@ -708,11 +768,17 @@
       align-items:stretch;
     }
     header.top{ flex-wrap:wrap; align-items:center; }
-    .brand{ min-width:0; flex:1 1 0; }
+    .brand{ min-width:0; flex:1 1 0; gap:var(--s3); }
+    /* "Order Portal · Customer" on one line under a smaller mark: the header
+       was a third of the first screen */
+    .brand img{ height:24px; }
+    .brand > div{ padding-left:var(--s3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .brand b, .brand span{ display:inline; font-size:13px; }
+    .brand span::before{ content:" \00b7 "; color:var(--faint); }
     .who{ width:auto; justify-content:flex-end; gap:var(--s2); flex-wrap:nowrap; flex:0 0 auto; }
     .who-em{ display:none; }
-    .pmenu{ order:3; flex:1 1 100%; margin:var(--s2) 0 0; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
-    .pmenu a{ flex:1; justify-content:center; padding:7px 12px; }
+    .pmenu{ order:3; flex:1 1 100%; margin:var(--s1) 0 0; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
+    .pmenu a{ flex:1; justify-content:center; padding:8px 12px; min-height:36px; }
     .pmenu a.on{ background:var(--paper); color:var(--ink); box-shadow:var(--e1); }
     #staffPick{ padding:5px var(--s4); gap:var(--s2); }
     #staffPick .pickbox{ flex:1 1 auto; width:auto; max-width:none; height:28px; min-height:28px; font-size:12px; }
@@ -724,14 +790,44 @@
     .sum{ grid-template-columns:repeat(2,1fr); }
     .sumc:last-child{ grid-column:1 / -1; }
     .sumv{ font-size:22px; }
-    .bhead{ grid-template-columns:1fr; }
-    /* the two batch actions share the full width of the card footer */
-    .bhead > div:last-child{ justify-self:stretch; }
-    .bacts{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    /* batch and status left, units and shipment right, store beneath, then
+       the button. The street address waits in the details. */
+    .bhead{
+      grid-template-columns:max-content minmax(0,1fr); grid-template-areas:"no units" "dest dest" "acts acts";
+      gap:var(--s1) var(--s3); padding:10px 14px;
+    }
+    .bhead > .bno{ flex-wrap:nowrap; }
+    /* tracking is a tap away in the details; up here it only crowds the units */
+    .bhead > .mono .trk-grp, .bhead > .mono .bdot{ display:none; }
+    .bhead > .bno{ grid-area:no; }
+    .bhead > div:nth-child(2){ grid-area:dest; }
+    .bhead > div:nth-child(2) .sub{ display:none; }
+    .bhead > .mono{ grid-area:units; text-align:right; }
+    .bhead > .mono .bship{ justify-content:flex-end; }
+    .bhead > div:last-child{ grid-area:acts; justify-self:stretch; }
+    .bacts{ display:grid; grid-template-columns:1fr; gap:8px; }
     .bacts .btn{ width:100%; }
+    /* rows in the expanded table: tighter, so thirty of them stay short */
+    /* Three columns do not fit a phone. Each unit becomes two short lines:
+       serial with the model under it, tracking on the right. */
+    .bbody table, .bbody tbody, .bbody tr, .bbody td{ display:block; }
+    .bbody thead{ display:none; }
+    .bbody table{ font-size:12.5px; }
+    .bbody tbody tr{
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0 var(--s3); align-items:center;
+      padding:8px 10px; border-bottom:1px solid var(--line);
+    }
+    .bbody tbody tr:last-child{ border-bottom:0; }
+    .bbody td{ padding:0; border:0; width:auto; white-space:normal; overflow-wrap:anywhere; }
+    .bbody td:nth-child(1){ grid-column:1; grid-row:1; font-weight:600; }
+    .bbody td:nth-child(2){ grid-column:2; grid-row:1; font-size:12px; text-align:right; }
+    .bbody td:nth-child(3){ grid-column:1 / -1; grid-row:2; font-size:12px; white-space:nowrap; }
+    /* the master tag repeats on every row of a batch; the header already says it */
+    .bbody .trk-tag{ display:none; }
+    .pager-rows select{ height:32px; }
     .back .btn{ min-height:36px; }
     .btn{ min-height:36px; }
-    .btn.sm{ min-height:30px; }
+    .btn.sm{ min-height:36px; }
     .icon-btn{ width:32px; height:32px; min-height:32px; }
     h1{ font-size:21px; }
     /* top-biased, not dead-centre: the browser's own bottom bar makes a
@@ -764,6 +860,7 @@
     body{ background:#fff; }
     .card, .batch, .sumc{ box-shadow:none; border-color:#ccc; break-inside:avoid; }
     .bbody{ display:block !important; background:#fff; }
+    .pager{ display:none !important; }
     .orow{ animation:none; }
   }
 
@@ -808,7 +905,9 @@
     <h1>Order Portal</h1>
     <p class="muted" style="margin-top:0;">Sign in to see your orders, shipments and serial numbers.</p>
     <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="username"></div>
-    <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div>
+    <div class="field"><label for="pw">Password</label>
+      <span class="pw-wrap"><input id="pw" type="password" autocomplete="current-password" enterkeyhint="go">
+        <button type="button" class="pw-see" id="pwSee" aria-label="Show password" title="Show password"></button></span></div>
     <button class="btn primary" id="go" type="button" style="width:100%; height:40px;">Sign in</button>
     <div class="err" id="loginErr"></div>
   </div>
@@ -882,7 +981,29 @@
 
   /* ---------- modal ---------- */
   let modalBg = null;
-  function closeModal(){ if (modalBg){ modalBg.remove(); modalBg = null; } }
+  let confirmResolve = null;
+  function closeModal(){
+    if (modalBg){ modalBg.remove(); modalBg = null; }
+    if (confirmResolve){ const r = confirmResolve; confirmResolve = null; r(false); }
+  }
+  /* Replaces the browser's confirm(). The verb the question opens with
+     becomes the button. */
+  function pConfirm(text){
+    const parts = String(text || '').split(/\n\s*\n/);
+    const title = parts[0].trim(), body = parts.slice(1).join(' ').trim();
+    const first = (title.match(/^([A-Z][a-z]+)/) || [])[1] || '';
+    const cta = /^(Delete|Remove|Cancel|Stop|Clear)$/.test(first) ? first : 'Yes';
+    return new Promise(function(resolve){
+      const bg = openModal(
+        '<div class="modal-h"><h2>' + esc(title) + '</h2>' + (body ? '<p>' + esc(body) + '</p>' : '') + '</div>' +
+        '<div class="modal-f"><button class="btn" id="pcNo" type="button">' + (first === 'Cancel' ? 'Keep it' : 'Go back') + '</button>' +
+        '<button class="btn primary" id="pcYes" type="button">' + esc(cta) + '</button></div>');
+      confirmResolve = resolve;
+      bg.querySelector('#pcNo').addEventListener('click', closeModal);
+      bg.querySelector('#pcYes').addEventListener('click', function(){ confirmResolve = null; closeModal(); resolve(true); });
+      setTimeout(function(){ const b = bg.querySelector('#pcNo'); if (b) b.focus(); }, 30);
+    });
+  }
   function openModal(html){
     closeModal();
     modalBg = document.createElement('div');
@@ -948,6 +1069,16 @@
   let orders = [], lines = [], configs = [], batches = [], tracking = [], units = [], locations = [];
   let currentId = null, query = '';
   let pview = 'orders';
+  /* Thirty rows by default: a 150-unit batch should not turn the page into a
+     mile of scrolling. The picker at the foot of each table raises it and the
+     choice sticks. */
+  const ROW_OPTS = [30, 60, 120, 0];
+  let rowsPer = (function(){
+    const v = parseInt(localStorage.getItem('portalRows') || '', 10);
+    return ROW_OPTS.indexOf(v) >= 0 ? v : 30;
+  })();
+  function pageSize(){ return rowsPer === 0 ? Infinity : rowsPer; }
+  let batchPage = {};
   let canBill = false, billState = 'idle', billErr = '', billSum = null, billInv = [], billSeries = [];
   let billPays = {}, billDocs = {}, billOpen = null, billTab = 'open';
   let rmaTickets = [], rmaParts = [], rmaShipments = [], rmaComments = [], rmaAttachments = [], rmaEvents = [], rmaContacts = [];
@@ -1024,6 +1155,22 @@
     $('topbar').style.display = '';
     await load();
   }
+  /* show the password, because a mistyped one is the commonest sign-in failure */
+  (function(){
+    const btn = $('pwSee'), input = $('pw');
+    if (!btn || !input) return;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" class="pw-eye" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></g></svg>' +
+      '<svg viewBox="0 0 24 24" class="pw-eye-off" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4L20 20"/><path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5C18 5.5 21.5 12 21.5 12a16 16 0 0 1-2.6 3.3"/><path d="M6.6 7.7A16.4 16.4 0 0 0 2.5 12S6 18.5 12 18.5a9.7 9.7 0 0 0 3.1-.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></g></svg>';
+    btn.addEventListener('click', function(){
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.classList.toggle('on', show);
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      btn.setAttribute('title', show ? 'Hide password' : 'Show password');
+      input.focus();
+    });
+  })();
+
   $('go').addEventListener('click', signIn);
   $('pw').addEventListener('keydown', function(e){ if (e.key === 'Enter') signIn(); });
   $('em').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('pw').focus(); });
@@ -1307,6 +1454,45 @@
     const lk = $('lookup');
     if (lk) lk.addEventListener('click', serialLookup);
   }
+
+  /* Paging redraws the whole detail view, so remember which batches were
+     open and put them back. */
+  function batchesOpen(){
+    const ids = [];
+    document.querySelectorAll('.bbody').forEach(function(b){
+      if (b.style.display !== 'none') ids.push(b.id.replace(/^bb_/, ''));
+    });
+    return ids;
+  }
+  function reopenBatches(ids){
+    ids.forEach(function(id){
+      const bd = document.getElementById('bb_' + id);
+      if (!bd) return;
+      bd.style.display = '';
+      const btn = document.querySelector('[data-x="' + id + '"]');
+      if (btn) btn.textContent = 'Hide';
+    });
+  }
+  document.addEventListener('click', function(e){
+    const pv = e.target.closest('[data-bprev]'), nx = e.target.closest('[data-bnext]');
+    if (!pv && !nx) return;
+    const id = (pv || nx).getAttribute(pv ? 'data-bprev' : 'data-bnext');
+    batchPage[id] = (batchPage[id] || 0) + (pv ? -1 : 1);
+    const open = batchesOpen();
+    if (currentId) openOrder(currentId);
+    reopenBatches(open);
+  });
+  document.addEventListener('change', function(e){
+    const sel = e.target.closest('[data-rows]');
+    if (!sel) return;
+    const n = parseInt(sel.value, 10);
+    rowsPer = ROW_OPTS.indexOf(n) >= 0 ? n : 30;   /* 0 means All, and 0 is falsy */
+    try { localStorage.setItem('portalRows', String(rowsPer)); } catch(err){}
+    batchPage = {};
+    const open = batchesOpen();
+    if (currentId) openOrder(currentId);
+    reopenBatches(open);
+  });
 
   /* ---------- billing ----------
      Read-only money. The only things they can change are the PO number and
@@ -1658,7 +1844,7 @@
     setTimeout(function(){ w.focus(); w.print(); }, 350);
   }
 
-  document.addEventListener('click', function(e){
+  document.addEventListener('click', async function(e){
     if (pview !== 'billing') return;
     const tab = e.target.closest('[data-btab]');
     if (tab){ billTab = tab.getAttribute('data-btab'); billOpen = null; renderBilling(); return; }
@@ -1697,7 +1883,7 @@
     if (ddel){
       const id = billOpen;
       const d = (billDocs[id] || []).find(function(x){ return x.id === ddel.getAttribute('data-bdocdel'); });
-      if (!d || !confirm('Remove ' + d.filename + '?')) return;
+      if (!d || !(await pConfirm('Remove ' + d.filename + '?'))) return;
       ddel.disabled = true;
       (async function(){
         const rm = await SB.storage.from('customer-docs').remove([d.path]);
@@ -1801,14 +1987,37 @@
               '<button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
           '</div>' +
           '<div class="bbody" id="bb_' + esc(b.id) + '" style="display:none;">' +
-            '<div class="bbar"><button class="btn sm" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy All</button></div>' +
-            '<div class="twrap"><table><thead><tr><th>Serial</th><th>Model</th><th>Tracking</th></tr></thead><tbody>' +
-            bu.map(function(u){
-              return '<tr><td class="mono">' + esc(u.serial) + '</td>' +
-                '<td><span class="cfg" data-cfg="' + esc(u.config_id) + '" tabindex="0">' + esc(cfgName[u.config_id] || '\u2014') + '</span></td>' +
-                '<td class="mono">' + trackHtml(b.carrier, per[u.id] ? [per[u.id]] : wide) +
-                  (per[u.id] ? '' : (wide.length ? trkTag(true) : '')) + '</td></tr>';
-            }).join('') + '</tbody></table></div>' +
+            '<div class="bbar"><button class="btn sm" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy Serial Numbers</button></div>' +
+            (function(){
+              const pages = Math.max(1, Math.ceil(bu.length / pageSize()));
+              let bp = batchPage[b.id] || 0;
+              if (bp > pages - 1) bp = pages - 1;
+              if (bp < 0) bp = 0;
+              const from = bp * pageSize();
+              const shown = bu.slice(from, from + pageSize());
+              return '<div class="twrap"><table><thead><tr><th>Serial</th><th>Model</th><th>Tracking</th></tr></thead><tbody>' +
+                shown.map(function(u){
+                  return '<tr><td class="mono">' + esc(u.serial) + '</td>' +
+                    '<td><span class="cfg" data-cfg="' + esc(u.config_id) + '" tabindex="0">' + esc(cfgName[u.config_id] || '\u2014') + '</span></td>' +
+                    '<td class="mono">' + trackHtml(b.carrier, per[u.id] ? [per[u.id]] : wide) +
+                      (per[u.id] ? '' : (wide.length ? trkTag(true) : '')) + '</td></tr>';
+                }).join('') + '</tbody></table></div>' +
+                '<div class="pager">' +
+                  (pages > 1
+                    ? '<button class="btn sm" data-bprev="' + esc(b.id) + '" type="button"' + (bp === 0 ? ' disabled' : '') + '>Previous</button>'
+                    : '') +
+                  '<span class="pager-i">' + num(from + 1) + '\u2013' + num(Math.min(from + pageSize(), bu.length)) +
+                    ' of ' + num(bu.length) + '</span>' +
+                  (pages > 1
+                    ? '<button class="btn sm" data-bnext="' + esc(b.id) + '" type="button"' + (bp >= pages - 1 ? ' disabled' : '') + '>Next</button>'
+                    : '') +
+                  '<label class="pager-rows"><span>Show</span>' +
+                    '<select data-rows aria-label="Rows per page">' +
+                    ROW_OPTS.map(function(n){
+                      return '<option value="' + n + '"' + (n === rowsPer ? ' selected' : '') + '>' + (n === 0 ? 'All' : n) + '</option>';
+                    }).join('') + '</select></label>' +
+                '</div>';
+            })() +
           '</div>' +
         '</div>';
       }).join('')
@@ -2372,7 +2581,7 @@
       openRma(t.id);
     });
     const cancel = $('rmaCancel'); if (cancel) cancel.addEventListener('click', async function(){
-      if (!confirm('Cancel ' + rmaNo(t) + '?')) return;
+      if (!(await pConfirm('Cancel ' + rmaNo(t) + '?'))) return;
       const r = await SB.from('rma_tickets').update({ status: 'cancelled' }).eq('id', t.id).select().single();
       if (r.error){ toast('Could not cancel: ' + r.error.message, 'bad'); return; }
       Object.assign(t, r.data); await rmaEvent(t, 'status', 'new', 'cancelled', 'Cancelled by the technician'); openRma(t.id);
