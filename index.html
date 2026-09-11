@@ -1522,6 +1522,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     .hist-table.stack td:empty{ display:none; }
     .table-wrap.stack-wrap{ border:none; border-radius:0; overflow:visible; max-height:none; background:none; }
+    /* Mail log: subject and result on the first line, who and when on the
+       second. Twenty-five messages as labelled cards was a phone-length page. */
+    .hist-table.stack.mail-log tr{
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px var(--s3);
+      padding:8px 10px; margin-bottom:var(--s1);
+    }
+    .hist-table.stack.mail-log td{ display:block; padding:0; text-align:left; }
+    .hist-table.stack.mail-log td::before{ content:none; }
+    .hist-table.stack.mail-log td[data-l="Subject"]{
+      grid-column:1; grid-row:1; font-weight:600; font-size:12.5px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .hist-table.stack.mail-log td[data-l="Result"]{ grid-column:2; grid-row:1; text-align:right; }
+    .hist-table.stack.mail-log td[data-l="To"]{
+      grid-column:1; grid-row:2; font-size:11.5px; color:var(--muted);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .hist-table.stack.mail-log td[data-l="Sent"]{ grid-column:2; grid-row:2; font-size:11.5px; color:var(--faint); text-align:right; white-space:nowrap; }
   }
 
   /* ---------- THE LABEL (4 x 6) ---------- */
@@ -2096,6 +2114,36 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     padding:var(--s1) 0 var(--s2) 2px;
   }
 
+
+  /* ---------- demo mode ---------- */
+  #demoBar{
+    position:fixed; left:0; right:0; bottom:0; z-index:9999;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px max(12px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));
+    background:var(--warn); color:#fff; font-size:12.5px; line-height:1.3;
+    box-shadow:0 -2px 12px rgba(0,0,0,.18);
+  }
+  #demoBar b{ font-weight:600; }
+  #demoBar .demo-dot{
+    width:8px; height:8px; border-radius:50%; background:#fff; flex:0 0 auto;
+    animation:demoPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes demoPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+  #demoBar .demo-sep{ opacity:.6; }
+  #demoBar .demo-txt{ min-width:0; }
+  #demoBar button{
+    margin-left:auto; appearance:none; cursor:pointer; font:inherit; font-size:12px;
+    padding:5px 12px; min-height:30px; border-radius:9999px;
+    background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.5); color:#fff;
+  }
+  #demoBar button:hover{ background:rgba(255,255,255,.3); }
+  :root[data-demo]{ --demo-bar:44px; }
+
+  /* the phone tab bar sits above the demo banner */
+  :root[data-demo] #tabbar{ bottom:calc(var(--demo-bar) + env(safe-area-inset-bottom)); }
+  :root[data-demo] body{ padding-bottom:var(--demo-bar); }
+  @media print{ #demoBar{ display:none !important; } }
+
   /* ---- admin ---- */
   .adm-tabs{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
   /* one hue per section, the same language as the nav and the status chips */
@@ -2110,6 +2158,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .adm-tabs .mg-pill[data-admtab="people"]{    --tab-hue:var(--hue-admin); }
   .adm-tabs .mg-pill[data-admtab="logins"]{    --tab-hue:var(--hue-timeclock); }
   .adm-tabs .mg-pill[data-admtab="email"]{     --tab-hue:var(--hue-rma); }
+  .adm-tabs .mg-pill[data-admtab="demo"]{      --tab-hue:var(--warn); }
   .adm-sec{ margin-top:var(--s5); }
   .adm-sub{
     display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
@@ -2778,6 +2827,29 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .rma-att a{ display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:var(--r-pill); background:var(--paper); color:var(--ink); text-decoration:none; max-width:100%; cursor:pointer; }
   .rma-att a span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; }
   .rma-att img{ width:64px; height:64px; object-fit:cover; border-radius:var(--r-sm); border:1px solid var(--line); cursor:pointer; background:var(--soft); }
+  /* Order notes. Same message shape as an RMA thread, with a pinned state
+     and a visible marker on anything the customer cannot see. */
+  .onote-empty{ margin:0; color:var(--muted); font-size:13px; }
+  .rma-msg.pinned{ border-color:var(--accent-line); background:var(--accent-soft); }
+  /* author left, time and Remove right, on one line: a wrapping name and a
+     wrapping timestamp collided into the body text */
+  .rma-msg .rma-msg-h{ flex-wrap:nowrap; align-items:center; }
+  .rma-msg .onote-tags{ display:flex; align-items:center; gap:6px; min-width:0; }
+  .rma-msg .onote-tags:first-child{ flex:1 1 auto; }
+  .rma-msg .onote-tags:first-child b{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rma-msg .onote-tags:last-child{ flex:0 0 auto; white-space:nowrap; }
+  .rma-msg .onote-tags .ord-chip{ flex:0 0 auto; }
+  .onote-x{
+    appearance:none; border:none; background:none; padding:0 2px; cursor:pointer;
+    color:var(--faint); font-size:12px; line-height:1;
+  }
+  .onote-x:hover{ color:var(--bad); }
+  .onote-seg{ display:flex; gap:2px; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
+  .onote-seg button{
+    appearance:none; border:none; background:none; cursor:pointer; font:inherit; font-size:12px;
+    padding:5px 12px; border-radius:var(--r-pill); color:var(--muted); min-height:30px; white-space:nowrap;
+  }
+  .onote-seg button.on{ background:var(--paper); color:var(--ink); font-weight:600; box-shadow:var(--e1); }
   .rma-compose{ margin-top:var(--s4); display:grid; gap:var(--s2); }
   .rma-compose textarea{ min-height:76px; resize:vertical; }
   .rma-compose-bar{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; }
@@ -3696,12 +3768,475 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   // ---- Supabase (database) ----
   const SUPABASE_URL = 'https://vajrnbniwkvnkkkigeit.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_mF1sD8UO4CHuyCgPTLZsXQ_CilDLz3y';
-  const SB = (window.supabase && window.supabase.createClient)
+  const SB_LIVE = (window.supabase && window.supabase.createClient)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } })
     : null;
+  const DEMO_SIDE = 'staff';
+
+  /* ================= DEMO MODE =================
+     A screenshare switch. When it is on, nothing in this browser tab talks
+     to the database: reads are answered from a fixture company, and writes
+     land in memory so the app still behaves — you can build units, ship a
+     batch, record a payment, post a note, and none of it leaves the page.
+
+     It is deliberately loud. A banner sits above everything, the tab title
+     changes, and the flag is per-browser, so turning it on cannot affect a
+     customer or a colleague. Reloading keeps it on, because a screenshare
+     that resets on refresh is worse than useless.
+
+     Auth is never faked — you stay signed in as yourself. */
+  const DEMO_KEY = 'nt-demo-mode';
+  const DEMO = { on: false, db: null, seq: 0 };
+  try { DEMO.on = localStorage.getItem(DEMO_KEY) === '1'; } catch(e){}
+
+  function demoId(p){ DEMO.seq++; return 'demo-' + p + '-' + DEMO.seq; }
+  function demoDay(n){ const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+  function demoStamp(n){ const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString(); }
+
+  function demoSeed(){
+    const CUST = 'demo-cust-1', ME = 'demo-user-1';
+    const cfgA = 'demo-cfg-1', cfgB = 'demo-cfg-2';
+    const o1 = 'demo-ord-1', o2 = 'demo-ord-2';
+    const db = {
+      customers: [{ id: CUST, name: 'Demo Gaming Co', code: 'DG', next_serial: 561, active: true,
+                    created_at: demoStamp(-210) }],
+      configs: [
+        { id: cfgA, customer_id: CUST, name: 'Spectre 15', status: 'active', active: true,
+          pc_case: 'Spectre mid tower', cpu: 'Ryzen 5 7600', gpu: 'RTX 4060', ram: '16GB DDR5', storage: '1TB NVMe' },
+        { id: cfgB, customer_id: CUST, name: 'Wraith Pro', status: 'active', active: true,
+          pc_case: 'Wraith compact', cpu: 'Ryzen 7 7700', gpu: 'RTX 4070', ram: '32GB DDR5', storage: '2TB NVMe' }
+      ],
+      ship_to_locations: [
+        { id: 'demo-loc-1', customer_id: CUST, store_name: 'Riverside Gaming', store_number: '204', address: '1180 Riverside Dr', city: 'Austin', state: 'TX', zip: '78701', active: true },
+        { id: 'demo-loc-2', customer_id: CUST, store_name: 'Northgate Play', store_number: '311', address: '88 Northgate Mall', city: 'Phoenix', state: 'AZ', zip: '85004', active: true },
+        { id: 'demo-loc-3', customer_id: CUST, store_name: 'Lakeside Arcade', store_number: '118', address: '7 Lakeside Blvd', city: 'Tampa', state: 'FL', zip: '33602', active: true },
+        { id: 'demo-loc-4', customer_id: CUST, store_name: 'Westway Games', store_number: '402', address: '2200 Westway Pkwy', city: 'Denver', state: 'CO', zip: '80202', active: true }
+      ],
+      orders: [
+        { id: o1, customer_id: CUST, invoice_no: 'DG001', created_at: demoStamp(-96), archived: false,
+          due_date: demoDay(-66), invoice_total: 17975, po_number: '4500118820',
+          hold_until_paid: false, complete_notified_at: demoStamp(-70), notes: null },
+        { id: o2, customer_id: CUST, invoice_no: 'DG002', created_at: demoStamp(-34), archived: false,
+          due_date: demoDay(12), invoice_total: 82080, po_number: null,
+          hold_until_paid: false, complete_notified_at: null, notes: null }
+      ],
+      order_lines: [
+        { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 25, unit_price: 719, position: 1, category: 1 },
+        { id: 'demo-line-2', order_id: o2, config_id: cfgB, qty_ordered: 60, unit_price: 1368, position: 1, category: 1 }
+      ],
+      order_payments: [
+        { id: 'demo-pay-1', order_id: o1, amount: 9000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
+        { id: 'demo-pay-2', order_id: o1, amount: 8975, paid_on: demoDay(-62), method: 'Wire', note: 'Balance' },
+        { id: 'demo-pay-3', order_id: o2, amount: 40000, paid_on: demoDay(-18), method: 'ACH', note: 'Part payment against DG002' }
+      ],
+      batches: [], batch_tracking: [], pc_log: [],
+      order_documents: [], order_customer_docs: [],
+      order_notes: [
+        { id: 'demo-note-1', order_id: o2, side: 'staff', audience: 'shared', pinned: true,
+          author_name: 'Novatech', created_at: demoStamp(-4), mine: false,
+          body: 'Our case shipment is held up at the port \u2014 the container is about two weeks out. Batches 3 and 4 are built and waiting on cases, so nothing else ships before then. Everything already with UPS is unaffected.' },
+        { id: 'demo-note-2', order_id: o2, side: 'customer', audience: 'shared', pinned: false,
+          author_name: 'Demo Gaming Co', created_at: demoStamp(-3), mine: false,
+          body: 'Understood, thanks for the heads up. Riverside is asking whether their four are in the batch that already left.' }
+      ],
+      customer_users: [{ id: 'demo-cu-1', user_id: ME, customer_id: CUST, active: true, can_view_billing: true, role: 'Owner' }],
+      order_contacts: [
+        { id: 'demo-oc-1', customer_id: CUST, name: 'Dana Reed', email: 'dana@demogaming.example', role: 'Purchasing', notify: true, active: true },
+        { id: 'demo-oc-2', customer_id: CUST, name: 'Sam Okafor', email: 'sam@demogaming.example', role: 'Operations', notify: true, active: true }
+      ],
+      customer_contacts: [{ id: 'demo-cc-1', customer_id: CUST, name: 'Ravi Patel', email: 'ravi@demogaming.example', phone: '512-555-0142', notify_rma: true, active: true, address: 'Demo Gaming Co\nAttn: Ravi Patel\n1180 Riverside Dr\nAustin, TX 78701' }],
+      rma_notify_contacts: [{ id: 'demo-rc-1', customer_id: CUST, name: 'Ravi Patel', email: 'ravi@demogaming.example', role: 'RMA technician', notify: true, active: true }],
+      app_settings: [
+        { key: 'rma_notify_emails', value: 'builds@novatechgaming.example' },
+        { key: 'order_from_address', value: 'orders@novatechgaming.example' },
+        { key: 'rma_from_address', value: 'rma@novatechgaming.example' },
+        { key: 'rma_return_address', value: 'Novatech Gaming\nAttn: RMA returns\n418 Foundry Rd\nColumbus, OH 43215' }
+      ],
+      serial_sequences: [{ customer_id: CUST, next_serial: 561 }],
+      /* whoever is signed in becomes the demo operator; the user_id filter is
+         ignored for this table so the real session matches it */
+      staff: [{ id: 'demo-staff-1', user_id: ME, name: 'You (demo)', email: 'you@novatechgaming.example',
+                active: true, is_admin: true, can_view_orders: true, can_manage_orders: true,
+                can_admin_orders: true, can_manage_catalog: true, can_manage_rma: true,
+                can_view_margins: true, rate: null }],
+      tc_employees: [], tc_hours: [],
+      inv_items: [], inv_moves: [], build_components: [], builds: [],
+      product_lines: [], margin_channels: [],
+      rma_tickets: [], rma_parts: [], rma_shipments: [], rma_comments: [],
+      rma_attachments: [], rma_events: []
+    };
+
+    /* ---- units, batches and tracking ----
+       DG001 is done and gone. DG002 is the interesting one: two batches out
+       the door, one packed and waiting, one still open, and eleven units
+       built but not yet assigned so the pool has something in it. */
+    let serial = 500;
+    const unit = function(order, cfg, batch, status){
+      const s = 'DG-' + String(serial++).padStart(6, '0');
+      return { id: demoId('u'), serial: s, order_id: order, config_id: cfg, batch_id: batch,
+               unit_status: status, status: status === 'shipped' ? 'shipped' : 'building',
+               customer: 'Demo Gaming Co', order_no: order === o1 ? 'DG001' : 'DG002',
+               generated_at: demoStamp(-40), pc_case: null, cpu: null, gpu: null, ram: null, storage: null };
+    };
+    const batch = function(order, no, loc, status, day, trk){
+      const id = demoId('b');
+      db.batches.push({ id: id, order_id: order, batch_no: no, location_id: loc, carrier: 'UPS',
+                        status: status, ship_date: day, created_at: demoStamp(-30),
+                        opened_notified_at: demoStamp(-30) });
+      if (trk) db.batch_tracking.push({ id: demoId('t'), batch_id: id, tracking_no: trk, unit_id: null });
+      return id;
+    };
+
+    const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784');
+    for (let i = 0; i < 25; i++) db.pc_log.push(unit(o1, cfgA, b1, 'shipped'));
+
+    const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785');
+    for (let i = 0; i < 16; i++) db.pc_log.push(unit(o2, cfgB, b2, 'shipped'));
+    const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786');
+    for (let i = 0; i < 14; i++) db.pc_log.push(unit(o2, cfgB, b3, 'shipped'));
+    const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787');
+    for (let i = 0; i < 12; i++) db.pc_log.push(unit(o2, cfgB, b4, 'assigned'));
+    batch(o2, 4, 'demo-loc-4', 'open', null, null);
+    for (let i = 0; i < 11; i++) db.pc_log.push(unit(o2, cfgB, null, 'built'));
+
+    /* one RMA, mid-flight, so the section is not empty */
+    const rma = 'demo-rma-1';
+    const rmaUnit = db.pc_log[3];
+    db.rma_tickets.push({
+      id: rma, customer_id: CUST, rma_no: 41, serial: rmaUnit.serial, unit_id: rmaUnit.id,
+      status: 'approved', issue_category: 'gpu',
+      issue: 'No display out of the card. Onboard video works, so the unit boots.',
+      part_requested: 'RTX 4060', created_at: demoStamp(-11), updated_at: demoStamp(-2),
+      contact_id: 'demo-cc-1', ship_to: 'Demo Gaming Co\nAttn: Ravi Patel\n1180 Riverside Dr\nAustin, TX 78701'
+    });
+    db.rma_parts.push({ id: demoId('p'), rma_id: rma, part_name: 'RTX 4060', qty: 1, status: 'approved', created_at: demoStamp(-9) });
+    db.rma_comments.push({ id: demoId('c'), rma_id: rma, author_type: 'customer', author_name: 'Ravi Patel',
+      body: 'Swapped the cable and tried a second monitor, same result.', internal: false, created_at: demoStamp(-10) });
+    db.rma_comments.push({ id: demoId('c'), rma_id: rma, author_type: 'staff', author_name: 'Novatech',
+      body: 'Approved \u2014 replacement card goes out today, return label is in the box.', internal: false, created_at: demoStamp(-9) });
+    db.rma_events.push({ id: demoId('e'), rma_id: rma, kind: 'status', from_val: 'new', to_val: 'approved',
+      detail: null, actor_type: 'staff', actor_name: 'Novatech', created_at: demoStamp(-9) });
+    db.rma_shipments.push({ id: demoId('s'), rma_id: rma, direction: 'out', carrier: 'UPS',
+      tracking_no: '1Z999AA10523456788', ship_date: demoDay(-9), created_at: demoStamp(-9) });
+
+    /* a plausible mail history for the Email tab */
+    db._email_log = [
+      { id: 1, kind: 'order', to_addrs: 'dana@demogaming.example', subject: 'Batch 2 shipped \u00b7 DG002', state: 'delivered', status_code: 200, created_at: demoStamp(-9), customer_id: CUST },
+      { id: 2, kind: 'order', to_addrs: 'dana@demogaming.example, sam@demogaming.example', subject: 'Batch 1 shipped \u00b7 DG002', state: 'delivered', status_code: 200, created_at: demoStamp(-14), customer_id: CUST },
+      { id: 3, kind: 'rma', to_addrs: 'ravi@demogaming.example', subject: 'RMA-0041 approved', state: 'delivered', status_code: 200, created_at: demoStamp(-9), customer_id: CUST },
+      { id: 4, kind: 'order', to_addrs: 'dana@demogaming.example', subject: 'Order complete \u00b7 DG001', state: 'delivered', status_code: 200, created_at: demoStamp(-70), customer_id: CUST }
+    ];
+    db._me = ME; db._cust = CUST;
+    return db;
+  }
+
+  /* ---- the query builder ----
+     Enough of the PostgREST surface for this app: the filters, ordering and
+     writes it actually uses. Anything it does not know returns an empty set
+     rather than an error, so an unseeded corner of the app renders empty
+     instead of breaking mid-demo. */
+  function demoTable(name){
+    if (!DEMO.db) DEMO.db = demoSeed();
+    if (!DEMO.db[name]) DEMO.db[name] = [];
+    return DEMO.db[name];
+  }
+
+  function demoFrom(name){
+    let filters = [], ord = null, lim = null, one = false, maybe = false;
+    let mode = 'select', payload = null, conflict = null;
+    const add = function(op, col, val){ filters.push({ op: op, col: col, val: val }); return api; };
+    /* The signed-in person is real; the fixture rows are not. Matching them on
+       user_id would always fail, so identity lookups ignore that filter and
+       answer with the demo operator. */
+    const loose = (name === 'staff' || name === 'customer_users');
+    const match = function(row){
+      return filters.every(function(f){
+        if (loose && f.col === 'user_id') return true;
+        const v = row[f.col];
+        switch (f.op){
+          case 'eq':   return String(v) === String(f.val);
+          case 'neq':  return String(v) !== String(f.val);
+          case 'in':   return (f.val || []).some(function(x){ return String(x) === String(v); });
+          case 'is':   return f.val === null ? (v === null || v === undefined) : v === f.val;
+          case 'notis':return f.val === null ? (v !== null && v !== undefined) : v !== f.val;
+          case 'gt':   return v > f.val;
+          case 'gte':  return v >= f.val;
+          case 'lt':   return v < f.val;
+          case 'lte':  return v <= f.val;
+          case 'like': case 'ilike': {
+            const re = new RegExp('^' + String(f.val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*') + '$', 'i');
+            return re.test(String(v == null ? '' : v));
+          }
+          default: return true;
+        }
+      });
+    };
+    const stamp = function(row){
+      const out = Object.assign({}, row);
+      if (out.id === undefined) out.id = demoId(name);
+      if (out.created_at === undefined) out.created_at = new Date().toISOString();
+      return out;
+    };
+    const run = function(){
+      const tbl = demoTable(name);
+      let out = [];
+      if (mode === 'select'){
+        out = tbl.filter(match);
+        if (ord){
+          out = out.slice().sort(function(x, y){
+            const a = x[ord.col], b = y[ord.col];
+            if (a === b) return 0;
+            if (a === null || a === undefined) return 1;
+            if (b === null || b === undefined) return -1;
+            return (a > b ? 1 : -1) * (ord.asc ? 1 : -1);
+          });
+        }
+        if (lim != null) out = out.slice(0, lim);
+      } else if (mode === 'insert'){
+        const rows = (Array.isArray(payload) ? payload : [payload]).map(stamp);
+        rows.forEach(function(r){ tbl.push(r); });
+        out = rows;
+      } else if (mode === 'update'){
+        out = tbl.filter(match);
+        out.forEach(function(r){ Object.assign(r, payload); });
+      } else if (mode === 'upsert'){
+        const rows = Array.isArray(payload) ? payload : [payload];
+        const keys = (conflict || 'id').split(',').map(function(s){ return s.trim(); });
+        out = rows.map(function(r){
+          const hit = tbl.find(function(x){ return keys.every(function(k){ return String(x[k]) === String(r[k]); }); });
+          if (hit){ Object.assign(hit, r); return hit; }
+          const fresh = stamp(r); tbl.push(fresh); return fresh;
+        });
+      } else if (mode === 'delete'){
+        out = tbl.filter(match);
+        DEMO.db[name] = tbl.filter(function(r){ return !match(r); });
+      }
+      if (one || maybe){
+        return { data: out[0] || null, error: (one && !out.length) ? { message: 'No rows returned', code: 'PGRST116' } : null };
+      }
+      return { data: out, error: null };
+    };
+    const api = {
+      select: function(){ return api; },
+      insert: function(v){ mode = 'insert'; payload = v; return api; },
+      update: function(v){ mode = 'update'; payload = v; return api; },
+      upsert: function(v, o){ mode = 'upsert'; payload = v; conflict = o && o.onConflict; return api; },
+      delete: function(){ mode = 'delete'; return api; },
+      eq: function(c, v){ return add('eq', c, v); },
+      neq: function(c, v){ return add('neq', c, v); },
+      in: function(c, v){ return add('in', c, v); },
+      is: function(c, v){ return add('is', c, v); },
+      gt: function(c, v){ return add('gt', c, v); },
+      gte: function(c, v){ return add('gte', c, v); },
+      lt: function(c, v){ return add('lt', c, v); },
+      lte: function(c, v){ return add('lte', c, v); },
+      like: function(c, v){ return add('like', c, v); },
+      ilike: function(c, v){ return add('ilike', c, v); },
+      not: function(c, op, v){ return add(op === 'is' ? 'notis' : 'neq', c, v); },
+      or: function(){ return api; },
+      limit: function(n){ lim = n; return api; },
+      range: function(f, t){ lim = t + 1; return api; },
+      order: function(c, o){ ord = { col: c, asc: !(o && o.ascending === false) }; return api; },
+      single: function(){ one = true; return api; },
+      maybeSingle: function(){ maybe = true; return api; },
+      then: function(res, rej){ return Promise.resolve(run()).then(res, rej); }
+    };
+    return api;
+  }
+
+  /* ---- functions ----
+     The ones the screens need, answered from the fixtures. Everything else
+     succeeds quietly: a demo should never show an error the real app would
+     not show. */
+  function demoRpc(name, args){
+    args = args || {};
+    if (!DEMO.db) DEMO.db = demoSeed();
+    const db = DEMO.db;
+    const paidOn = function(id){
+      return db.order_payments.filter(function(p){ return String(p.order_id) === String(id); })
+        .reduce(function(s, p){ return s + Number(p.amount || 0); }, 0);
+    };
+    const invRow = function(o){
+      const paid = paidOn(o.id);
+      const total = o.invoice_total == null ? null : Number(o.invoice_total);
+      const bal = total == null ? null : total - paid;
+      const late = (!o.due_date || total == null || bal <= 0.005) ? 0
+        : Math.max(0, Math.round((Date.now() - new Date(o.due_date + 'T12:00:00').getTime()) / 86400000));
+      return {
+        order_id: o.id, invoice_no: o.invoice_no, po_number: o.po_number, created_at: o.created_at,
+        due_date: o.due_date, invoice_total: total, paid: paid, balance: bal, days_late: late,
+        held: !!o.hold_until_paid,
+        state: total == null ? 'unpriced' : bal <= 0.005 ? 'paid'
+             : late > 0 ? 'overdue' : paid > 0.005 ? 'part paid' : 'open',
+        has_pdf: false,
+        docs: db.order_customer_docs.filter(function(d){ return String(d.order_id) === String(o.id); }).length
+      };
+    };
+    const invoices = function(){ return db.orders.map(invRow); };
+    const ok = function(data){ return Promise.resolve({ data: data === undefined ? null : data, error: null }); };
+
+    switch (name){
+      case 'order_billing': {
+        const o = db.orders.find(function(x){ return String(x.id) === String(args.p_order); });
+        if (!o) return ok([]);
+        const r = invRow(o);
+        return ok([{ invoice_total: r.invoice_total, paid: r.paid, balance: r.balance,
+                     due_date: r.due_date, hold_until_paid: r.held, days_late: r.days_late }]);
+      }
+      case 'order_payments_for':
+      case 'portal_billing_payments':
+        return ok(db.order_payments.filter(function(p){ return String(p.order_id) === String(args.p_order); })
+          .map(function(p){ return { id: p.id, paid_on: p.paid_on, amount: p.amount, method: p.method, note: p.note }; }));
+      case 'order_docs_for':
+        return ok(db.order_documents.filter(function(d){ return String(d.order_id) === String(args.p_order); }));
+      case 'portal_billing_invoices':
+        return ok(invoices().sort(function(a, b){ return (b.due_date || '') < (a.due_date || '') ? -1 : 1; }));
+      case 'portal_billing_summary': {
+        const inv = invoices(), owed = inv.filter(function(r){ return Number(r.balance || 0) > 0.005; });
+        const sum = function(f){ return owed.filter(f).reduce(function(s, r){ return s + Number(r.balance || 0); }, 0); };
+        const dated = owed.filter(function(r){ return r.due_date; }).sort(function(a, b){ return a.due_date < b.due_date ? -1 : 1; });
+        return ok([{
+          invoiced: inv.reduce(function(s, r){ return s + Number(r.invoice_total || 0); }, 0),
+          paid: inv.reduce(function(s, r){ return s + Number(r.paid || 0); }, 0),
+          outstanding: sum(function(){ return true; }),
+          overdue: sum(function(r){ return r.days_late > 0; }),
+          open_count: owed.length,
+          next_due_date: dated.length ? dated[0].due_date : null,
+          next_due_amount: dated.length ? dated[0].balance : null,
+          b_current: sum(function(r){ return r.days_late === 0; }),
+          b_1_30: sum(function(r){ return r.days_late >= 1 && r.days_late <= 30; }),
+          b_31_60: sum(function(r){ return r.days_late >= 31 && r.days_late <= 60; }),
+          b_61_90: sum(function(r){ return r.days_late >= 61 && r.days_late <= 90; }),
+          b_90_plus: sum(function(r){ return r.days_late > 90; })
+        }]);
+      }
+      case 'portal_billing_series':
+      case 'portal_billing_paid_series': {
+        const months = Math.min(36, Math.max(1, Number(args.p_months || 12)));
+        const out = [];
+        for (let i = months - 1; i >= 0; i--){
+          const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+          const key = d.toISOString().slice(0, 7);
+          const paid = db.order_payments
+            .filter(function(p){ return String(p.paid_on || '').slice(0, 7) === key; })
+            .reduce(function(s, p){ return s + Number(p.amount || 0); }, 0);
+          const invoiced = db.orders
+            .filter(function(o){ return String(o.created_at || '').slice(0, 7) === key; })
+            .reduce(function(s, o){ return s + Number(o.invoice_total || 0); }, 0);
+          const units = db.batches
+            .filter(function(b){ return b.status === 'shipped' && String(b.ship_date || '').slice(0, 7) === key; })
+            .reduce(function(s, b){ return s + db.pc_log.filter(function(u){ return String(u.batch_id) === String(b.id); }).length; }, 0);
+          out.push({ month: key + '-01', paid: paid, invoiced: invoiced, units: units });
+        }
+        return ok(out);
+      }
+      case 'order_notes_list':
+        return ok(db.order_notes
+          .filter(function(n){ return String(n.order_id) === String(args.p_order); })
+          .sort(function(a, b){ return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (a.created_at < b.created_at ? -1 : 1); }));
+      case 'order_note_post': {
+        const id = demoId('note');
+        db.order_notes.push({
+          id: id, order_id: args.p_order, body: args.p_body,
+          audience: args.p_audience || 'shared', side: DEMO_SIDE, pinned: !!args.p_pinned,
+          author_name: args.p_author || (DEMO_SIDE === 'staff' ? 'Novatech' : 'Demo Gaming Co'),
+          created_at: new Date().toISOString(), mine: true
+        });
+        return ok(id);
+      }
+      case 'order_note_delete':
+        db.order_notes = db.order_notes.filter(function(n){ return String(n.id) !== String(args.p_note); });
+        return ok();
+      case 'order_note_counts':
+        return ok(Object.values(db.order_notes.reduce(function(acc, n){
+          const k = String(n.order_id);
+          acc[k] = acc[k] || { order_id: n.order_id, notes: 0, last_at: null };
+          acc[k].notes++; if (!acc[k].last_at || n.created_at > acc[k].last_at) acc[k].last_at = n.created_at;
+          return acc;
+        }, {})));
+      case 'alloc_serials': {
+        const n = Number(args.p_count || args.count || 1);
+        const seq = db.serial_sequences[0] || { next_serial: 900 };
+        const out = [];
+        for (let i = 0; i < n; i++) out.push({ serial: 'DG-' + String(seq.next_serial + i).padStart(6, '0') });
+        seq.next_serial += n;
+        return ok(out);
+      }
+      case 'reclaim_serials': return ok();
+      case 'serial_floor': return ok(500);
+      case 'next_batch_no': {
+        const mine = db.batches.filter(function(b){ return String(b.order_id) === String(args.p_order); });
+        return ok(mine.reduce(function(m, b){ return Math.max(m, Number(b.batch_no || 0)); }, 0) + 1);
+      }
+      case 'email_log_recent': {
+        let rows = (db._email_log || []).slice();
+        if (args.p_kind) rows = rows.filter(function(x){ return x.kind === args.p_kind; });
+        rows.sort(function(a, b){ return a.created_at < b.created_at ? 1 : -1; });
+        return ok(rows.slice(0, Number(args.p_limit || 25)));
+      }
+      case 'portal_set_po_number': {
+        const o = db.orders.find(function(x){ return String(x.id) === String(args.p_order); });
+        if (o) o.po_number = args.p_po || null;
+        return ok(o ? [o] : []);
+      }
+      case 'rma_secret_status': return ok([{ key: 'resend_api_key', is_set: true }]);
+      case 'is_margin_admin': return ok(true);
+      case 'find_user_by_email': return ok([]);
+      case 'portal_remittance_notice': return ok();
+      case 'rma_discord_test': case 'rma_email_test': case 'order_email_test':
+        return ok({ ok: true, demo: true });
+      default:
+        return ok([]);
+    }
+  }
+
+  function demoStorage(bucket){
+    return {
+      upload: function(){ return Promise.resolve({ data: { path: 'demo/' + bucket }, error: null }); },
+      remove: function(){ return Promise.resolve({ data: [], error: null }); },
+      createSignedUrl: function(){
+        return Promise.resolve({ error: { message: 'Files are not available in demo mode.' }, data: null });
+      },
+      download: function(){ return Promise.resolve({ error: { message: 'Files are not available in demo mode.' }, data: null }); },
+      list: function(){ return Promise.resolve({ data: [], error: null }); }
+    };
+  }
+
+  /* One client for the app to use. Auth always goes to the real service; the
+     data layer is switched under it. */
+  const SB = !SB_LIVE ? null : {
+    from: function(t){ return DEMO.on ? demoFrom(t) : SB_LIVE.from(t); },
+    rpc: function(n, a){ return DEMO.on ? demoRpc(n, a) : SB_LIVE.rpc(n, a); },
+    storage: { from: function(b){ return DEMO.on ? demoStorage(b) : SB_LIVE.storage.from(b); } },
+    auth: SB_LIVE.auth,
+    functions: SB_LIVE.functions
+  };
+
+  function demoBanner(){
+    let el = document.getElementById('demoBar');
+    if (!DEMO.on){ if (el) el.remove(); document.documentElement.removeAttribute('data-demo'); return; }
+    document.documentElement.setAttribute('data-demo', '1');
+    if (!el){
+      el = document.createElement('div');
+      el.id = 'demoBar';
+      el.innerHTML = '<span class="demo-dot"></span>' +
+        '<b>Demo mode</b><span class="demo-sep">\u00b7</span>' +
+        '<span class="demo-txt">fictional data. Nothing you do here is saved or sent.</span>' +
+        '<button type="button" id="demoOff">Turn off</button>';
+      document.body.appendChild(el);
+      el.querySelector('#demoOff').addEventListener('click', function(){ demoSet(false); });
+    }
+  }
+
+  function demoSet(on){
+    try { localStorage.setItem(DEMO_KEY, on ? '1' : '0'); } catch(e){}
+    location.reload();
+  }
+
 
   // ---- Auth ----
   async function initAuth(){
+    demoBanner();
     if (!SB){
       loginView.innerHTML = '<div class="login-card"><h2 class="login-title">Connection problem</h2><p class="muted-line">Could not load the sign-in library. Check your internet connection and refresh the page.</p></div>';
       return;
@@ -6959,11 +7494,130 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<p class="card-note">Marking a batch shipped stamps the ship date and flips its units to shipped. ' +
         'The customer sees it in their portal straight away, tracking numbers included. ' +
         'A shipped serial number is retired for good \u2014 even if the order is deleted later, that number is never issued again.</p>' +
-      '</section>');
+      '</section>') +
+
+      '<section class="card" id="ordNotesCard">' +
+        '<h2 class="card-title">Notes <span class="card-sub">where this order stands \u00b7 shared notes appear in the customer\u2019s portal and email their order contacts</span></h2>' +
+        '<div id="ordNotesBody"><p class="onote-empty">Loading\u2026</p></div>' +
+      '</section>';
 
     if (!gated){ ordRenderPool(); ordRenderBatches(); }
+    ordNotesLoad(o.id);
   }
 
+
+  /* ---------- notes on an order ----------
+     One thread, both sides. A shared note is the answer to "where is this?"
+     so it goes to the customer and to their order contacts; an internal one
+     stays here. */
+  let ordNotes = [], ordNotesFor = null, ordNoteAud = 'shared', ordNoteDraft = '';
+
+  async function ordNotesLoad(id){
+    ordNotesFor = id;
+    const r = await SB.rpc('order_notes_list', { p_order: id });
+    if (ordNotesFor !== id) return;
+    ordNotes = r.error ? [] : (r.data || []);
+    if (r.error) ordNoteErr = r.error.message;
+    ordRenderNotes();
+  }
+  let ordNoteErr = '';
+
+  function ordNoteWhen(v){
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return '';
+    const mins = Math.round((Date.now() - d.getTime()) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    if (mins < 1440) return Math.round(mins / 60) + 'h ago';
+    return d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+  }
+
+  function ordRenderNotes(){
+    const host = document.getElementById('ordNotesBody');
+    if (!host) return;
+    if (ordNoteErr){
+      host.innerHTML = '<p class="onote-empty">' + esc(ordNoteErr) +
+        '</p><p class="onote-empty" style="margin-top:8px;">Run <b>order-notes.sql</b> in Supabase to switch notes on.</p>';
+      return;
+    }
+    const thread = ordNotes.length
+      ? '<div class="rma-thread">' + ordNotes.map(function(n){
+          const internal = n.audience === 'internal';
+          return '<div class="rma-msg' + (n.side === 'customer' ? ' cust' : '') +
+              (internal ? ' internal' : '') + (n.pinned ? ' pinned' : '') + '">' +
+            '<div class="rma-msg-h"><span class="onote-tags"><b>' + esc(n.author_name || 'Someone') + '</b>' +
+              (n.side === 'customer' ? '<span class="ord-chip info">customer</span>' : '') +
+              (internal ? '<span class="ord-chip warn">internal only</span>' : '') +
+              (n.pinned ? '<span class="ord-chip">pinned</span>' : '') +
+            '</span>' +
+            '<span class="onote-tags">' + ordNoteWhen(n.created_at) +
+              (ordPerm.manage || n.mine
+                ? '<button class="onote-x" data-onotedel="' + esc(n.id) + '" type="button" title="Remove this note">Remove</button>'
+                : '') +
+            '</span></div>' +
+            '<p>' + esc(n.body) + '</p>' +
+          '</div>';
+        }).join('') + '</div>'
+      : '<p class="onote-empty">Nothing noted yet. A note here is the quickest way to explain a delay, a part shortage, or a change of plan.</p>';
+
+    const compose = ordPerm.manage
+      ? '<div class="rma-compose">' +
+          '<textarea id="ordNoteIn" placeholder="We are waiting on cases \u2014 the container is about two weeks out. Nothing ships before then." maxlength="4000">' + esc(ordNoteDraft) + '</textarea>' +
+          '<div class="rma-compose-bar">' +
+            '<div class="onote-seg" role="group" aria-label="Who sees this note">' +
+              '<button type="button" data-onoteaud="shared" class="' + (ordNoteAud === 'shared' ? 'on' : '') + '">Shared with customer</button>' +
+              '<button type="button" data-onoteaud="internal" class="' + (ordNoteAud === 'internal' ? 'on' : '') + '">Internal only</button>' +
+            '</div>' +
+            '<label><input type="checkbox" id="ordNotePin"> Pin to the top</label>' +
+            '<span class="spacer"></span>' +
+            '<button class="primary btn-sm" id="ordNotePost" type="button">Post note</button>' +
+          '</div>' +
+          '<p class="card-note" style="margin:0;">' + (ordNoteAud === 'shared'
+            ? 'This posts to the customer\u2019s portal and emails whoever is listed for their order notifications.'
+            : 'Only Novatech sees this. Nothing is emailed.') + '</p>' +
+        '</div>'
+      : '';
+    host.innerHTML = thread + compose;
+  }
+
+  document.addEventListener('click', async function(e){
+    const aud = e.target.closest('[data-onoteaud]');
+    if (aud){
+      const ta = document.getElementById('ordNoteIn'); if (ta) ordNoteDraft = ta.value;
+      ordNoteAud = aud.getAttribute('data-onoteaud'); ordRenderNotes();
+      const t2 = document.getElementById('ordNoteIn'); if (t2){ t2.focus(); t2.setSelectionRange(t2.value.length, t2.value.length); }
+      return;
+    }
+    const del = e.target.closest('[data-onotedel]');
+    if (del){
+      if (!(await mgConfirm('Remove this note?\n\nIt disappears for everyone, including the customer.'))) return;
+      const id = del.getAttribute('data-onotedel');
+      const r = await SB.rpc('order_note_delete', { p_note: id });
+      if (r.error){ toast(r.error.message, 'bad', 7000); return; }
+      ordNotes = ordNotes.filter(function(n){ return String(n.id) !== String(id); });
+      ordRenderNotes(); toast('Note removed', 'ok');
+      return;
+    }
+    if (e.target.closest('#ordNotePost')){
+      const ta = document.getElementById('ordNoteIn');
+      const body = (ta && ta.value || '').trim();
+      if (!body){ if (ta) ta.focus(); toast('Write the note first.', 'warn'); return; }
+      const btn = e.target.closest('#ordNotePost');
+      const pin = document.getElementById('ordNotePin');
+      btn.disabled = true; btn.textContent = 'Posting\u2026';
+      const r = await SB.rpc('order_note_post', {
+        p_order: ordNotesFor, p_body: body, p_audience: ordNoteAud,
+        p_pinned: !!(pin && pin.checked), p_author: rmaMeName()
+      });
+      if (r.error){
+        btn.disabled = false; btn.textContent = 'Post note';
+        toast(r.error.message, 'bad', 8000); return;
+      }
+      ordNoteDraft = '';
+      await ordNotesLoad(ordNotesFor);
+      toast(ordNoteAud === 'shared' ? 'Note posted \u2014 the customer can see it' : 'Internal note saved', 'ok');
+    }
+  });
 
   /* ---- copy serials / CSV ---- */
   async function ordCopyText(text, what){
@@ -9748,7 +10402,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const host = document.getElementById('admBody');
     const tabs = ordPerm.admin
       ? [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],
-         ['email','Email'],['people','People'],['logins','Customer logins']]
+         ['email','Email'],['people','People'],['logins','Customer logins'],['demo','Demo mode']]
       : [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],['email','Email']];
     if (!tabs.some(function(t){ return t[0] === admTab; })) admTab = 'customers';
     host.innerHTML =
@@ -9782,7 +10436,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       people:    'Employee logins are created in Supabase. This is where you set what each person can reach.',
       logins:    'Read-only portal access for a customer. Create the login in Supabase first, then map it here.',
       rma:       'The technician we talk to at each customer, where their parts ship, and the Discord channel inbound activity posts to.',
-      email:     'One Resend connection, two kinds of mail. Order notifications and RMA notifications keep their own recipients, their own From address and their own history.'
+      email:     'One Resend connection, two kinds of mail. Order notifications and RMA notifications keep their own recipients, their own From address and their own history.',
+      demo:      'A fictional company to click through on a screenshare, so you never have to demonstrate the app on somebody\u2019s real order.'
     }[admTab] || '';
     if (admTab === 'customers') return admPaneCustomers(p);
     if (admTab === 'configs')   return admPaneConfigs(p);
@@ -9793,6 +10448,55 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (admTab === 'notify')    return admPaneEmail(p);
     if (admTab === 'people'  && ordPerm.admin) return admPanePeople(p);
     if (admTab === 'logins'  && ordPerm.admin) return admPaneLogins(p);
+    if (admTab === 'demo'    && ordPerm.admin) return admPaneDemo(p);
+  }
+
+  /* ---- demo mode ----
+     For showing the app to a customer without touching their account. The
+     switch is per-browser and the data is fictional, so there is nothing to
+     undo afterwards. */
+  function admPaneDemo(p){
+    p.innerHTML =
+      '<section class="card">' +
+        '<h2 class="card-title">Demo mode ' +
+          (DEMO.on ? '<span class="ord-chip warn">on</span>' : '<span class="ord-chip">off</span>') + '</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">' +
+          'Swaps the whole app onto a fictional company \u2014 Demo Gaming Co, two invoices, ' +
+          'four shipments, an open RMA \u2014 so you can screenshare and click through ' +
+          'without touching real orders. Build units, ship a batch, record a payment, post a ' +
+          'note: it all works, and none of it is saved or emailed.' +
+        '</p>' +
+        '<div class="adm-bar" style="margin-top:var(--s4);margin-bottom:0;">' +
+          (DEMO.on
+            ? '<button class="primary btn-sm" id="admDemoOff" type="button">Turn demo mode off</button>' +
+              '<button class="ghost btn-sm" id="admDemoReset" type="button">Start the demo over</button>'
+            : '<button class="primary btn-sm" id="admDemoOn" type="button">Turn demo mode on</button>') +
+        '</div>' +
+        '<p class="card-note">' +
+          'The page reloads either way. Your sign-in is untouched \u2014 only the data layer changes. ' +
+          'It stays on until you turn it off, including across reloads, and a banner along the bottom ' +
+          'says so the whole time. It applies to the customer portal in this browser too, so you can ' +
+          'show both sides of the same fictional order.' +
+        '</p>' +
+      '</section>' +
+      (DEMO.on ? '' :
+        '<section class="card" style="margin-top:var(--s4);">' +
+          '<h2 class="card-title">What the customer sees</h2>' +
+          '<p class="muted-sm" style="margin-top:0;">' +
+            'Nothing. The switch lives in this browser only \u2014 it is not a setting on the account, ' +
+            'so no customer login and no colleague is affected by it.' +
+          '</p>' +
+        '</section>');
+
+    const on = document.getElementById('admDemoOn');
+    if (on) on.addEventListener('click', async function(){
+      if (!(await mgConfirm('Turn demo mode on?\n\nThe page reloads onto fictional data. Real orders are untouched, and nothing you do while it is on is saved.'))) return;
+      demoSet(true);
+    });
+    const off = document.getElementById('admDemoOff');
+    if (off) off.addEventListener('click', function(){ demoSet(false); });
+    const reset = document.getElementById('admDemoReset');
+    if (reset) reset.addEventListener('click', function(){ DEMO.db = null; location.reload(); });
   }
 
   /* ---- customers + serial sequences ---- */
@@ -9937,7 +10641,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
     host.innerHTML =
-      '<div class="table-wrap stack-wrap"><table class="hist-table stack"><thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Result</th></tr></thead><tbody>' +
+      '<div class="table-wrap stack-wrap"><table class="hist-table stack mail-log"><thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Result</th></tr></thead><tbody>' +
       rows.map(function(x){
         const c = EMAIL_CHIP[x.state] || EMAIL_CHIP.unknown;
         const label = x.state === 'refused' && x.status_code ? x.status_code + ' refused' : c[1];

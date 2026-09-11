@@ -233,7 +233,7 @@
   /* its own cell, so the row's align-items:center does the vertical centring */
   .ostat{ display:flex; align-items:center; justify-content:center; min-width:0; margin-right:var(--s4); }
   .ostat .chip{ flex:0 0 auto; }
-  .inv-lbl{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--faint); }
+  .inv-lbl{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--faint);  white-space:nowrap; }
   .sub{ color:var(--muted); font-size:12.5px; margin-top:4px; }
   .chev{ color:var(--faint); display:flex; justify-content:flex-end; transition:transform var(--t), color var(--t); }
   .chev svg{ width:18px; height:18px; }
@@ -335,29 +335,196 @@
     reopenBatches(open);
   });
 
-  /* ---------- billing ---------- */
-  .bstats{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s3); }
-  .bstat{ padding:var(--s4); border:1px solid var(--line); border-radius:var(--r-md); background:var(--paper); min-width:0; }
-  .bstat-k{ font-size:12px; color:var(--muted); }
-  .bstat-v{ margin-top:2px; font-size:26px; font-weight:600; line-height:1.2; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
-  .bstat-s{ font-size:12px; color:var(--muted); }
-  .bstat.due .bstat-v{ color:var(--bad, #b3261e); }
-  .bage{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:var(--s2); margin-top:var(--s4); }
-  .bage-c{ padding:var(--s3); border:1px solid var(--line); border-radius:var(--r-sm); background:var(--soft); min-width:0; }
-  .bage-c.hot{ border-color:var(--bad, #b3261e); }
-  .bage-k{ font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
-  .bage-v{ margin-top:2px; font-weight:600; font-variant-numeric:tabular-nums; }
-  .bchart{ display:flex; align-items:flex-end; gap:var(--s2); height:120px; margin-top:var(--s4); }
-  .bchart-col{ flex:1 1 0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:6px; min-width:0; }
+
+  /* ---------- demo mode ---------- */
+  #demoBar{
+    position:fixed; left:0; right:0; bottom:0; z-index:9999;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px max(12px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));
+    background:var(--warn); color:#fff; font-size:12.5px; line-height:1.3;
+    box-shadow:0 -2px 12px rgba(0,0,0,.18);
+  }
+  #demoBar b{ font-weight:600; }
+  #demoBar .demo-dot{
+    width:8px; height:8px; border-radius:50%; background:#fff; flex:0 0 auto;
+    animation:demoPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes demoPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+  #demoBar .demo-sep{ opacity:.6; }
+  #demoBar .demo-txt{ min-width:0; }
+  #demoBar button{
+    margin-left:auto; appearance:none; cursor:pointer; font:inherit; font-size:12px;
+    padding:5px 12px; min-height:30px; border-radius:9999px;
+    background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.5); color:#fff;
+  }
+  #demoBar button:hover{ background:rgba(255,255,255,.3); }
+  :root[data-demo]{ --demo-bar:44px; }
+
+  @media print{ #demoBar{ display:none !important; } }
+
+  /* ---------- notes on an order ----------
+     Both sides write here. A note from NovaTech is the answer to "where is
+     my order", so it sits under the shipments, not behind a tab. */
+  .nthread{ display:flex; flex-direction:column; gap:var(--s3); }
+  .nmsg{ border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s3) var(--s4); background:var(--paper); }
+  .nmsg.them{ background:var(--soft); }
+  .nmsg.pinned{ border-color:var(--accent-line); background:var(--accent-soft); }
+  .nmsg-h{
+    display:flex; justify-content:space-between; align-items:center; gap:var(--s3);
+    flex-wrap:wrap; font-size:12px; color:var(--muted); margin-bottom:var(--s1);
+  }
+  .nmsg-h b{ color:var(--ink); font-weight:600; }
+  .nmsg-h{ flex-wrap:nowrap; }
+  .nmsg-h span{ display:inline-flex; align-items:center; gap:6px; min-width:0; }
+  .nmsg-h span:first-child{ flex:1 1 auto; }
+  .nmsg-h span:first-child b{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nmsg-h span:last-child{ flex:0 0 auto; white-space:nowrap; }
+  .nmsg p{ margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-size:13.5px; }
+  .nmsg-x{
+    appearance:none; border:none; background:none; padding:0 2px; cursor:pointer;
+    color:var(--faint); font-size:12px; line-height:1; font-family:inherit;
+  }
+  .nmsg-x:hover{ color:var(--bad); }
+  .ncompose{ margin-top:var(--s4); display:grid; gap:var(--s2); }
+  .ncompose textarea{
+    width:100%; min-height:76px; resize:vertical; font:inherit; font-size:13.5px;
+    padding:var(--s3); border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  .ncompose textarea:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  .ncompose-bar{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; }
+  .ncompose-bar .sp{ flex:1; }
+  .nempty{ margin:0; color:var(--muted); font-size:13px; }
+
+  /* ---------- billing ----------
+     The page answers one question first — what do I owe — then shows the
+     shape of the account: how it ages, what has moved month to month, and
+     the invoices themselves. */
+
+  /* the balance, on the brand ground, with a settled meter under it */
+  .bhero{
+    display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:var(--s5);
+    padding:var(--s5) var(--s5b, var(--s5)); border-radius:var(--r-lg);
+    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color:var(--accent-ink); box-shadow:var(--e2); align-items:start;
+  }
+  .bhero-k{ font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; opacity:.72; }
+  .bhero-v{
+    margin-top:var(--s1); font-size:44px; font-weight:600; line-height:1.05;
+    letter-spacing:-1.5px; font-variant-numeric:tabular-nums;
+  }
+  .bhero-s{ margin-top:var(--s2); font-size:13px; opacity:.82; }
+  .bmeter{
+    margin-top:var(--s4); height:8px; border-radius:var(--r-pill);
+    background:rgba(255,255,255,.22); overflow:hidden;
+  }
+  .bmeter-f{ height:100%; border-radius:var(--r-pill); background:var(--accent-ink); transition:width var(--t-slow); }
+  .bmeter-l{ margin-top:var(--s2); font-size:12px; opacity:.82; font-variant-numeric:tabular-nums; }
+  /* the right column: the next thing that needs doing */
+  .bhero-side{ display:flex; flex-direction:column; gap:var(--s3); }
+  .bhero-box{
+    padding:var(--s3) var(--s4); border-radius:var(--r-md);
+    background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.18);
+  }
+  .bhero-box.hot{ background:rgba(255,255,255,.2); border-color:var(--accent-ink); }
+  .bhero-box .bhero-k{ opacity:.8; }
+  .bhero-box b{ display:block; margin-top:2px; font-size:19px; letter-spacing:-0.4px; font-variant-numeric:tabular-nums; }
+  .bhero-box span{ font-size:12px; opacity:.8; }
+
+  /* three plain figures in a row — cards would compete with the hero */
+  .bquick{
+    display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+    border:1px solid var(--line); border-radius:var(--r-md); background:var(--paper);
+    margin-top:var(--s4); overflow:hidden;
+  }
+  .bquick > div{ padding:var(--s4); border-left:1px solid var(--line); min-width:0; }
+  .bquick > div:first-child{ border-left:none; }
+  .bquick-k{ font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  .bquick-v{ margin-top:2px; font-size:22px; font-weight:600; letter-spacing:-0.6px; font-variant-numeric:tabular-nums; }
+  .bquick-s{ font-size:12px; color:var(--muted); }
+  .bquick .hot{ color:var(--bad); }
+
+  /* aging: one bar, because five boxes of money say less than their shares */
+  .bagebar{ display:flex; height:14px; border-radius:var(--r-pill); overflow:hidden; background:var(--soft); margin-top:var(--s4); }
+  .bagebar i{ display:block; min-width:2px; transition:flex-basis var(--t-slow); }
+  .bagebar i.g0{ background:var(--accent); }
+  .bagebar i.g1{ background:color-mix(in srgb, var(--warn) 60%, var(--paper)); }
+  .bagebar i.g2{ background:var(--warn); }
+  .bagebar i.g3{ background:color-mix(in srgb, var(--bad) 70%, var(--warn)); }
+  .bagebar i.g4{ background:var(--bad); }
+  .bagekey{ display:flex; flex-wrap:wrap; gap:var(--s3) var(--s5); margin-top:var(--s4); }
+  .bagekey > div{ min-width:0; }
+  .bagekey-k{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); white-space:nowrap; }
+  .bagekey-k i{ width:8px; height:8px; border-radius:2px; flex:0 0 auto; }
+  .bagekey-v{ margin-top:1px; font-weight:600; font-variant-numeric:tabular-nums; font-size:14px; }
+  .bagekey .zero{ color:var(--stone); font-weight:400; }
+
+  /* the chart: gridlines, a real axis, and a value on hover */
+  .bch{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:0 var(--s3); margin-top:var(--s4b); }
+  .bch-y{
+    display:flex; flex-direction:column; justify-content:space-between;
+    height:168px; font-size:10.5px; color:var(--faint); text-align:right;
+    font-variant-numeric:tabular-nums; white-space:nowrap;
+  }
+  .bch-y span{ transform:translateY(-50%); }
+  .bch-y span:last-child{ transform:translateY(50%); }
+  .bch-col2{ min-width:0; }
+  .bch-plot{ position:relative; height:168px; }
+  .bch-grid{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; }
+  .bch-grid i{ display:block; height:1px; background:var(--line); }
+  .bch-grid i:last-child{ background:var(--line-strong); }
+  .bch-cols{ position:absolute; inset:0; display:flex; align-items:flex-end; gap:2px; }
+  .bch-col{
+    flex:1 1 0; min-width:0; height:100%; position:relative;
+    display:flex; align-items:flex-end; justify-content:center; padding:0 2px;
+    border-radius:var(--r-xs) var(--r-xs) 0 0;
+  }
+  .bch-col:hover{ background:var(--soft); }
+  .bch-bar{
+    width:100%; max-width:44px; border-radius:var(--r-xs) var(--r-xs) 0 0;
+    background:linear-gradient(180deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 62%, var(--paper)) 100%);
+    transition:height var(--t-slow);
+  }
+  .bch-col.none .bch-bar{ background:var(--line); }
+  .bch-col.units .bch-bar{
+    background:linear-gradient(180deg, var(--ok) 0%, color-mix(in srgb, var(--ok) 55%, var(--paper)) 100%);
+  }
+  .bch-tip{
+    position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%);
+    padding:3px 8px; border-radius:var(--r-tag); background:var(--ink); color:var(--paper);
+    font-size:11px; white-space:nowrap; opacity:0; pointer-events:none;
+    transition:opacity var(--t); font-variant-numeric:tabular-nums; z-index:2;
+  }
+  .bch-col:hover .bch-tip{ opacity:1; }
+  .bch-x{ display:flex; gap:2px; margin-top:var(--s2); }
+  .bch-x span{
+    flex:1 1 0; min-width:0; text-align:center; font-size:10.5px; color:var(--faint);
+    white-space:nowrap; overflow:hidden;
+  }
+  .bch-tot{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); margin-top:var(--s4); font-size:12.5px; color:var(--muted); }
+  .bch-tot b{ color:var(--ink); font-variant-numeric:tabular-nums; }
+  .bseg{ display:flex; gap:2px; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
+  .bseg button{
+    appearance:none; border:none; background:none; cursor:pointer; font:inherit; font-size:12px;
+    padding:5px 12px; border-radius:var(--r-pill); color:var(--muted); min-height:30px;
+  }
+  .bseg button.on{ background:var(--paper); color:var(--ink); font-weight:600; box-shadow:var(--e1); }
+  .bseg button:hover{ color:var(--ink); }
   .bchart-bar{ width:100%; max-width:34px; background:var(--accent); border-radius:var(--r-sm) var(--r-sm) 0 0; min-height:2px; }
-  .bchart-l{ font-size:11px; color:var(--muted); white-space:nowrap; }
   .btabs{ display:flex; gap:var(--s2); }
   .binv{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s2); overflow:hidden; background:var(--paper); }
   .binv-h{
-    display:grid; grid-template-columns:minmax(0,1.4fr) repeat(3, minmax(0,1fr)) auto;
-    gap:var(--s3); align-items:center; padding:var(--s4); cursor:pointer;
+    display:grid; grid-template-columns:minmax(0,1.5fr) 96px repeat(2, minmax(0,1fr)) auto;
+    gap:var(--s3) var(--s4); align-items:center; padding:var(--s4); cursor:pointer;
     transition:background var(--t);
   }
+  .binv.open{ border-color:var(--line-strong); box-shadow:var(--e1); }
+  /* how much of this invoice is settled, at a glance */
+  .binv-m{ height:6px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; }
+  .binv-m i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--accent); }
+  .binv-m.full i{ background:var(--ok); }
+  .binv-m.late i{ background:var(--bad); }
+  .binv-mp{ margin-top:3px; font-size:10.5px; color:var(--faint); font-variant-numeric:tabular-nums; }
   .binv-h:hover{ background:var(--soft); }
   .binv-h:focus-visible{ outline:none; box-shadow:var(--ring); }
   .binv-no{ font-weight:600; }
@@ -376,15 +543,25 @@
   .bdoc-n{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
   .bdoc-m{ color:var(--muted); font-size:12px; white-space:nowrap; }
   .bacts{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s4); }
-  @media (max-width:820px){
-    .bstats{ grid-template-columns:repeat(2, minmax(0,1fr)); }
-    .bage{ grid-template-columns:repeat(2, minmax(0,1fr)); }
-    .binv-h{ grid-template-columns:minmax(0,1fr) auto; }
+  @media (max-width:860px){
+    .bhero{ grid-template-columns:1fr; gap:var(--s4); padding:var(--s4b) var(--s4); }
+    .bhero-v{ font-size:38px; }
+    .bhero-side{ flex-direction:row; }
+    .bhero-side > *{ flex:1 1 0; }
+    .binv-h{ grid-template-columns:minmax(0,1fr) 88px auto; }
     .binv-n.hide-sm{ display:none; }
   }
   @media (max-width:560px){
-    .bstats{ grid-template-columns:1fr; }
-    .bage{ grid-template-columns:1fr; }
+    .bquick{ grid-template-columns:1fr; }
+    .bquick > div{ border-left:none; border-top:1px solid var(--line); }
+    .bquick > div:first-child{ border-top:none; }
+    .bhero-side{ flex-direction:column; }
+    .bhero-v{ font-size:34px; letter-spacing:-1px; }
+    .bagekey{ gap:var(--s3) var(--s4); }
+    .bch-y{ display:none; }
+    .bch{ grid-template-columns:minmax(0,1fr); }
+    .binv-h{ grid-template-columns:minmax(0,1fr) auto; padding:var(--s3) var(--s4); }
+    .binv-m-wrap{ display:none; }
   }
 
   /* ---------- RMAs ---------- */
@@ -767,7 +944,9 @@
       gap:var(--s2);
       align-items:stretch;
     }
-    header.top{ flex-wrap:wrap; align-items:center; }
+    /* not sticky on a phone: the header is 117px and the content underneath
+       matters more than the menu staying put */
+    header.top{ flex-wrap:wrap; align-items:center; position:static; box-shadow:none; }
     .brand{ min-width:0; flex:1 1 0; gap:var(--s3); }
     /* "Order Portal · Customer" on one line under a smaller mark: the header
        was a third of the first screen */
@@ -881,7 +1060,7 @@
   <div class="brand">
     <img class="is-light" src="logo.png" alt="" onerror="this.style.display='none'">
     <img class="is-dark" src="logo-dark.png" alt="" onerror="this.style.display='none'">
-    <div><b>Order Portal</b><span id="custName"></span></div>
+    <div><b>Portal</b><span id="custName"></span></div>
   </div>
   <nav class="pmenu" id="pmenu" aria-label="Sections">
     <a data-pview="orders" class="on" role="button" tabindex="0">Orders</a>
@@ -933,9 +1112,471 @@
   'use strict';
   const SUPABASE_URL = 'https://vajrnbniwkvnkkkigeit.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_mF1sD8UO4CHuyCgPTLZsXQ_CilDLz3y';
-  const SB = (window.supabase && window.supabase.createClient)
+  const SB_LIVE = (window.supabase && window.supabase.createClient)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true } })
     : null;
+  const DEMO_SIDE = 'customer';
+
+  /* ================= DEMO MODE =================
+     A screenshare switch. When it is on, nothing in this browser tab talks
+     to the database: reads are answered from a fixture company, and writes
+     land in memory so the app still behaves — you can build units, ship a
+     batch, record a payment, post a note, and none of it leaves the page.
+
+     It is deliberately loud. A banner sits above everything, the tab title
+     changes, and the flag is per-browser, so turning it on cannot affect a
+     customer or a colleague. Reloading keeps it on, because a screenshare
+     that resets on refresh is worse than useless.
+
+     Auth is never faked — you stay signed in as yourself. */
+  const DEMO_KEY = 'nt-demo-mode';
+  const DEMO = { on: false, db: null, seq: 0 };
+  try { DEMO.on = localStorage.getItem(DEMO_KEY) === '1'; } catch(e){}
+
+  function demoId(p){ DEMO.seq++; return 'demo-' + p + '-' + DEMO.seq; }
+  function demoDay(n){ const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+  function demoStamp(n){ const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString(); }
+
+  function demoSeed(){
+    const CUST = 'demo-cust-1', ME = 'demo-user-1';
+    const cfgA = 'demo-cfg-1', cfgB = 'demo-cfg-2';
+    const o1 = 'demo-ord-1', o2 = 'demo-ord-2';
+    const db = {
+      customers: [{ id: CUST, name: 'Demo Gaming Co', code: 'DG', next_serial: 561, active: true,
+                    created_at: demoStamp(-210) }],
+      configs: [
+        { id: cfgA, customer_id: CUST, name: 'Spectre 15', status: 'active', active: true,
+          pc_case: 'Spectre mid tower', cpu: 'Ryzen 5 7600', gpu: 'RTX 4060', ram: '16GB DDR5', storage: '1TB NVMe' },
+        { id: cfgB, customer_id: CUST, name: 'Wraith Pro', status: 'active', active: true,
+          pc_case: 'Wraith compact', cpu: 'Ryzen 7 7700', gpu: 'RTX 4070', ram: '32GB DDR5', storage: '2TB NVMe' }
+      ],
+      ship_to_locations: [
+        { id: 'demo-loc-1', customer_id: CUST, store_name: 'Riverside Gaming', store_number: '204', address: '1180 Riverside Dr', city: 'Austin', state: 'TX', zip: '78701', active: true },
+        { id: 'demo-loc-2', customer_id: CUST, store_name: 'Northgate Play', store_number: '311', address: '88 Northgate Mall', city: 'Phoenix', state: 'AZ', zip: '85004', active: true },
+        { id: 'demo-loc-3', customer_id: CUST, store_name: 'Lakeside Arcade', store_number: '118', address: '7 Lakeside Blvd', city: 'Tampa', state: 'FL', zip: '33602', active: true },
+        { id: 'demo-loc-4', customer_id: CUST, store_name: 'Westway Games', store_number: '402', address: '2200 Westway Pkwy', city: 'Denver', state: 'CO', zip: '80202', active: true }
+      ],
+      orders: [
+        { id: o1, customer_id: CUST, invoice_no: 'DG001', created_at: demoStamp(-96), archived: false,
+          due_date: demoDay(-66), invoice_total: 17975, po_number: '4500118820',
+          hold_until_paid: false, complete_notified_at: demoStamp(-70), notes: null },
+        { id: o2, customer_id: CUST, invoice_no: 'DG002', created_at: demoStamp(-34), archived: false,
+          due_date: demoDay(12), invoice_total: 82080, po_number: null,
+          hold_until_paid: false, complete_notified_at: null, notes: null }
+      ],
+      order_lines: [
+        { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 25, unit_price: 719, position: 1, category: 1 },
+        { id: 'demo-line-2', order_id: o2, config_id: cfgB, qty_ordered: 60, unit_price: 1368, position: 1, category: 1 }
+      ],
+      order_payments: [
+        { id: 'demo-pay-1', order_id: o1, amount: 9000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
+        { id: 'demo-pay-2', order_id: o1, amount: 8975, paid_on: demoDay(-62), method: 'Wire', note: 'Balance' },
+        { id: 'demo-pay-3', order_id: o2, amount: 40000, paid_on: demoDay(-18), method: 'ACH', note: 'Part payment against DG002' }
+      ],
+      batches: [], batch_tracking: [], pc_log: [],
+      order_documents: [], order_customer_docs: [],
+      order_notes: [
+        { id: 'demo-note-1', order_id: o2, side: 'staff', audience: 'shared', pinned: true,
+          author_name: 'Novatech', created_at: demoStamp(-4), mine: false,
+          body: 'Our case shipment is held up at the port \u2014 the container is about two weeks out. Batches 3 and 4 are built and waiting on cases, so nothing else ships before then. Everything already with UPS is unaffected.' },
+        { id: 'demo-note-2', order_id: o2, side: 'customer', audience: 'shared', pinned: false,
+          author_name: 'Demo Gaming Co', created_at: demoStamp(-3), mine: false,
+          body: 'Understood, thanks for the heads up. Riverside is asking whether their four are in the batch that already left.' }
+      ],
+      customer_users: [{ id: 'demo-cu-1', user_id: ME, customer_id: CUST, active: true, can_view_billing: true, role: 'Owner' }],
+      order_contacts: [
+        { id: 'demo-oc-1', customer_id: CUST, name: 'Dana Reed', email: 'dana@demogaming.example', role: 'Purchasing', notify: true, active: true },
+        { id: 'demo-oc-2', customer_id: CUST, name: 'Sam Okafor', email: 'sam@demogaming.example', role: 'Operations', notify: true, active: true }
+      ],
+      customer_contacts: [{ id: 'demo-cc-1', customer_id: CUST, name: 'Ravi Patel', email: 'ravi@demogaming.example', phone: '512-555-0142', notify_rma: true, active: true, address: 'Demo Gaming Co\nAttn: Ravi Patel\n1180 Riverside Dr\nAustin, TX 78701' }],
+      rma_notify_contacts: [{ id: 'demo-rc-1', customer_id: CUST, name: 'Ravi Patel', email: 'ravi@demogaming.example', role: 'RMA technician', notify: true, active: true }],
+      app_settings: [
+        { key: 'rma_notify_emails', value: 'builds@novatechgaming.example' },
+        { key: 'order_from_address', value: 'orders@novatechgaming.example' },
+        { key: 'rma_from_address', value: 'rma@novatechgaming.example' },
+        { key: 'rma_return_address', value: 'Novatech Gaming\nAttn: RMA returns\n418 Foundry Rd\nColumbus, OH 43215' }
+      ],
+      serial_sequences: [{ customer_id: CUST, next_serial: 561 }],
+      /* whoever is signed in becomes the demo operator; the user_id filter is
+         ignored for this table so the real session matches it */
+      staff: [{ id: 'demo-staff-1', user_id: ME, name: 'You (demo)', email: 'you@novatechgaming.example',
+                active: true, is_admin: true, can_view_orders: true, can_manage_orders: true,
+                can_admin_orders: true, can_manage_catalog: true, can_manage_rma: true,
+                can_view_margins: true, rate: null }],
+      tc_employees: [], tc_hours: [],
+      inv_items: [], inv_moves: [], build_components: [], builds: [],
+      product_lines: [], margin_channels: [],
+      rma_tickets: [], rma_parts: [], rma_shipments: [], rma_comments: [],
+      rma_attachments: [], rma_events: []
+    };
+
+    /* ---- units, batches and tracking ----
+       DG001 is done and gone. DG002 is the interesting one: two batches out
+       the door, one packed and waiting, one still open, and eleven units
+       built but not yet assigned so the pool has something in it. */
+    let serial = 500;
+    const unit = function(order, cfg, batch, status){
+      const s = 'DG-' + String(serial++).padStart(6, '0');
+      return { id: demoId('u'), serial: s, order_id: order, config_id: cfg, batch_id: batch,
+               unit_status: status, status: status === 'shipped' ? 'shipped' : 'building',
+               customer: 'Demo Gaming Co', order_no: order === o1 ? 'DG001' : 'DG002',
+               generated_at: demoStamp(-40), pc_case: null, cpu: null, gpu: null, ram: null, storage: null };
+    };
+    const batch = function(order, no, loc, status, day, trk){
+      const id = demoId('b');
+      db.batches.push({ id: id, order_id: order, batch_no: no, location_id: loc, carrier: 'UPS',
+                        status: status, ship_date: day, created_at: demoStamp(-30),
+                        opened_notified_at: demoStamp(-30) });
+      if (trk) db.batch_tracking.push({ id: demoId('t'), batch_id: id, tracking_no: trk, unit_id: null });
+      return id;
+    };
+
+    const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784');
+    for (let i = 0; i < 25; i++) db.pc_log.push(unit(o1, cfgA, b1, 'shipped'));
+
+    const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785');
+    for (let i = 0; i < 16; i++) db.pc_log.push(unit(o2, cfgB, b2, 'shipped'));
+    const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786');
+    for (let i = 0; i < 14; i++) db.pc_log.push(unit(o2, cfgB, b3, 'shipped'));
+    const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787');
+    for (let i = 0; i < 12; i++) db.pc_log.push(unit(o2, cfgB, b4, 'assigned'));
+    batch(o2, 4, 'demo-loc-4', 'open', null, null);
+    for (let i = 0; i < 11; i++) db.pc_log.push(unit(o2, cfgB, null, 'built'));
+
+    /* one RMA, mid-flight, so the section is not empty */
+    const rma = 'demo-rma-1';
+    const rmaUnit = db.pc_log[3];
+    db.rma_tickets.push({
+      id: rma, customer_id: CUST, rma_no: 41, serial: rmaUnit.serial, unit_id: rmaUnit.id,
+      status: 'approved', issue_category: 'gpu',
+      issue: 'No display out of the card. Onboard video works, so the unit boots.',
+      part_requested: 'RTX 4060', created_at: demoStamp(-11), updated_at: demoStamp(-2),
+      contact_id: 'demo-cc-1', ship_to: 'Demo Gaming Co\nAttn: Ravi Patel\n1180 Riverside Dr\nAustin, TX 78701'
+    });
+    db.rma_parts.push({ id: demoId('p'), rma_id: rma, part_name: 'RTX 4060', qty: 1, status: 'approved', created_at: demoStamp(-9) });
+    db.rma_comments.push({ id: demoId('c'), rma_id: rma, author_type: 'customer', author_name: 'Ravi Patel',
+      body: 'Swapped the cable and tried a second monitor, same result.', internal: false, created_at: demoStamp(-10) });
+    db.rma_comments.push({ id: demoId('c'), rma_id: rma, author_type: 'staff', author_name: 'Novatech',
+      body: 'Approved \u2014 replacement card goes out today, return label is in the box.', internal: false, created_at: demoStamp(-9) });
+    db.rma_events.push({ id: demoId('e'), rma_id: rma, kind: 'status', from_val: 'new', to_val: 'approved',
+      detail: null, actor_type: 'staff', actor_name: 'Novatech', created_at: demoStamp(-9) });
+    db.rma_shipments.push({ id: demoId('s'), rma_id: rma, direction: 'out', carrier: 'UPS',
+      tracking_no: '1Z999AA10523456788', ship_date: demoDay(-9), created_at: demoStamp(-9) });
+
+    /* a plausible mail history for the Email tab */
+    db._email_log = [
+      { id: 1, kind: 'order', to_addrs: 'dana@demogaming.example', subject: 'Batch 2 shipped \u00b7 DG002', state: 'delivered', status_code: 200, created_at: demoStamp(-9), customer_id: CUST },
+      { id: 2, kind: 'order', to_addrs: 'dana@demogaming.example, sam@demogaming.example', subject: 'Batch 1 shipped \u00b7 DG002', state: 'delivered', status_code: 200, created_at: demoStamp(-14), customer_id: CUST },
+      { id: 3, kind: 'rma', to_addrs: 'ravi@demogaming.example', subject: 'RMA-0041 approved', state: 'delivered', status_code: 200, created_at: demoStamp(-9), customer_id: CUST },
+      { id: 4, kind: 'order', to_addrs: 'dana@demogaming.example', subject: 'Order complete \u00b7 DG001', state: 'delivered', status_code: 200, created_at: demoStamp(-70), customer_id: CUST }
+    ];
+    db._me = ME; db._cust = CUST;
+    return db;
+  }
+
+  /* ---- the query builder ----
+     Enough of the PostgREST surface for this app: the filters, ordering and
+     writes it actually uses. Anything it does not know returns an empty set
+     rather than an error, so an unseeded corner of the app renders empty
+     instead of breaking mid-demo. */
+  function demoTable(name){
+    if (!DEMO.db) DEMO.db = demoSeed();
+    if (!DEMO.db[name]) DEMO.db[name] = [];
+    return DEMO.db[name];
+  }
+
+  function demoFrom(name){
+    let filters = [], ord = null, lim = null, one = false, maybe = false;
+    let mode = 'select', payload = null, conflict = null;
+    const add = function(op, col, val){ filters.push({ op: op, col: col, val: val }); return api; };
+    /* The signed-in person is real; the fixture rows are not. Matching them on
+       user_id would always fail, so identity lookups ignore that filter and
+       answer with the demo operator. */
+    const loose = (name === 'staff' || name === 'customer_users');
+    const match = function(row){
+      return filters.every(function(f){
+        if (loose && f.col === 'user_id') return true;
+        const v = row[f.col];
+        switch (f.op){
+          case 'eq':   return String(v) === String(f.val);
+          case 'neq':  return String(v) !== String(f.val);
+          case 'in':   return (f.val || []).some(function(x){ return String(x) === String(v); });
+          case 'is':   return f.val === null ? (v === null || v === undefined) : v === f.val;
+          case 'notis':return f.val === null ? (v !== null && v !== undefined) : v !== f.val;
+          case 'gt':   return v > f.val;
+          case 'gte':  return v >= f.val;
+          case 'lt':   return v < f.val;
+          case 'lte':  return v <= f.val;
+          case 'like': case 'ilike': {
+            const re = new RegExp('^' + String(f.val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*') + '$', 'i');
+            return re.test(String(v == null ? '' : v));
+          }
+          default: return true;
+        }
+      });
+    };
+    const stamp = function(row){
+      const out = Object.assign({}, row);
+      if (out.id === undefined) out.id = demoId(name);
+      if (out.created_at === undefined) out.created_at = new Date().toISOString();
+      return out;
+    };
+    const run = function(){
+      const tbl = demoTable(name);
+      let out = [];
+      if (mode === 'select'){
+        out = tbl.filter(match);
+        if (ord){
+          out = out.slice().sort(function(x, y){
+            const a = x[ord.col], b = y[ord.col];
+            if (a === b) return 0;
+            if (a === null || a === undefined) return 1;
+            if (b === null || b === undefined) return -1;
+            return (a > b ? 1 : -1) * (ord.asc ? 1 : -1);
+          });
+        }
+        if (lim != null) out = out.slice(0, lim);
+      } else if (mode === 'insert'){
+        const rows = (Array.isArray(payload) ? payload : [payload]).map(stamp);
+        rows.forEach(function(r){ tbl.push(r); });
+        out = rows;
+      } else if (mode === 'update'){
+        out = tbl.filter(match);
+        out.forEach(function(r){ Object.assign(r, payload); });
+      } else if (mode === 'upsert'){
+        const rows = Array.isArray(payload) ? payload : [payload];
+        const keys = (conflict || 'id').split(',').map(function(s){ return s.trim(); });
+        out = rows.map(function(r){
+          const hit = tbl.find(function(x){ return keys.every(function(k){ return String(x[k]) === String(r[k]); }); });
+          if (hit){ Object.assign(hit, r); return hit; }
+          const fresh = stamp(r); tbl.push(fresh); return fresh;
+        });
+      } else if (mode === 'delete'){
+        out = tbl.filter(match);
+        DEMO.db[name] = tbl.filter(function(r){ return !match(r); });
+      }
+      if (one || maybe){
+        return { data: out[0] || null, error: (one && !out.length) ? { message: 'No rows returned', code: 'PGRST116' } : null };
+      }
+      return { data: out, error: null };
+    };
+    const api = {
+      select: function(){ return api; },
+      insert: function(v){ mode = 'insert'; payload = v; return api; },
+      update: function(v){ mode = 'update'; payload = v; return api; },
+      upsert: function(v, o){ mode = 'upsert'; payload = v; conflict = o && o.onConflict; return api; },
+      delete: function(){ mode = 'delete'; return api; },
+      eq: function(c, v){ return add('eq', c, v); },
+      neq: function(c, v){ return add('neq', c, v); },
+      in: function(c, v){ return add('in', c, v); },
+      is: function(c, v){ return add('is', c, v); },
+      gt: function(c, v){ return add('gt', c, v); },
+      gte: function(c, v){ return add('gte', c, v); },
+      lt: function(c, v){ return add('lt', c, v); },
+      lte: function(c, v){ return add('lte', c, v); },
+      like: function(c, v){ return add('like', c, v); },
+      ilike: function(c, v){ return add('ilike', c, v); },
+      not: function(c, op, v){ return add(op === 'is' ? 'notis' : 'neq', c, v); },
+      or: function(){ return api; },
+      limit: function(n){ lim = n; return api; },
+      range: function(f, t){ lim = t + 1; return api; },
+      order: function(c, o){ ord = { col: c, asc: !(o && o.ascending === false) }; return api; },
+      single: function(){ one = true; return api; },
+      maybeSingle: function(){ maybe = true; return api; },
+      then: function(res, rej){ return Promise.resolve(run()).then(res, rej); }
+    };
+    return api;
+  }
+
+  /* ---- functions ----
+     The ones the screens need, answered from the fixtures. Everything else
+     succeeds quietly: a demo should never show an error the real app would
+     not show. */
+  function demoRpc(name, args){
+    args = args || {};
+    if (!DEMO.db) DEMO.db = demoSeed();
+    const db = DEMO.db;
+    const paidOn = function(id){
+      return db.order_payments.filter(function(p){ return String(p.order_id) === String(id); })
+        .reduce(function(s, p){ return s + Number(p.amount || 0); }, 0);
+    };
+    const invRow = function(o){
+      const paid = paidOn(o.id);
+      const total = o.invoice_total == null ? null : Number(o.invoice_total);
+      const bal = total == null ? null : total - paid;
+      const late = (!o.due_date || total == null || bal <= 0.005) ? 0
+        : Math.max(0, Math.round((Date.now() - new Date(o.due_date + 'T12:00:00').getTime()) / 86400000));
+      return {
+        order_id: o.id, invoice_no: o.invoice_no, po_number: o.po_number, created_at: o.created_at,
+        due_date: o.due_date, invoice_total: total, paid: paid, balance: bal, days_late: late,
+        held: !!o.hold_until_paid,
+        state: total == null ? 'unpriced' : bal <= 0.005 ? 'paid'
+             : late > 0 ? 'overdue' : paid > 0.005 ? 'part paid' : 'open',
+        has_pdf: false,
+        docs: db.order_customer_docs.filter(function(d){ return String(d.order_id) === String(o.id); }).length
+      };
+    };
+    const invoices = function(){ return db.orders.map(invRow); };
+    const ok = function(data){ return Promise.resolve({ data: data === undefined ? null : data, error: null }); };
+
+    switch (name){
+      case 'order_billing': {
+        const o = db.orders.find(function(x){ return String(x.id) === String(args.p_order); });
+        if (!o) return ok([]);
+        const r = invRow(o);
+        return ok([{ invoice_total: r.invoice_total, paid: r.paid, balance: r.balance,
+                     due_date: r.due_date, hold_until_paid: r.held, days_late: r.days_late }]);
+      }
+      case 'order_payments_for':
+      case 'portal_billing_payments':
+        return ok(db.order_payments.filter(function(p){ return String(p.order_id) === String(args.p_order); })
+          .map(function(p){ return { id: p.id, paid_on: p.paid_on, amount: p.amount, method: p.method, note: p.note }; }));
+      case 'order_docs_for':
+        return ok(db.order_documents.filter(function(d){ return String(d.order_id) === String(args.p_order); }));
+      case 'portal_billing_invoices':
+        return ok(invoices().sort(function(a, b){ return (b.due_date || '') < (a.due_date || '') ? -1 : 1; }));
+      case 'portal_billing_summary': {
+        const inv = invoices(), owed = inv.filter(function(r){ return Number(r.balance || 0) > 0.005; });
+        const sum = function(f){ return owed.filter(f).reduce(function(s, r){ return s + Number(r.balance || 0); }, 0); };
+        const dated = owed.filter(function(r){ return r.due_date; }).sort(function(a, b){ return a.due_date < b.due_date ? -1 : 1; });
+        return ok([{
+          invoiced: inv.reduce(function(s, r){ return s + Number(r.invoice_total || 0); }, 0),
+          paid: inv.reduce(function(s, r){ return s + Number(r.paid || 0); }, 0),
+          outstanding: sum(function(){ return true; }),
+          overdue: sum(function(r){ return r.days_late > 0; }),
+          open_count: owed.length,
+          next_due_date: dated.length ? dated[0].due_date : null,
+          next_due_amount: dated.length ? dated[0].balance : null,
+          b_current: sum(function(r){ return r.days_late === 0; }),
+          b_1_30: sum(function(r){ return r.days_late >= 1 && r.days_late <= 30; }),
+          b_31_60: sum(function(r){ return r.days_late >= 31 && r.days_late <= 60; }),
+          b_61_90: sum(function(r){ return r.days_late >= 61 && r.days_late <= 90; }),
+          b_90_plus: sum(function(r){ return r.days_late > 90; })
+        }]);
+      }
+      case 'portal_billing_series':
+      case 'portal_billing_paid_series': {
+        const months = Math.min(36, Math.max(1, Number(args.p_months || 12)));
+        const out = [];
+        for (let i = months - 1; i >= 0; i--){
+          const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+          const key = d.toISOString().slice(0, 7);
+          const paid = db.order_payments
+            .filter(function(p){ return String(p.paid_on || '').slice(0, 7) === key; })
+            .reduce(function(s, p){ return s + Number(p.amount || 0); }, 0);
+          const invoiced = db.orders
+            .filter(function(o){ return String(o.created_at || '').slice(0, 7) === key; })
+            .reduce(function(s, o){ return s + Number(o.invoice_total || 0); }, 0);
+          const units = db.batches
+            .filter(function(b){ return b.status === 'shipped' && String(b.ship_date || '').slice(0, 7) === key; })
+            .reduce(function(s, b){ return s + db.pc_log.filter(function(u){ return String(u.batch_id) === String(b.id); }).length; }, 0);
+          out.push({ month: key + '-01', paid: paid, invoiced: invoiced, units: units });
+        }
+        return ok(out);
+      }
+      case 'order_notes_list':
+        return ok(db.order_notes
+          .filter(function(n){ return String(n.order_id) === String(args.p_order); })
+          .sort(function(a, b){ return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (a.created_at < b.created_at ? -1 : 1); }));
+      case 'order_note_post': {
+        const id = demoId('note');
+        db.order_notes.push({
+          id: id, order_id: args.p_order, body: args.p_body,
+          audience: args.p_audience || 'shared', side: DEMO_SIDE, pinned: !!args.p_pinned,
+          author_name: args.p_author || (DEMO_SIDE === 'staff' ? 'Novatech' : 'Demo Gaming Co'),
+          created_at: new Date().toISOString(), mine: true
+        });
+        return ok(id);
+      }
+      case 'order_note_delete':
+        db.order_notes = db.order_notes.filter(function(n){ return String(n.id) !== String(args.p_note); });
+        return ok();
+      case 'order_note_counts':
+        return ok(Object.values(db.order_notes.reduce(function(acc, n){
+          const k = String(n.order_id);
+          acc[k] = acc[k] || { order_id: n.order_id, notes: 0, last_at: null };
+          acc[k].notes++; if (!acc[k].last_at || n.created_at > acc[k].last_at) acc[k].last_at = n.created_at;
+          return acc;
+        }, {})));
+      case 'alloc_serials': {
+        const n = Number(args.p_count || args.count || 1);
+        const seq = db.serial_sequences[0] || { next_serial: 900 };
+        const out = [];
+        for (let i = 0; i < n; i++) out.push({ serial: 'DG-' + String(seq.next_serial + i).padStart(6, '0') });
+        seq.next_serial += n;
+        return ok(out);
+      }
+      case 'reclaim_serials': return ok();
+      case 'serial_floor': return ok(500);
+      case 'next_batch_no': {
+        const mine = db.batches.filter(function(b){ return String(b.order_id) === String(args.p_order); });
+        return ok(mine.reduce(function(m, b){ return Math.max(m, Number(b.batch_no || 0)); }, 0) + 1);
+      }
+      case 'email_log_recent': {
+        let rows = (db._email_log || []).slice();
+        if (args.p_kind) rows = rows.filter(function(x){ return x.kind === args.p_kind; });
+        rows.sort(function(a, b){ return a.created_at < b.created_at ? 1 : -1; });
+        return ok(rows.slice(0, Number(args.p_limit || 25)));
+      }
+      case 'portal_set_po_number': {
+        const o = db.orders.find(function(x){ return String(x.id) === String(args.p_order); });
+        if (o) o.po_number = args.p_po || null;
+        return ok(o ? [o] : []);
+      }
+      case 'rma_secret_status': return ok([{ key: 'resend_api_key', is_set: true }]);
+      case 'is_margin_admin': return ok(true);
+      case 'find_user_by_email': return ok([]);
+      case 'portal_remittance_notice': return ok();
+      case 'rma_discord_test': case 'rma_email_test': case 'order_email_test':
+        return ok({ ok: true, demo: true });
+      default:
+        return ok([]);
+    }
+  }
+
+  function demoStorage(bucket){
+    return {
+      upload: function(){ return Promise.resolve({ data: { path: 'demo/' + bucket }, error: null }); },
+      remove: function(){ return Promise.resolve({ data: [], error: null }); },
+      createSignedUrl: function(){
+        return Promise.resolve({ error: { message: 'Files are not available in demo mode.' }, data: null });
+      },
+      download: function(){ return Promise.resolve({ error: { message: 'Files are not available in demo mode.' }, data: null }); },
+      list: function(){ return Promise.resolve({ data: [], error: null }); }
+    };
+  }
+
+  /* One client for the app to use. Auth always goes to the real service; the
+     data layer is switched under it. */
+  const SB = !SB_LIVE ? null : {
+    from: function(t){ return DEMO.on ? demoFrom(t) : SB_LIVE.from(t); },
+    rpc: function(n, a){ return DEMO.on ? demoRpc(n, a) : SB_LIVE.rpc(n, a); },
+    storage: { from: function(b){ return DEMO.on ? demoStorage(b) : SB_LIVE.storage.from(b); } },
+    auth: SB_LIVE.auth,
+    functions: SB_LIVE.functions
+  };
+
+  function demoBanner(){
+    let el = document.getElementById('demoBar');
+    if (!DEMO.on){ if (el) el.remove(); document.documentElement.removeAttribute('data-demo'); return; }
+    document.documentElement.setAttribute('data-demo', '1');
+    if (!el){
+      el = document.createElement('div');
+      el.id = 'demoBar';
+      el.innerHTML = '<span class="demo-dot"></span>' +
+        '<b>Demo mode</b><span class="demo-sep">\u00b7</span>' +
+        '<span class="demo-txt">fictional data. Nothing you do here is saved or sent.</span>' +
+        '<button type="button" id="demoOff">Turn off</button>';
+      document.body.appendChild(el);
+      el.querySelector('#demoOff').addEventListener('click', function(){ demoSet(false); });
+    }
+  }
+
+  function demoSet(on){
+    try { localStorage.setItem(DEMO_KEY, on ? '1' : '0'); } catch(e){}
+    location.reload();
+  }
+
 
   const $ = function(id){ return document.getElementById(id); };
   function esc(v){ return (v==null?'':String(v)).replace(/[&<>"]/g, function(c){
@@ -1080,12 +1721,15 @@
   function pageSize(){ return rowsPer === 0 ? Infinity : rowsPer; }
   let batchPage = {};
   let canBill = false, billState = 'idle', billErr = '', billSum = null, billInv = [], billSeries = [];
-  let billPays = {}, billDocs = {}, billOpen = null, billTab = 'open';
+  let billPays = {}, billDocs = {}, billOpen = null, billTab = 'open', billChart = 'money';
+  let billNotes = {};
+  let notes = [], notesFor = null, notesErr = '';
   let rmaTickets = [], rmaParts = [], rmaShipments = [], rmaComments = [], rmaAttachments = [], rmaEvents = [], rmaContacts = [];
   let rmaCurrent = null, rmaReturnAddress = '';
 
   /* ---------- auth ---------- */
   async function init(){
+    demoBanner();
     if (!SB){ $('loginErr').textContent = 'Could not load the sign-in library. Check your connection and refresh.'; return; }
     const { data } = await SB.auth.getSession();
     session = data.session;
@@ -1494,6 +2138,7 @@
     reopenBatches(open);
   });
 
+
   /* ---------- billing ----------
      Read-only money. The only things they can change are the PO number and
      documents they attach themselves; both go through their own function or
@@ -1512,6 +2157,109 @@
   }
   const BILL_CHIP = { paid:'ok', overdue:'bad', 'part paid':'warn', open:'', unpriced:'' };
 
+  /* Axis figures want to be short: $187k reads at a glance where $187,225.00
+     just makes the reader count digits. */
+  function bshort(n){
+    const v = Math.abs(Number(n || 0));
+    if (v >= 1000000) return '$' + (v / 1000000).toFixed(v >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'm';
+    if (v >= 1000) return '$' + Math.round(v / 1000) + 'k';
+    return '$' + Math.round(v);
+  }
+  function bmonthShort(d){
+    const dt = new Date(String(d).slice(0, 10) + 'T12:00:00');
+    return isNaN(dt) ? '' : dt.toLocaleDateString(undefined, { month:'short' });
+  }
+  function bmonthLong(d){
+    const dt = new Date(String(d).slice(0, 10) + 'T12:00:00');
+    return isNaN(dt) ? '' : dt.toLocaleDateString(undefined, { month:'long', year:'numeric' });
+  }
+  /* A bar chart needs a top that is a round number, or the gridlines land on
+     values nobody would choose to write down. */
+  function bniceMax(v){
+    if (!(v > 0)) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(v)));
+    const step = [1, 2, 2.5, 5, 10].find(function(s){ return v <= s * mag; }) || 10;
+    return step * mag;
+  }
+
+  function billChartHtml(){
+    if (!billSeries.length) return '';
+    const units = billChart === 'units';
+    const val = function(x){ return units ? Number(x.units || 0) : Number(x.paid || 0); };
+    const top = bniceMax(billSeries.reduce(function(m, x){ return Math.max(m, val(x)); }, 0));
+    const total = billSeries.reduce(function(s, x){ return s + val(x); }, 0);
+    const fmt = function(v){ return units ? num(v) + (v === 1 ? ' unit' : ' units') : bmoney(v); };
+    const axis = [top, top * 0.5, 0].map(function(v){
+      return '<span>' + (units ? num(Math.round(v)) : bshort(v)) + '</span>';
+    }).join('');
+
+    return '<div class="card" style="margin-top:var(--s4);">' +
+      '<div class="toolbar" style="align-items:flex-start;">' +
+        '<div style="min-width:0;">' +
+          '<h2 style="margin:0;font-size:15px;">' + (units ? 'Units delivered' : 'Payments received') + '</h2>' +
+          '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">' +
+            (units ? 'Units on batches marked shipped, by month.' : 'By month, as recorded against your invoices.') +
+          '</p>' +
+        '</div>' +
+        '<div class="bseg" role="group" aria-label="What to chart">' +
+          '<button type="button" data-bchart="money" class="' + (units ? '' : 'on') + '">Money</button>' +
+          '<button type="button" data-bchart="units" class="' + (units ? 'on' : '') + '">Units</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bch">' +
+        '<div class="bch-y">' + axis + '</div>' +
+        '<div class="bch-col2">' +
+        '<div class="bch-plot">' +
+          '<div class="bch-grid"><i></i><i></i><i></i></div>' +
+          '<div class="bch-cols">' + billSeries.map(function(x){
+            const v = val(x), h = top ? (v / top) * 100 : 0;
+            return '<div class="bch-col' + (v ? (units ? ' units' : '') : ' none') + '">' +
+              '<div class="bch-tip">' + esc(bmonthLong(x.month)) + ' \u00b7 ' + esc(fmt(v)) + '</div>' +
+              '<div class="bch-bar" style="height:' + (v ? Math.max(2, h) : 1) + '%"></div>' +
+            '</div>';
+          }).join('') + '</div>' +
+        '</div>' +
+        '<div class="bch-x">' +
+          billSeries.map(function(x){ return '<span>' + esc(bmonthShort(x.month)) + '</span>'; }).join('') +
+        '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bch-tot">' +
+        '<span>' + (units ? 'Delivered over these months' : 'Received over these months') + ' <b>' + esc(fmt(total)) + '</b></span>' +
+        (units ? '' : '<span>Invoiced over the same period <b>' + bmoneyBig(billSeries.reduce(function(s, x){ return s + Number(x.invoiced || 0); }, 0)) + '</b></span>') +
+      '</div>' +
+    '</div>';
+  }
+
+  function billAgeHtml(sum){
+    const rowsAge = [
+      ['Current', sum.b_current, 'g0'], ['1\u201330 days', sum.b_1_30, 'g1'],
+      ['31\u201360', sum.b_31_60, 'g2'], ['61\u201390', sum.b_61_90, 'g3'],
+      ['90+ days', sum.b_90_plus, 'g4']
+    ];
+    const tot = rowsAge.reduce(function(s, b){ return s + Number(b[1] || 0); }, 0);
+    if (!(tot > 0.005)) return '';
+    return '<div class="card" style="margin-top:var(--s4);">' +
+      '<h2 style="margin:0;font-size:15px;">How the balance ages</h2>' +
+      '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">' +
+        bmoneyBig(tot) + ' still owing, by how long it has been due.</p>' +
+      '<div class="bagebar">' + rowsAge.map(function(b){
+        const v = Number(b[1] || 0);
+        if (!(v > 0.005)) return '';
+        return '<i class="' + b[2] + '" style="flex:0 0 ' + (v / tot * 100).toFixed(2) + '%" ' +
+          'title="' + esc(b[0] + ' \u00b7 ' + bmoney(v)) + '"></i>';
+      }).join('') + '</div>' +
+      '<div class="bagekey">' + rowsAge.map(function(b){
+        const v = Number(b[1] || 0);
+        return '<div><div class="bagekey-k"><i class="' + b[2] + '" style="background:' +
+            (b[2] === 'g0' ? 'var(--accent)' : b[2] === 'g1' ? 'color-mix(in srgb, var(--warn) 60%, var(--paper))' :
+             b[2] === 'g2' ? 'var(--warn)' : b[2] === 'g3' ? 'color-mix(in srgb, var(--bad) 70%, var(--warn))' : 'var(--bad)') +
+            '"></i>' + b[0] + '</div>' +
+          '<div class="bagekey-v' + (v > 0.005 ? '' : ' zero') + '">' + bmoney(v) + '</div></div>';
+      }).join('') + '</div>' +
+    '</div>';
+  }
+
   async function loadBilling(){
     if (billState === 'loading') return;
     billState = 'loading';
@@ -1521,7 +2269,7 @@
     const [sm, iv, sr] = await Promise.all([
       SB.rpc('portal_billing_summary', { p_customer: scope }),
       SB.rpc('portal_billing_invoices', { p_customer: scope }),
-      SB.rpc('portal_billing_paid_series', { p_months: 12, p_customer: scope })
+      SB.rpc('portal_billing_series', { p_months: 12, p_customer: scope })
     ]);
     if (sm.error || iv.error){
       billState = 'error';
@@ -1555,7 +2303,10 @@
     const open = billInv.filter(function(x){ return Number(x.balance || 0) > 0.005 || x.invoice_total == null; });
     const paid = billInv.filter(function(x){ return x.invoice_total != null && Number(x.balance || 0) <= 0.005; });
     const rows = billTab === 'paid' ? paid : open;
-    const maxPaid = billSeries.reduce(function(m, x){ return Math.max(m, Number(x.paid || 0)); }, 0);
+    const invoiced = Number(sum.invoiced || 0);
+    const settled = invoiced > 0 ? Math.min(100, Number(sum.paid || 0) / invoiced * 100) : 0;
+    const overdue = Number(sum.overdue || 0);
+    const clear = !(Number(sum.outstanding || 0) > 0.005);
 
     host.innerHTML = pnavHtml() +
       '<h1>Billing</h1>' +
@@ -1563,45 +2314,52 @@
         ? 'Exactly what this customer\u2019s billing viewer sees. Reading only \u2014 the remittance notice is theirs to send.'
         : 'What you have paid, what is still owed, and when it is due. Everything here is read-only except your PO numbers and documents you attach.') + '</p>' +
 
-      '<div class="bstats">' +
-        '<div class="bstat"><div class="bstat-k">Outstanding</div>' +
-          '<div class="bstat-v">' + bmoneyBig(sum.outstanding) + '</div>' +
-          '<div class="bstat-s">' + num(sum.open_count || 0) + (Number(sum.open_count) === 1 ? ' open invoice' : ' open invoices') + '</div></div>' +
-        '<div class="bstat' + (Number(sum.overdue || 0) > 0.005 ? ' due' : '') + '"><div class="bstat-k">Past due</div>' +
-          '<div class="bstat-v">' + bmoneyBig(sum.overdue) + '</div>' +
-          '<div class="bstat-s">' + (Number(sum.overdue || 0) > 0.005 ? 'needs attention' : 'nothing overdue') + '</div></div>' +
-        '<div class="bstat"><div class="bstat-k">Next due</div>' +
-          '<div class="bstat-v">' + (sum.next_due_date ? bmoneyBig(sum.next_due_amount) : '\u2014') + '</div>' +
-          '<div class="bstat-s">' + (sum.next_due_date ? esc(fmtDate(sum.next_due_date)) : 'no dated invoices open') + '</div></div>' +
-        '<div class="bstat"><div class="bstat-k">Paid to date</div>' +
-          '<div class="bstat-v">' + bmoneyBig(sum.paid) + '</div>' +
-          '<div class="bstat-s">of ' + bmoneyBig(sum.invoiced) + ' invoiced</div></div>' +
-      '</div>' +
-
-      '<div class="card" style="margin-top:var(--s4);"><h2 style="margin:0;font-size:15px;">How the balance ages</h2>' +
-        '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">Only invoices with something still owing.</p>' +
-        '<div class="bage">' +
-          [['Current', sum.b_current, false], ['1\u201330 days', sum.b_1_30, true],
-           ['31\u201360', sum.b_31_60, true], ['61\u201390', sum.b_61_90, true],
-           ['90+', sum.b_90_plus, true]].map(function(b){
-            const hot = b[2] && Number(b[1] || 0) > 0.005;
-            return '<div class="bage-c' + (hot ? ' hot' : '') + '"><div class="bage-k">' + b[0] + '</div>' +
-              '<div class="bage-v">' + bmoney(b[1] || 0) + '</div></div>';
-          }).join('') +
+      '<div class="bhero">' +
+        '<div style="min-width:0;">' +
+          '<div class="bhero-k">' + (clear ? 'Account balance' : 'Balance outstanding') + '</div>' +
+          '<div class="bhero-v">' + bmoneyBig(sum.outstanding) + '</div>' +
+          '<div class="bhero-s">' + (clear
+            ? 'Nothing owing. Everything invoiced has been settled.'
+            : num(sum.open_count || 0) + (Number(sum.open_count) === 1 ? ' invoice open' : ' invoices open') +
+              (overdue > 0.005 ? ' \u00b7 ' + bmoneyBig(overdue) + ' of it past due' : ' \u00b7 none of it past due')) + '</div>' +
+          '<div class="bmeter" role="img" aria-label="' + Math.round(settled) + ' percent of everything invoiced is paid">' +
+            '<div class="bmeter-f" style="width:' + settled.toFixed(1) + '%"></div></div>' +
+          '<div class="bmeter-l">' + bmoneyBig(sum.paid) + ' paid of ' + bmoneyBig(invoiced) + ' invoiced \u00b7 ' +
+            Math.round(settled) + '% settled</div>' +
+        '</div>' +
+        '<div class="bhero-side">' +
+          '<div class="bhero-box">' +
+            '<div class="bhero-k">Next payment due</div>' +
+            '<b>' + (sum.next_due_date ? bmoneyBig(sum.next_due_amount) : '\u2014') + '</b>' +
+            '<span>' + (sum.next_due_date ? esc(fmtDate(sum.next_due_date)) : 'no dated invoice open') + '</span>' +
+          '</div>' +
+          '<div class="bhero-box' + (overdue > 0.005 ? ' hot' : '') + '">' +
+            '<div class="bhero-k">Past due</div>' +
+            '<b>' + bmoneyBig(overdue) + '</b>' +
+            '<span>' + (overdue > 0.005 ? 'needs attention' : 'nothing overdue') + '</span>' +
+          '</div>' +
         '</div>' +
       '</div>' +
 
-      (billSeries.length
-        ? '<div class="card" style="margin-top:var(--s4);"><h2 style="margin:0;font-size:15px;">What you have paid</h2>' +
-            '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">By month, payments we have recorded.</p>' +
-            '<div class="bchart">' + billSeries.map(function(x){
-              const h = maxPaid ? Math.max(2, Number(x.paid || 0) / maxPaid * 96) : 2;
-              return '<div class="bchart-col" title="' + esc(bmoney(x.paid)) + '">' +
-                '<div class="bchart-bar" style="height:' + h + 'px"></div>' +
-                '<div class="bchart-l">' + esc(fmtDate(x.month).replace(/,.*$/, '')) + '</div></div>';
-            }).join('') + '</div>' +
-          '</div>'
-        : '') +
+      '<div class="bquick">' +
+        '<div><div class="bquick-k">Invoiced to date</div>' +
+          '<div class="bquick-v">' + bmoneyBig(invoiced) + '</div>' +
+          '<div class="bquick-s">' + num(billInv.length) + (billInv.length === 1 ? ' invoice' : ' invoices') + ' on file</div></div>' +
+        '<div><div class="bquick-k">Paid to date</div>' +
+          '<div class="bquick-v">' + bmoneyBig(sum.paid) + '</div>' +
+          '<div class="bquick-s">across ' + num(paid.length) + (paid.length === 1 ? ' settled invoice' : ' settled invoices') + '</div></div>' +
+        '<div><div class="bquick-k">Oldest unpaid</div>' +
+          '<div class="bquick-v' + (Number(sum.b_90_plus || 0) > 0.005 ? ' hot' : '') + '">' +
+            (function(){
+              const late = open.reduce(function(m, r){ return Math.max(m, Number(r.days_late || 0)); }, 0);
+              return late > 0 ? num(late) + 'd' : '\u2014';
+            })() + '</div>' +
+          '<div class="bquick-s">' + (open.some(function(r){ return Number(r.days_late || 0) > 0; })
+            ? 'past its due date' : 'nothing has run late') + '</div></div>' +
+      '</div>' +
+
+      billChartHtml() +
+      billAgeHtml(sum) +
 
       '<div class="card" style="margin-top:var(--s4);">' +
         '<div class="toolbar"><div class="btabs">' +
@@ -1614,14 +2372,23 @@
         (rows.length ? rows.map(function(r){
           const isOpen = String(billOpen) === String(r.order_id);
           const chip = BILL_CHIP[r.state] === undefined ? '' : BILL_CHIP[r.state];
-          return '<div class="binv" data-binv="' + esc(r.order_id) + '">' +
+          return '<div class="binv' + (isOpen ? ' open' : '') + '" data-binv="' + esc(r.order_id) + '">' +
             '<div class="binv-h" role="button" tabindex="0" title="Click for payments and documents">' +
               '<div><div class="binv-no mono">' + esc(r.invoice_no || '\u2014') + '</div>' +
                 '<div class="binv-sub">' + (r.po_number ? 'PO ' + esc(r.po_number) + ' \u00b7 ' : '') +
                   (r.due_date ? 'due ' + esc(fmtDate(r.due_date)) : 'no due date') +
-                  (r.days_late > 0 ? ' \u00b7 ' + num(r.days_late) + ' days late' : '') + '</div></div>' +
+                  (r.days_late > 0 ? ' \u00b7 ' + num(r.days_late) + ' days late' : '') +
+                  (billNotes[r.order_id] ? ' \u00b7 ' + num(billNotes[r.order_id]) + ' note' + (billNotes[r.order_id] === 1 ? '' : 's') : '') + '</div></div>' +
+              (function(){
+                const tot = Number(r.invoice_total || 0);
+                const pct = tot > 0 ? Math.min(100, Number(r.paid || 0) / tot * 100) : 0;
+                const full = tot > 0 && Number(r.balance || 0) <= 0.005;
+                return '<div class="binv-m-wrap">' +
+                  '<div class="binv-m' + (full ? ' full' : r.days_late > 0 ? ' late' : '') + '">' +
+                    '<i style="width:' + (tot > 0 ? pct.toFixed(1) : 0) + '%"></i></div>' +
+                  '<div class="binv-mp">' + (tot > 0 ? Math.round(pct) + '% paid' : 'not priced') + '</div></div>';
+              })() +
               '<div class="binv-n hide-sm"><b>' + bmoney(r.invoice_total) + '</b><span>invoiced</span></div>' +
-              '<div class="binv-n hide-sm"><b>' + bmoney(r.paid) + '</b><span>paid</span></div>' +
               '<div class="binv-n"><b>' + (r.invoice_total == null ? '\u2014' : bmoney(r.balance)) + '</b><span>balance</span></div>' +
               '<div><span class="chip ' + chip + '">' + esc(r.state) + '</span></div>' +
             '</div>' +
@@ -1848,6 +2615,8 @@
     if (pview !== 'billing') return;
     const tab = e.target.closest('[data-btab]');
     if (tab){ billTab = tab.getAttribute('data-btab'); billOpen = null; renderBilling(); return; }
+    const cm = e.target.closest('[data-bchart]');
+    if (cm){ billChart = cm.getAttribute('data-bchart'); renderBilling(); return; }
     if (e.target.closest('#bCsv')){ billCsv(); return; }
     if (e.target.closest('#bStmt')){ billStatement(); return; }
 
@@ -1920,6 +2689,86 @@
     billUpload(id, files).then(function(){ f.value = ''; });
   });
 
+  /* ---------- notes ---------- */
+  async function notesLoad(id){
+    notesFor = id; notesErr = '';
+    const r = await SB.rpc('order_notes_list', { p_order: id });
+    if (notesFor !== id) return;
+    notes = r.error ? [] : (r.data || []);
+    if (r.error) notesErr = r.error.message;
+    renderNotes();
+  }
+
+  function noteWhen(v){
+    const d = new Date(v);
+    if (isNaN(d)) return '';
+    const mins = Math.round((Date.now() - d.getTime()) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    if (mins < 1440) return Math.round(mins / 60) + 'h ago';
+    return d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+  }
+
+  function renderNotes(){
+    const host = $('notesBody'); if (!host) return;
+    if (notesErr){
+      host.innerHTML = '<p class="nempty">' + esc(notesErr) + '</p>';
+      return;
+    }
+    const thread = notes.length
+      ? '<div class="nthread">' + notes.map(function(n){
+          const theirs = n.side === 'staff';
+          return '<div class="nmsg' + (theirs ? ' them' : '') + (n.pinned ? ' pinned' : '') + '">' +
+            '<div class="nmsg-h"><span><b>' + esc(theirs ? 'NovaTech' : (n.author_name || 'You')) + '</b>' +
+              (n.pinned ? '<span class="chip">pinned</span>' : '') + '</span>' +
+            '<span>' + esc(noteWhen(n.created_at)) +
+              (n.mine ? '<button class="nmsg-x" data-notedel="' + esc(n.id) + '" type="button">Remove</button>' : '') +
+            '</span></div>' +
+            '<p>' + esc(n.body) + '</p></div>';
+        }).join('') + '</div>'
+      : '<p class="nempty">Nothing noted yet. NovaTech posts here when something about this order changes, and you can reply.</p>';
+
+    host.innerHTML = thread + (isStaff ? '' :
+      '<div class="ncompose">' +
+        '<textarea id="noteIn" maxlength="4000" placeholder="Anything you want on the record against this order."></textarea>' +
+        '<div class="ncompose-bar">' +
+          '<span class="muted">NovaTech is emailed when you post.</span>' +
+          '<span class="sp"></span>' +
+          '<button class="btn primary sm" id="notePost" type="button">Post note</button>' +
+        '</div>' +
+      '</div>');
+  }
+
+  document.addEventListener('click', async function(e){
+    const del = e.target.closest('[data-notedel]');
+    if (del){
+      if (!(await pConfirm('Remove your note?'))) return;
+      const id = del.getAttribute('data-notedel');
+      const r = await SB.rpc('order_note_delete', { p_note: id });
+      if (r.error){ toast(r.error.message, 'bad', 7000); return; }
+      notes = notes.filter(function(n){ return String(n.id) !== String(id); });
+      renderNotes(); toast('Note removed', 'ok');
+      return;
+    }
+    const post = e.target.closest('#notePost');
+    if (post){
+      const ta = $('noteIn');
+      const body = (ta && ta.value || '').trim();
+      if (!body){ if (ta) ta.focus(); toast('Write the note first.', 'warn'); return; }
+      post.disabled = true; post.textContent = 'Posting\u2026';
+      const r = await SB.rpc('order_note_post', {
+        p_order: notesFor, p_body: body, p_audience: 'shared',
+        p_pinned: false, p_author: (customer ? customer.name + ' \u00b7 ' : '') + (session && session.user ? session.user.email : '')
+      });
+      if (r.error){
+        post.disabled = false; post.textContent = 'Post note';
+        toast(r.error.message, 'bad', 8000); return;
+      }
+      await notesLoad(notesFor);
+      toast('Posted \u2014 NovaTech has been told', 'ok');
+    }
+  });
+
   /* ---------- detail ---------- */
   function openOrder(id){
     currentId = id; pview = 'orders'; syncMenu();
@@ -1961,6 +2810,8 @@
         '<div class="sumc prep" title="Packed into a batch, waiting to leave"><div class="sumv">' + num(st.assigned) + '</div><div class="suml">Preparing to ship</div></div>' +
         '<div class="sumc ok" title="Dispatched to a store"><div class="sumv">' + num(st.shipped) + '</div><div class="suml">Shipped</div></div>' +
       '</div>' +
+      '<div class="card" id="notesCard"><h2>Notes <span class="subtle">from NovaTech, and anything you want on the record</span></h2>' +
+        '<div id="notesBody"><p class="nempty">Loading\u2026</p></div></div>' +
       '<div class="card"><h2>Shipments <span class="subtle">each shipment goes to one store</span></h2>' +
       (mine.length ? mine.map(function(b){
         const bu = units.filter(function(u){ return u.batch_id === b.id; });
@@ -2027,6 +2878,7 @@
       '</div>';
 
     $('back').addEventListener('click', renderList);
+    notesLoad(o.id);
     bindPo(o);
     $('share').addEventListener('click', function(){ copyLink(linkFor(o.id)); });
     /* The invoice PDF carries dollar figures, so it is not offered here — it
