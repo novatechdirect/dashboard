@@ -305,6 +305,25 @@
   /* the number leads; status chips sit at the far right of the row */
   .inv-h1 > .chip{ margin-left:auto; }
   .inv-h1 > .chip + .chip{ margin-left:0; }
+
+  /* ---------- PO number: the one field the customer owns ---------- */
+  .pometa{ display:flex; align-items:center; flex-wrap:wrap; gap:var(--s2) var(--s3); margin:calc(-1 * var(--s2)) 0 var(--s5); font-size:13px; color:var(--muted); }
+  .pometa .po-k{ font-weight:600; }
+  .pometa .po-v{ color:var(--ink); font-weight:600; }
+  .pometa .po-none{ color:var(--faint); }
+  .pometa .po-due::before{ content:"\00b7"; color:var(--faint); margin-right:var(--s3); }
+  .poform{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
+  .poform input{
+    height:32px; padding:0 var(--s3); font:inherit; font-size:13px; width:200px; max-width:100%;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  .poform input:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
+  @media (max-width:640px){
+    .poform input{ height:40px; font-size:16px; width:100%; }
+    .poform{ width:100%; }
+    .poform .btn{ flex:1; }
+  }
   .rhead .btn, .rlook + * .btn, #rnLook, #rmaRetGo{ white-space:nowrap; }
   .rrow{
     display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto 110px; gap:var(--s4); align-items:center;
@@ -456,6 +475,8 @@
   .bno{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); min-width:0; }
   .bno .chip{ flex:0 0 auto; }
   .bhead{
+    cursor:pointer;
+    transition:background var(--t);
     display:grid; grid-template-columns:auto minmax(0,1fr) auto auto;
     gap:var(--s3) var(--s4); align-items:center; padding:var(--s4);
   }
@@ -470,6 +491,12 @@
     .bhead > div:last-child{ grid-column:1 / -1; justify-self:end; }
   }
   .bhead b{ font-size:13.5px; }
+  /* sits over the serial column, so it reads as "copy this list" */
+  .bbar{ display:flex; margin-bottom:var(--s3); }
+  .bhead:hover{ background:var(--soft); }
+  .bhead:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .bhead button, .bhead a, .bhead .cfg{ cursor:default; }
+  .bhead button, .bhead a{ cursor:pointer; }
   .bship{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px; }
   .bship a{ font-family:var(--font-num); font-size:12px; font-weight:600; }
   .trk-dd{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -484,6 +511,11 @@
     letter-spacing:0.07em; color:var(--muted); font-style:normal;
   }
   .carrier i{ font-style:normal; }
+  .trk-tag{
+    display:inline-block; margin-left:6px; font-size:9.5px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--faint);
+    font-family:var(--font-ui); vertical-align:middle; white-space:nowrap;
+  }
   .carrier img{ height:14px; width:auto; display:block; }
   /* a real logo needs no chrome around it */
   .carrier.has-logo{ background:none; border:none; padding:0; height:auto; }
@@ -1072,6 +1104,14 @@
         ' onerror="this.remove()">' +
       '<i>' + esc(short) + '</i></span>';
   }
+  /* A master number covers the whole batch; a unit number is that box alone.
+     The distinction matters when a customer rings the carrier, so it is marked
+     — quietly, because most of the time it is the same story either way. */
+  function trkTag(isMaster){
+    return isMaster
+      ? '<span class="trk-tag" title="One number for the whole shipment">master</span>'
+      : '';
+  }
   function trackHtml(carrier, nums){
     const list = (Array.isArray(nums) ? nums : [nums]).filter(Boolean);
     if (!list.length) return '<span class="muted">\u2014</span>';
@@ -1208,11 +1248,9 @@
       '<button class="btn" id="csv" type="button">Download CSV</button>' +
       '<button class="btn" id="prt" type="button">Print</button>' +
       ' <button class="btn" id="share" type="button">Copy link</button>' +
-      (o.invoice_pdf_name ? ' <button class="btn primary" id="pdf" type="button">Invoice PDF</button>' : '') +
       '</div>' +
       '<h1 class="inv-h1">Invoice <span class="mono">' + esc(o.invoice_no) + '</span><span class="chip ' + s.c + '">' + s.l + '</span></h1>' +
-      '<p class="muted">' + (o.po_number ? 'PO ' + esc(o.po_number) + ' &middot; ' : '') +
-        (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : '') + '</p>' +
+      '<div class="pometa" id="poMeta">' + poMetaHtml(o) + '</div>' +
       (st.ordered ? (function(){
         const segs = [
           ['Shipped', st.shipped, 'var(--ok)'],
@@ -1242,7 +1280,7 @@
         const wide = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
         const shipped = b.status === 'shipped';
         return '<div class="batch">' +
-          '<div class="bhead">' +
+          '<div class="bhead" data-head="' + esc(b.id) + '" role="button" tabindex="0" title="Click for serials and tracking">' +
             '<div class="bno"><b>Batch ' + b.batch_no + '</b>' +
               '<span class="chip ' + (shipped?'k':'w') + '">' + (shipped?'Shipped':'Preparing') + '</span></div>' +
             '<div><b>' + esc(locName(b)) + '</b>' +
@@ -1256,15 +1294,17 @@
                   '</span><span class="bdot">&middot;</span>'
                 : carrierBadge(b.carrier)) +
               '<span>' + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</span></div></div>' +
-            '<div class="bacts"><button class="btn" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy serials</button>' +
+            '<div class="bacts">' +
               '<button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
           '</div>' +
           '<div class="bbody" id="bb_' + esc(b.id) + '" style="display:none;">' +
+            '<div class="bbar"><button class="btn sm" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy All</button></div>' +
             '<div class="twrap"><table><thead><tr><th>Serial</th><th>Model</th><th>Tracking</th></tr></thead><tbody>' +
             bu.map(function(u){
               return '<tr><td class="mono">' + esc(u.serial) + '</td>' +
                 '<td><span class="cfg" data-cfg="' + esc(u.config_id) + '" tabindex="0">' + esc(cfgName[u.config_id] || '\u2014') + '</span></td>' +
-                '<td class="mono">' + trackHtml(b.carrier, per[u.id] ? [per[u.id]] : wide) + '</td></tr>';
+                '<td class="mono">' + trackHtml(b.carrier, per[u.id] ? [per[u.id]] : wide) +
+                  (per[u.id] ? '' : (wide.length ? trkTag(true) : '')) + '</td></tr>';
             }).join('') + '</tbody></table></div>' +
           '</div>' +
         '</div>';
@@ -1275,31 +1315,89 @@
       '</div>';
 
     $('back').addEventListener('click', renderList);
+    bindPo(o);
     $('share').addEventListener('click', function(){ copyLink(linkFor(o.id)); });
-    if ($('pdf')) $('pdf').addEventListener('click', async function(){
-      const btn = this; btn.disabled = true; btn.textContent = 'Opening\u2026';
-      const r = await SB.storage.from('order-invoices').createSignedUrl(o.id + '/invoice.pdf', 120);
-      btn.disabled = false; btn.textContent = 'Invoice PDF';
-      if (r.error || !r.data || !r.data.signedUrl){
-        toast('That invoice PDF could not be opened. Please ask your NovaTech contact.', 'bad', 7000);
-        return;
-      }
-      window.open(r.data.signedUrl, '_blank', 'noopener');
-    });
+    /* The invoice PDF carries dollar figures, so it is not offered here — it
+       belongs on the billing view, behind its own permission. */
     $('csv').addEventListener('click', function(){ exportCsv(o); });
     $('prt').addEventListener('click', function(){
       document.querySelectorAll('.bbody').forEach(function(x){ x.style.display = ''; });
       window.print();
     });
+    /* the whole header row is the target; the buttons inside it keep their own jobs */
+    function toggleBatch(id){
+      const bd = $('bb_' + id); if (!bd) return;
+      const open = bd.style.display !== 'none';
+      bd.style.display = open ? 'none' : '';
+      const btn = document.querySelector('[data-x="' + id + '"]');
+      if (btn) btn.textContent = open ? 'Details' : 'Hide';
+    }
     document.querySelectorAll('[data-x]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        const bd = $('bb_' + btn.getAttribute('data-x'));
-        const open = bd.style.display !== 'none';
-        bd.style.display = open ? 'none' : '';
-        btn.textContent = open ? 'Details' : 'Hide';
+      btn.addEventListener('click', function(){ toggleBatch(btn.getAttribute('data-x')); });
+    });
+    document.querySelectorAll('[data-head]').forEach(function(head){
+      head.addEventListener('click', function(e){
+        if (e.target.closest('button, a, .cfg')) return;
+        toggleBatch(head.getAttribute('data-head'));
+      });
+      head.addEventListener('keydown', function(e){
+        if (e.target !== head) return;
+        if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleBatch(head.getAttribute('data-head')); }
       });
     });
   }
+  /* ---------- PO number ---------- */
+  /* The customer's own reference, so the customer keeps it current. Everything
+     else on the invoice stays read-only. */
+  function poMetaHtml(o){
+    return '<span class="po-k">PO number</span>' +
+      (o.po_number ? '<span class="po-v mono">' + esc(o.po_number) + '</span>'
+                   : '<span class="po-none">not set</span>') +
+      '<button class="btn sm" id="poEdit" type="button">' + (o.po_number ? 'Change' : 'Add') + '</button>' +
+      (o.due_date ? '<span class="po-due">due ' + esc(fmtDate(o.due_date)) + '</span>' : '');
+  }
+
+  function bindPo(o){
+    const row = $('poMeta'); if (!row) return;
+    const edit = row.querySelector('#poEdit');
+    if (edit) edit.addEventListener('click', function(){ poForm(o); });
+  }
+
+  function poForm(o){
+    const row = $('poMeta'); if (!row) return;
+    row.innerHTML = '<span class="po-k">PO number</span>' +
+      '<span class="poform">' +
+        '<input id="poIn" type="text" maxlength="60" autocomplete="off" spellcheck="false" ' +
+          'placeholder="e.g. 4500123987" value="' + esc(o.po_number || '') + '">' +
+        '<button class="btn sm primary" id="poSave" type="button">Save</button>' +
+        '<button class="btn sm" id="poCancel" type="button">Cancel</button>' +
+      '</span>';
+    const input = $('poIn'), save = $('poSave');
+    input.focus(); input.select();
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Enter'){ e.preventDefault(); save.click(); }
+      if (e.key === 'Escape'){ e.preventDefault(); $('poCancel').click(); }
+    });
+    $('poCancel').addEventListener('click', function(){
+      row.innerHTML = poMetaHtml(o); bindPo(o);
+    });
+    save.addEventListener('click', async function(){
+      const val = input.value.trim();
+      if (val === (o.po_number || '')){ row.innerHTML = poMetaHtml(o); bindPo(o); return; }
+      save.disabled = true; save.textContent = 'Saving\u2026';
+      const r = await SB.rpc('portal_set_po_number', { p_order: o.id, p_po: val || null });
+      if (r.error){
+        save.disabled = false; save.textContent = 'Save';
+        toast('Could not save the PO number: ' + r.error.message, 'bad', 7000);
+        return;
+      }
+      if (r.data) Object.assign(o, Array.isArray(r.data) ? r.data[0] : r.data);
+      else o.po_number = val || null;
+      row.innerHTML = poMetaHtml(o); bindPo(o);
+      toast(val ? 'PO number saved' : 'PO number cleared', 'ok');
+    });
+  }
+
   $('listView').addEventListener('click', function(e){
     const r = e.target.closest('.orow'); if (r) openOrder(r.getAttribute('data-id'));
   });
@@ -2069,7 +2167,7 @@
           '<dt>Invoice</dt><dd>' + esc(o ? o.invoice_no : '\u2014') + '</dd>' +
           (cfg ? '<dt>Model</dt><dd>' + esc(cfg.name) + '</dd>' : '') +
           (b ? '<dt>Shipment</dt><dd>Batch ' + b.batch_no + (locName(b) ? ' \u00b7 ' + esc(locName(b)) : '') + '</dd>' : '') +
-          (t ? '<dt>Tracking</dt><dd class="trk-dd">' + carrierBadge(b ? b.carrier : '') + trackHtml(b ? b.carrier : '', [t.tracking_no]) + '</dd>' : '') +
+          (t ? '<dt>Tracking</dt><dd class="trk-dd">' + carrierBadge(b ? b.carrier : '') + trackHtml(b ? b.carrier : '', [t.tracking_no]) + trkTag(!t.unit_id) + '</dd>' : '') +
           (b && b.ship_date ? '<dt>Shipped</dt><dd>' + esc(fmtDate(b.ship_date)) + '</dd>' : '') +
         '</dl>' +
         '<dl><dt>Warranty</dt><dd>' + rmaWarrantyChip(rmaWarranty(u)) + '</dd></dl>' +

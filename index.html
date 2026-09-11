@@ -1711,6 +1711,26 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   /* ---- billing: admin-only money ---- */
+  .bill-docs{ display:flex; flex-direction:column; gap:var(--s2); }
+  .bill-doc{
+    display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; gap:var(--s3);
+    align-items:center; padding:var(--s2) var(--s3);
+    border:1px solid var(--line); border-radius:var(--r-sm); background:var(--paper);
+  }
+  .bill-doc-k{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+  .bill-doc-n{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+  .bill-doc-m{ font-size:12px; color:var(--muted); white-space:nowrap; }
+  .bill-doc-b{ display:flex; gap:6px; }
+  .bill-doc-add{ display:flex; gap:var(--s2); align-items:center; margin-top:var(--s3); flex-wrap:wrap; }
+  .bill-doc-add select{
+    height:32px; padding:0 var(--s2); font:inherit; font-size:13px;
+    border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    background:var(--paper); color:var(--ink);
+  }
+  @media (max-width:700px){
+    .bill-doc{ grid-template-columns:minmax(0,1fr); }
+    .bill-doc-b{ justify-content:flex-end; }
+  }
   .bill-kpis{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s4); margin-top:var(--s4); }
   .bill-k{ min-width:0; }
   .bill-kv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:-0.4px; font-variant-numeric:tabular-nums; line-height:1.2; }
@@ -1898,6 +1918,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* ---- batches ---- */
   .ord-head-r{ display:flex; align-items:center; gap:var(--s2); }
   .ord-batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; }
+  .ord-batch-head{ cursor:pointer; }
+  .ord-batch-head:hover{ background:var(--soft, var(--paper)); }
+  .ord-batch-head button, .ord-batch-head a{ cursor:pointer; }
+  /* sits over the serial column, so it reads as "copy this list" */
+  .ord-batch-bar{ display:flex; margin-bottom:var(--s3); }
   .ord-batch-head{
     display:grid; grid-template-columns:130px minmax(0,1fr) 150px auto;
     gap:var(--s3); align-items:center; padding:var(--s3) var(--s4); background:var(--paper);
@@ -1986,6 +2011,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-trk-plain{ color:var(--ink); border-bottom:1px dotted var(--line-strong); cursor:help; }
   .ord-trk-none{ color:var(--faint); }
   .ord-trk-hint{ color:var(--faint); font-family:var(--font-ui); font-size:11.5px; }
+  .ord-trk-tag{
+    display:inline-block; margin-left:6px; font-family:var(--font-ui); font-size:9.5px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--faint);
+    vertical-align:middle; white-space:nowrap;
+  }
 
   /* ---- config name with spec popover ---- */
   .ord-cfg{
@@ -3627,7 +3657,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var _nb = document.getElementById('navBilling'); if (_nb) _nb.style.display = 'none';
       var _tb2 = document.getElementById('tileBilling'); if (_tb2) _tb2.style.display = 'none';
       var _bb = document.getElementById('tabBilling'); if (_bb) _bb.style.display = 'none';
-      obRows = []; obPays = {}; obLoaded = false;
+      obRows = []; obPays = {}; obDocs = {}; obLoaded = false;
       mgIsAdmin = false; mgInited = false;
       var _na = document.getElementById('navAdmin'); if (_na) _na.style.display = 'none';
       var _ta = document.getElementById('tileAdmin'); if (_ta) _ta.style.display = 'none';
@@ -5854,7 +5884,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      Money is deliberately quarantined. It loads through an RPC that checks
      the caller itself, it renders only behind ordPerm.admin, and none of it
      exists in the customer portal. */
-  let obRows = [], obPays = {}, obRange = localStorage.getItem('obRange') || 'all', obLoaded = false;
+  let obRows = [], obPays = {}, obDocs = {}, obRange = localStorage.getItem('obRange') || 'all', obLoaded = false;
 
   function obMoney(n){
     const r = Math.round((+n || 0) * 100) / 100;
@@ -6215,6 +6245,91 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     obPays[orderId] = r.error ? [] : (r.data || []);
   }
 
+  /* ---- documents on an invoice ----------------------------------------------
+     Internal paperwork, not the portal's invoice PDF. Separate bucket,
+     admin-only policies on both the table and the objects, so nothing here
+     can be reached by a customer login. */
+  const OB_DOC_BUCKET = 'billing-docs';
+  const OB_DOC_KINDS = [['invoice','Invoice'],['payment','Payment / remittance'],['po','Customer PO'],['credit','Credit note'],['other','Other']];
+  const OB_DOC_MAX = 25 * 1024 * 1024;
+
+  function obDocKind(k){
+    const f = OB_DOC_KINDS.find(function(x){ return x[0] === k; });
+    return f ? f[1] : 'Other';
+  }
+  function obDocSize(n){
+    const b = +n || 0;
+    if (!b) return '';
+    return b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  async function obLoadDocs(orderId){
+    if (!ordPerm.admin) return;
+    const r = await SB.rpc('order_docs_for', { p_order: orderId });
+    obDocs[orderId] = r.error ? [] : (r.data || []);
+    return obDocs[orderId];
+  }
+
+  function obDocsHtml(orderId){
+    const list = obDocs[orderId];
+    if (!list) return '<p class="muted-sm" style="margin:0;">Loading\u2026</p>';
+    if (!list.length) return '<p class="muted-sm" style="margin:0;">Nothing attached yet.</p>';
+    return '<div class="bill-docs">' + list.map(function(d){
+      return '<div class="bill-doc">' +
+        '<span class="bill-doc-k">' + esc(obDocKind(d.kind)) + '</span>' +
+        '<span class="bill-doc-n" title="' + esc(d.filename) + '">' + esc(d.filename) + '</span>' +
+        '<span class="bill-doc-m">' + esc(fmtDate(d.created_at)) +
+          (obDocSize(d.size_bytes) ? ' \u00b7 ' + obDocSize(d.size_bytes) : '') + '</span>' +
+        '<span class="bill-doc-b">' +
+          '<button class="ghost btn-sm" data-obdocopen="' + esc(d.id) + '" type="button">Open</button>' +
+          '<button class="ghost danger btn-sm" data-obdocdel="' + esc(d.id) + '" type="button">Remove</button>' +
+        '</span>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  async function obDocOpen(d){
+    const r = await SB.storage.from(OB_DOC_BUCKET).createSignedUrl(d.path, 120);
+    if (r.error || !r.data || !r.data.signedUrl){
+      toast('Could not open the file: ' + ((r.error && r.error.message) || 'no link returned'), 'bad', 7000);
+      return;
+    }
+    window.open(r.data.signedUrl, '_blank', 'noopener');
+  }
+
+  async function obDocUpload(orderId, files, kind, st){
+    let ok = 0;
+    for (const f of Array.from(files)){
+      if (f.size > OB_DOC_MAX){
+        st.className = 'ord-pdf-status bad';
+        st.textContent = f.name + ' is ' + (f.size / 1048576).toFixed(1) + ' MB. The limit is 25 MB.';
+        continue;
+      }
+      st.className = 'ord-pdf-status'; st.textContent = 'Uploading ' + f.name + '\u2026';
+      const safe = f.name.replace(/[^\w.\-]+/g, '_').slice(-80);
+      const path = orderId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '-' + safe;
+      const up = await SB.storage.from(OB_DOC_BUCKET).upload(path, f, { upsert: false, contentType: f.type || 'application/octet-stream' });
+      if (up.error){
+        st.className = 'ord-pdf-status bad';
+        st.textContent = 'Upload failed: ' + (up.error.message || 'error');
+        continue;
+      }
+      const ins = await SB.from('order_documents').insert({
+        order_id: orderId, kind: kind || 'other', filename: f.name, path: path,
+        size_bytes: f.size, content_type: f.type || null, created_by: session.user.id
+      });
+      if (ins.error){
+        await SB.storage.from(OB_DOC_BUCKET).remove([path]);
+        st.className = 'ord-pdf-status bad';
+        st.textContent = 'Uploaded, but not recorded: ' + ins.error.message;
+        continue;
+      }
+      ok++;
+    }
+    if (ok){ st.className = 'ord-pdf-status'; st.textContent = ''; toast(ok + (ok === 1 ? ' document attached' : ' documents attached'), 'ok'); }
+    return ok;
+  }
+
   function obEditModal(o){
     const r = obFor(o.id);
     const tot = (r && r.invoice_total != null) ? +r.invoice_total : (o.invoice_total != null ? +o.invoice_total : null);
@@ -6251,6 +6366,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             ? '<div class="field span2"><button class="ghost btn-sm" id="obPayFull" type="button">Fill the remaining ' + obMoney(bal) + '</button></div>'
             : '') +
         '</div>' +
+
+        '<h3 class="card-title" style="margin:var(--s5) 0 var(--s2);">Documents</h3>' +
+        '<p class="muted-sm" style="margin:0 0 var(--s3);">Order admins only. These files are not in the customer portal.</p>' +
+        '<div id="obDocsBox">' + obDocsHtml(o.id) + '</div>' +
+        '<div class="bill-doc-add">' +
+          '<select id="obDocKind">' + OB_DOC_KINDS.map(function(k){
+            return '<option value="' + k[0] + '">' + k[1] + '</option>';
+          }).join('') + '</select>' +
+          '<button class="ghost btn-sm" id="obDocPick" type="button">Attach files</button>' +
+        '</div>' +
+        '<input type="file" id="obDocInput" multiple style="display:none;">' +
+        '<div class="ord-pdf-status" id="obDocStatus"></div>' +
         '<div class="err" id="obErr"></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="obCancel" type="button">Back</button>' +
@@ -6261,6 +6388,41 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (full) full.addEventListener('click', function(){ amt.value = bal.toFixed(2); amt.focus(); });
 
     bg.querySelector('#obCancel').addEventListener('click', mgCloseModal);
+
+    /* documents: fetched after the modal is up, so opening stays instant */
+    const docBox = bg.querySelector('#obDocsBox');
+    const docSt = bg.querySelector('#obDocStatus');
+    const docIn = bg.querySelector('#obDocInput');
+    function redrawDocs(){ docBox.innerHTML = obDocsHtml(o.id); }
+    if (!obDocs[o.id]) obLoadDocs(o.id).then(redrawDocs);
+    bg.querySelector('#obDocPick').addEventListener('click', function(){ docIn.click(); });
+    docIn.addEventListener('change', async function(){
+      if (!this.files.length) return;
+      await obDocUpload(o.id, this.files, bg.querySelector('#obDocKind').value, docSt);
+      this.value = '';
+      await obLoadDocs(o.id); redrawDocs();
+    });
+    bg.addEventListener('click', async function(e){
+      const op = e.target.closest('[data-obdocopen]');
+      if (op){
+        const d = (obDocs[o.id] || []).find(function(x){ return x.id === op.getAttribute('data-obdocopen'); });
+        if (d) obDocOpen(d);
+        return;
+      }
+      const dl = e.target.closest('[data-obdocdel]');
+      if (dl){
+        const d = (obDocs[o.id] || []).find(function(x){ return x.id === dl.getAttribute('data-obdocdel'); });
+        if (!d || !confirm('Remove ' + d.filename + '?')) return;
+        dl.disabled = true;
+        const rm = await SB.storage.from(OB_DOC_BUCKET).remove([d.path]);
+        if (rm.error){ dl.disabled = false; docSt.className = 'ord-pdf-status bad'; docSt.textContent = rm.error.message; return; }
+        const del = await SB.from('order_documents').delete().eq('id', d.id);
+        if (del.error){ dl.disabled = false; docSt.className = 'ord-pdf-status bad'; docSt.textContent = del.error.message; return; }
+        docSt.className = 'ord-pdf-status'; docSt.textContent = '';
+        await obLoadDocs(o.id); redrawDocs();
+        toast('Document removed', 'ok');
+      }
+    });
 
     bg.addEventListener('click', async function(e){
       const d = e.target.closest('[data-obpaydel]');
@@ -7310,13 +7472,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (o) ordDeleteOrder(o);
       return;
     }
-    const bx = e.target.closest('[data-bexpand]');
+    const bx = e.target.closest('[data-bexpand]') ||
+      /* the whole header row is a target; its own buttons keep their jobs */
+      (e.target.closest('.ord-batch-head') && !e.target.closest('button, a, input, select, label, .ord-cfg-tag')
+        ? e.target.closest('.ord-batch-head')
+        : null);
     if (bx){
-      const body = document.getElementById('ordBatchBody_' + bx.getAttribute('data-bexpand'));
+      const bid = bx.getAttribute('data-bexpand') ||
+        (bx.closest('.ord-batch') ? bx.closest('.ord-batch').getAttribute('data-bid') : null);
+      const body = bid ? document.getElementById('ordBatchBody_' + bid) : null;
       if (body){
         const open = body.style.display !== 'none';
         body.style.display = open ? 'none' : '';
-        bx.textContent = open ? 'Details' : 'Hide';
+        const btn = document.querySelector('[data-bexpand="' + bid + '"]');
+        if (btn) btn.textContent = open ? 'Details' : 'Hide';
       }
       return;
     }
@@ -7874,6 +8043,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         ' onerror="this.remove()">' +
       '<i>' + esc(short) + '</i></span>';
   }
+  /* A master number covers the whole batch; a unit number is that box alone.
+     The distinction matters the moment someone rings the carrier. */
+  function ordTrkTag(isMaster){
+    return isMaster
+      ? '<span class="ord-trk-tag" title="One number for the whole shipment">master</span>'
+      : '';
+  }
   function ordTrackHtml(carrier, nums){
     const list = (Array.isArray(nums) ? nums : [nums]).filter(Boolean);
     if (!list.length) return '<span class="ord-trk-none">\u2014</span>';
@@ -7906,7 +8082,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const batchWide = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
       const shipped = b.status === 'shipped';
       return '<div class="ord-batch" data-bid="' + esc(b.id) + '">' +
-        '<div class="ord-batch-head">' +
+        '<div class="ord-batch-head" title="Click for serials and tracking">' +
           '<div class="ord-batch-id">' +
             '<span class="ord-batch-no">Batch ' + b.batch_no + '</span>' +
             '<span class="ord-chip ' + (shipped ? 'ok' : 'warn') + '">' + (shipped ? 'Shipped' : 'Open') + '</span>' +
@@ -7922,7 +8098,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             '<div class="ord-sub ord-batch-ship">' +
               (batchWide.length
                 ? '<span class="ord-trk-grp">' + ordCarrierBadge(b.carrier) +
-                  ordTrackHtml(b.carrier, [batchWide[0]]) +
+                  ordTrackHtml(b.carrier, [batchWide[0]]) + ordTrkTag(true) +
                   (batchWide.length > 1
                     ? '<span class="ord-trk-hint">+' + ordNum(batchWide.length - 1) + '</span>'
                     : '') +
@@ -7933,14 +8109,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<div class="ord-batch-btns">' +
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
             '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
-            '<button class="ghost btn-sm" data-bcopy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy serials</button>' +
             (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
             (ordPerm.manage ? '<button class="ghost btn-sm" data-bedit="' + esc(b.id) + '" type="button">Edit</button>' : '') +
           '</div>' +
         '</div>' +
         '<div class="ord-batch-body" id="ordBatchBody_' + esc(b.id) + '" style="display:none;">' +
+          '<div class="ord-batch-bar"><button class="ghost btn-sm" data-bcopy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy All</button></div>' +
           (batchWide.length
-            ? '<p class="muted-sm ord-batch-trk">Batch tracking: ' + ordCarrierBadge(b.carrier) + '<span class="ord-mono">' + ordTrackHtml(b.carrier, batchWide) + '</span>' +
+            ? '<p class="muted-sm ord-batch-trk">Master tracking: ' + ordCarrierBadge(b.carrier) + '<span class="ord-mono">' + ordTrackHtml(b.carrier, batchWide) + '</span>' +
+              '<span class="ord-trk-hint"> \u00b7 covers every unit below</span>' +
               (ordTrackUrl(b.carrier, batchWide[0]) ? '' : ' <span class="ord-trk-hint">\u00b7 add a carrier to link it</span>') + '</p>'
             : '') +
           (function(){
@@ -7955,7 +8132,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           bshown.map(function(u){
             return '<tr><td class="ord-mono" data-l="Serial">' + esc(u.serial) + rmaUnitFlag(u) + '</td>' +
               '<td data-l="Config">' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
-              '<td class="ord-mono" data-l="Tracking">' + ordTrackHtml(b.carrier, perUnit[u.id] ? [perUnit[u.id]] : batchWide) + '</td></tr>';
+              '<td class="ord-mono" data-l="Tracking">' + ordTrackHtml(b.carrier, perUnit[u.id] ? [perUnit[u.id]] : batchWide) +
+                (perUnit[u.id] ? '' : (batchWide.length ? ordTrkTag(true) : '')) + '</td></tr>';
           }).join('') +
           '</tbody></table></div>' +
           (bpages > 1
