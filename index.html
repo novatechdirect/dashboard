@@ -1722,10 +1722,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .bill-doc-m{ font-size:12px; color:var(--muted); white-space:nowrap; }
   .bill-doc-b{ display:flex; gap:6px; }
   .bill-doc-add{ display:flex; gap:var(--s2); align-items:center; margin-top:var(--s3); flex-wrap:wrap; }
+  /* width:auto and background-color, not the shorthand — the global select
+     rule sets width:100%, and the shorthand would wipe the chevron image */
   .bill-doc-add select{
-    height:32px; padding:0 var(--s2); font:inherit; font-size:13px;
+    width:auto; flex:0 0 auto; min-width:180px;
+    height:32px; padding:0 28px 0 var(--s2); font:inherit; font-size:13px;
     border:1px solid var(--line-strong); border-radius:var(--r-sm);
-    background:var(--paper); color:var(--ink);
+    background-color:var(--paper); color:var(--ink);
   }
   @media (max-width:700px){
     .bill-doc{ grid-template-columns:minmax(0,1fr); }
@@ -6053,6 +6056,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                         }).join('') + '</div>'
                       : '<p class="muted-sm" style="margin:0;">Nothing recorded yet.</p>') +
 
+                  '<h3 class="bill-exp-h">Documents</h3>' +
+                  '<p class="muted-sm" style="margin:0 0 var(--s3);">Order admins only. Not visible in the customer portal.</p>' +
+                  '<div id="obDocsBox">' + obDocsHtml(r.order_id) + '</div>' +
+                  '<div class="bill-doc-add">' +
+                    '<select id="obDocKind">' + OB_DOC_KINDS.map(function(k){
+                      return '<option value="' + k[0] + '">' + k[1] + '</option>';
+                    }).join('') + '</select>' +
+                    '<button class="ghost btn-sm" id="obDocPick" type="button">Attach files</button>' +
+                    '<input type="file" id="obDocInput" multiple style="display:none;">' +
+                  '</div>' +
+                  '<div class="ord-pdf-status" id="obDocStatus"></div>' +
+
                   '<div class="bill-exp-acts">' +
                     '<button class="primary btn-sm" data-obedit="' + esc(r.order_id) + '" type="button">' +
                       (tot == null ? 'Set the total' : 'Record a payment') + '</button>' +
@@ -6080,8 +6095,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const row = e.target.closest('[data-obrow]');
     if (row){
       if (e.target.closest('[data-obedit]') || e.target.closest('[data-obgo]')) return;
+      if (e.target.closest('#obDocPick') || e.target.closest('#obDocKind') ||
+          e.target.closest('[data-obdocopen]') || e.target.closest('[data-obdocdel]')) return;
       const id = row.getAttribute('data-obrow');
       obOpenRow = String(obOpenRow) === String(id) ? null : id;
+      if (obOpenRow && !obDocs[obOpenRow]) obLoadDocs(obOpenRow).then(obRenderTable);
       obRenderTable();
       if (obOpenRow && obPays[id] === undefined){
         obLoadPays(id).then(function(){ if (String(obOpenRow) === String(id)) obRenderTable(); });
@@ -6101,6 +6119,49 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const go = e.target.closest('[data-obgo]');
     if (go){ ordOpenOrder(go.getAttribute('data-obgo')); showTool('orders'); }
+  });
+
+  /* ---- documents on the expanded invoice row ---- */
+  document.addEventListener('click', async function(e){
+    if (e.target.closest('#obDocPick')){
+      const inp = document.getElementById('obDocInput'); if (inp) inp.click();
+      return;
+    }
+    const op = e.target.closest('[data-obdocopen]');
+    if (op){
+      const d = (obDocs[obOpenRow] || []).find(function(x){ return x.id === op.getAttribute('data-obdocopen'); });
+      if (d) obDocOpen(d);
+      return;
+    }
+    const dl = e.target.closest('[data-obdocdel]');
+    if (dl){
+      const oid = obOpenRow;
+      const d = (obDocs[oid] || []).find(function(x){ return x.id === dl.getAttribute('data-obdocdel'); });
+      if (!d || !confirm('Remove ' + d.filename + '?')) return;
+      dl.disabled = true;
+      const st = document.getElementById('obDocStatus');
+      const rm = await SB.storage.from(OB_DOC_BUCKET).remove([d.path]);
+      const del = rm.error ? null : await SB.from('order_documents').delete().eq('id', d.id);
+      const bad = rm.error || (del && del.error);
+      if (bad){
+        dl.disabled = false;
+        if (st){ st.className = 'ord-pdf-status bad'; st.textContent = bad.message; }
+        return;
+      }
+      await obLoadDocs(oid); obRenderTable();
+      toast('Document removed', 'ok');
+    }
+  });
+
+  document.addEventListener('change', async function(e){
+    if (!e.target.matches('#obDocInput')) return;
+    const oid = obOpenRow;
+    if (!oid || !e.target.files.length) return;
+    const kindEl = document.getElementById('obDocKind');
+    const st = document.getElementById('obDocStatus');
+    await obDocUpload(oid, e.target.files, kindEl ? kindEl.value : 'other', st || { className:'', textContent:'' });
+    e.target.value = '';
+    await obLoadDocs(oid); obRenderTable();
   });
 
   /* Bars, not a line. With a handful of invoices a month a line chart invents
@@ -6367,17 +6428,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             : '') +
         '</div>' +
 
-        '<h3 class="card-title" style="margin:var(--s5) 0 var(--s2);">Documents</h3>' +
-        '<p class="muted-sm" style="margin:0 0 var(--s3);">Order admins only. These files are not in the customer portal.</p>' +
-        '<div id="obDocsBox">' + obDocsHtml(o.id) + '</div>' +
-        '<div class="bill-doc-add">' +
-          '<select id="obDocKind">' + OB_DOC_KINDS.map(function(k){
-            return '<option value="' + k[0] + '">' + k[1] + '</option>';
-          }).join('') + '</select>' +
-          '<button class="ghost btn-sm" id="obDocPick" type="button">Attach files</button>' +
-        '</div>' +
-        '<input type="file" id="obDocInput" multiple style="display:none;">' +
-        '<div class="ord-pdf-status" id="obDocStatus"></div>' +
         '<div class="err" id="obErr"></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="obCancel" type="button">Back</button>' +
@@ -6388,41 +6438,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (full) full.addEventListener('click', function(){ amt.value = bal.toFixed(2); amt.focus(); });
 
     bg.querySelector('#obCancel').addEventListener('click', mgCloseModal);
-
-    /* documents: fetched after the modal is up, so opening stays instant */
-    const docBox = bg.querySelector('#obDocsBox');
-    const docSt = bg.querySelector('#obDocStatus');
-    const docIn = bg.querySelector('#obDocInput');
-    function redrawDocs(){ docBox.innerHTML = obDocsHtml(o.id); }
-    if (!obDocs[o.id]) obLoadDocs(o.id).then(redrawDocs);
-    bg.querySelector('#obDocPick').addEventListener('click', function(){ docIn.click(); });
-    docIn.addEventListener('change', async function(){
-      if (!this.files.length) return;
-      await obDocUpload(o.id, this.files, bg.querySelector('#obDocKind').value, docSt);
-      this.value = '';
-      await obLoadDocs(o.id); redrawDocs();
-    });
-    bg.addEventListener('click', async function(e){
-      const op = e.target.closest('[data-obdocopen]');
-      if (op){
-        const d = (obDocs[o.id] || []).find(function(x){ return x.id === op.getAttribute('data-obdocopen'); });
-        if (d) obDocOpen(d);
-        return;
-      }
-      const dl = e.target.closest('[data-obdocdel]');
-      if (dl){
-        const d = (obDocs[o.id] || []).find(function(x){ return x.id === dl.getAttribute('data-obdocdel'); });
-        if (!d || !confirm('Remove ' + d.filename + '?')) return;
-        dl.disabled = true;
-        const rm = await SB.storage.from(OB_DOC_BUCKET).remove([d.path]);
-        if (rm.error){ dl.disabled = false; docSt.className = 'ord-pdf-status bad'; docSt.textContent = rm.error.message; return; }
-        const del = await SB.from('order_documents').delete().eq('id', d.id);
-        if (del.error){ dl.disabled = false; docSt.className = 'ord-pdf-status bad'; docSt.textContent = del.error.message; return; }
-        docSt.className = 'ord-pdf-status'; docSt.textContent = '';
-        await obLoadDocs(o.id); redrawDocs();
-        toast('Document removed', 'ok');
-      }
-    });
 
     bg.addEventListener('click', async function(e){
       const d = e.target.closest('[data-obpaydel]');
@@ -9685,15 +9700,33 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const log = document.getElementById('admEmailLog');
     if (log){
       const lr = await SB.rpc('rma_email_recent');
+      if (lr.error && /state|column|function/i.test(lr.error.message || '')){
+        log.innerHTML = '<p class="muted-sm" style="margin:12px 0 0;">Run <b>email-log-status.sql</b> in Supabase to record what Resend answered.</p>';
+        return;
+      }
       const rows = (lr.error ? [] : (lr.data || []));
+      /* a send from more than a few hours ago has no pg_net response row left,
+         so "pending" used to mean two different things. Say which. */
+      const chip = {
+        accepted: ['ok', 'accepted'],
+        refused:  ['bad', 'refused'],
+        failed:   ['bad', 'failed'],
+        waiting:  ['neutral', 'waiting'],
+        unknown:  ['neutral', 'no response recorded']
+      };
       log.innerHTML = rows.length
         ? '<div class="table-wrap" style="margin-top:12px;"><table class="hist-table"><thead><tr><th>Sent</th><th>To</th><th>Subject</th><th>Result</th></tr></thead><tbody>' +
             rows.map(function(x){
-              const code = x.status_code == null ? '<span class="ord-chip neutral">pending</span>'
-                : (x.status_code === 200 ? '<span class="ord-chip ok">accepted</span>'
-                : '<span class="ord-chip bad">' + x.status_code + '</span>');
+              const s = chip[x.state] || chip.unknown;
+              const label = x.state === 'refused' && x.status_code ? x.status_code + ' refused' : s[1];
+              const code = '<span class="ord-chip ' + s[0] + '">' + esc(label) + '</span>' +
+                (x.state === 'refused' || x.state === 'failed'
+                  ? '<div class="muted-sm" style="margin-top:4px;">' + esc(x.detail || '') + '</div>'
+                  : '');
               return '<tr><td>' + esc(rmaDate(x.created_at)) + '</td><td class="adm-spec">' + esc(x.to_addrs || '') + '</td><td>' + esc(x.subject || '') + '</td><td>' + code + '</td></tr>';
-            }).join('') + '</tbody></table></div>'
+            }).join('') +
+            '</tbody></table></div>' +
+            '<p class="muted-sm" style="margin:8px 0 0;">Accepted means Resend took the message. Delivery itself is in the Resend dashboard under Logs.</p>'
         : '';
     }
   }
