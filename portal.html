@@ -1068,6 +1068,8 @@
         viewAs = this.value;
         me = { customer_id: viewAs };
         currentId = null; query = ''; setUrl(null);
+        billState = 'idle'; billSum = null; billInv = []; billSeries = [];
+        billPays = {}; billDocs = {}; billOpen = null;
         $('detailView').style.display = 'none';
         await load();
       });
@@ -1244,7 +1246,7 @@
   function syncMenu(){
     const menu = $('pmenu'); if (!menu) return;
     menu.querySelectorAll('[data-pview]').forEach(function(a){ a.classList.toggle('on', a.getAttribute('data-pview') === pview); });
-    const nb = $('navBilling'); if (nb) nb.style.display = canBill ? '' : 'none';
+    const nb = $('navBilling'); if (nb) nb.style.display = (canBill || isStaff) ? '' : 'none';
     const needs = rmaTickets.filter(function(t){ return t.status === 'needs_info'; }).length;
     const b = $('pmenuBadge'); if (b){ b.textContent = String(needs); b.style.display = needs ? '' : 'none'; }
   }
@@ -1327,10 +1329,13 @@
   async function loadBilling(){
     if (billState === 'loading') return;
     billState = 'loading';
+    /* Staff have no customer_users row, so the functions need to be told
+       which customer to answer for. A customer login ignores the argument. */
+    const scope = isStaff && me ? me.customer_id : null;
     const [sm, iv, sr] = await Promise.all([
-      SB.rpc('portal_billing_summary'),
-      SB.rpc('portal_billing_invoices'),
-      SB.rpc('portal_billing_paid_series', { p_months: 12 })
+      SB.rpc('portal_billing_summary', { p_customer: scope }),
+      SB.rpc('portal_billing_invoices', { p_customer: scope }),
+      SB.rpc('portal_billing_paid_series', { p_months: 12, p_customer: scope })
     ]);
     if (sm.error || iv.error){
       billState = 'error';
@@ -1344,7 +1349,7 @@
   }
 
   function renderBilling(){
-    if (!canBill){ pview = 'orders'; return renderList(); }
+    if (!canBill && !isStaff){ pview = 'orders'; return renderList(); }
     const host = $('listView');
     if (billState === 'idle'){
       host.innerHTML = pnavHtml() + '<h1>Billing</h1>' +
@@ -1368,7 +1373,9 @@
 
     host.innerHTML = pnavHtml() +
       '<h1>Billing</h1>' +
-      '<p class="muted" style="margin-top:0;">What you have paid, what is still owed, and when it is due. Everything here is read-only except your PO numbers and documents you attach.</p>' +
+      '<p class="muted" style="margin-top:0;">' + (isStaff
+        ? 'Exactly what this customer\u2019s billing viewer sees. Reading only \u2014 the remittance notice is theirs to send.'
+        : 'What you have paid, what is still owed, and when it is due. Everything here is read-only except your PO numbers and documents you attach.') + '</p>' +
 
       '<div class="bstats">' +
         '<div class="bstat"><div class="bstat-k">Outstanding</div>' +
@@ -1464,7 +1471,7 @@
                     '<button class="btn sm" data-bpo="' + esc(r.order_id) + '" type="button">' + (r.po_number ? 'Change PO number' : 'Add a PO number') + '</button>' +
                     '<button class="btn sm" data-bupload="' + esc(r.order_id) + '" type="button">Attach a document</button>' +
                     (r.has_pdf ? '<button class="btn sm" data-bpdf="' + esc(r.order_id) + '" type="button">Invoice PDF</button>' : '') +
-                    (Number(r.balance || 0) > 0.005 ? '<button class="btn sm primary" data-brem="' + esc(r.order_id) + '" type="button">I have sent payment</button>' : '') +
+                    (!isStaff && Number(r.balance || 0) > 0.005 ? '<button class="btn sm primary" data-brem="' + esc(r.order_id) + '" type="button">I have sent payment</button>' : '') +
                   '</div>' +
                   '<input type="file" data-bfile="' + esc(r.order_id) + '" multiple style="display:none;">' +
                 '</div>'
@@ -1481,7 +1488,8 @@
     renderBilling();
     if (!billOpen) return;
     if (billPays[id] === undefined){
-      const r = await SB.rpc('portal_billing_payments', { p_order: id });
+      const r = await SB.rpc('portal_billing_payments', {
+        p_order: id, p_customer: isStaff && me ? me.customer_id : null });
       billPays[id] = r.error ? [] : (r.data || []);
       if (String(billOpen) === String(id)) renderBilling();
     }
