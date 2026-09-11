@@ -836,7 +836,16 @@
     modalBg.className = 'modal-bg';
     modalBg.id = 'modalBg';
     modalBg.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>';
-    modalBg.addEventListener('click', function(e){ if (e.target === modalBg) closeModal(); });
+    let downOnBg = false;
+    /* A selection drag that starts in the modal and ends on the backdrop
+       still lands its click there. Closing on that wiped the form, which is
+       why it looked tied to copy and paste. Press and release must both be
+       on the backdrop. */
+    modalBg.addEventListener('mousedown', function(e){ downOnBg = (e.target === modalBg); });
+    modalBg.addEventListener('click', function(e){
+      if (e.target === modalBg && downOnBg) closeModal();
+      downOnBg = false;
+    });
     document.body.appendChild(modalBg);
     const first = modalBg.querySelector('input, button');
     if (first) first.focus();
@@ -894,7 +903,15 @@
     if (!SB){ $('loginErr').textContent = 'Could not load the sign-in library. Check your connection and refresh.'; return; }
     const { data } = await SB.auth.getSession();
     session = data.session;
-    SB.auth.onAuthStateChange(function(_e, s){ session = s; render(); });
+    let authUid = session && session.user ? session.user.id : null;
+    /* Token refreshes and refocus both fire here. Re-rendering on them sent
+       the customer back to the order list mid-task. */
+    SB.auth.onAuthStateChange(function(_e, s){
+      const uid = s && s.user ? s.user.id : null;
+      session = s;
+      if (uid === authUid) return;
+      authUid = uid; render();
+    });
     render();
   }
   async function render(){

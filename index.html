@@ -3641,8 +3641,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const { data } = await SB.auth.getSession();
     session = data.session;
+    let authUid = session && session.user ? session.user.id : null;
     SB.auth.onAuthStateChange(function(_ev, s){
+      const uid = s && s.user ? s.user.id : null;
       session = s;
+      /* TOKEN_REFRESHED fires roughly hourly, and SIGNED_IN fires again when
+         the tab regains focus. Re-booting on those reset the whole app to
+         Home mid-task. Only a change of who is signed in needs a re-render. */
+      if (uid === authUid) return;
+      authUid = uid;
       renderAuth();
       if (s){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
     });
@@ -4919,7 +4926,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     var bg = document.createElement('div'); bg.id = 'mgModalBg'; bg.className = 'mg-modal-bg';
     bg.setAttribute('role', 'dialog'); bg.setAttribute('aria-modal', 'true');
     bg.innerHTML = '<div class="mg-modal' + (wide ? ' wide' : '') + '">' + html + '</div>';
-    bg.addEventListener('click', function(e){ if (e.target === bg) mgCloseModal(); });
+    var downOnBg = false;
+    /* A text selection that starts inside the modal and ends on the backdrop
+       still lands its click on the backdrop. Closing on that threw away
+       whatever had been typed, which is why it seemed to happen while
+       copying and pasting. Require the press and the release both on it. */
+    bg.addEventListener('mousedown', function(e){ downOnBg = (e.target === bg); });
+    bg.addEventListener('click', function(e){
+      if (e.target === bg && downOnBg) mgCloseModal();
+      downOnBg = false;
+    });
     bg.addEventListener('keydown', function(e){
       if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON'){
         var p = bg.querySelector('[data-primary]');
