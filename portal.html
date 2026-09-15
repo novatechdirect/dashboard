@@ -226,8 +226,13 @@
     transition:border-color var(--t), box-shadow var(--t), transform var(--t);
     animation:rise var(--t-slow) both;
   }
-  .orow:hover{ border-color:color-mix(in srgb, var(--accent) 30%, var(--line)); box-shadow:var(--e2); transform:translateY(-1px); }
-  .orow:hover .chev{ transform:translateX(3px); color:var(--accent-fg); }
+  .orow:hover{ border-color:color-mix(in srgb, var(--accent) 30%, var(--line)); box-shadow:var(--e2); }
+  .orow:hover .chev{ color:var(--accent-fg); }
+  /* movement only on a real pointer: a tap fires a hover that sticks */
+  @media (hover: hover) and (pointer: fine){
+    .orow:hover{ transform:translateY(-1px); }
+    .orow:hover .chev{ transform:translateX(3px); }
+  }
   .orow:focus-visible{ outline:none; box-shadow:var(--ring); }
   .inv{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; font-weight:600; font-size:15px; }
   /* its own cell, so the row's align-items:center does the vertical centring */
@@ -301,7 +306,7 @@
   function batchesOpen(){
     const ids = [];
     document.querySelectorAll('.bbody').forEach(function(b){
-      if (b.style.display !== 'none') ids.push(b.id.replace(/^bb_/, ''));
+      if (b.classList.contains('open')) ids.push(b.id.replace(/^bb_/, ''));
     });
     return ids;
   }
@@ -309,7 +314,8 @@
     ids.forEach(function(id){
       const bd = document.getElementById('bb_' + id);
       if (!bd) return;
-      bd.style.display = '';
+      bd.classList.add('open', 'instant');
+      requestAnimationFrame(function(){ bd.classList.remove('instant'); });
       const btn = document.querySelector('[data-x="' + id + '"]');
       if (btn) btn.textContent = 'Hide';
     });
@@ -533,6 +539,7 @@
   .binv-n b{ display:block; }
   .binv-n span{ font-size:11px; color:var(--muted); letter-spacing:.04em; text-transform:uppercase; }
   .binv-b{ padding:0 var(--s4) var(--s4); border-top:1px solid var(--line); }
+  .binv-b.fresh{ animation:rise var(--t-slow) both; }
   .binv-sec{ margin:var(--s4) 0 var(--s2); font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
   .bpay{ display:grid; grid-template-columns:auto auto minmax(0,1fr); gap:var(--s3); padding:var(--s2) 0; border-bottom:1px solid var(--line); font-size:13px; }
   .bpay:last-child{ border-bottom:none; }
@@ -798,7 +805,26 @@
     font-weight:600; color:var(--muted); background:var(--soft); border:1px solid var(--line);
     border-radius:var(--r-pill); padding:2px 8px; vertical-align:middle;
   }
-  .bbody{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line); background:var(--soft); }
+  /* The batch body grows out of a 0fr grid track instead of appearing at full
+     height. min-height:0 on the inner child is what lets the track shrink. */
+  .bbody{
+    display:grid; grid-template-rows:0fr; overflow:hidden; opacity:0;
+    /* visibility keeps a collapsed batch out of the tab order, and because it
+       flips only at the end of a transition it does not cut the close short */
+    visibility:hidden;
+    transition:grid-template-rows var(--t-slow), opacity var(--t), visibility var(--t-slow);
+  }
+  .bbody.open{ grid-template-rows:1fr; opacity:1; visibility:visible; }
+  /* restoring a batch after a page redraw is not a user action; it must not play */
+  .bbody.instant{ transition:none; }
+  /* The clip shell carries no padding or border of its own: either one would
+     count toward the grid track's minimum and leave a strip showing when the
+     batch is closed. The visual box lives one level in. */
+  .bbody-in{ min-height:0; overflow:hidden; }
+  .bbody-pad{
+    padding:var(--s3) var(--s4) var(--s4);
+    border-top:1px solid var(--line); background:var(--soft);
+  }
   .pager{ display:flex; align-items:center; justify-content:center; gap:var(--s3); margin-top:var(--s3); flex-wrap:wrap; }
   .pager-i{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .pager-rows{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
@@ -884,6 +910,9 @@
     background:var(--paper); border:1px solid var(--line); border-radius:var(--r-lg);
     box-shadow:var(--e3); width:100%; max-width:440px; animation:pop var(--t-slow) both;
   }
+  /* leaves the way it arrived, a touch quicker */
+  .modal-bg.leaving{ animation:fadeOut 140ms cubic-bezier(.2,.6,.2,1) both; }
+  .modal-bg.leaving .modal{ animation:popOut 140ms cubic-bezier(.2,.6,.2,1) both; }
   .modal-h{ padding:var(--s5) var(--s5) 0; }
   .modal-h h3{ margin:0; font-size:17px; letter-spacing:0; }
   .modal-h p{ margin:var(--s1) 0 0; font-size:12.5px; color:var(--muted); }
@@ -921,10 +950,24 @@
   @keyframes rise{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
   @keyframes pop{ from{ opacity:0; transform:scale(.97); } to{ opacity:1; transform:none; } }
   @keyframes fade{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes fadeOut{ to{ opacity:0; } }
+  @keyframes popOut{ to{ opacity:0; transform:scale(.98); } }
+  @keyframes sheetIn{ from{ transform:translate3d(0,100%,0); } }
+  @keyframes sheetOut{ to{ transform:translate3d(0,100%,0); } }
   @keyframes shimmer{ from{ background-position:100% 50%; } to{ background-position:0 50%; } }
+  /* Reduced motion, gentler not zero: position changes go, opacity and color
+     stay at their normal durations so entrances still read as entrances. */
   @media (prefers-reduced-motion: reduce){
-    *, *::before, *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important;
-      transition-duration:.01ms !important; }
+    .login, .orow, .sumc, .rrow, .toast{ animation-name:fade; }
+    .modal, .pop, .binv-b.fresh{ animation-name:fade; }
+    .modal-bg.leaving .modal{ animation-name:fadeOut; }
+    /* the batch opens instantly; only its opacity is still animated */
+    .bbody{ transition:opacity var(--t), visibility var(--t-slow); }
+    .orow:hover{ transform:none; }
+    .orow:hover .chev{ transform:none; }
+    .btn:active{ transform:none; }
+    .skel{ animation:none; }
+    #demoBar .demo-dot{ animation:none; }
   }
 
   @media (max-width:820px){
@@ -1023,6 +1066,21 @@
     .modal{
       max-width:none; border-bottom-left-radius:0; border-bottom-right-radius:0;
       max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain; animation:sheetIn 300ms cubic-bezier(.32,.72,0,1);
+    }
+    /* grabber: says the sheet can be pulled, and holds while it scrolls */
+    .modal::before{
+      content:""; display:block; position:sticky; top:0; z-index:2;
+      width:36px; height:4px; margin:var(--s2) auto var(--s2);
+      border-radius:var(--r-pill); background:var(--line-strong);
+    }
+    /* anchored to the bottom edge here, so it arrives and leaves along it */
+    .modal-bg.leaving .modal{ animation:sheetOut 200ms cubic-bezier(.32,.72,0,1) both; }
+    /* a sheet the finger already threw must not be re-animated on close */
+    .modal-bg.sheet-dragged .modal{ animation:none !important; }
+    @media (prefers-reduced-motion: reduce){
+      .modal{ animation-name:fade; }
+      .modal-bg.leaving .modal{ animation-name:fadeOut; }
     }
     .modal-f{ position:sticky; bottom:0; background:var(--paper);
       padding-bottom:calc(var(--s5) + env(safe-area-inset-bottom)); }
@@ -1038,7 +1096,8 @@
     header.top, .toolbar, .back, .btn, .icon-btn, .toast-stack{ display:none !important; }
     body{ background:#fff; }
     .card, .batch, .sumc{ box-shadow:none; border-color:#ccc; break-inside:avoid; }
-    .bbody{ display:block !important; background:#fff; }
+    .bbody{ grid-template-rows:1fr !important; opacity:1 !important; overflow:visible !important; visibility:visible !important; }
+    .bbody-pad{ background:#fff; }
     .pager{ display:none !important; }
     .orow{ animation:none; }
   }
@@ -1624,7 +1683,16 @@
   let modalBg = null;
   let confirmResolve = null;
   function closeModal(){
-    if (modalBg){ modalBg.remove(); modalBg = null; }
+    if (modalBg){
+      const el = modalBg; modalBg = null;
+      el.removeAttribute('id');
+      /* drop any animation:none a drag left behind, so the class below starts
+         the exit rather than losing to an inline override */
+      const sh = el.querySelector('.modal');
+      if (sh) sh.style.animation = '';
+      el.classList.add('leaving');
+      setTimeout(function(){ el.remove(); }, 140);
+    }
     if (confirmResolve){ const r = confirmResolve; confirmResolve = null; r(false); }
   }
   /* Replaces the browser's confirm(). The verb the question opens with
@@ -1722,6 +1790,9 @@
   let batchPage = {};
   let canBill = false, billState = 'idle', billErr = '', billSum = null, billInv = [], billSeries = [];
   let billPays = {}, billDocs = {}, billOpen = null, billTab = 'open', billChart = 'money';
+  /* set for the one render that follows a click, so the async payment and
+     document renders underneath do not replay the entry */
+  let billFresh = null;
   let billNotes = {};
   let notes = [], notesFor = null, notesErr = '';
   let rmaTickets = [], rmaParts = [], rmaShipments = [], rmaComments = [], rmaAttachments = [], rmaEvents = [], rmaContacts = [];
@@ -2017,7 +2088,7 @@
       { l:'Shipped',           n:shipped, c:'var(--ok)' },
       { l:'Preparing to ship', n:prep,    c:'var(--info)' },
       { l:'Ready to assign',   n:built,   c:'var(--accent)' },
-      { l:'Remaining to build',n:toBuild, c:'var(--line-strong)' }
+      { l:'Remaining to build',n:toBuild, c:'var(--line-strong)', k:'rem' }
     ];
     return '<div class="card">' +
       '<h2>Pipeline <span class="subtle">across your open orders</span></h2>' +
@@ -2025,7 +2096,7 @@
       '<div class="pipes">units in ' + open + ' open order' + (open === 1 ? '' : 's') +
         (toBuild ? ' \u00b7 ' + num(toBuild) + ' left to build' : ' \u00b7 all built') + '</div>' +
       '<div class="pipebar">' + segs.map(function(s){
-        return s.n ? '<i style="width:' + (s.n/total*100) + '%;background:' + s.c + '" title="' +
+        return s.n ? '<i class="' + (s.k || '') + '" style="width:' + (s.n/total*100) + '%;background:' + s.c + '" title="' +
                      s.l + ': ' + num(s.n) + '"></i>' : '';
       }).join('') + '</div>' +
       '<div class="pipeleg">' + segs.map(function(s){
@@ -2104,7 +2175,7 @@
   function batchesOpen(){
     const ids = [];
     document.querySelectorAll('.bbody').forEach(function(b){
-      if (b.style.display !== 'none') ids.push(b.id.replace(/^bb_/, ''));
+      if (b.classList.contains('open')) ids.push(b.id.replace(/^bb_/, ''));
     });
     return ids;
   }
@@ -2112,7 +2183,8 @@
     ids.forEach(function(id){
       const bd = document.getElementById('bb_' + id);
       if (!bd) return;
-      bd.style.display = '';
+      bd.classList.add('open', 'instant');
+      requestAnimationFrame(function(){ bd.classList.remove('instant'); });
       const btn = document.querySelector('[data-x="' + id + '"]');
       if (btn) btn.textContent = 'Hide';
     });
@@ -2246,7 +2318,7 @@
       '<div class="bagebar">' + rowsAge.map(function(b){
         const v = Number(b[1] || 0);
         if (!(v > 0.005)) return '';
-        return '<i class="' + b[2] + '" style="flex:0 0 ' + (v / tot * 100).toFixed(2) + '%" ' +
+        return '<i class="' + b[2] + '" style="flex-grow:0;flex-shrink:0;flex-basis:' + (v / tot * 100).toFixed(2) + '%" ' +
           'title="' + esc(b[0] + ' \u00b7 ' + bmoney(v)) + '"></i>';
       }).join('') + '</div>' +
       '<div class="bagekey">' + rowsAge.map(function(b){
@@ -2393,7 +2465,7 @@
               '<div><span class="chip ' + chip + '">' + esc(r.state) + '</span></div>' +
             '</div>' +
             (isOpen
-              ? '<div class="binv-b">' +
+              ? '<div class="binv-b' + (String(billFresh) === String(r.order_id) ? ' fresh' : '') + '">' +
                   (r.held ? '<p class="muted" style="margin:var(--s3) 0 0;font-size:13px;">This invoice is awaiting payment in full. The build details stay hidden until it is settled.</p>' : '') +
                   '<div class="binv-sec">Payments</div>' +
                   (billPays[r.order_id] === undefined
@@ -2438,7 +2510,9 @@
 
   async function billOpenRow(id){
     billOpen = String(billOpen) === String(id) ? null : id;
+    billFresh = billOpen;
     renderBilling();
+    billFresh = null;
     if (!billOpen) return;
     if (billPays[id] === undefined){
       const r = await SB.rpc('portal_billing_payments', {
@@ -2794,11 +2868,11 @@
           ['Shipped', st.shipped, 'var(--ok)'],
           ['Preparing to ship', st.assigned, 'var(--info)'],
           ['Ready to assign', st.built, 'var(--accent)'],
-          ['Remaining to build', st.remaining, 'var(--line-strong)']
+          ['Remaining to build', st.remaining, 'var(--line-strong)', 'rem']
         ];
         const done = Math.round(st.shipped / st.ordered * 100);
         return '<div class="oprog"><div class="oprog-bar">' + segs.map(function(s){
-            return s[1] ? '<i style="width:' + (s[1]/st.ordered*100) + '%;background:' + s[2] + '" title="' + s[0] + ': ' + num(s[1]) + '"></i>' : '';
+            return s[1] ? '<i class="' + (s[3] || '') + '" style="width:' + (s[1]/st.ordered*100) + '%;background:' + s[2] + '" title="' + s[0] + ': ' + num(s[1]) + '"></i>' : '';
           }).join('') + '</div>' +
           '<div class="oprog-l"><span><b>' + done + '%</b> shipped</span>' +
           '<span>' + (st.remaining ? '<b>' + num(st.remaining) + '</b> left to build' : 'all ' + num(st.ordered) + ' built') + '</span></div></div>';
@@ -2837,7 +2911,7 @@
             '<div class="bacts">' +
               '<button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
           '</div>' +
-          '<div class="bbody" id="bb_' + esc(b.id) + '" style="display:none;">' +
+          '<div class="bbody" id="bb_' + esc(b.id) + '"><div class="bbody-in"><div class="bbody-pad">' +
             '<div class="bbar"><button class="btn sm" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy Serial Numbers</button></div>' +
             (function(){
               const pages = Math.max(1, Math.ceil(bu.length / pageSize()));
@@ -2869,7 +2943,7 @@
                     }).join('') + '</select></label>' +
                 '</div>';
             })() +
-          '</div>' +
+          '</div></div></div>' +
         '</div>';
       }).join('')
       : '<div class="empty">' +
@@ -2885,14 +2959,14 @@
        belongs on the billing view, behind its own permission. */
     $('csv').addEventListener('click', function(){ exportCsv(o); });
     $('prt').addEventListener('click', function(){
-      document.querySelectorAll('.bbody').forEach(function(x){ x.style.display = ''; });
+      document.querySelectorAll('.bbody').forEach(function(x){ x.classList.add('open', 'instant'); });
       window.print();
     });
     /* the whole header row is the target; the buttons inside it keep their own jobs */
     function toggleBatch(id){
       const bd = $('bb_' + id); if (!bd) return;
-      const open = bd.style.display !== 'none';
-      bd.style.display = open ? 'none' : '';
+      const open = bd.classList.contains('open');
+      bd.classList.toggle('open', !open);
       const btn = document.querySelector('[data-x="' + id + '"]');
       if (btn) btn.textContent = open ? 'Details' : 'Hide';
     }
@@ -3790,6 +3864,9 @@
     if (top + p.offsetHeight > window.innerHeight - 12) top = Math.max(12, r.top - p.offsetHeight - 6);
     p.style.left = Math.round(left) + 'px';
     p.style.top = Math.round(top) + 'px';
+    /* grow out of the word that was clicked rather than the popover's centre */
+    const ox = Math.max(8, Math.min(p.offsetWidth - 8, r.left + r.width / 2 - left));
+    p.style.transformOrigin = Math.round(ox) + 'px ' + (top > r.top ? '0' : p.offsetHeight + 'px');
   }
   document.addEventListener('mouseover', function(e){
     const a = e.target.closest && e.target.closest('.cfg');
@@ -3813,6 +3890,263 @@
   window.addEventListener('resize', popHide);
 
   init();
+
+  /* ---------- fluid bottom sheet ----------
+     1:1 finger tracking, rubber-banding past the top edge, momentum
+     projection at release and an interruptible critically-damped spring.
+     Runs only where the modal is actually laid out as a bottom sheet. */
+  (function(){
+    var DECEL = 0.998;              /* Apple's scroll deceleration rate */
+    var RESPONSE = 0.35, ZETA = 1;  /* critically damped: no overshoot */
+    var THRESHOLD = 10;             /* hysteresis before a drag commits */
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var raf = 0;
+
+    function project(v){ return (v / 1000) * DECEL / (1 - DECEL); }
+    function rubberband(over, dim){
+      var c = 0.55;
+      return (over * dim * c) / (dim + c * Math.abs(over));
+    }
+    function paint(d){ d.sheet.style.transform = 'translate3d(0,' + d.y.toFixed(2) + 'px,0)'; }
+    function clear(d){
+      d.sheet.style.transform = '';
+      d.sheet.style.willChange = '';
+      /* touch-action goes back so the sheet scrolls again. animation does NOT:
+         clearing an inline animation:none starts the entry animation over at
+         frame 0 rather than resuming it, which would replay the slide-up every
+         time a drag sprang back. The close path clears it instead. */
+      d.sheet.style.touchAction = '';
+    }
+
+    /* Semi-implicit spring. Starts from the live on-screen value and the
+       velocity the finger had, so there is no seam between drag and animation
+       and no jump when a drag interrupts a settle already in flight. */
+    function spring(d, target, v0, done){
+      var w = 2 * Math.PI / RESPONSE, k = w * w, c = 2 * ZETA * w;
+      var v = v0, last = 0;
+      cancelAnimationFrame(raf);
+      function step(now){
+        /* same frame-timestamp skew guard as the count-up: a negative dt would
+           integrate the spring backwards on its first step */
+        if (!last) last = now;
+        var dt = Math.min(0.032, Math.max(0, (now - last) / 1000)) || 0.016;
+        last = now;
+        v += (-k * (d.y - target) - c * v) * dt;
+        d.y += v * dt;
+        if (Math.abs(d.y - target) < 0.5 && Math.abs(v) < 40){
+          d.y = target; paint(d); if (done) done(); return;
+        }
+        paint(d);
+        raf = requestAnimationFrame(step);
+      }
+      raf = requestAnimationFrame(step);
+    }
+
+    function settle(d){
+      var v = d.vel();
+      /* land where the throw is going, not where the finger let go */
+      var out = (d.y + project(v)) > d.h * 0.5 || d.y > d.h * 0.85;
+      if (!out){
+        if (reduce.matches){ d.y = 0; paint(d); clear(d); return; }
+        spring(d, 0, v, function(){ clear(d); });
+        return;
+      }
+      d.bg.classList.add('sheet-dragged');
+      if (reduce.matches){ closeModal(); return; }
+      spring(d, d.h, Math.max(v, 300), function(){ closeModal(); });
+    }
+
+    document.addEventListener('pointerdown', function(e){
+      if (!e.target.closest) return;
+      var sheet = e.target.closest('.modal');
+      if (!sheet) return;
+      var bg = sheet.closest('.modal-bg');
+      if (!bg || getComputedStyle(bg).alignItems !== 'flex-end') return;
+      if (e.target.closest('input, textarea, select, button, a, label')) return;
+      if (sheet.scrollTop > 0) return;
+
+      cancelAnimationFrame(raf);
+      /* take over from the entry animation at whatever value it reached */
+      var y0 = 0, tf = getComputedStyle(sheet).transform;
+      if (tf && tf !== 'none'){ try { y0 = new DOMMatrixReadOnly(tf).m42 || 0; } catch(err){} }
+
+      var hist = [];
+      var d = {
+        bg: bg, sheet: sheet, y: y0, h: sheet.offsetHeight || 1,
+        vel: function(){
+          if (hist.length < 2) return 0;
+          var f = hist[0], l = hist[hist.length - 1], dt = (l.t - f.t) / 1000;
+          return dt > 0 ? (l.y - f.y) / dt : 0;
+        }
+      };
+      var startY = e.clientY, committed = false;
+      sheet.style.willChange = 'transform';
+      try { sheet.setPointerCapture(e.pointerId); } catch(err){}
+
+      function move(ev){
+        var dy = ev.clientY - startY;
+        if (!committed){
+          if (Math.abs(dy) < THRESHOLD) return;
+          committed = true;
+          /* only now take the sheet off its entry animation and off the
+             browser's panning, so a plain tap leaves both untouched */
+          sheet.style.animation = 'none';
+          sheet.style.touchAction = 'none';
+        }
+        hist.push({ y: dy, t: ev.timeStamp });
+        while (hist.length > 6) hist.shift();
+        /* continue from where the sheet actually is, not from zero */
+        var raw = y0 + dy;
+        /* past the top edge it resists progressively instead of stopping dead */
+        d.y = raw >= 0 ? raw : -rubberband(-raw, d.h);
+        paint(d);
+        if (ev.cancelable) ev.preventDefault();
+      }
+      function up(){
+        sheet.removeEventListener('pointermove', move);
+        sheet.removeEventListener('pointerup', up);
+        sheet.removeEventListener('pointercancel', up);
+        if (!committed){ clear(d); return; }
+        settle(d);
+      }
+      sheet.addEventListener('pointermove', move);
+      sheet.addEventListener('pointerup', up);
+      sheet.addEventListener('pointercancel', up);
+    });
+  })();
+
+  /* ---------- bars fill up on arrival ----------
+     A progress bar is full at every moment; only the split moves. So each
+     track animates as a unit: the coloured segments grow from nothing while
+     the grey remainder is eaten away from its full width. Segments of one bar
+     share a delay so the bar never shows a gap; the stagger is between bars.
+     Armed only by navigation — a click on the nav, or back/forward. Renders
+     triggered by anything else, hover and tooltips included, never arm it. A short grace window covers async follow-up renders, then it
+     disarms — so re-renders inside a view (tab switches, an invoice opening,
+     batch paging) never refill. */
+  (function(){
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var SEL = '.bar i, .oprog-bar i, .pipebar i, .bmeter-f, .bagebar i, .bch-bar, .binv-m i';
+    var PROPS = ['width', 'height', 'flex-basis'];
+    var FILL = 620, STEP = 45, MAXDELAY = 270, GRACE = 900;
+    var armed = true, disarming = 0, observer = null, lastKey = null;
+    var groups = [], pending = 0;
+
+    /* Which view we are looking at. A change here means bars the user has not
+       seen yet, so the fill re-arms; anything else is a re-render. */
+    function viewKey(){
+      var el = document.querySelector('[data-pview].on, .nav-item.active, #tabbar .tab-btn.active');
+      var name = el ? (el.getAttribute('data-pview') || el.getAttribute('data-goto') || el.textContent.trim()) : '';
+      return name + '|' + location.search;
+    }
+    function armFor(key){
+      lastKey = key;
+      armed = true;
+      if (disarming){ clearTimeout(disarming); disarming = 0; }
+      /* Views that switch by toggling display keep their nodes, so the
+         per-node flags have to go or those bars could only ever fill once. */
+      document.querySelectorAll('[data-filled]').forEach(function(el){
+        delete el.dataset.filled;
+      });
+      /* A display switch mutates no nodes, so nothing would call scan. Look
+         again after the app's own click handler has had its frame. */
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ if (armed) scan(document.body); });
+      });
+    }
+
+    function read(el){
+      for (var i = 0; i < PROPS.length; i++){
+        var v = el.style.getPropertyValue(PROPS[i]);
+        if (v) return { prop: PROPS[i], target: v };
+      }
+      return null;
+    }
+    function pct(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+    function flush(){
+      pending = 0;
+      if (!groups.length) return;
+      var batch = groups; groups = [];
+      if (!disarming){
+        disarming = setTimeout(function(){ armed = false; }, GRACE);
+      }
+      /* one reflow for the whole batch, so every bar starts from a committed state */
+      void document.body.offsetWidth;
+      batch.forEach(function(list, i){
+        var delay = Math.min(i * STEP, MAXDELAY);
+        list.forEach(function(q){
+          q.el.style.setProperty('transition', q.prop + ' ' + FILL + 'ms cubic-bezier(.2,.6,.2,1) ' + delay + 'ms');
+          q.el.style.setProperty(q.prop, q.target);
+        });
+      });
+      /* hand the properties back to the stylesheet once the fill has landed */
+      setTimeout(function(){
+        batch.forEach(function(list){
+          list.forEach(function(q){ q.el.style.removeProperty('transition'); });
+        });
+      }, FILL + MAXDELAY + 60);
+    }
+
+    function scan(root){
+      if (!armed || !root || !root.querySelectorAll) return;
+      var found = [];
+      if (root.matches && root.matches(SEL)) found.push(root);
+      root.querySelectorAll(SEL).forEach(function(el){ found.push(el); });
+
+      var byTrack = new Map();
+      found.forEach(function(el){
+        if (el.dataset.filled || !el.parentNode) return;
+        /* a bar in a hidden view is left alone, so it still fills when its
+           view is the one being shown */
+        if (!el.offsetParent) return;
+        el.dataset.filled = '1';
+        var r = read(el);
+        if (!r) return;
+        var list = byTrack.get(el.parentNode);
+        if (!list){ list = []; byTrack.set(el.parentNode, list); }
+        list.push({ el: el, prop: r.prop, target: r.target, rem: el.classList.contains('rem') });
+      });
+
+      byTrack.forEach(function(list){
+        var total = 0;
+        list.forEach(function(q){ total += pct(q.target); });
+        list.forEach(function(q){
+          q.el.style.setProperty('transition', 'none');
+          /* the remainder starts owning the whole track; progress starts empty */
+          q.el.style.setProperty(q.prop, q.rem ? total + '%' : '0%');
+        });
+        groups.push(list);
+      });
+
+      if (groups.length && !pending) pending = requestAnimationFrame(flush);
+    }
+
+    /* the pages render by writing innerHTML in dozens of places; watching for
+       new nodes beats wiring a call into every one of them */
+    observer = new MutationObserver(function(muts){
+      if (!armed) return;
+      muts.forEach(function(m){
+        for (var i = 0; i < m.addedNodes.length; i++){
+          if (m.addedNodes[i].nodeType === 1) scan(m.addedNodes[i]);
+        }
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    /* Navigation is the signal, caught on the way down so we are armed before
+       the app's own handler paints. Reading the view from the DOM alone is not
+       enough: the nav class and the content are not written in a fixed order. */
+    document.addEventListener('click', function(e){
+      if (!e.target.closest) return;
+      if (e.target.closest('[data-pview], .nav-item, [data-goto], #tabbar .tab-btn')) armFor(viewKey());
+    }, true);
+    /* back and forward are navigation too; nothing else may arm */
+    window.addEventListener('popstate', function(){ armFor(viewKey()); });
+
+    lastKey = viewKey();
+    scan(document.body);
+  })();
 })();
 </script>
 </body>
