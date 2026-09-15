@@ -3550,7 +3550,8 @@
   }
   async function rmaEvent(t, kind, from, to, detail){
     const r = await SB.from('rma_events').insert({ rma_id: t.id, kind: kind, from_val: from || null, to_val: to || null, detail: detail || null, actor_id: session.user.id, actor_type: 'customer', actor_name: myName() }).select().single();
-    if (!r.error && r.data) rmaEvents.push(r.data);
+    if (r.error){ toast('Saved, but Novatech may not have been alerted: ' + r.error.message, 'bad', 8000); return; }
+    if (r.data) rmaEvents.push(r.data);
   }
 
   /* ---- attachments ---- */

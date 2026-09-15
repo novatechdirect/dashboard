@@ -10078,7 +10078,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   async function rmaEvent(t, kind, from, to, detail){
     const row = { rma_id: t.id, kind: kind, from_val: from || null, to_val: to || null, detail: detail || null, actor_id: session.user.id, actor_type: 'staff', actor_name: rmaMeName() };
     const r = await SB.from('rma_events').insert(row).select().single();
-    if (!r.error && r.data) rmaEvents.push(r.data);
+    if (r.error){ toast('Saved, but the timeline entry and its alerts did not go out: ' + r.error.message, 'bad', 8000); return; }
+    if (r.data) rmaEvents.push(r.data);
   }
   async function rmaSetStatus(t, status, patch, detail){
     const from = t.status;
@@ -10272,10 +10273,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function rmaApproveModal(t){
     const u = rmaUnitById(t.unit_id) || rmaUnitBySerial(t.serial), w = rmaWarranty(u);
     const inW = w.key === 'active' || w.key === 'expiring';
-    const bg = mgModal(mgModalHead('Approve ' + rmaNo(t), 'Warranty on this unit: ' + w.label) +
+    /* a legacy unit has no warranty record to check, which is not the same as
+       being out of warranty — the call is yours, so the option stays open */
+    const legacy = !!t.legacy && !u;
+    const bought = t.legacy_purchased_on ? rmaDate(t.legacy_purchased_on) : null;
+    const bg = mgModal(mgModalHead('Approve ' + rmaNo(t),
+        legacy ? 'Legacy order \u2014 no warranty record in the system' + (bought ? ', bought around ' + bought + ' per the technician' : '')
+               : 'Warranty on this unit: ' + w.label) +
       '<div class="rma-radio">' +
-        '<label><input type="radio" name="rmaCov" value="warranty"' + (inW ? ' checked' : ' disabled') + '><div><b>Under warranty</b><small>' + (inW ? 'Covered. Part ships at no charge.' : 'Not available \u2014 ' + esc(w.label.toLowerCase()) + '.') + '</small></div></label>' +
-        '<label><input type="radio" name="rmaCov" value="goodwill"' + (inW ? '' : ' checked') + '><div><b>Goodwill</b><small>Out of warranty, but we cover it anyway.</small></div></label>' +
+        '<label><input type="radio" name="rmaCov" value="warranty"' + (inW ? ' checked' : (legacy ? '' : ' disabled')) + '><div><b>Under warranty</b><small>' +
+          (inW ? 'Covered. Part ships at no charge.'
+               : legacy ? 'Covered at no charge. Check the purchase date against your own records first \u2014 nothing here can verify it.'
+               : 'Not available \u2014 ' + esc(w.label.toLowerCase()) + '.') + '</small></div></label>' +
+        '<label><input type="radio" name="rmaCov" value="goodwill"' + (inW || legacy ? '' : ' checked') + '><div><b>Goodwill</b><small>Out of warranty, but we cover it anyway.</small></div></label>' +
         '<label><input type="radio" name="rmaCov" value="billable"><div><b>Billable</b><small>We ship the part and invoice the customer for it.</small></div></label>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="rmaApCancel" type="button">Back</button><button class="primary" id="rmaApGo" type="button">Approve</button></div>');
@@ -10285,7 +10295,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       this.disabled = true;
       const ok = await rmaSetStatus(t, 'approved', { coverage: cov }, RMA_COVERAGE[cov]);
       if (ok){
-        await rmaEvent(t, 'coverage', null, cov, null);
+        await rmaEvent(t, 'coverage', null, cov,
+          legacy && cov === 'warranty' ? 'Legacy order \u2014 warranty accepted on Novatech\u2019s records' + (bought ? ', bought around ' + bought : '') : null);
         const ps = rmaTicketParts(t.id).filter(function(p){ return p.status === 'requested'; });
         if (ps.length){ await SB.from('rma_parts').update({ status: 'approved' }).in('id', ps.map(function(p){ return p.id; })); ps.forEach(function(p){ p.status = 'approved'; }); }
         rmaRenderDetail();
