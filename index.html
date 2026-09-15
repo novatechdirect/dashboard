@@ -2398,6 +2398,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-pool-wrap{ max-height:none; overflow-y:visible; }
   .ord-pool-table td{ padding-top:12px; padding-bottom:12px; }
 
+  /* An open invoice carries payments and documents below it, which a 440px
+     box cuts in half. Let the page take the scroll instead. */
+  .bill-wrap{ max-height:none; overflow-y:visible; }
+
   /* select N */
   .ord-seln{ display:inline-flex; align-items:center; gap:var(--s2); }
   .ord-seln label{ font-size:12px; color:var(--muted); }
@@ -2871,12 +2875,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .rma-contact + .rma-contact{ padding-top:var(--s4); border-top:1px solid var(--line); }
   .rma-contact > b{ font-size:14px; }
   .rma-contact .rma-addr{ margin-top:var(--s2); color:var(--muted); }
-  .rma-slip-act{ margin-top:var(--s3); }
+  .rma-slip-act{ margin-top:var(--s3); display:flex; gap:var(--s2); flex-wrap:wrap; }
+  .rma-slip-act button{ display:inline-flex; align-items:center; gap:6px; }
+  .rma-slip-act .nt-ico{ width:15px; height:15px; flex:0 0 auto; }
   @media (max-width:820px){
-    /* one short action; it belongs beside the card title, not below the address */
-    .rma-ship-card{ position:relative; }
-    .rma-ship-card .rma-slip-act{ position:absolute; top:16px; right:16px; margin-top:0; }
-    .rma-ship-card .card-title{ padding-right:110px; }
+    /* two actions no longer fit beside the title, so they stay under the address */
+    .rma-ship-card .rma-slip-act{ position:static; margin-top:var(--s3); }
+    .rma-ship-card .card-title{ padding-right:0; }
   }
   @media (max-width:720px){
     .rma-head{ gap:var(--s3); margin-bottom:var(--s4); }
@@ -2957,6 +2962,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .rma-flag.done{ background:var(--soft); color:var(--muted); border-color:var(--line); }
   .ord-serial-hit{ color:var(--ink); }
+  /* carrier logo beside its tracking number, never touching it */
+  .rma-msg .rma-unit{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; }
   .rma-unit-hero{ padding-bottom:var(--s3); border-bottom:1px solid var(--line); margin-bottom:var(--s4); }
   .rma-unit-serial{ font-size:18px; font-weight:600; letter-spacing:0; }
   .rma-unit-build{ color:var(--muted); font-size:13px; margin-top:2px; }
@@ -6797,7 +6804,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
     let tI = 0, tP = 0;
-    t.innerHTML = '<div class="table-wrap stack-wrap"><table class="hist-table stack bill-table">' +
+    t.innerHTML = '<div class="table-wrap stack-wrap bill-wrap"><table class="hist-table stack bill-table">' +
       '<thead><tr><th>Invoice</th><th>Customer</th><th>Dated</th><th class="bill-num">Total</th>' +
       '<th class="bill-num">Paid</th><th class="bill-num">Balance</th><th>Status</th></tr></thead><tbody>' +
       rows.map(function(r){
@@ -9862,6 +9869,32 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (t && t.store_location_id){ const l = ordLocations.find(function(x){ return String(x.id) === String(t.store_location_id); }); if (l) return l; }
     return rmaUnitStore(u);
   }
+  /* Copy an address verbatim, line breaks and all, with no modal in the way.
+     execCommand goes first on purpose: it runs inside the click gesture and
+     works on http and inside frames, where navigator.clipboard often does not. */
+  function rmaCopyAddress(text, what){
+    const label = what || 'Address';
+    let ok = false;
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      if (ta.setSelectionRange) ta.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy');
+      ta.remove();
+    } catch(e){ ok = false; }
+    if (ok){ toast(label + ' copied', 'ok'); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(
+        function(){ toast(label + ' copied', 'ok'); },
+        function(){ toast('Could not reach the clipboard \u2014 select the address and copy it by hand.', 'bad', 6000); });
+      return;
+    }
+    toast('Could not reach the clipboard \u2014 select the address and copy it by hand.', 'bad', 6000);
+  }
   /* where the part goes: the snapshot on the ticket, else the store, else the technician on file */
   function rmaShipToText(t, u){
     if (t.ship_to_text) return t.ship_to_text;
@@ -9895,7 +9928,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     let actions = '';
     if (can){
-      const closeBtn = '<button class="' + (t.status === 'return_received' ? 'primary' : 'ghost') + ' btn-sm" data-rmaact="close">Close RMA</button>';
+      const gotReturn = rmaTicketShips(t.id).some(function(s){ return s.direction === 'return' && s.received_at; });
+      const closeBtn = '<button class="' + (t.status === 'return_received' || gotReturn ? 'primary' : 'ghost') + ' btn-sm" data-rmaact="close">Close RMA</button>';
       const del = '<button class="ghost btn-sm" data-rmaact="delete" title="Delete this RMA and everything on it">Delete</button>';
       if (t.status === 'new' || t.status === 'needs_info')
         actions = '<button class="primary btn-sm" data-rmaact="approve">Approve</button>' +
@@ -9903,13 +9937,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                   '<button class="ghost btn-sm" data-rmaact="deny">Deny</button>' + closeBtn +
                   '<button class="ghost btn-sm" data-rmaact="cancel">Cancel</button>' + del;
       else if (t.status === 'approved')
-        actions = '<button class="primary btn-sm" data-rmaact="ship">Mark shipped</button><button class="ghost btn-sm" data-rmaact="slip">Packing slip</button>' +
+        /* the technician may send the failed part back before we ship out */
+        actions = '<button class="primary btn-sm" data-rmaact="ship">Mark shipped</button>' +
+                  (rmaTicketShips(t.id).some(function(s){ return s.direction === 'return' && !s.received_at; })
+                    ? '<button class="ghost btn-sm" data-rmaact="returned">Return received</button>' : '') +
+                  '<button class="ghost btn-sm" data-rmaact="slip">Packing slip</button>' +
                   '<button class="ghost btn-sm" data-rmaact="deny">Deny</button>' + closeBtn + del;
       else if (t.status === 'shipped')
-        actions = '<button class="primary btn-sm" data-rmaact="returned">Return received</button><button class="ghost btn-sm" data-rmaact="ship">Add shipment</button>' +
+        /* an early return may already be logged and received, in which case
+           asking for it again would file a second return shipment */
+        actions = (gotReturn ? '' : '<button class="primary btn-sm" data-rmaact="returned">Return received</button>') +
+                  '<button class="ghost btn-sm" data-rmaact="ship">Add shipment</button>' +
                   '<button class="ghost btn-sm" data-rmaact="slip">Packing slip</button>' + closeBtn + del;
       else if (t.status === 'return_received')
-        actions = closeBtn + del;
+        actions = (rmaTicketShips(t.id).some(function(s){ return s.direction === 'outbound'; })
+                    ? '' : '<button class="primary btn-sm" data-rmaact="ship">Mark shipped</button>') + closeBtn + del;
       else
         actions = '<button class="ghost btn-sm" data-rmaact="reopen">Reopen</button>' + del;
     }
@@ -9959,16 +10001,25 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     function shipRow(s){
       return '<div class="rma-msg"><div class="rma-msg-h"><b>' + (s.direction === 'return' ? 'Return' : 'Outbound') + (s.ship_date ? ' \u00b7 ' + rmaDate(s.ship_date) : '') + '</b><span>' + (s.received_at ? 'received ' + rmaDate(s.received_at) : (s.direction === 'return' ? 'on its way' : '')) + '</span></div>' +
         '<div class="rma-unit">' + (s.carrier ? ordCarrierBadge(s.carrier) : '') + ordTrackHtml(s.carrier, s.tracking_no ? [s.tracking_no] : []) + '</div>' +
-        (s.ship_to ? '<p class="muted-sm" style="margin-top:6px;white-space:pre-wrap;">' + esc(s.ship_to) + '</p>' : '') +
+        /* a return has no ship_to of its own — it comes back to us, so show
+           the return address the technician was given */
+        ((s.ship_to || (s.direction === 'return' ? rmaSettings.rma_return_address : '')) ?
+          '<p class="muted-sm" style="margin-top:6px;white-space:pre-wrap;">' + esc(s.ship_to || rmaSettings.rma_return_address) + '</p>' : '') +
         (s.note ? '<p class="muted-sm" style="margin-top:4px;">' + esc(s.note) + '</p>' : '') + '</div>';
     }
     const shipHtml = (out.length || ret.length)
       ? '<div class="rma-thread">' + out.map(shipRow).join('') + ret.map(shipRow).join('') + '</div>'
       : '<p class="muted-sm" style="margin:0;">Nothing shipped yet.</p>';
-    const shipToHtml = '<dl class="rma-dl" style="margin-top:var(--s3);"><dt>Ship to</dt><dd>' +
+    const shipToDl = '<dl class="rma-dl" style="margin-top:var(--s3);"><dt>Ship to</dt><dd>' +
       ({ hq:'Their head office', store:'The store', custom:'An address the technician gave' }[t.ship_to_kind] || 'The technician') +
-      (shipTo ? '<div class="rma-addr">' + esc(shipTo) + '</div>' : '<div class="muted-sm" style="margin-top:4px;">No address on file \u2014 ' + (t.ship_to_kind === 'hq' ? 'set their head office in Admin \u2192 Customers.' : 'add the technician in Admin \u2192 RMA.') + '</div>') + '</dd></dl>' +
-      (can && ['approved','shipped','return_received','closed'].indexOf(t.status) >= 0 ? '<div class="rma-slip-act"><button class="ghost btn-sm" data-rmaact="slip">Packing slip</button></div>' : '');
+      (shipTo ? '<div class="rma-addr">' + esc(shipTo) + '</div>' : '<div class="muted-sm" style="margin-top:4px;">No address on file \u2014 ' + (t.ship_to_kind === 'hq' ? 'set their head office in Admin \u2192 Customers.' : 'add the technician in Admin \u2192 RMA.') + '</div>') + '</dd></dl>';
+    const shipSlipBtn =
+      (can && ['approved','shipped','return_received','closed'].indexOf(t.status) >= 0 ? '<button class="ghost btn-sm" data-rmaact="slip">Packing slip</button>' : '');
+    /* ShipStation wants the address pasted in, so hand it over in one click */
+    const shipToHtml = shipToDl +
+      (shipTo || shipSlipBtn ? '<div class="rma-slip-act">' +
+        (shipTo ? '<button class="ghost btn-sm" data-rmaact="copyaddr" title="Copy the address for ShipStation">' + ntIco('clipboard', 'nt-ico') + 'Copy address</button>' : '') +
+        shipSlipBtn + '</div>' : '');
 
     const thread = cmts.length ? cmts.map(function(c){
         const atts = rmaAttachments.filter(function(x){ return x.comment_id === c.id; });
@@ -10177,6 +10228,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     if (act === 'legacylink') return rmaLinkOrderModal(t);
     if (act === 'slip'){ rmaPackingSlip(t); return; }
+    if (act === 'copyaddr'){
+      const addr = rmaShipToText(t, rmaUnitById(t.unit_id) || rmaUnitBySerial(t.serial));
+      if (!addr){ toast('No address on this ticket yet.', 'warn'); return; }
+      rmaCopyAddress(addr, 'Address'); return;
+    }
     if (act === 'approve') return rmaApproveModal(t);
     if (act === 'deny') return rmaReasonModal(t, 'Deny this RMA', 'Tell the technician why. They will see this on the ticket.', 'Deny', async function(reason){
       await rmaSetStatus(t, 'denied', { denial_reason: reason }, reason);
@@ -10352,7 +10408,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           rmaShipments.push(r.data);
         }
         await rmaEvent(t, 'shipment', null, 'return', 'Received' + (trk ? ' \u00b7 ' + carrier + ' ' + trk : ''));
-        await rmaSetStatus(t, 'return_received', null, null);
+        /* an early return must not skip the ticket past "shipped" — if the
+           replacement has not gone out yet, log the receipt and stay put */
+        if (rmaTicketShips(t.id).some(function(s){ return s.direction === 'outbound'; })){
+          await rmaSetStatus(t, 'return_received', null, null);
+        } else {
+          toast('Return logged \u2014 the ticket stays approved until the replacement ships', 'ok', 6000);
+          rmaRenderDetail(); rmaRenderList();
+        }
         mgCloseModal(); return;
       }
       const shipTo = bg.querySelector('#rmaShTo').value.trim() || null;

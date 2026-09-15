@@ -671,6 +671,12 @@
   .rtl li.w::before{ background:var(--warn); }
   .rtl li.b::before{ background:var(--bad); }
   .raddr{ white-space:pre-wrap; font-size:13px; color:var(--muted); margin-top:6px; }
+  /* the return address, with the one-click copy the label maker needs */
+  .rretaddr{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4);
+    margin-top:var(--s3); padding-top:var(--s3); border-top:1px solid var(--warn-line); }
+  .rretaddr-k{ font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:600; }
+  .rretaddr .raddr{ color:inherit; }
+  .rretaddr button{ flex:0 0 auto; }
   .rnext{ font-size:13.5px; margin:0 0 var(--s4); padding:var(--s3) var(--s4); background:var(--soft); border-radius:var(--r-sm); border:1px solid var(--line); }
   .rnext.w{ background:var(--warn-bg); border-color:var(--warn-line); color:var(--warn-ink); }
   .rnext.b{ background:var(--bad-bg); border-color:var(--bad-line); color:var(--bad-ink); }
@@ -3405,7 +3411,9 @@
     const evts = rmaEvents.filter(function(x){ return x.rma_id === id && (x.kind === 'status' || x.kind === 'shipment'); });
     const loose = rmaAttachments.filter(function(x){ return x.rma_id === id && !x.comment_id; });
     const editable = t.status === 'new' || t.status === 'needs_info';
-    const needReturn = t.status === 'shipped' && !ret.length;
+    /* the failed part can go back as soon as the RMA is approved — no reason to
+       make the technician wait for our outbound shipment first */
+    const needReturn = (t.status === 'approved' || t.status === 'shipped') && !ret.length;
     const serialLink = o ? '<a class="mono rlink" data-goorder="' + esc(o.id) + '" title="Open this unit\u2019s order">' + esc(t.serial) + '</a>' : '<span class="mono">' + esc(t.serial) + '</span>';
 
     function shipRow(s){
@@ -3420,7 +3428,15 @@
         '<ul class="rparts">' + parts.map(function(x){ return '<li><span>' + esc(x.description) + '</span><span class="mono">\u00d7 ' + x.qty + '</span></li>'; }).join('') + '</ul>'
       : '';
     const returnBox = needReturn
-      ? '<div class="rnext w" style="margin:var(--s4) 0 0;"><b>Send the failed part back.</b> Print a return slip for the box, then add the tracking number here so Novatech can close the ticket.' +
+      ? '<div class="rnext w" style="margin:var(--s4) 0 0;"><b>Send the failed part back.</b> ' +
+          (out.length
+            ? 'Print a return slip for the box, then add the tracking number here so Novatech can close the ticket.'
+            : 'You do not have to wait for the replacement \u2014 ship it whenever it suits you, then add the tracking number here.') +
+          (rmaReturnAddress
+            ? '<div class="rretaddr"><div><span class="rretaddr-k">Ship it to</span>' +
+                '<div class="raddr">' + esc(rmaReturnAddress) + '</div></div>' +
+              '<button class="btn sm" id="rmaRetCopy" type="button">Copy address</button></div>'
+            : '') +
           '<div class="rbar" style="margin-top:var(--s3);"><select id="rmaRetCar" style="height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
             RMA_CARRIERS.map(function(c){ return '<option>' + c + '</option>'; }).join('') + '</select>' +
             '<input id="rmaRetTrk" type="text" placeholder="Tracking number" style="flex:1 1 180px;height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
@@ -3488,6 +3504,7 @@
     const ed = $('rmaEdit'); if (ed) ed.addEventListener('click', function(){ newRmaModal(t.serial, t); });
     $('detailView').querySelectorAll('[data-goorder]').forEach(function(a){ a.addEventListener('click', function(){ pview = 'orders'; openOrder(a.getAttribute('data-goorder')); }); });
     $('detailView').querySelectorAll('[data-rslip]').forEach(function(bt){ bt.addEventListener('click', function(){ returnSlip(t); }); });
+    const rc = $('rmaRetCopy'); if (rc) rc.addEventListener('click', function(){ rmaCopyAddress(rmaReturnAddress, 'Return address'); });
     const fi = $('rmaFiles'); if (fi) fi.addEventListener('change', function(){ $('rmaFilesNote').textContent = this.files.length ? this.files.length + ' file' + (this.files.length === 1 ? '' : 's') + ' ready' : ''; });
     const post = $('rmaPost'); if (post) post.addEventListener('click', async function(){
       const body = $('rmaBody').value.trim(), files = $('rmaFiles').files;
@@ -3749,6 +3766,32 @@
   }
 
   /* ---- copy serials ---- */
+  /* Copies verbatim, line breaks and all, without a modal in the way.
+     execCommand first: it runs inside the click gesture and works on http
+     and inside frames, where navigator.clipboard often does not. */
+  function rmaCopyAddress(text, label){
+    const what = label || 'Address';
+    let ok = false;
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      if (ta.setSelectionRange) ta.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy');
+      ta.remove();
+    } catch(e){ ok = false; }
+    if (ok){ toast(what + ' copied', 'ok'); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(
+        function(){ toast(what + ' copied', 'ok'); },
+        function(){ toast('Could not reach the clipboard \u2014 select the address and copy it by hand.', 'bad', 6000); });
+      return;
+    }
+    toast('Could not reach the clipboard \u2014 select the address and copy it by hand.', 'bad', 6000);
+  }
   async function copyText(text, label){
     try { await navigator.clipboard.writeText(text); toast(label + ' copied', 'ok'); }
     catch(e){
