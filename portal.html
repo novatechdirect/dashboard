@@ -671,6 +671,8 @@
   .rtl li.w::before{ background:var(--warn); }
   .rtl li.b::before{ background:var(--bad); }
   .raddr{ white-space:pre-wrap; font-size:13px; color:var(--muted); margin-top:6px; }
+  .rmsg-addr{ font-size:13px; color:var(--muted); }
+  .rmsg-acts{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:8px; }
   /* the return address, with the one-click copy the label maker needs */
   .rretaddr{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4);
     margin-top:var(--s3); padding-top:var(--s3); border-top:1px solid var(--warn-line); }
@@ -3420,8 +3422,13 @@
       return '<div class="rmsg"><div class="rmsg-h"><b>' + (s.direction === 'return' ? 'Your return' : 'Part shipped') + (s.ship_date ? ' \u00b7 ' + esc(fmtDate(s.ship_date)) : '') + '</b>' +
         '<span>' + (s.received_at ? 'received by Novatech ' + esc(fmtDate(s.received_at)) : (s.direction === 'return' ? 'on its way' : '')) + '</span></div>' +
         '<div class="trk-dd">' + carrierBadge(s.carrier) + trackHtml(s.carrier, s.tracking_no ? [s.tracking_no] : []) + '</div>' +
-        (s.ship_to ? '<p class="muted" style="margin:6px 0 0;white-space:pre-wrap;">' + esc(s.ship_to) + '</p>' : '') +
-        (s.direction === 'return' && !s.received_at ? '<div style="margin-top:8px;"><button class="btn sm" data-rslip="1" type="button">Print return slip</button></div>' : '') + '</div>';
+        /* a return comes back to us, so show the address they were given */
+        ((s.ship_to || (s.direction === 'return' ? rmaReturnAddress : '')) ?
+          '<p class="rmsg-addr" style="margin:6px 0 0;white-space:pre-wrap;">' + esc(s.ship_to || rmaReturnAddress) + '</p>' : '') +
+        (s.direction === 'return' && !s.received_at ? '<div class="rmsg-acts">' +
+          '<button class="btn sm" data-rslip="1" type="button">Print return slip</button>' +
+          ((s.ship_to || rmaReturnAddress) ? '<button class="btn sm" data-rcopy="1" type="button">Copy address</button>' : '') +
+          '</div>' : '') + '</div>';
     }
     const partsLine = parts.length && ['approved','shipped','return_received','closed'].indexOf(t.status) >= 0
       ? '<p class="muted" style="margin:0 0 6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">' + (t.status === 'approved' ? 'Approved, shipping soon' : 'Parts shipped') + '</p>' +
@@ -3495,7 +3502,9 @@
         '<div class="card"><h2>Timeline</h2>' + (evts.length ? '<ul class="rtl">' + evts.slice().reverse().map(function(e){
           const isStatus = e.kind === 'status';
           const cls = isStatus ? (RMA_ST[e.to_val] || { c:'n' }).c : (e.to_val === 'return' ? 'k' : 'i');
-          const txt = isStatus ? (RMA_ST[e.to_val] || { l:e.to_val }).l : (e.to_val === 'return' ? (e.detail && /^Received/.test(e.detail) ? 'Return received by Novatech' : 'Return tracking added') : 'Part shipped');
+          /* the status row already says "Part shipped" — this row is the
+             tracking number, so it says that instead of repeating it */
+          const txt = isStatus ? (RMA_ST[e.to_val] || { l:e.to_val }).l : (e.to_val === 'return' ? (e.detail && /^Received/.test(e.detail) ? 'Return received by Novatech' : 'Return tracking added') : 'Tracking added' + (e.detail ? ' \u00b7 ' + e.detail : ''));
           return '<li class="' + cls + '">' + esc(txt) + '<small>' + rmaWhen(e.created_at) + '</small></li>';
         }).join('') + '</ul>' : '<p class="muted" style="margin:0;">Nothing yet.</p>') + '</div>' +
       '</div></div>';
@@ -3504,6 +3513,11 @@
     const ed = $('rmaEdit'); if (ed) ed.addEventListener('click', function(){ newRmaModal(t.serial, t); });
     $('detailView').querySelectorAll('[data-goorder]').forEach(function(a){ a.addEventListener('click', function(){ pview = 'orders'; openOrder(a.getAttribute('data-goorder')); }); });
     $('detailView').querySelectorAll('[data-rslip]').forEach(function(bt){ bt.addEventListener('click', function(){ returnSlip(t); }); });
+    $('detailView').querySelectorAll('[data-rcopy]').forEach(function(bt){ bt.addEventListener('click', function(){
+      /* copy exactly what the row shows above the buttons */
+      const box = bt.closest('.rmsg'), p = box ? box.querySelector('.rmsg-addr') : null;
+      rmaCopyAddress(p ? p.textContent : rmaReturnAddress, 'Return address');
+    }); });
     const rc = $('rmaRetCopy'); if (rc) rc.addEventListener('click', function(){ rmaCopyAddress(rmaReturnAddress, 'Return address'); });
     const fi = $('rmaFiles'); if (fi) fi.addEventListener('change', function(){ $('rmaFilesNote').textContent = this.files.length ? this.files.length + ' file' + (this.files.length === 1 ? '' : 's') + ' ready' : ''; });
     const post = $('rmaPost'); if (post) post.addEventListener('click', async function(){
