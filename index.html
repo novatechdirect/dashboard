@@ -1659,7 +1659,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   @media print{
     @page{ size:4in 6in; margin:0; }
     html,body{background:#fff; margin:0; padding:0;}
-    .controls, .topnav, .tabbar, .toast-stack, .mg-bar, .mg-modal-bg{ display:none !important; }
+    .controls, .topnav, .tabbar, .siderail, .toast-stack, .mg-bar, .mg-modal-bg{ display:none !important; }
     #printArea{ display:block !important; }
     .label{
       page-break-after:always;
@@ -2823,7 +2823,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* ============================================================
      RMA
      ============================================================ */
-  .rma-kpis{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s3); margin-bottom:var(--s5); }
+  .rma-kpis{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:var(--s3); margin-bottom:var(--s5); }
+  @media (max-width:1100px){ .rma-kpis{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
   .rma-kpi{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); }
   .rma-kpi b{ display:block; font-size:24px; font-weight:600; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; line-height:1.2; }
   .rma-kpi span{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--faint); }
@@ -2995,6 +2996,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .rma-fail{ display:grid; gap:var(--s2); }
   .rma-fail-row{ display:grid; grid-template-columns:142px minmax(0,1fr) 28px; gap:var(--s3); align-items:center; font-size:13px; }
   .rma-fail-row span{ color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rma-fail{ container-type:inline-size; }
+  @container (max-width:250px){
+    .rma-fail-row{ grid-template-columns:minmax(0,1fr) 28px; row-gap:6px; }
+    .rma-fail-row b{ grid-column:2; grid-row:1; }
+    .rma-fail-bar{ grid-column:1 / -1; grid-row:2; }
+  }
   .rma-fail-bar{ height:8px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; }
   .rma-fail-bar i{ display:block; height:100%; background:var(--accent); }
   .rma-fail-row b{ text-align:right; font-variant-numeric:tabular-nums; }
@@ -3065,34 +3072,283 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .tile, .tile:hover, .nav-item, .nav-brand{ color:inherit; text-decoration:none; }
   .nav-item{ color:var(--muted); }
   .nav-item.active{ color:var(--on-ink); }
+  /* ============================================================
+     v31 DASHBOARD SHELL
+     Navigation moves to a fixed left rail; the top bar keeps only
+     context and account. Same tokens, same card language.
+     ============================================================ */
+  :root{ --rail:248px; --rail-mini:76px; }
+
+  .siderail{ display:none; }
+  body.authed{ padding-left:var(--rail); transition:padding-left var(--t); }
+  body.authed.rail-mini{ padding-left:var(--rail-mini); }
+  body.authed .siderail{
+    display:flex; flex-direction:column;
+    position:fixed; left:0; top:0; bottom:0; width:var(--rail); z-index:25;
+    background:var(--paper); border-right:1px solid var(--line);
+    padding:var(--s4) var(--s3) 0; overflow-y:auto; overscroll-behavior:contain;
+    transition:width var(--t);
+  }
+  body.authed.rail-mini .siderail{ width:var(--rail-mini); padding-inline:var(--s2); }
+
+  .rail-brand{ gap:var(--s3); padding:var(--s2) var(--s3) var(--s5); overflow:hidden; }
+  .rail-brand::after{ display:none; }
+  .rail-brand .nav-logo{ height:26px; }
+  body.authed.rail-mini .rail-brand{ padding:var(--s2) 0 var(--s5); justify-content:center; }
+  body.authed.rail-mini .rail-brand .nav-wordmark{ display:none; }
+  .nav-logo.is-mark{ display:none; }
+  body.authed.rail-mini .rail-brand .nav-logo.is-light,
+  body.authed.rail-mini .rail-brand .nav-logo.is-dark{ display:none; }
+  body.authed.rail-mini .rail-brand .nav-logo.is-mark{ display:block; width:32px; height:32px; max-width:none; }
+
+  .siderail .nav-menu{
+    display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start;
+    flex:0 0 auto; gap:2px; overflow:visible; min-width:0;
+  }
+  .siderail .nav-item{
+    display:flex; align-items:center; gap:var(--s3); min-height:38px;
+    padding:9px var(--s3); border-radius:var(--r-sm); font-size:13.5px;
+  }
+  .siderail .nav-item > svg{ width:19px; height:19px; flex:0 0 auto; }
+  .siderail .nav-item .nav-lbl{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .siderail .nav-badge{ margin-left:auto; }
+  body.authed.rail-mini .siderail .nav-item{ justify-content:center; padding-inline:0; }
+  body.authed.rail-mini .siderail .nav-item .nav-lbl{ display:none; }
+  body.authed.rail-mini .siderail .nav-badge{ position:absolute; top:2px; right:10px; margin:0; }
+
+  .rail-foot{
+    margin-top:auto; padding:var(--s4) var(--s3);
+    border-top:1px solid var(--line); color:var(--faint);
+  }
+  body.authed.rail-mini .rail-foot{ text-align:center; padding-inline:0; }
+
+  /* top bar: context on the left, account on the right */
+  body.authed .nav-inner{ height:60px; gap:var(--s4); }
+  .rail-btn{
+    display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+    width:34px; height:34px; min-height:34px; padding:0; margin-left:-6px;
+    border-radius:var(--r-sm); background:transparent; border:1px solid transparent;
+    color:var(--muted); cursor:pointer; transition:background var(--t), color var(--t), border-color var(--t);
+  }
+  .rail-btn:hover{ background:var(--soft); color:var(--ink); border-color:var(--line); }
+  .rail-btn svg{ width:18px; height:18px; display:block; }
+  .top-title{
+    flex:1 1 auto; min-width:0; font-size:15px; font-weight:600; color:var(--ink);
+    letter-spacing:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .nav-brand.top-brand{ display:none; }
+  body:not(.authed) .rail-btn, body:not(.authed) .top-title{ display:none; }
+  body:not(.authed) .nav-brand.top-brand{ display:flex; }
+
+  /* stats row — four numbers worth reading before anything else */
+  .stat-row{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s4); margin-bottom:var(--s5); }
+  .stat{
+    display:flex; flex-direction:column; gap:var(--s2); padding:var(--s4b);
+    border-radius:var(--r-md); text-decoration:none; color:inherit;
+    background:color-mix(in srgb, var(--stat-hue, var(--accent)) 7%, var(--paper));
+    border:1px solid color-mix(in srgb, var(--stat-hue, var(--accent)) 30%, var(--paper));
+    transition:border-color var(--t), box-shadow var(--t), transform var(--t);
+  }
+  :root[data-theme="dark"] .stat{ background:color-mix(in srgb, var(--stat-hue, var(--accent)) 15%, var(--paper)); }
+  @supports not (color: color-mix(in srgb, red, blue)){
+    .stat{ background:var(--soft); border-color:var(--line-strong); }
+  }
+  @media (hover: hover) and (pointer: fine){
+    a.stat:hover{ transform:translateY(-2px); border-color:color-mix(in srgb, var(--stat-hue, var(--accent)) 55%, var(--paper)); box-shadow:var(--e1); }
+  }
+  a.stat:active{ transform:translateY(0); }
+  .stat-top{ display:flex; align-items:center; gap:var(--s3); min-width:0; }
+  .stat-ico{
+    width:32px; height:32px; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+    border-radius:var(--r-sm); color:var(--stat-hue, var(--accent));
+    background:var(--paper);
+    border:1px solid color-mix(in srgb, var(--stat-hue, var(--accent)) 30%, var(--paper));
+  }
+  @supports not (color: color-mix(in srgb, red, blue)){
+    .stat-ico{ background:var(--soft); border-color:var(--line); }
+  }
+  .stat-ico svg{ width:17px; height:17px; stroke-width:1.9; }
+  .stat-lbl{ font-size:13px; font-weight:600; color:var(--muted); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stat-val{
+    font-family:var(--font-num); font-size:32px; font-weight:600; line-height:1.05;
+    color:var(--ink); font-variant-numeric:tabular-nums; letter-spacing:-.02em;
+  }
+  .stat-sub{ font-size:12.5px; color:var(--faint); }
+  .stat[data-tone="warn"] .stat-sub{ color:var(--warn-ink); font-weight:600; }
+  .stat[data-tone="ok"] .stat-sub{ color:var(--ok); font-weight:600; }
+  .stat[data-hue="orders"]{ --stat-hue:var(--hue-orders); }
+  .stat[data-hue="builds"]{ --stat-hue:var(--ok); }
+  .stat[data-hue="rma"]{ --stat-hue:var(--hue-rma); }
+  .stat[data-hue="inventory"]{ --stat-hue:var(--hue-inventory); }
+
+  /* widget rows: one wide panel beside one narrow, as in a real dashboard */
+  .dash-grid{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--s4); margin-bottom:var(--s4); }
+  .dash-grid > .card{ margin-bottom:0; display:flex; flex-direction:column; }
+  /* these heads are one line by design: a balanced wrap breaks them in half */
+  .dash-grid .chart-head > .card-title, .dash-grid .chart-head > button{ white-space:nowrap; }
+
+  /* builds by week — bars, so it does not read as the area chart on Orders */
+  .bars{ display:flex; align-items:flex-end; gap:5px; height:168px; margin-top:var(--s4); }
+  .bar-col{ flex:1 1 0; min-width:0; height:100%; display:flex; align-items:flex-end; }
+  .bar{
+    width:100%; border-radius:var(--r-xs) var(--r-xs) 0 0; background:var(--accent);
+    opacity:.88; transition:opacity var(--t);
+    transform-origin:bottom; animation:barGrow 420ms cubic-bezier(.2,.7,.2,1) backwards;
+  }
+  @keyframes barGrow{ from{ transform:scaleY(0); } }
+  @media (prefers-reduced-motion: reduce){ .bar{ animation:none; } }
+  .bar-col:hover .bar{ opacity:1; }
+  .bar.zero{ background:var(--line); }
+
+  /* order status donut */
+  .dn-wrap{ position:relative; width:140px; height:140px; margin:var(--s5) auto var(--s4); }
+  .dn{ display:block; width:140px; height:140px; }
+  .dn-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+  .dn-center{ animation:dnPop 320ms ease-out 220ms backwards; }
+  @keyframes dnPop{ from{ opacity:0; transform:scale(.92); } }
+  .dn-center b{ font-family:var(--font-num); font-size:26px; font-weight:600; line-height:1; color:var(--ink); font-variant-numeric:tabular-nums; }
+  @media (prefers-reduced-motion: reduce){
+    .dn circle{ transition:none !important; }
+    .dn-center{ animation:none; }
+  }
+  .dn-center span{ font-size:11.5px; color:var(--faint); }
+  .dn-legend{ display:flex; flex-direction:column; gap:10px; margin-top:auto; }
+  .dn-item{ display:flex; align-items:center; gap:var(--s2); font-size:12.5px; min-width:0; }
+  .dn-dot{ width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
+  .dn-l{ color:var(--muted); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dn-n{ margin-left:auto; font-family:var(--font-num); font-variant-numeric:tabular-nums; font-weight:600; color:var(--ink); }
+
+  /* recent orders */
+  .rc-list{ display:flex; flex-direction:column; margin-top:var(--s3); }
+  .rc-row{
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) 152px 82px;
+    align-items:center; gap:var(--s3); padding:11px 0;
+    border-top:1px solid var(--line); text-decoration:none; color:inherit;
+  }
+  .rc-row:first-child{ border-top:none; }
+  .rc-inv{ font-weight:600; font-size:13.5px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rc-row:hover .rc-inv{ color:var(--accent-fg); }
+  .rc-cust{ font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rc-date{ font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; white-space:nowrap; text-align:right; }
+  .rc-row .ord-chip{ justify-self:start; }
+  @media (max-width:560px){
+    /* two lines per order rather than four squeezed columns */
+    .rc-row{ grid-template-columns:minmax(0,1fr) auto; gap:4px var(--s3); }
+    .rc-row .ord-chip{ grid-column:2; grid-row:1; justify-self:end; }
+    .rc-cust{ grid-column:1; }
+    .rc-date{ grid-column:2; }
+  }
+
+  /* quick actions: the old home tiles, compacted into the narrow column */
+  .qa-grid{ grid-template-columns:1fr; gap:6px; margin-top:var(--s4); }
+  .tile.qa{
+    display:flex; flex-direction:row; align-items:center; gap:10px;
+    padding:8px 10px; border-radius:var(--r-sm); min-height:0;
+  }
+  .tile.qa .tile-icon{ width:30px; height:30px; border-radius:var(--r-sm); }
+  .tile.qa .tile-icon svg{ width:16px; height:16px; }
+  .tile.qa .tile-title{ flex:1 1 auto; min-width:0; font-size:13px; font-weight:600; line-height:1.25; }
+  .qa-chev{ flex:0 0 auto; display:flex; color:var(--stone); transition:color var(--t), transform var(--t); }
+  .qa-chev svg{ display:block; width:15px; height:15px; stroke-width:2; }
+  .tile.qa:hover .qa-chev{ color:var(--tile-hue, var(--accent)); transform:translateX(2px); }
+  @media (max-width:1100px){
+    .dash-grid{ grid-template-columns:1fr; }
+    .qa-grid{ grid-template-columns:1fr 1fr; }
+    /* one column means the card is wide: donut and legend sit side by side,
+       the pair centred and the legend kept narrow so the figure stays beside
+       its label instead of drifting to the far edge */
+    #hdonut{ display:flex; align-items:center; justify-content:center; gap:var(--s6); padding:0 var(--s4); }
+    .dn-wrap{ flex:0 0 auto; margin:var(--s4) 0; }
+    .dn-legend{ flex:0 1 250px; margin-top:0; }
+  }
+  @media (max-width:430px){
+    .dn-wrap, .dn{ width:118px; height:118px; }
+    #hdonut{ gap:var(--s4); padding:0; }
+    .dn-legend{ flex:0 1 200px; }
+    .dn-center b{ font-size:22px; }
+  }
+
+  /* the compare bar belongs to the content column, not the rail */
+  @media (min-width:701px){
+    body.authed .mg-bar{ left:var(--rail); }
+    body.authed.rail-mini .mg-bar{ left:var(--rail-mini); }
+  }
+
+  @media (max-width:1180px){
+    .stat-row{ gap:var(--s3); } .stat{ padding:var(--s4); } .stat-val{ font-size:28px; }
+  }
+  @media (max-width:1000px){
+    /* not enough width for labels and content both: the rail goes to icons */
+    body.authed, body.authed.rail-mini{ padding-left:var(--rail-mini); }
+    body.authed .siderail{ width:var(--rail-mini); padding-inline:var(--s2); }
+    body.authed .rail-brand{ padding:var(--s2) 0 var(--s5); justify-content:center; }
+    body.authed .rail-brand .nav-wordmark{ display:none; }
+    body.authed .rail-brand .nav-logo.is-light,
+    body.authed .rail-brand .nav-logo.is-dark{ display:none; }
+    body.authed .rail-brand .nav-logo.is-mark{ display:block; width:32px; height:32px; max-width:none; }
+    body.authed .siderail .nav-item{ justify-content:center; padding-inline:0; }
+    body.authed .siderail .nav-item .nav-lbl{ display:none; }
+    body.authed .siderail .nav-badge{ position:absolute; top:2px; right:10px; margin:0; }
+    body.authed .rail-foot{ text-align:center; padding-inline:0; }
+    .rail-btn{ display:none; }
+    .stat-row{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  }
+  @media (max-width:700px){
+    /* phones keep the bottom tab bar; the rail steps out entirely */
+    body.authed, body.authed.rail-mini{ padding-left:env(safe-area-inset-left); }
+    body.authed .siderail{ display:none; }
+    .nav-brand.top-brand{ display:flex; }
+    .nav-brand.top-brand::after{ display:none; }
+    .top-title{ display:none; }
+    body.authed .nav-inner{ height:52px; gap:12px; }
+  }
+  @media (max-width:560px){ .qa-grid{ grid-template-columns:1fr; } }
+  @media (max-width:430px){ .stat-row{ grid-template-columns:1fr; gap:var(--s3); } }
+  /* the RMA rate line draws itself in, matching the portal */
+  @keyframes plotDraw{ from{ clip-path:inset(0 100% 0 0); } }
+  #rmaTrendPlot > svg{ animation:plotDraw 900ms cubic-bezier(.2,.7,.2,1) backwards; }
+  @media (prefers-reduced-motion: reduce){ #rmaTrendPlot > svg{ animation:none; } }
 </style>
 </head>
 <body>
 
-<nav class="topnav">
-  <div class="nav-inner">
-    <a class="nav-brand" href="#">
+<aside class="siderail" id="siderail">
+  <a class="nav-brand rail-brand" href="#">
       <img class="nav-logo is-light" src="logo.png" alt="Novatech" onerror="this.style.display='none';var t=document.getElementById('logoText');if(t)t.style.display='inline';">
       <img class="nav-logo is-dark" src="logo-dark.png" alt="Novatech" onerror="this.style.display='none';var t=document.getElementById('logoText');if(t)t.style.display='inline';">
+      <img class="nav-logo is-mark" src="logo-mark.png" alt="" onerror="this.style.display='none';">
       <span class="nav-wordmark" id="logoText" style="display:none;">NOVATECH</span>
     </a>
     <div class="nav-menu">
-      <a class="nav-item active" href="#" id="navHome">Home</a>
-      <a class="nav-item" href="#" id="navOrders">Orders</a>
-      <a class="nav-item" href="#" id="navRma">RMA<span class="nav-badge" id="navRmaBadge" style="display:none;"></span></a>
-      <a class="nav-item" href="#" id="navInventory">Inventory</a>
-      <a class="nav-item" href="#" id="navTimeclock">Timeclock</a>
-      <a class="nav-item" href="#" id="navMargins" style="display:none;">Margins</a>
-      <a class="nav-item" href="#" id="navBilling" style="display:none;">Billing</a>
-      <a class="nav-item" href="#" id="navAdmin" style="display:none;">Admin</a>
+      <a class="nav-item active" href="#" id="navHome"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z"/><path stroke-linecap="round" d="M12 15L12 18"/></g></svg><span class="nav-lbl">Home</span></a>
+      <a class="nav-item" href="#" id="navOrders"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg><span class="nav-lbl">Orders</span></a>
+      <a class="nav-item" href="#" id="navRma"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg><span class="nav-lbl">RMA</span><span class="nav-badge" id="navRmaBadge" style="display:none;"></span></a>
+      <a class="nav-item" href="#" id="navInventory"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg><span class="nav-lbl">Inventory</span></a>
+      <a class="nav-item" href="#" id="navTimeclock"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg><span class="nav-lbl">Timeclock</span></a>
+      <a class="nav-item" href="#" id="navMargins" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg><span class="nav-lbl">Margins</span></a>
+      <a class="nav-item" href="#" id="navBilling" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg><span class="nav-lbl">Billing</span></a>
+      <a class="nav-item" href="#" id="navAdmin" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg><span class="nav-lbl">Admin</span></a>
     </div>
-    <div class="nav-right">
-      <span class="auth-chip" id="authChip" style="display:none;"></span>
+    <div class="rail-foot"><span class="version" id="version">v3.9.11</span></div>
+  </aside>
+
+  <nav class="topnav">
+    <div class="nav-inner">
+      <button type="button" class="rail-btn" id="railToggle" title="Collapse sidebar" aria-label="Collapse sidebar">
+        <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></g></svg>
+      </button>
+      <a class="nav-brand top-brand" href="#">
+        <img class="nav-logo is-light" src="logo.png" alt="Novatech" onerror="this.style.display='none';var t=document.getElementById('logoTextTop');if(t)t.style.display='inline';">
+        <img class="nav-logo is-dark" src="logo-dark.png" alt="Novatech" onerror="this.style.display='none';var t=document.getElementById('logoTextTop');if(t)t.style.display='inline';">
+        <span class="nav-wordmark" id="logoTextTop" style="display:none;">NOVATECH</span>
+      </a>
+      <div class="top-title" id="topTitle">Dashboard</div>
+      <div class="nav-right">
+        <span class="auth-chip" id="authChip" style="display:none;"></span>
       <button type="button" class="theme-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">
         <svg viewBox="0 0 24 24" class="i-moon"><path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" d="M12 22C17.5228 22 22 17.5228 22 12C22 11.5373 21.3065 11.4608 21.0672 11.8568C19.9289 13.7406 17.8615 15 15.5 15C11.9101 15 9 12.0899 9 8.5C9 6.13845 10.2594 4.07105 12.1432 2.93276C12.5392 2.69347 12.4627 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/></svg>
         <svg viewBox="0 0 24 24" class="i-sun"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 2V4"/><path stroke-linecap="round" d="M12 20V22"/><path stroke-linecap="round" d="M4 12L2 12"/><path stroke-linecap="round" d="M22 12L20 12"/><path stroke-linecap="round" d="M19.7778 4.22266L17.5558 6.25424"/><path stroke-linecap="round" d="M4.22217 4.22266L6.44418 6.25424"/><path stroke-linecap="round" d="M6.44434 17.5557L4.22211 19.7779"/><path stroke-linecap="round" d="M19.7778 19.7773L17.5558 17.5551"/></g></svg>
       </button>
-      <span class="version" id="version">v3.9.11</span>
     </div>
   </div>
 </nav>
@@ -3188,112 +3444,64 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         </div>
       </div>
     </header>
-    <div class="chart-grid" id="homeChartsMain">
-      <section class="card chart-card" id="homeHero">
+    <div class="stat-row" id="homeStats">
+      <a class="stat" href="#" data-goto="orders" data-hue="orders">
+        <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg></span><span class="stat-lbl">Open orders</span></span>
+        <span class="stat-val" id="statOrdVal">&mdash;</span>
+        <span class="stat-sub" id="statOrdSub">Loading&hellip;</span>
+      </a>
+      <div class="stat" data-hue="builds">
+        <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path stroke-linecap="round" d="M8.5 20h7M12 16.5V20"/></g></svg></span><span class="stat-lbl">PCs built</span></span>
+        <span class="stat-val count-int" id="statBldVal">&mdash;</span>
+        <span class="stat-sub" id="statBldSub">last 30 days</span>
+      </div>
+      <a class="stat" href="#" data-goto="rma" data-hue="rma">
+        <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></span><span class="stat-lbl">RMAs to action</span></span>
+        <span class="stat-val" id="statRmaVal">&mdash;</span>
+        <span class="stat-sub" id="statRmaSub">&nbsp;</span>
+      </a>
+      <a class="stat" href="#" data-goto="inventory" data-hue="inventory">
+        <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg></span><span class="stat-lbl">Low stock</span></span>
+        <span class="stat-val" id="statInvVal">&mdash;</span>
+        <span class="stat-sub" id="statInvSub">Loading&hellip;</span>
+      </a>
+    </div>
+    <div class="dash-grid">
+      <section class="card" id="homeBuilds">
         <div class="chart-head">
           <div class="chart-kpi">
             <h2 class="card-title">Builds</h2>
-            <div class="chart-val" id="hbVal">&mdash;</div>
-            <div class="chart-sub" id="hbSub"></div>
-          </div>
-          <div class="chart-tabs" id="hbTabs">
-            <button type="button" class="chart-tab" data-range="30">30D</button>
-            <button type="button" class="chart-tab on" data-range="90">90D</button>
-            <button type="button" class="chart-tab" data-range="ytd">YTD</button>
+            <div class="chart-val" id="hbarVal">&mdash;</div>
+            <div class="chart-sub" id="hbarSub">last 12 weeks</div>
           </div>
         </div>
-        <div class="chart-plot" id="hbPlot"></div>
+        <div id="hbarPlot"></div>
       </section>
-      <section class="card chart-card" id="homePipe">
-        <div class="chart-kpi">
-          <h2 class="card-title">Pipeline</h2>
-          <div class="chart-val" id="hpVal">&mdash;</div>
-          <div class="chart-sub" id="hpSub"></div>
-        </div>
-        <div id="hpBody"></div>
+      <section class="card" id="homeStatusCard">
+        <h2 class="card-title" style="margin:0;">Order status</h2>
+        <div id="hdonut"></div>
       </section>
     </div>
-    <div class="chart-grid" id="homeRmaGrid" style="display:none;">
-      <section class="card chart-card">
+    <div class="dash-grid">
+      <section class="card" id="homeRecentCard">
         <div class="chart-head">
-          <div class="chart-kpi">
-            <h2 class="card-title">RMAs</h2>
-            <div class="chart-val" id="hrVal">&mdash;</div>
-            <div class="chart-sub" id="hrSub"></div>
-          </div>
-          <button class="ghost btn-sm" type="button" id="homeRmaOpen" style="flex:0 0 auto;">Open RMAs</button>
+          <h2 class="card-title" style="margin:0;">Recent orders</h2>
+          <button class="ghost btn-sm" type="button" id="homeOrdAll" style="flex:0 0 auto;">View all</button>
         </div>
-        <div class="chart-plot" id="hrPlot"></div>
+        <div id="hrecent"></div>
       </section>
-      <section class="card chart-card">
-        <div class="chart-head"><h2 class="card-title" style="margin:0;">Failures by part</h2><div class="chart-tabs"><button type="button" class="chart-tab" data-failrange="30">30D</button><button type="button" class="chart-tab" data-failrange="ytd">YTD</button><button type="button" class="chart-tab on" data-failrange="all">All</button></div></div>
-        <div class="rma-fail" id="hrFail"></div>
+      <section class="card" id="homeQuick">
+        <h2 class="card-title" style="margin:0;">Quick actions</h2>
+        <div class="tile-grid qa-grid" id="tileGrid">
+        <a class="tile qa" href="#" data-goto="orders"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg></span><span class="tile-title">B2B Orders</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
+        <a class="tile qa" href="#" data-goto="rma"><span class="tile-icon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></span><span class="tile-title">RMA</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
+        <a class="tile qa" href="#" data-goto="inventory"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg></span><span class="tile-title">Inventory</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
+        <a class="tile qa" href="#" data-goto="timeclock"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg></span><span class="tile-title">Timeclock</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
+        <a class="tile qa" href="#" data-goto="margins" id="tileMargins" style="display:none;"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg></span><span class="tile-title">Cost &amp; Margins</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
+        <a class="tile qa" href="#" data-goto="billing" id="tileBilling" style="display:none;"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg></span><span class="tile-title">Billing</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
+        <a class="tile qa" href="#" data-goto="admin" id="tileAdmin" style="display:none;"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg></span><span class="tile-title">Admin</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
+        </div>
       </section>
-    </div>
-    <div class="tile-grid" id="tileGrid">
-      <a class="tile" href="#" data-goto="orders">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">B2B Orders</span>
-          <span class="tile-desc">Invoices, batches, labels and tracking</span>
-          <span class="tile-status" id="tileOrdStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
-      </a>
-      <a class="tile" href="#" data-goto="rma">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">RMA</span>
-          <span class="tile-desc">Warranty parts, by serial number</span>
-          <span class="tile-status" id="tileRmaStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
-      </a>
-      <a class="tile" href="#" data-goto="inventory">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Inventory</span>
-          <span class="tile-desc">Parts on hand, low stock, activity</span>
-          <span class="tile-status" id="tileInvStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
-      </a>
-      <a class="tile" href="#" data-goto="timeclock">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Timeclock</span>
-          <span class="tile-desc">Hours and pay, every two weeks</span>
-          <span class="tile-status" id="tileTcStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
-      </a>
-      <a class="tile" href="#" data-goto="margins" id="tileMargins" style="display:none;">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Cost &amp; Margins</span>
-          <span class="tile-desc">Build costs, profit and margin by channel</span>
-          <span class="tile-status" id="tileMgStatus"><span class="ts-lbl">Loading&hellip;</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
-      </a>
-      <a class="tile" href="#" data-goto="billing" id="tileBilling" style="display:none;">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Billing</span>
-          <span class="tile-desc">Invoice totals, payments and what is outstanding</span>
-          <span class="tile-status" id="tileBillStatus"><span class="ts-lbl">Track the money</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
-      </a>
-      <a class="tile" href="#" data-goto="admin" id="tileAdmin" style="display:none;">
-        <span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg></span>
-        <span class="tile-body">
-          <span class="tile-title">Admin</span>
-          <span class="tile-desc">Customers, configs, destinations, people</span>
-          <span class="tile-status" id="tileAdmStatus"><span class="ts-lbl">Manage the shop</span></span>
-        </span>
-        <span class="tile-arrow"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>
-      </a>
     </div>
     <div class="install-card" id="installCard" style="display:none;">
       <div class="install-txt">
@@ -3317,6 +3525,32 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           </div>
         </div>
       </header>
+
+      <div class="chart-grid" id="homeChartsMain">
+        <section class="card chart-card" id="homeHero">
+          <div class="chart-head">
+            <div class="chart-kpi">
+              <h2 class="card-title">Builds</h2>
+              <div class="chart-val" id="hbVal">&mdash;</div>
+              <div class="chart-sub" id="hbSub"></div>
+            </div>
+            <div class="chart-tabs" id="hbTabs">
+              <button type="button" class="chart-tab" data-range="30">30D</button>
+              <button type="button" class="chart-tab on" data-range="90">90D</button>
+              <button type="button" class="chart-tab" data-range="ytd">YTD</button>
+            </div>
+          </div>
+          <div class="chart-plot" id="hbPlot"></div>
+        </section>
+        <section class="card chart-card" id="homePipe">
+          <div class="chart-kpi">
+            <h2 class="card-title">Pipeline</h2>
+            <div class="chart-val" id="hpVal">&mdash;</div>
+            <div class="chart-sub" id="hpSub"></div>
+          </div>
+          <div id="hpBody"></div>
+        </section>
+      </div>
 
       <section class="card" id="ordRunway" style="display:none;">
         <div class="chart-head">
@@ -4458,6 +4692,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (which === 'orders' && SB && session){ ordOpen(); }
     if (which === 'admin' && SB && session){ admOpen(); }
     if (which === 'rma' && SB && session){ rmaOpen(); }
+    if (which === 'home'){
+      renderHomeBars(); renderHomeDonut();
+      if (window.ntCountUp) window.ntCountUp(document.getElementById('statBldVal'));
+    }
+    var _tt = document.getElementById('topTitle');
+    if (_tt) _tt.textContent = { home:'Dashboard', orders:'B2B Orders', rma:'RMA', inventory:'Inventory', timeclock:'Timeclock', margins:'Cost & Margins', billing:'Billing', admin:'Admin' }[which] || 'Dashboard';
     document.querySelectorAll('#tabbar .tab-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-goto') === which);
     });
@@ -4467,11 +4707,42 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
   }
   navHome.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
-  document.querySelector('.nav-brand').addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
+  document.querySelectorAll('.nav-brand').forEach(function(b){
+    b.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
+  });
+  /* the rail collapses to icons and remembers it */
+  (function(){
+    var btn = document.getElementById('railToggle'); if (!btn) return;
+    function label(){
+      var mini = document.body.classList.contains('rail-mini');
+      btn.title = mini ? 'Expand sidebar' : 'Collapse sidebar';
+      btn.setAttribute('aria-label', btn.title);
+    }
+    if (localStorage.getItem('ntRail') === 'mini') document.body.classList.add('rail-mini');
+    label();
+    btn.addEventListener('click', function(){
+      document.body.classList.toggle('rail-mini');
+      localStorage.setItem('ntRail', document.body.classList.contains('rail-mini') ? 'mini' : 'full');
+      label();
+    });
+  })();
+  document.getElementById('homeOrdAll').addEventListener('click', function(){
+    ordCurrentId = null; ordSetUrl(null); ordShowList(); showTool('orders');
+  });
+  document.getElementById('hrecent').addEventListener('click', function(e){
+    var r = e.target.closest('[data-ordgo]');
+    if (!r) return;
+    e.preventDefault();
+    showTool('orders');
+    ordOpenOrder(r.getAttribute('data-ordgo'));
+  });
+  document.getElementById('homeStats').addEventListener('click', function(e){
+    var s = e.target.closest('a.stat[data-goto]');
+    if (s){ e.preventDefault(); showTool(s.getAttribute('data-goto')); }
+  });
   navOrders.addEventListener('click', function(e){ e.preventDefault(); ordCurrentId = null; ordSetUrl(null); ordShowList(); showTool('orders'); });
   navAdmin.addEventListener('click', function(e){ e.preventDefault(); showTool('admin'); });
   navRma.addEventListener('click', function(e){ e.preventDefault(); rmaCurrentId = null; rmaSetUrl(null); rmaShowList(); showTool('rma'); });
-  document.getElementById('homeRmaOpen').addEventListener('click', function(){ rmaCurrentId = null; rmaSetUrl(null); rmaShowList(); showTool('rma'); });
 
   /* phones: Margins and Admin sit behind a More sheet so the bar stays at five */
   function tabMoreClose(){
@@ -6206,7 +6477,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const card = document.getElementById('tcHoursCard'), plot = document.getElementById('thPlot'); if (!card || !plot) return;
     if (!tcViewAdmin() || !tcHoursRows.length){ card.style.display = 'none'; return; }
     const periods = {}; tcHoursRows.forEach(function(r){ periods[r.period_ending] = (periods[r.period_ending]||0) + (+r.hours||0); });
-    const keys = []; let p = lastClosedPeriodEnd();
+    /* Nobody logs until the period is over, so the newest one or two periods
+       are always empty. Anchor the series on the last Friday anyone actually
+       logged; otherwise the line falls to zero at the right every fortnight
+       and reads as a collapse in hours. */
+    let lastLogged = '';
+    Object.keys(periods).forEach(function(k){ if (periods[k] > 0 && k > lastLogged) lastLogged = k; });
+    const keys = []; let p = lastLogged || lastClosedPeriodEnd();
     for (let i = 0; i < 12; i++){ keys.unshift(p); p = shiftFriday(p, -14); }
     const series = keys.map(function(k){ return { x:new Date(k + 'T12:00:00'), y:Math.round((periods[k]||0)*10)/10 }; });
     const cur = series[series.length-1].y, prev = series.length > 1 ? series[series.length-2].y : 0;
@@ -6216,8 +6493,155 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     CH.area(plot, series, { h:160, id:'th', fmt:function(y){ return CH.nf(y) + ' h'; }, fmtX:function(d){ return 'period to ' + CH.fmtShort(d); } });
   }
 
+  function setStat(id, val, sub, tone){
+    var v = document.getElementById('stat' + id + 'Val'), s = document.getElementById('stat' + id + 'Sub');
+    if (v){
+      v.textContent = val;
+      if (v.classList.contains('count-int') && window.ntCountUp) window.ntCountUp(v);
+    }
+    if (s) s.innerHTML = sub;
+    var c = v && v.closest('.stat');
+    if (c){ if (tone) c.setAttribute('data-tone', tone); else c.removeAttribute('data-tone'); }
+  }
+  /* the four numbers at the top of home, off the data already loaded */
+  function renderHomeStats(){
+    if (!document.getElementById('homeStats')) return;
+    if (!ordInited) setStat('Ord', '\u2014', 'Loading\u2026');
+    else {
+      var open = 0, ready = 0;
+      ordOrders.forEach(function(o){
+        var k = ordStatus(ordStats(o)).key;
+        if (k !== 'complete') open++;
+        if (k === 'ready') ready++;
+      });
+      setStat('Ord', CH.nf(open),
+        ready ? CH.nf(ready) + ' awaiting shipment' : (open ? 'in progress' : 'all complete'),
+        open ? '' : 'ok');
+    }
+    var dates = allBuildDates();
+    var end = new Date(); end.setHours(23,59,59,999);
+    var f30 = new Date(end); f30.setDate(f30.getDate() - 29); f30.setHours(0,0,0,0);
+    var f60 = new Date(f30); f60.setDate(f60.getDate() - 30);
+    var cur = dates.filter(function(d){ return d >= f30; }).length;
+    var prev = dates.filter(function(d){ return d >= f60 && d < f30; }).length;
+    var dsub = 'last 30 days';
+    if (prev){
+      var pct = Math.round((cur - prev) / prev * 100);
+      dsub += ' \u00b7 <span class="chart-delta ' + (pct > 0 ? 'up' : (pct < 0 ? 'down' : 'flat')) + '">'
+        + (pct > 0 ? '\u2197' : (pct < 0 ? '\u2198' : '\u2192')) + Math.abs(pct) + '%</span> vs prior 30';
+    }
+    setStat('Bld', CH.nf(cur), dsub);
+    var rOpen = 0, rTodo = 0;
+    try {
+      rOpen = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; }).length;
+      /* Waiting on the shop: a new request to review, an approved one whose
+         part has not gone out, or a returned part to check in and close.
+         Needs-info waits on the customer and shipped waits on the courier —
+         counting those makes an idle ticket look like a task. */
+      rTodo = rmaTickets.filter(function(t){
+        return t.status === 'new' || t.status === 'approved' || t.status === 'return_received';
+      }).length;
+    } catch(e){}
+    setStat('Rma', CH.nf(rTodo),
+      rTodo ? CH.nf(rOpen) + ' open in total'
+            : (rOpen ? 'nothing to action \u00b7 ' + CH.nf(rOpen) + ' open' : 'none open'),
+      rTodo ? 'warn' : '');
+    if (!invItems.length) setStat('Inv', '\u2014', 'Loading\u2026');
+    else {
+      var lows = invItems.filter(isLow).length;
+      setStat('Inv', CH.nf(lows),
+        lows ? 'below threshold' : CH.nf(invItems.length) + ' parts all stocked',
+        lows ? 'warn' : 'ok');
+    }
+  }
+  /* twelve weekly buckets ending this week */
+  function miniWeeks(dates, n){
+    var to = new Date(); to.setHours(23,59,59,999);
+    var from = CH.weekStart(new Date());
+    from.setDate(from.getDate() - 7 * (n - 1)); from.setHours(0,0,0,0);
+    return CH.bucket(dates, from, to, true);
+  }
+  function renderHomeBars(){
+    var host = document.getElementById('hbarPlot'); if (!host) return;
+    var series = miniWeeks(allBuildDates(), 12);
+    var vals = series.map(function(p){ return p.y; });
+    var total = vals.reduce(function(a, b){ return a + b; }, 0);
+    var val = document.getElementById('hbarVal'), sub = document.getElementById('hbarSub');
+    if (val) val.textContent = CH.nf(total);
+    if (sub) sub.textContent = 'PCs built in the last 12 weeks'
+      + (vals[vals.length - 1] ? ' \u00b7 ' + CH.nf(vals[vals.length - 1]) + ' this week' : '');
+    if (!total){ host.innerHTML = '<div class="chart-empty">No builds logged in the last 12 weeks</div>'; return; }
+    var max = Math.max.apply(null, vals);
+    host.innerHTML = '<div class="bars">' + series.map(function(p, i){
+      var pct = p.y ? Math.max(4, Math.round(p.y / max * 100)) : 0;
+      return '<div class="bar-col" title="' + CH.nf(p.y) + (p.y === 1 ? ' build' : ' builds')
+        + ' \u00b7 week of ' + CH.fmtShort(p.x) + '">'
+        + '<div class="bar' + (p.y ? '' : ' zero') + '" style="height:' + (p.y ? pct + '%' : '3px')
+        + ';animation-delay:' + (i * 30) + 'ms"></div></div>';
+    }).join('') + '</div>'
+      + '<div class="chart-axis"><span>' + CH.fmtShort(series[0].x) + '</span>'
+      + '<span>' + CH.fmtShort(series[Math.floor((series.length - 1) / 2)].x) + '</span>'
+      + '<span>' + CH.fmtShort(series[series.length - 1].x) + '</span></div>';
+  }
+  function renderHomeDonut(){
+    var host = document.getElementById('hdonut'); if (!host) return;
+    if (!ordInited){ host.innerHTML = '<div class="chart-empty">Loading\u2026</div>'; return; }
+    var by = { complete:0, partial:0, ready:0, building:0 };
+    ordOrders.forEach(function(o){ var k = ordStatus(ordStats(o)).key; by[k] = (by[k] || 0) + 1; });
+    var segs = [
+      { l:'Complete', n:by.complete, c:'var(--ok)' },
+      { l:'Partially shipped', n:by.partial, c:'var(--accent)' },
+      { l:'Awaiting shipment', n:by.ready, c:'var(--warn)' },
+      { l:'Building', n:by.building, c:'var(--line-strong)' }
+    ];
+    var total = segs.reduce(function(a, s){ return a + s.n; }, 0);
+    if (!total){ host.innerHTML = '<div class="chart-empty">No orders yet</div>'; return; }
+    var R = 52, SW = 18, C = 2 * Math.PI * R, off = 0, SWEEP = 760;
+    var arcs = segs.map(function(s){
+      if (!s.n) return '';
+      var len = s.n / total * C;
+      var arc = '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke="' + s.c + '" stroke-width="' + SW
+        + '" stroke-dasharray="0 ' + C.toFixed(2) + '" data-da="' + len.toFixed(2) + ' ' + (C - len).toFixed(2)
+        + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 70 70)"'
+        + ' style="transition:stroke-dasharray ' + Math.max(90, len / C * SWEEP).toFixed(0)
+        + 'ms linear;transition-delay:' + (off / C * SWEEP).toFixed(0) + 'ms"/>';
+      off += len;
+      return arc;
+    }).join('');
+    host.innerHTML = '<div class="dn-wrap"><svg class="dn" viewBox="0 0 140 140">'
+      + '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke="var(--soft)" stroke-width="' + SW + '"/>'
+      + arcs + '</svg><div class="dn-center"><b>' + CH.nf(total) + '</b><span>'
+      + (total === 1 ? 'order' : 'orders') + '</span></div></div>'
+      + '<div class="dn-legend">' + segs.map(function(s){
+          return '<div class="dn-item"><span class="dn-dot" style="background:' + s.c + '"></span>'
+            + '<span class="dn-l">' + s.l + '</span><span class="dn-n">' + Math.round(s.n / total * 100) + '%</span></div>';
+        }).join('') + '</div>';
+    /* one frame later the real dash lengths land, and the transitions run */
+    requestAnimationFrame(function(){
+      host.querySelectorAll('circle[data-da]').forEach(function(c){
+        c.setAttribute('stroke-dasharray', c.getAttribute('data-da'));
+      });
+    });
+  }
+  function renderHomeRecent(){
+    var host = document.getElementById('hrecent'); if (!host) return;
+    if (!ordInited){ host.innerHTML = '<div class="chart-empty">Loading\u2026</div>'; return; }
+    if (!ordOrders.length){ host.innerHTML = '<div class="chart-empty">No orders yet</div>'; return; }
+    host.innerHTML = '<div class="rc-list">' + ordOrders.slice(0, 5).map(function(o){
+      var sc = ordStatus(ordStats(o));
+      var c = ordCustomers.find(function(x){ return String(x.id) === String(o.customer_id); });
+      return '<a class="rc-row" href="#" data-ordgo="' + esc(o.id) + '">'
+        + '<span class="rc-inv">' + esc(o.invoice_no || '\u2014') + '</span>'
+        + '<span class="rc-cust">' + esc(c ? c.name : '\u2014') + '</span>'
+        + '<span class="ord-chip ' + sc.cls + '">' + sc.label + '</span>'
+        + '<span class="rc-date">' + fmtDate(o.created_at) + '</span></a>';
+    }).join('') + '</div>';
+  }
+  function renderHomeWidgets(){ renderHomeBars(); renderHomeDonut(); renderHomeRecent(); }
   function renderHomeStatus(){
     renderHomeCharts();
+    renderHomeStats();
+    renderHomeWidgets();
     const to = document.getElementById('tileOrdStatus');
     if (to){
       if (!ordInited){ to.innerHTML = '<span class="ts-lbl">Loading\u2026</span>'; to.className = 'tile-status'; }
@@ -6650,7 +7074,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     } catch(e){
       ordListBody.innerHTML = '<div class="empty"><div class="empty-ico">!</div><p>Could not load orders.</p>' +
         '<p class="muted-sm">' + esc(e.message || String(e)) + '</p></div>';
-      ordLoading = false; return;
+      ordLoading = false;
+      renderHomeStatus();
+      return;
     }
     ordLoading = false;
     if (ordPerm.admin) await obLoad();
@@ -9784,6 +10210,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<button class="ghost btn-sm" id="rmaNext" type="button"' + (rmaPage >= pages - 1 ? ' disabled' : '') + '>Next</button></div>'
         : '');
   }
+  /* RMAs raised per 100 units shipped — the rate, not the count */
+  function rmaRate(){
+    const live = rmaTickets.filter(function(t){ return t.status !== 'cancelled'; }).length;
+    const shippedUnits = ordAllUnits.filter(function(u){ return u.unit_status === 'shipped'; }).length;
+    return shippedUnits ? (live / shippedUnits * 100).toFixed(1) : '\u2014';
+  }
   function rmaRenderKpis(){
     const k = document.getElementById('rmaKpis'); if (!k) return;
     const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; });
@@ -9795,7 +10227,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<div class="rma-kpi"><b>' + open.length + '</b><span>Open</span></div>' +
       '<div class="rma-kpi' + (waiting ? ' hot' : '') + '"><b>' + waiting + '</b><span>New to review</span></div>' +
       '<div class="rma-kpi" title="Part shipped, failed part not back yet"><b>' + shipped + '</b><span>Shipped</span></div>' +
-      '<div class="rma-kpi"><b>' + (avg == null ? '\u2014' : avg + 'd') + '</b><span>Avg days to close</span></div>';
+      '<div class="rma-kpi"><b>' + (avg == null ? '\u2014' : avg + 'd') + '</b><span>Avg days to close</span></div>' +
+      '<div class="rma-kpi" title="RMAs raised per 100 units shipped"><b>' + rmaRate() + '</b><span>Per 100 shipped</span></div>';
     const ch = document.getElementById('rmaCharts');
     if (!rmaTickets.length){ ch.style.display = 'none'; return; }
     ch.style.display = '';
@@ -9835,19 +10268,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     rmaFailRange = b.getAttribute('data-failrange'); localStorage.setItem('rmaFailRange', rmaFailRange);
     rmaFailInto('hrFail'); rmaFailInto('rmaFail');
   });
-  /* home: open count, RMAs per 100 units shipped, the same trend and failure charts */
-  function rmaRenderHomeCharts(){
-    const g = document.getElementById('homeRmaGrid'); if (!g) return;
-    if (!rmaTickets.length){ g.style.display = 'none'; return; }
-    g.style.display = '';
-    const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; }).length;
-    const live = rmaTickets.filter(function(t){ return t.status !== 'cancelled'; }).length;
-    const shippedUnits = ordAllUnits.filter(function(u){ return u.unit_status === 'shipped'; }).length;
-    rmaTrendInto('hrPlot', 'hrVal', 'hrSub');
-    document.getElementById('hrVal').textContent = CH.nf(open);
-    document.getElementById('hrSub').textContent = 'open \u00b7 ' + (shippedUnits ? (live / shippedUnits * 100).toFixed(1) + ' RMAs per 100 units shipped' : CH.nf(live) + ' all time');
-    rmaFailInto('hrFail');
-  }
+  /* the charts live on the RMA page now; home keeps only its stat card */
+  function rmaRenderHomeCharts(){ renderHomeStats(); }
   /* a small flag beside a serial anywhere in Orders */
   function rmaUnitFlag(u){
     if (!u || !rmaTickets.length) return '';
@@ -12064,7 +12486,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      batch paging) never refill. */
   (function(){
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var SEL = '.ord-prog i, .ord-prog-track i, .ord-prog > span, .bill-rail i, .pipe-bar i, .rw-fill, .bill-bar-t';
+    var SEL = '.ord-prog i, .ord-prog-track i, .ord-prog > span, .bill-rail i, .pipe-bar i, .rw-fill, .bill-bar-t, .rma-fail-bar i';
     var PROPS = ['width', 'height', 'flex-basis'];
     var FILL = 620, STEP = 45, MAXDELAY = 270, GRACE = 900;
     var armed = true, disarming = 0, observer = null, lastKey = null;
@@ -12230,7 +12652,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      does not restart them. The final string is kept verbatim and restored on
      the last frame, so the number the user reads is never a reconstruction. */
   (function(){
-    var SEL = '.bill-kv';
+    var SEL = '.bill-kv, .count-int';
     var RUN = 900, GRACE = 1200;
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
     var armed = true, disarming = 0;
@@ -12239,6 +12661,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US',
         { minimumFractionDigits:2, maximumFractionDigits:2 });
     }
+    function whole(n){ return Math.round(n).toLocaleString('en-US'); }
     function run(el){
       /* The true figure is captured once, from the render, and never read back
          from the live text: a re-arm mid-climb would otherwise adopt an
@@ -12247,6 +12670,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (el.dataset.counted) return;
       el.dataset.counted = '1';
       var finalText = el.dataset.final;
+      var fmt = el.classList.contains('count-int') ? whole : money;
       var target = parseFloat(finalText.replace(/[^0-9.\-]/g, ''));
       if (isNaN(target) || reduce.matches){ el.textContent = finalText; return; }
       if (!disarming) disarming = setTimeout(function(){ armed = false; }, GRACE);
@@ -12270,7 +12694,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         var t = Math.min(1, Math.max(0, (now - start) / RUN));
         if (t >= 1){ land(); return; }
         /* ease-out: climbs fast, lands gently on the real figure */
-        el.textContent = money(target * (1 - Math.pow(1 - t, 3)));
+        el.textContent = fmt(target * (1 - Math.pow(1 - t, 3)));
         el.__cntRaf = requestAnimationFrame(step);
       }
       /* if frames are being throttled, land on the real figure on the clock
@@ -12304,6 +12728,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         }
       });
     }).observe(document.body, { childList: true, subtree: true });
+
+    window.ntCountUp = function(el){
+      if (!el) return;
+      delete el.dataset.counted;
+      delete el.dataset.final;
+      run(el);
+    };
 
     scan(document.body);
   })();
