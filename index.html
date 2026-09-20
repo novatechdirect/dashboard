@@ -1426,6 +1426,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   body.mg-comparing .controls{ padding-bottom:180px; }
 
   .mg-sect{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin:var(--s6) 0 var(--s3); }
+  .mg-actions{ display:flex; gap:var(--s2); margin-left:auto; flex:0 0 auto; }
+  /* on its own, above the list, it still sits to the right */
+  #mgActions:not(.mg-sect .mg-actions){ margin:var(--s5) 0 var(--s3); justify-content:flex-end; }
+  @media (max-width:700px){
+    .mg-sect .mg-actions{ margin-left:0; width:100%; }
+    .mg-sect .mg-actions > *{ flex:1 1 auto; justify-content:center; }
+  }
   .mg-sect .inv-cat{ margin:0; }
 
   @media (max-width:700px){
@@ -2598,10 +2605,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       grid-column:1 / -1; width:100%; height:36px; min-height:36px; font-size:16px;
     }
     .ord-bar-l button, .ord-bar-r button{ width:100%; }
-    /* the RMA list bar carries one action, so search and Export share a row */
-    #rmaListPane .ord-bar{ grid-template-columns:minmax(0,1fr) auto; }
-    #rmaListPane .ord-bar-l input[type="text"]{ grid-column:auto; }
-    #rmaListPane .ord-bar-r button{ width:auto; white-space:nowrap; }
+    /* the RMA list bar: search on its own line, then the three actions */
+    #rmaListPane .ord-bar{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+    #rmaListPane .ord-bar-l input[type="text"]{ grid-column:1 / -1; }
+    #rmaListPane .ord-bar-r button{ width:100%; white-space:nowrap; }
 
     /* top-biased, not dead-centre: the sticky header and the browser's own
        bottom bar make a mathematically centred card read low on a phone */
@@ -2615,7 +2622,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
            surrounding panel steps back to give the invoice cards the room --- */
     @media (max-width:430px){
       .ord-bar{ grid-template-columns:repeat(3, minmax(0,1fr)); }
-      #rmaListPane .ord-bar{ grid-template-columns:minmax(0,1fr) auto; }
       .ord-bar-l button, .ord-bar-r button{
         min-height:36px !important; padding:4px 8px !important;
         font-size:11.5px !important; line-height:1.2;
@@ -2810,7 +2816,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .spark-q.low{ color:var(--warn-ink); }
   .spark svg{ display:block; width:100%; height:44px; margin-top:var(--s2); }
   .spark-sub{ font-size:11.5px; color:var(--muted); margin-top:var(--s1); }
-  @media (max-width:700px){ .chart-val{ font-size:24px; } .chart-tabs{ width:100%; } .chart-tab{ flex:1 1 auto; } }
+  @media (max-width:700px){
+    .chart-val{ font-size:24px; } .chart-tabs{ width:100%; } .chart-tab{ flex:1 1 auto; }
+    .bars{ height:112px; gap:4px; margin-top:var(--s3); }
+    #homeBuilds .chart-val{ font-size:22px; }
+    #homeBuilds .chart-head{ margin-bottom:0; }
+  }
   /* charts eat a phone screen; on mobile they fold behind a toggle */
   .chart-toggle{ display:none; }
   @media (max-width:820px){
@@ -2832,10 +2843,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      ============================================================ */
   .rma-kpis{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:var(--s3); margin-bottom:var(--s5); }
   @media (max-width:1100px){ .rma-kpis{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
-  .rma-kpi{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); }
+  .rma-kpi{
+    border-radius:var(--r-md); padding:var(--s4);
+    background:color-mix(in srgb, var(--kpi-hue, var(--accent)) 4%, var(--paper));
+    border:1px solid color-mix(in srgb, var(--kpi-hue, var(--accent)) 17%, var(--paper));
+  }
+  :root[data-theme="dark"] .rma-kpi{
+    background:color-mix(in srgb, var(--kpi-hue, var(--accent)) 9%, var(--paper));
+    border-color:color-mix(in srgb, var(--kpi-hue, var(--accent)) 26%, var(--paper));
+  }
+  @supports not (color: color-mix(in srgb, red, blue)){
+    .rma-kpi{ background:var(--soft); border-color:var(--line-strong); }
+  }
   .rma-kpi b{ display:block; font-size:24px; font-weight:600; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; line-height:1.2; }
-  .rma-kpi span{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--faint); }
+  .rma-kpi span{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+  /* the count that wants something done reads in its own colour */
   .rma-kpi.hot b{ color:var(--warn-ink); }
+  .rma-kpi.hot span{ color:var(--warn-ink); }
   .rma-row{
     display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto 110px 24px; gap:var(--s4); align-items:center;
     padding:var(--s4) var(--s4b); border:1px solid var(--line); border-radius:var(--r-md); background:var(--paper);
@@ -3356,7 +3380,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* the greeting is a single line, so home starts higher than the other tools */
   #toolHome{ margin-top:calc(var(--s5) * -1); }
   #toolHome > .app-header{ margin-bottom:var(--s5); }
-  @media (max-width:700px){ #toolHome{ margin-top:calc(var(--s3) * -1); } }
+  @media (max-width:700px){ #toolHome{ margin-top:0; } }
 
   /* stats row — four numbers worth reading before anything else */
   .stat-row{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s4); margin-bottom:var(--s5); }
@@ -3562,6 +3586,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     body.authed #homeQuick .tile.qa{ max-height:92px; }
     body.authed #homeBuilds .bars{ height:190px; }
   }
+
+  .tc-preview{ display:flex; align-items:center; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; }
+  .tc-preview > span{ min-width:0; }
+  .tc-preview .btn-sm{ flex:0 0 auto; }
 
   /* boot: a held frame while the session is checked */
   .boot-splash{ display:none; }
@@ -3963,12 +3991,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <p class="tagline">Hours and pay, every two weeks</p>
         </div>
       </div>
-      <div class="header-right" id="tcViewToggle" style="display:none;">
-        <button class="ghost btn-sm" id="tcAsEmployee" type="button" title="See this page the way your team sees it">Employee view</button>
-      </div>
     </header>
 
-    <p class="rma-next" id="tcPreviewBanner" style="display:none;">Employee view — your own hours, no team summary. This is what everyone on the roster sees.</p>
+    <p class="rma-next tc-preview" id="tcPreviewBanner" style="display:none;">
+      <span>Employee view &mdash; your own hours, no team summary. This is what everyone on the roster sees.</span>
+      <button class="ghost btn-sm" id="tcAsAdmin" type="button">Back to admin view</button>
+    </p>
 
     <section class="card">
       <h2 class="card-title">My hours</h2>
@@ -4017,6 +4045,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <button class="ghost btn-sm" id="tcPrevPeriod">&larr; Prev</button>
           <button class="ghost btn-sm" id="tcNextPeriod">Next &rarr;</button>
           <button class="ghost btn-sm" id="tcCsvBtn">Export CSV</button>
+          <span id="tcViewToggle" style="display:none;">
+            <button class="ghost btn-sm" id="tcAsEmployee" type="button" title="See this page the way your team sees it">Employee view</button>
+          </span>
         </div>
       </div>
       <p class="muted-sm" id="tcPeriodRange" style="margin:0 0 var(--s3);"></p>
@@ -4062,10 +4093,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             <p class="tagline">Warranty parts, tracked by serial number</p>
           </div>
         </div>
-        <div class="header-right">
-          <button class="ghost btn-sm" id="rmaRefresh">Refresh</button>
-          <button class="primary btn-sm" id="rmaNewBtn" style="display:none;">New RMA</button>
-        </div>
       </header>
       <div class="rma-kpis" id="rmaKpis"></div>
       <div class="chart-grid" id="rmaCharts" style="display:none;">
@@ -4088,7 +4115,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             <input id="rmaSearch" type="text" placeholder="Search RMA #, serial, customer or invoice">
           </div>
           <div class="ord-bar-r">
+            <button class="ghost btn-sm" id="rmaRefresh">Refresh</button>
             <button class="ghost btn-sm" id="rmaCsv">Export</button>
+            <button class="primary btn-sm" id="rmaNewBtn" style="display:none;">New RMA</button>
           </div>
         </div>
         <div class="ord-chips" id="rmaChips">
@@ -4121,15 +4150,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <p class="tagline">Build costs &middot; profit &middot; margin per channel</p>
         </div>
       </div>
-      <div class="header-right">
-        <button class="ghost btn-sm" id="mgCompareBtn">Compare</button>
-        <button class="primary btn-sm" id="mgAddBtn">+ Add build</button>
-      </div>
     </header>
     <section class="card">
       <div class="mg-pills" id="mgChannelBar"></div>
     </section>
     <div class="mg-kpis" id="mgKpis"></div>
+    <div class="mg-actions" id="mgActions">
+      <button class="ghost btn-sm" id="mgCompareBtn">Compare</button>
+      <button class="primary btn-sm" id="mgAddBtn">+ Add build</button>
+    </div>
     <div id="mgBody"><p class="muted-line">Loading&hellip;</p></div>
     <div style="margin:22px 0 8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <div class="inv-cat" style="margin:0;">Custom one-off builds</div>
@@ -5754,15 +5783,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     tcTeamCard.style.display = asAdmin ? '' : 'none';
     const toggle = document.getElementById('tcViewToggle');
     if (toggle) toggle.style.display = tcIsAdmin ? '' : 'none';
-    const btn = document.getElementById('tcAsEmployee');
-    if (btn) btn.textContent = tcPreview ? 'Back to admin view' : 'Employee view';
     const banner = document.getElementById('tcPreviewBanner');
     if (banner) banner.style.display = tcPreview ? '' : 'none';
     renderTcMine();
     renderTcHours();
   }
   document.addEventListener('click', function(e){
-    if (e.target.closest('#tcAsEmployee')){ tcPreview = !tcPreview; tcApplyView(); }
+    if (e.target.closest('#tcAsEmployee, #tcAsAdmin')){ tcPreview = !tcPreview; tcApplyView(); }
   });
   let tcHoursRows = [];       // rows visible to me (own, or all if admin)
   let tcInited = false;
@@ -6378,10 +6405,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (!ls.length) return;
       x += '<div class="mg-sect"><div class="inv-cat">' + nm + '</div></div>' + ls.map(mgLineCard).join('');
     });
+    const keep = document.getElementById('mgActions');
+    if (keep && keep.parentNode) keep.parentNode.removeChild(keep);
     el.innerHTML = x || ('<div class="empty">'
       + mgIco('empty-ico', '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g>')
       + '<h4>No builds yet</h4><p>Add your first build to start tracking cost, profit and margin by channel.</p>'
       + '<button class="primary btn-sm empty-act" id="mgEmptyAdd">+ Add build</button></div>');
+    if (keep){
+      const first = el.querySelector('.mg-sect');
+      if (first) first.appendChild(keep);
+      else el.parentNode.insertBefore(keep, el);
+    }
   }
   function mgRenderCustom(){
     const el = document.getElementById('mgCustomBody'); if (!el) return;
@@ -10770,12 +10804,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const shipped = open.filter(function(t){ return t.status === 'shipped'; }).length;
     const done = rmaTickets.filter(function(t){ return t.status === 'closed' && t.closed_at; });
     const avg = done.length ? Math.round(done.reduce(function(s, t){ return s + rmaDays(t.created_at, t.closed_at); }, 0) / done.length) : null;
+    /* indigo for the live caseload, amber for what waits on us, blue for what
+       is in transit, green for speed, grey for the reference rate */
     k.innerHTML =
-      '<div class="rma-kpi"><b>' + open.length + '</b><span>Open</span></div>' +
-      '<div class="rma-kpi' + (waiting ? ' hot' : '') + '"><b>' + waiting + '</b><span>New to review</span></div>' +
-      '<div class="rma-kpi" title="Part shipped, failed part not back yet"><b>' + shipped + '</b><span>Shipped</span></div>' +
-      '<div class="rma-kpi"><b>' + (avg == null ? '\u2014' : avg + 'd') + '</b><span>Avg days to close</span></div>' +
-      '<div class="rma-kpi" title="RMAs raised per 100 units shipped"><b>' + rmaRate() + '</b><span>Per 100 shipped</span></div>';
+      '<div class="rma-kpi" style="--kpi-hue:var(--info)"><b>' + open.length + '</b><span>Open</span></div>' +
+      '<div class="rma-kpi' + (waiting ? ' hot' : '') + '" style="--kpi-hue:var(--warn)"><b>' + waiting + '</b><span>New to review</span></div>' +
+      '<div class="rma-kpi" style="--kpi-hue:var(--hue-rma)" title="Part shipped, failed part not back yet"><b>' + shipped + '</b><span>Shipped</span></div>' +
+      '<div class="rma-kpi" style="--kpi-hue:var(--ok)"><b>' + (avg == null ? '\u2014' : avg + 'd') + '</b><span>Avg days to close</span></div>' +
+      '<div class="rma-kpi" style="--kpi-hue:var(--stone)" title="RMAs raised per 100 units shipped"><b>' + rmaRate() + '</b><span>Per 100 shipped</span></div>';
     const ch = document.getElementById('rmaCharts');
     if (!rmaTickets.length){ ch.style.display = 'none'; return; }
     ch.style.display = '';
