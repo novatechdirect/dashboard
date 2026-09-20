@@ -21,6 +21,12 @@
     try{
       var t = localStorage.getItem('ntTheme') === 'dark' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', t);
+      /* the session resolves asynchronously; until it does show neither
+         screen, rather than flashing sign-in at someone already signed in */
+      document.documentElement.classList.add('nt-boot');
+      /* if the check never comes back, fall through to the normal screens
+         rather than spinning forever */
+      setTimeout(function(){ document.documentElement.classList.remove('nt-boot'); }, 5000);
     }catch(e){}
   })();
 </script>
@@ -121,7 +127,7 @@
   header.top{
     display:flex; align-items:center; justify-content:space-between; gap:var(--s5);
     /* brand and actions land on the same columns as the page content below */
-    padding:var(--s3) max(var(--s5), calc((100% - 1280px) / 2)); background:var(--paper);
+    padding:var(--s3) max(var(--s5), calc((100% - 2040px) / 2)); background:var(--paper);
     border-bottom:1px solid var(--line); position:sticky; top:0; z-index:30; flex-wrap:nowrap;
     box-shadow:var(--e1);
   }
@@ -193,7 +199,7 @@
   :root:not([data-theme="light"]) .i-moon{ display:none; }
 
   /* ---------- layout ---------- */
-  .wrap{ max-width:1280px; margin:0 auto; padding:var(--s7) var(--s6) var(--s8); }
+  .wrap{ max-width:2040px; margin:0 auto; padding:var(--s7) var(--s6) var(--s8); }
   .card{
     background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
     padding:var(--s5); margin-bottom:var(--s5); box-shadow:none;
@@ -950,7 +956,7 @@
      so it gets its own band under the header rather than crowding the brand. */
   #staffPick{
     display:flex; align-items:center; gap:var(--s2);
-    padding:5px max(var(--s5), calc((100% - 1280px) / 2));
+    padding:5px max(var(--s5), calc((100% - 2040px) / 2));
     background:var(--warn-bg); border-bottom:1px solid var(--warn-line);
   }
   #staffPick .staffbadge{ flex:0 0 auto; }
@@ -1138,18 +1144,41 @@
   body.authed.rail-mini{ padding-left:var(--rail-mini); }
   body.authed .siderail{
     display:flex; flex-direction:column; position:fixed; left:0; top:0; bottom:0;
-    width:var(--rail); z-index:31; background:var(--paper); border-right:1px solid var(--line);
+    width:var(--rail); z-index:31; background:var(--paper); border-right:1px solid var(--line); --rail-pad:var(--s3);
     padding:var(--s4) var(--s3) 0; overflow-y:auto; overscroll-behavior:contain;
     transition:width var(--t);
   }
-  body.authed.rail-mini .siderail{ width:var(--rail-mini); padding-inline:var(--s2); }
+  body.authed.rail-mini .siderail{ width:var(--rail-mini); padding-inline:var(--s2); --rail-pad:var(--s2); }
 
-  .rail-brand{ display:flex; align-items:center; padding:var(--s2) var(--s3) var(--s5); overflow:hidden; }
+  .rail-head{
+    display:flex; align-items:center; gap:var(--s2);
+    padding:var(--s2) var(--s3) var(--s5); min-width:0;
+  }
+  .rail-brand{ display:flex; align-items:center; flex:1 1 auto; min-width:0; padding:0; overflow:hidden; }
+/* expanded, the control sits with the logo; collapsed, it moves to the header */
+  .rail-toggle{
+    display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+    width:32px; height:32px; min-height:32px; padding:0;
+    border-radius:var(--r-sm); background:transparent; border:1px solid transparent;
+    color:var(--muted); cursor:pointer;
+    transition:background var(--t), color var(--t), border-color var(--t);
+  }
+  .rail-toggle:hover{ background:var(--soft); color:var(--ink); border-color:var(--line); }
+  .rail-toggle:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .rail-toggle svg{ width:17px; height:17px; display:block; }
+  .rail-toggle.in-rail{ color:var(--faint); }
+  .rail-toggle.in-rail:hover{ color:var(--ink); }
+  .rail-toggle.in-top{ margin-left:-6px; }
+  body:not(.authed) .rail-toggle{ display:none; }
+  body.authed.rail-mini .rail-toggle.in-rail{ display:none; }
+  body.authed:not(.rail-mini) .rail-toggle.in-top{ display:none; }
+  body.authed header.top .brand{ margin-left:var(--s2); }
   .rail-logo{ height:26px; width:auto; display:block; }
   .rail-logo.is-dark, .rail-logo.is-mark{ display:none; }
   :root[data-theme="dark"] .rail-logo.is-light{ display:none; }
   :root[data-theme="dark"] .rail-logo.is-dark{ display:block; }
-  body.authed.rail-mini .rail-brand{ justify-content:center; padding:var(--s2) 0 var(--s5); }
+  body.authed.rail-mini .rail-head{ justify-content:center; padding-inline:0; }
+  body.authed.rail-mini .rail-brand{ justify-content:center; padding:0; }
   body.authed.rail-mini .rail-logo.is-light,
   body.authed.rail-mini .rail-logo.is-dark{ display:none; }
   body.authed.rail-mini .rail-logo.is-mark{ display:block; width:32px; height:32px; }
@@ -1162,13 +1191,68 @@
   body.authed .pmenu a > svg{ width:19px; height:19px; flex:0 0 auto; }
   body.authed .pmenu a .nav-lbl{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
   body.authed .pmenu .pbadge{ margin-left:auto; }
+  /* one indicator slides between rows instead of each row lighting up */
+  .siderail .pmenu{ position:relative; }
+  .nav-ind{
+    position:absolute; left:calc(var(--rail-pad, var(--s3)) * -1); right:0; top:0; height:38px;
+    background:var(--ink-deep); border-radius:0 var(--r-sm) var(--r-sm) 0;
+    opacity:0; pointer-events:none; z-index:0; transition:none;
+  }
+  .nav-ind.ready{
+    transition:transform 200ms cubic-bezier(.2,.7,.2,1), height 200ms cubic-bezier(.2,.7,.2,1),
+               left var(--t), opacity 140ms linear;
+  }
+  @media (prefers-reduced-motion: reduce){ .nav-ind.ready{ transition:opacity 140ms linear; } }
+  .siderail .pmenu a{ position:relative; z-index:1; }
+  /* the indicator carries the fill now, so the row itself stays clear */
+  body.authed .siderail .pmenu a.on,
+  body.authed .siderail .pmenu a.on:hover{ background:transparent; color:var(--on-ink); }
   body.authed.rail-mini .pmenu a{ justify-content:center; padding-inline:0; }
   body.authed.rail-mini .pmenu a .nav-lbl{ display:none; }
   body.authed.rail-mini .pmenu .pbadge{ position:absolute; top:2px; right:10px; margin:0; }
 
-  .rail-foot{ margin-top:auto; padding:var(--s4) var(--s3); border-top:1px solid var(--line); }
+  .rail-foot{
+    margin-top:auto; padding:var(--s3) var(--s3) var(--s4); border-top:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:flex-start; gap:var(--s3);
+  }
   .rail-ver{ font-size:11.5px; color:var(--faint); }
-  body.authed.rail-mini .rail-foot{ display:none; }
+  body.authed.rail-mini .rail-foot{ align-items:center; padding-inline:0; }
+  body.authed.rail-mini .rail-ver{ display:none; }
+
+  /* theme switch — the control states what it is, the track states where it is */
+  .rail-theme{
+    display:flex; align-items:center; gap:var(--s2); width:100%;
+    padding:6px 8px; min-height:38px; border-radius:var(--r-sm);
+    background:transparent; border:1px solid transparent; color:var(--muted);
+    font-size:13px; font-weight:500; text-align:left; cursor:pointer;
+    transition:background var(--t), color var(--t), border-color var(--t);
+  }
+  .rail-theme:hover{ background:var(--soft); color:var(--ink); border-color:var(--line); }
+  .rail-theme:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .rt-ico{ display:flex; flex:0 0 auto; color:var(--faint); }
+  .rail-theme:hover .rt-ico{ color:var(--ink); }
+  .rt-ico svg{ width:17px; height:17px; display:block; }
+  :root[data-theme="light"] .rt-ico .i-sun{ display:block; }
+  :root[data-theme="light"] .rt-ico .i-moon{ display:none; }
+  :root[data-theme="dark"] .rt-ico .i-sun{ display:none; }
+  :root[data-theme="dark"] .rt-ico .i-moon{ display:block; }
+  .rt-lbl{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rt-track{
+    position:relative; flex:0 0 auto; width:38px; height:22px; border-radius:var(--r-pill);
+    background:var(--line-strong); transition:background var(--t);
+  }
+  .rt-knob{
+    position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 2px rgba(10,21,48,.28); transition:transform var(--t);
+  }
+  :root[data-theme="dark"] .rt-track{ background:var(--accent); }
+  :root[data-theme="dark"] .rt-knob{ transform:translateX(16px); }
+  @media (prefers-reduced-motion: reduce){ .rt-knob{ transition:none; } }
+  body.authed.rail-mini .rail-theme{ width:auto; justify-content:center; padding:6px; }
+  body.authed.rail-mini .rt-lbl, body.authed.rail-mini .rt-track{ display:none; }
+  body.authed.rail-mini .rt-ico svg{ width:19px; height:19px; }
+  /* the rail owns the theme control once signed in; the login screen keeps its own */
+  body.authed .who #themeBtn{ display:none; }
 
   .rail-btn{
     display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
@@ -1182,7 +1266,7 @@
   body.authed header.top .brand{ margin-right:auto; }
   /* the rail carries the mark on desktop, so the header leads with the name */
   @media (min-width:701px){
-    body.authed header.top .brand img{ display:none; }
+    :root body.authed header.top .brand img{ display:none; }
     body.authed header.top .brand > div{ padding-left:0; }
     body.authed header.top .brand > div::before{ display:none; }
   }
@@ -1329,7 +1413,11 @@
       background:color-mix(in srgb, var(--paper) 94%, transparent);
       -webkit-backdrop-filter:saturate(180%) blur(12px); backdrop-filter:saturate(180%) blur(12px);
     }
-    .rail-brand, .rail-foot{ display:none; }
+    .rail-head, .rail-foot{ display:none; }
+    .nav-ind{ display:none; }
+    body.authed .siderail .pmenu a.on{ background:var(--ink-deep); }
+    /* phones keep the bottom tab bar, so the header takes the theme control back */
+    body.authed .who #themeBtn{ display:inline-flex; }
     body.authed .pmenu, body.authed.rail-mini .pmenu{
       flex-direction:row; flex:1 1 auto; gap:2px; background:none; border:none; padding:0; margin:0;
     }
@@ -1346,6 +1434,139 @@
     .stat-row{ gap:var(--s3); }
   }
   @media (max-width:560px){ .qa-grid{ grid-template-columns:1fr; } }
+  /* ============================================================
+     GLOBAL SEARCH — one field in the header, centred on the content
+     column. Every term it matches is an identifier, so a hit is a
+     record to open rather than a filter to apply.
+     ============================================================ */
+  .gsearch{ display:none; }
+  body.authed .gsearch{
+    display:block; position:relative; flex:0 1 420px; min-width:0; margin-inline:auto;
+  }
+  body.authed header.top .brand{ flex:0 1 auto; }
+  .gs-field{
+    display:flex; align-items:center; gap:var(--s2); height:36px; padding:0 var(--s3);
+    background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill);
+    transition:background var(--t), border-color var(--t), box-shadow var(--t);
+  }
+  .gs-field:focus-within{ background:var(--paper); border-color:var(--accent); box-shadow:var(--ring); }
+  .gs-ico{ display:flex; flex:0 0 auto; color:var(--faint); }
+  .gs-ico svg{ width:16px; height:16px; display:block; }
+  .gs-field:focus-within .gs-ico{ color:var(--accent); }
+  #gsInput{
+    flex:1 1 auto; min-width:0; height:100%; padding:0; margin:0;
+    background:none; border:0; outline:none; box-shadow:none !important;
+    font:inherit; font-size:13.5px; color:var(--ink); min-height:0 !important; border-radius:0 !important;
+  }
+  #gsInput::placeholder{ color:var(--faint); }
+  .gs-x{
+    display:none; align-items:center; justify-content:center; flex:0 0 auto;
+    width:20px; height:20px; min-height:20px; padding:0; border:0; background:none;
+    color:var(--faint); cursor:pointer; border-radius:50% !important;
+  }
+  .gs-x:hover{ color:var(--ink); background:var(--line); }
+  .gs-x svg{ width:13px; height:13px; display:block; }
+  .gsearch.has-q .gs-x{ display:inline-flex; }
+  .gs-cancel{ display:none; }
+  .gs-btn{ display:none; }
+  .gs-scrim{ display:none; }
+
+  .gs-panel{
+    display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:40;
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
+    box-shadow:var(--e3); overflow:hidden; max-height:min(70vh, 460px); overflow-y:auto;
+    animation:gsDrop 140ms cubic-bezier(.2,.7,.2,1);
+  }
+  @keyframes gsDrop{ from{ opacity:0; transform:translateY(-6px); } }
+  .gsearch.open .gs-panel{ display:block; }
+  .gs-group{
+    padding:var(--s3) var(--s4) 4px; font-size:10.5px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
+  }
+  .gs-row{
+    display:grid; grid-template-columns:28px minmax(0,1fr) auto; align-items:center;
+    gap:var(--s3); width:100%; padding:9px var(--s4); min-height:0;
+    background:none; border:0; border-radius:0 !important; text-align:left; cursor:pointer;
+    color:inherit; font:inherit; box-shadow:none;
+  }
+  .gs-row:hover, .gs-row.sel{ background:var(--soft); }
+  .gs-rico{
+    display:flex; align-items:center; justify-content:center;
+    width:28px; height:28px; border-radius:var(--r-sm);
+    background:var(--soft); color:var(--gs-hue, var(--accent)); border:1px solid var(--line);
+  }
+  .gs-row:hover .gs-rico, .gs-row.sel .gs-rico{ background:var(--paper); }
+  .gs-rico svg{ width:15px; height:15px; display:block; }
+  .gs-txt{ min-width:0; }
+  .gs-t{ display:block; font-size:13.5px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gs-t mark{ background:color-mix(in srgb, var(--accent) 22%, transparent); color:inherit; border-radius:2px; padding:0 1px; }
+  .gs-s{ display:block; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gs-tag{ flex:0 0 auto; font-size:11px; color:var(--faint); white-space:nowrap; }
+  .gs-empty{ padding:var(--s5) var(--s4); text-align:center; font-size:13px; color:var(--muted); }
+
+  body.authed .who{ flex:0 1 auto; min-width:max-content; }
+  @media (max-width:1240px){ body.authed .gsearch{ flex-basis:320px; } }
+  @media (max-width:1040px){ body.authed .gsearch{ flex-basis:240px; } }
+  @media (max-width:700px){
+    body.authed .gsearch{ display:none; }
+    body.authed .gs-btn{
+      display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+      width:36px; height:36px; min-height:36px; padding:0; margin-left:auto;
+      border-radius:50% !important; background:transparent; border:1px solid transparent;
+      color:var(--muted); cursor:pointer;
+    }
+    body.authed .gs-btn:hover{ background:var(--soft); color:var(--ink); }
+    .gs-btn svg{ width:18px; height:18px; display:block; }
+
+    body.gs-open .gs-scrim{
+      display:block; position:fixed; inset:0; z-index:58;
+      background:var(--scrim, rgba(10,21,48,.5)); animation:gsFade 160ms ease-out;
+    }
+    @keyframes gsFade{ from{ opacity:0; } }
+    body.gs-open .gsearch{
+      display:block; position:fixed; top:0; left:0; right:0; z-index:60; margin:0;
+      padding:calc(var(--s3) + env(safe-area-inset-top)) var(--s4) var(--s3);
+      background:var(--paper); border-bottom:1px solid var(--line);
+      animation:gsSheet 220ms cubic-bezier(.2,.7,.2,1);
+    }
+    @keyframes gsSheet{ from{ opacity:0; transform:translateY(-100%); } }
+    body.gs-open .gs-field{ height:40px; }
+    body.gs-open .gs-cancel{
+      display:inline-flex; align-items:center; flex:0 0 auto; padding:0 0 0 var(--s2);
+      min-height:0; background:none; border:0; border-radius:0 !important;
+      color:var(--accent-fg); font:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+    }
+    body.gs-open .gs-panel{
+      position:static; margin-top:var(--s3); box-shadow:none; border-radius:var(--r-sm);
+      max-height:calc(100vh - 140px); animation:none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .gs-panel, body.gs-open .gsearch, body.gs-open .gs-scrim{ animation:none; }
+  }
+
+  /* boot: a held frame while the session is checked */
+  .boot-splash{ display:none; }
+  :root.nt-boot .boot-splash{
+    display:flex; align-items:center; justify-content:center; min-height:min(50vh, 340px);
+  }
+  :root.nt-boot #loginView{ display:none !important; }
+  .boot-dot{
+    width:22px; height:22px; border-radius:50%;
+    border:2px solid var(--line); border-top-color:var(--accent);
+    animation:bootSpin 700ms linear infinite;
+  }
+  @keyframes bootSpin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .boot-dot{ animation-duration:2s; } }
+
+  /* wide window: the status card has room for the ring and its key on one
+     line, which reads better than a column of air beneath the donut */
+  @media (min-width:1500px){
+    #pdonut{ display:flex; align-items:center; justify-content:center; gap:var(--s6); padding:0 var(--s4); }
+    #pdonut .dn-wrap{ flex:0 0 auto; margin:var(--s4) 0; }
+    #pdonut .dn-legend{ flex:0 1 250px; margin-top:0; }
+    .hbars{ height:190px; }
+  }
   @media (max-width:430px){ .stat-row{ grid-template-columns:1fr; } }
   @keyframes plotDraw{ from{ clip-path:inset(0 100% 0 0); } }
   #rRatePlot > svg{ animation:plotDraw 900ms cubic-bezier(.2,.7,.2,1) backwards; }
@@ -1355,31 +1576,56 @@
 </style>
 </head>
 <body>
+<script>/* last known state, so the shell paints instead of a blank frame */
+(function(){try{if(localStorage.getItem('ntWasAuthed')==='1')document.body.classList.add('authed');}catch(e){}})();</script>
 
 <aside class="siderail" id="siderail">
-  <a class="rail-brand" href="#" data-pview="home">
-    <img class="rail-logo is-light" src="logo.png" alt="Novatech" onerror="this.style.display='none'">
-    <img class="rail-logo is-dark" src="logo-dark.png" alt="Novatech" onerror="this.style.display='none'">
-    <img class="rail-logo is-mark" src="logo-mark.png" alt="" onerror="this.style.display='none'">
-  </a>
+  <div class="rail-head">
+    <a class="rail-brand" href="#" data-pview="home">
+      <img class="rail-logo is-light" src="logo.png" alt="Novatech" onerror="this.style.display='none'">
+      <img class="rail-logo is-dark" src="logo-dark.png" alt="Novatech" onerror="this.style.display='none'">
+      <img class="rail-logo is-mark" src="logo-mark.png" alt="" onerror="this.style.display='none'">
+    </a>
+    <button type="button" class="rail-toggle in-rail" id="railToggle" title="Collapse sidebar" aria-label="Collapse sidebar"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14.5 6L9 12l5.5 6"/></svg></button>
+  </div>
   <nav class="pmenu" id="pmenu" aria-label="Sections">
     <a data-pview="home" class="on" role="button" tabindex="0"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z"/><path stroke-linecap="round" d="M12 15L12 18"/></g></svg><span class="nav-lbl">Home</span></a>
     <a data-pview="orders" role="button" tabindex="0"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg><span class="nav-lbl">Orders</span></a>
     <a data-pview="rmas" role="button" tabindex="0"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg><span class="nav-lbl">RMAs</span><span class="pbadge" id="pmenuBadge" style="display:none;"></span></a>
     <a data-pview="billing" id="navBilling" role="button" tabindex="0" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg><span class="nav-lbl">Billing</span></a>
   </nav>
-  <div class="rail-foot"><span class="rail-ver">Order portal</span></div>
+  <div class="rail-foot">
+    <button type="button" class="rail-theme" id="themeSwitch" role="switch" aria-checked="false" aria-label="Dark mode" title="Dark mode">
+      <span class="rt-ico"><svg viewBox="0 0 24 24" class="i-sun"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4.5"/><path stroke-linecap="round" d="M12 2.5V4M12 20V21.5M21.5 12H20M4 12H2.5M18.7 5.3l-1.1 1.1M6.4 17.6l-1.1 1.1M18.7 18.7l-1.1-1.1M6.4 6.4L5.3 5.3"/></g></svg><svg viewBox="0 0 24 24" class="i-moon"><path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" d="M20.958 15.325c.204-.486-.379-.9-.88-.73a7 7 0 0 1-8.996-8.807c.18-.5-.22-1.096-.713-.895A8.5 8.5 0 1 0 20.958 15.325Z"/></svg></span>
+      <span class="rt-lbl">Dark mode</span>
+      <span class="rt-track"><span class="rt-knob"></span></span>
+    </button>
+    <span class="rail-ver">Order portal</span>
+  </div>
 </aside>
 
 <header class="top" id="topbar" style="display:none;">
-  <button type="button" class="rail-btn" id="railToggle" title="Collapse sidebar" aria-label="Collapse sidebar">
-    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></g></svg>
-  </button>
+  <button type="button" class="rail-toggle in-top" id="railToggleTop" title="Expand sidebar" aria-label="Expand sidebar"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9.5 6L15 12l-5.5 6"/></svg></button>
   <div class="brand">
     <img class="is-light" src="logo.png" alt="" onerror="this.style.display='none'">
     <img class="is-dark" src="logo-dark.png" alt="" onerror="this.style.display='none'">
     <div><b>Portal</b><span id="custName"></span></div>
   </div>
+  <div class="gsearch" id="gsearch">
+    <div class="gs-field">
+      <span class="gs-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></g></svg></span>
+      <input type="text" id="gsInput" autocomplete="off" spellcheck="false" enterkeyhint="go"
+             placeholder="Search serial, invoice, PO, tracking or RMA"
+             aria-label="Search" role="combobox" aria-expanded="false" aria-controls="gsPanel">
+      <button type="button" class="gs-x" id="gsClear" aria-label="Clear search" tabindex="-1">
+        <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M7 7l10 10M17 7L7 17"/></svg>
+      </button>
+      <button type="button" class="gs-cancel" id="gsCancel">Cancel</button>
+    </div>
+    <div class="gs-panel" id="gsPanel" role="listbox" aria-label="Search results"></div>
+  </div>
+  <button type="button" class="gs-btn" id="gsBtn" aria-label="Search"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></g></svg></button>
+  <div class="gs-scrim" id="gsScrim"></div>
   <div class="who">
     <span class="who-em" id="whoEmail"></span>
     <button type="button" class="icon-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">
@@ -1391,6 +1637,8 @@
 </header>
 
 <div id="staffPick" style="display:none;"></div>
+
+<div class="boot-splash"><span class="boot-dot"></span></div>
 
 <div id="loginView" class="login">
   <div class="card">
@@ -1911,13 +2159,16 @@
     });
     const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if (bar) bar.setAttribute('content', t === 'dark' ? 'black-translucent' : 'default');
+    const sw = $('themeSwitch');
+    if (sw) sw.setAttribute('aria-checked', t === 'dark' ? 'true' : 'false');
   }
   function toggleTheme(){
     setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
   }
-  ['themeBtn','themeBtn2'].forEach(function(id){
+  ['themeBtn','themeBtn2','themeSwitch'].forEach(function(id){
     const b = $(id); if (b) b.addEventListener('click', toggleTheme);
   });
+  setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
 
   /* ---------- toast ---------- */
   function toast(msg, kind, ms){
@@ -2070,6 +2321,9 @@
     render();
   }
   async function render(){
+    /* the answer is in: stop holding the frame and remember it for next time */
+    document.documentElement.classList.remove('nt-boot');
+    try { localStorage.setItem('ntWasAuthed', session ? '1' : '0'); } catch(e){}
     if (!session){
       document.body.classList.remove('authed');
       $('loginView').style.display = '';
@@ -3507,20 +3761,231 @@
     if (!e.target.closest || !e.target.closest('[data-locked]')) return;
     toast('Billing is limited to account admins. Ask your admin to turn it on for you.', 'ok', 6000);
   });
+  /* ---------------------------------------------------------------
+     GLOBAL SEARCH
+     Serial, invoice, PO, tracking and RMA all name one record, so a
+     hit is somewhere to go. Scoped to this customer's own data.
+     --------------------------------------------------------------- */
+  (function(){
+    const wrap = $('gsearch');
+    if (!wrap) return;
+    const input = $('gsInput'), panel = $('gsPanel'), clearB = $('gsClear'),
+          cancel = $('gsCancel'), openB = $('gsBtn'), scrim = $('gsScrim');
+
+    const GS_ICO = {
+      serial:'<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path stroke-linecap="round" d="M8.5 20h7M12 16.5V20"/></g></svg>',
+      order:'<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.002C18.175 4.014 19.353 4.111 20.121 4.879C21 5.758 21 7.172 21 10v6c0 2.829 0 4.243-.879 5.122C19.243 22 17.828 22 15 22H9c-2.828 0-4.243 0-5.121-.878C3 20.243 3 18.828 3 16v-6c0-2.828 0-4.242.879-5.121C4.647 4.111 5.825 4.014 8 4.002"/><path stroke-linecap="round" d="M7 14.5h8M7 18h5.5"/><path d="M8 3.5A1.5 1.5 0 0 1 9.5 2h5A1.5 1.5 0 0 1 16 3.5v1A1.5 1.5 0 0 1 14.5 6h-5A1.5 1.5 0 0 1 8 4.5z"/></g></svg>',
+      tracking:'<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v10H3z"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="7" cy="18.5" r="1.6"/><circle cx="17" cy="18.5" r="1.6"/></g></svg>',
+      rma:'<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>'
+    };
+    const GS_HUE = { serial:'var(--accent)', order:'var(--accent)', tracking:'var(--ok)', rma:'var(--hue-rma, var(--info))' };
+
+    let hits = [], sel = -1;
+
+    function mark(text, q){
+      const s = String(text == null ? '' : text), at = s.toLowerCase().indexOf(q);
+      if (at < 0) return esc(s);
+      return esc(s.slice(0, at)) + '<mark>' + esc(s.slice(at, at + q.length)) + '</mark>' + esc(s.slice(at + q.length));
+    }
+
+    function find(raw){
+      const q = String(raw || '').trim().toLowerCase();
+      if (q.length < 2) return [];
+      const out = [];
+      function rank(v){
+        const s = String(v == null ? '' : v).toLowerCase();
+        if (!s) return 0;
+        if (s === q) return 4;
+        if (s.indexOf(q) === 0) return 3;
+        return s.indexOf(q) >= 0 ? 1 : 0;
+      }
+      function take(group, rows, cap){
+        rows.sort(function(a, b){ return b.r - a.r || String(a.title).localeCompare(String(b.title)); });
+        rows.slice(0, cap || 5).forEach(function(x){ x.group = group; out.push(x); });
+      }
+      const byOrder = {}, byBatch = {};
+      orders.forEach(function(o){ byOrder[o.id] = o; });
+      batches.forEach(function(b){ byBatch[b.id] = b; });
+
+      let g = [];
+      units.forEach(function(u){
+        const r = rank(u.serial); if (!r) return;
+        const o = byOrder[u.order_id], b = u.batch_id ? byBatch[u.batch_id] : null;
+        g.push({ r:r, kind:'serial', title:u.serial,
+          sub:(o ? o.invoice_no : 'No invoice') + (b ? ' \u00b7 Batch ' + b.batch_no : ''),
+          tag:u.unit_status === 'shipped' ? 'Shipped' : (u.batch_id ? 'Preparing' : 'Building'),
+          go:o ? function(){ openOrder(o.id); } : null });
+      });
+      take('Serial number', g.filter(function(x){ return x.go; }), 6);
+
+      g = [];
+      orders.forEach(function(o){
+        const ri = rank(o.invoice_no), rp = rank(o.po_number);
+        if (!ri && !rp) return;
+        g.push({ r:Math.max(ri, rp), kind:'order',
+          title:ri >= rp ? o.invoice_no : o.po_number,
+          sub:ri >= rp ? (o.po_number ? 'PO ' + o.po_number : 'No PO on file') : o.invoice_no,
+          tag:ri >= rp ? 'Invoice' : 'PO',
+          go:function(){ openOrder(o.id); } });
+      });
+      take('Order', g, 5);
+
+      g = [];
+      tracking.forEach(function(t){
+        const r = rank(t.tracking_no); if (!r) return;
+        const b = byBatch[t.batch_id]; if (!b) return;
+        const o = byOrder[b.order_id];
+        g.push({ r:r, kind:'tracking', title:t.tracking_no,
+          sub:(o ? o.invoice_no + ' \u00b7 ' : '') + 'Batch ' + b.batch_no + (b.carrier ? ' \u00b7 ' + b.carrier : ''),
+          tag:'Shipment', go:o ? function(){ openOrder(o.id); } : null });
+      });
+      rmaShipments.forEach(function(s){
+        const r = rank(s.tracking_no); if (!r) return;
+        const t = rmaTickets.find(function(x){ return x.id === s.rma_id; });
+        if (!t) return;
+        g.push({ r:r, kind:'tracking', title:s.tracking_no,
+          sub:'RMA-' + t.rma_no + ' \u00b7 ' + (s.direction === 'return' ? 'your return' : 'part to you'),
+          tag:'RMA', go:function(){ openRma(t.id); } });
+      });
+      take('Tracking', g.filter(function(x){ return x.go; }), 5);
+
+      g = [];
+      const bare = q.replace(/^rma[-\s]?/, '');
+      rmaTickets.forEach(function(t){
+        let r = rank('rma-' + t.rma_no);
+        if (!r && bare && String(t.rma_no).indexOf(bare) === 0) r = 3;
+        if (!r) r = rank(t.serial) ? 1 : 0;
+        if (!r) return;
+        const o = byOrder[t.order_id];
+        g.push({ r:r, kind:'rma', title:'RMA-' + t.rma_no,
+          sub:(t.serial || 'No serial') + (o ? ' \u00b7 ' + o.invoice_no : ''),
+          tag:String(t.status || '').replace(/_/g, ' '),
+          go:function(){ openRma(t.id); } });
+      });
+      take('RMA', g, 5);
+
+      return out;
+    }
+
+    function setOpen(on){
+      wrap.classList.toggle('open', !!on);
+      input.setAttribute('aria-expanded', on ? 'true' : 'false');
+    }
+    function render(){
+      const raw = input.value.trim(), q = raw.toLowerCase();
+      wrap.classList.toggle('has-q', !!raw);
+      if (raw.length < 2){ hits = []; sel = -1; panel.innerHTML = ''; setOpen(false); return; }
+      hits = find(raw); sel = -1;
+      if (!hits.length){
+        panel.innerHTML = '<div class="gs-empty">Nothing matches \u201c' + esc(raw) + '\u201d</div>';
+      } else {
+        let html = '', last = '';
+        hits.forEach(function(h, n){
+          if (h.group !== last){ html += '<div class="gs-group">' + h.group + '</div>'; last = h.group; }
+          html += '<button type="button" class="gs-row" data-i="' + n + '" style="--gs-hue:' + GS_HUE[h.kind] + '">' +
+            '<span class="gs-rico">' + GS_ICO[h.kind] + '</span>' +
+            '<span class="gs-txt"><span class="gs-t">' + mark(h.title, q) + '</span>' +
+            '<span class="gs-s">' + esc(h.sub) + '</span></span>' +
+            '<span class="gs-tag">' + esc(h.tag || '') + '</span></button>';
+        });
+        panel.innerHTML = html;
+      }
+      setOpen(true);
+    }
+    function highlight(n){
+      const rows = panel.querySelectorAll('.gs-row');
+      if (!rows.length) return;
+      sel = (n + rows.length) % rows.length;
+      rows.forEach(function(r, k){ r.classList.toggle('sel', k === sel); });
+      const el = rows[sel], pt = panel.scrollTop, ph = panel.clientHeight;
+      if (el.offsetTop < pt) panel.scrollTop = el.offsetTop;
+      else if (el.offsetTop + el.offsetHeight > pt + ph) panel.scrollTop = el.offsetTop + el.offsetHeight - ph;
+    }
+    function close(){
+      setOpen(false);
+      input.value = ''; wrap.classList.remove('has-q');
+      panel.innerHTML = ''; hits = []; sel = -1;
+      document.body.classList.remove('gs-open');
+    }
+    function run(n){
+      const h = hits[n];
+      if (!h || !h.go) return;
+      close(); h.go();
+    }
+
+    input.addEventListener('input', render);
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'ArrowDown'){ e.preventDefault(); highlight(sel + 1); }
+      else if (e.key === 'ArrowUp'){ e.preventDefault(); highlight(sel - 1); }
+      else if (e.key === 'Enter'){ e.preventDefault(); run(sel < 0 ? 0 : sel); }
+      else if (e.key === 'Escape'){ e.preventDefault(); close(); }
+    });
+    panel.addEventListener('mousedown', function(e){
+      const r = e.target.closest('.gs-row');
+      if (r){ e.preventDefault(); run(+r.getAttribute('data-i')); }
+    });
+    clearB.addEventListener('click', function(){ input.value = ''; render(); input.focus(); });
+    cancel.addEventListener('click', close);
+    scrim.addEventListener('click', close);
+    openB.addEventListener('click', function(){
+      document.body.classList.add('gs-open');
+      setTimeout(function(){ input.focus(); }, 60);
+    });
+    document.addEventListener('click', function(e){
+      if (document.body.classList.contains('gs-open')) return;
+      if (!wrap.contains(e.target) && e.target !== openB) setOpen(false);
+    });
+  })();
+
+  /* the active-row indicator: one element that slides, so switching pages
+     reads as movement rather than two backgrounds crossfading */
+  (function(){
+    const menu = $('pmenu');
+    if (!menu) return;
+    const ind = document.createElement('span');
+    ind.className = 'nav-ind';
+    ind.setAttribute('aria-hidden', 'true');
+    menu.insertBefore(ind, menu.firstChild);
+    function place(){
+      const a = menu.querySelector('a.on');
+      if (!a || a.offsetParent === null){ ind.style.opacity = '0'; return; }
+      ind.style.height = a.offsetHeight + 'px';
+      ind.style.transform = 'translateY(' + a.offsetTop + 'px)';
+      ind.style.opacity = '1';
+    }
+    /* placing synchronously keeps up with a click; the indicator's own style
+       writes are skipped so they cannot feed the observer back into itself */
+    new MutationObserver(function(recs){
+      for (let i = 0; i < recs.length; i++){
+        if (recs[i].target !== ind){ place(); return; }
+      }
+    }).observe(menu, { attributes:true, attributeFilter:['class','style'], subtree:true });
+    window.addEventListener('resize', place);
+    place();
+    requestAnimationFrame(place);
+    /* the first placement lands without animating */
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ ind.classList.add('ready'); }); });
+  })();
+
   /* rail collapse, remembered */
   (function(){
-    const btn = $('railToggle'); if (!btn) return;
+    const btns = [$('railToggle'), $('railToggleTop')].filter(function(b){ return b; });
+    if (!btns.length) return;
     function label(){
       const mini = document.body.classList.contains('rail-mini');
-      btn.title = mini ? 'Expand sidebar' : 'Collapse sidebar';
-      btn.setAttribute('aria-label', btn.title);
+      btns.forEach(function(b){
+        b.title = mini ? 'Expand sidebar' : 'Collapse sidebar';
+        b.setAttribute('aria-label', b.title);
+      });
     }
     try { if (localStorage.getItem('ntPortalRail') === 'mini') document.body.classList.add('rail-mini'); } catch(e){}
     label();
-    btn.addEventListener('click', function(){
-      document.body.classList.toggle('rail-mini');
-      try { localStorage.setItem('ntPortalRail', document.body.classList.contains('rail-mini') ? 'mini' : 'full'); } catch(e){}
-      label();
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){
+        document.body.classList.toggle('rail-mini');
+        try { localStorage.setItem('ntPortalRail', document.body.classList.contains('rail-mini') ? 'mini' : 'full'); } catch(e){}
+        label();
+      });
     });
   })();
   $('listView').addEventListener('keydown', function(e){

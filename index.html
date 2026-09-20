@@ -404,6 +404,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet">
 <script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme')==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',t);var dark=t==='dark';var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++){if(!metas[i].getAttribute('media'))metas[i].setAttribute('content',dark?'#0e1116':'#ffffff');}document.documentElement.style.colorScheme=dark?'dark':'light';}catch(e){}})();</script>
+<script>/* the session resolves asynchronously; until it does, show neither screen
+  rather than flashing the sign-in card at someone who is already signed in */
+(function(){try{document.documentElement.classList.add('nt-boot');
+/* if the check never comes back, fall through to the normal screens
+         rather than spinning forever */
+      setTimeout(function(){ document.documentElement.classList.remove('nt-boot'); }, 5000);
+}catch(e){}})();</script>
 <style>
   /* ============================================================
      v30 DESIGN TOKENS
@@ -474,7 +481,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     --t-slow:220ms cubic-bezier(.2,.6,.2,1);
 
     /* layout */
-    --content:1280px;
+    --content:2040px;
     --measure:940px;
     --scrim:rgba(10,21,48,.5);
 
@@ -909,7 +916,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .nav-menu{ flex:1 1 auto; min-width:0; justify-content:center; overflow:visible; }
   @media (max-width:1240px){ .chip-email{ display:none; } }
   @media (max-width:1180px){ .nav-inner{ gap:var(--s4); } .nav-brand::after{ margin-left:var(--s4); } .nav-item{ padding:8px 12px; } }
-  @media (max-width:1040px){ .version{ display:none; } }
+  @media (max-width:1040px){ .nav-inner .version{ display:none; } }
   @media (max-width:1000px){ .nav-inner{ gap:var(--s3); } .nav-item{ padding:8px 8px; font-size:13px; } .nav-right{ gap:var(--s2); } }
   .status-select{ border:1px solid transparent; border-radius:var(--r-pill); height:26px; min-height:26px; width:auto; padding:0 28px 0 10px; font-size:11.5px; font-weight:600; line-height:1; cursor:pointer; -webkit-appearance:none; appearance:none; }
 
@@ -3083,18 +3090,42 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   body.authed{ padding-left:var(--rail); transition:padding-left var(--t); }
   body.authed.rail-mini{ padding-left:var(--rail-mini); }
   body.authed .siderail{
+    --rail-pad:var(--s3);
     display:flex; flex-direction:column;
     position:fixed; left:0; top:0; bottom:0; width:var(--rail); z-index:25;
     background:var(--paper); border-right:1px solid var(--line);
     padding:var(--s4) var(--s3) 0; overflow-y:auto; overscroll-behavior:contain;
     transition:width var(--t);
   }
-  body.authed.rail-mini .siderail{ width:var(--rail-mini); padding-inline:var(--s2); }
+  body.authed.rail-mini .siderail{ width:var(--rail-mini); padding-inline:var(--s2); --rail-pad:var(--s2); }
 
-  .rail-brand{ gap:var(--s3); padding:var(--s2) var(--s3) var(--s5); overflow:hidden; }
+  /* head: logo and the collapse control share one row, and stack when narrow */
+  .rail-head{
+    display:flex; align-items:center; gap:var(--s2);
+    padding:var(--s2) var(--s3) var(--s5); min-width:0;
+  }
+  .rail-brand{ gap:var(--s3); flex:1 1 auto; min-width:0; padding:0; overflow:hidden; }
   .rail-brand::after{ display:none; }
+/* expanded, the control sits with the logo; collapsed, it moves to the header */
+  .rail-toggle{
+    display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+    width:32px; height:32px; min-height:32px; padding:0;
+    border-radius:var(--r-sm); background:transparent; border:1px solid transparent;
+    color:var(--muted); cursor:pointer;
+    transition:background var(--t), color var(--t), border-color var(--t);
+  }
+  .rail-toggle:hover{ background:var(--soft); color:var(--ink); border-color:var(--line); }
+  .rail-toggle:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .rail-toggle svg{ width:17px; height:17px; display:block; }
+  .rail-toggle.in-rail{ color:var(--faint); }
+  .rail-toggle.in-rail:hover{ color:var(--ink); }
+  .rail-toggle.in-top{ margin-left:-6px; }
+  body:not(.authed) .rail-toggle{ display:none; }
+  body.authed.rail-mini .rail-toggle.in-rail{ display:none; }
+  body.authed:not(.rail-mini) .rail-toggle.in-top{ display:none; }
   .rail-brand .nav-logo{ height:26px; }
-  body.authed.rail-mini .rail-brand{ padding:var(--s2) 0 var(--s5); justify-content:center; }
+  body.authed.rail-mini .rail-head{ justify-content:center; padding-inline:0; }
+  body.authed.rail-mini .rail-brand{ padding:0; justify-content:center; }
   body.authed.rail-mini .rail-brand .nav-wordmark{ display:none; }
   .nav-logo.is-mark{ display:none; }
   body.authed.rail-mini .rail-brand .nav-logo.is-light,
@@ -3112,15 +3143,68 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .siderail .nav-item > svg{ width:19px; height:19px; flex:0 0 auto; }
   .siderail .nav-item .nav-lbl{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
   .siderail .nav-badge{ margin-left:auto; }
+/* one indicator slides between rows instead of each row lighting up */
+  .siderail .nav-menu{ position:relative; }
+  .nav-ind{
+    position:absolute; left:calc(var(--rail-pad, var(--s3)) * -1); right:0; top:0; height:38px;
+    background:var(--ink-deep); border-radius:0 var(--r-pill) var(--r-pill) 0;
+    opacity:0; pointer-events:none; z-index:0; transition:none;
+  }
+  .nav-ind.ready{
+    transition:transform 200ms cubic-bezier(.2,.7,.2,1), height 200ms cubic-bezier(.2,.7,.2,1),
+               left var(--t), opacity 140ms linear;
+  }
+  @supports not (color: color-mix(in srgb, red, blue)){ .nav-ind{ background:var(--accent-soft); } }
+  @media (prefers-reduced-motion: reduce){ .nav-ind.ready{ transition:opacity 140ms linear; } }
+  .siderail .nav-item{ position:relative; z-index:1; }
+  /* the indicator carries the fill now, so the row itself stays clear */
+  body.authed .siderail .nav-item.active,
+  body.authed .siderail .nav-item.active:hover{ background:transparent; }
   body.authed.rail-mini .siderail .nav-item{ justify-content:center; padding-inline:0; }
   body.authed.rail-mini .siderail .nav-item .nav-lbl{ display:none; }
   body.authed.rail-mini .siderail .nav-badge{ position:absolute; top:2px; right:10px; margin:0; }
 
   .rail-foot{
-    margin-top:auto; padding:var(--s4) var(--s3);
+    margin-top:auto; padding:var(--s3) var(--s3) var(--s4);
     border-top:1px solid var(--line); color:var(--faint);
+    display:flex; flex-direction:column; align-items:flex-start; gap:var(--s3);
   }
-  body.authed.rail-mini .rail-foot{ text-align:center; padding-inline:0; }
+  body.authed.rail-mini .rail-foot{ align-items:center; padding-inline:0; }
+
+  /* theme switch — the control states what it is, the track states where it is */
+  .rail-theme{
+    display:flex; align-items:center; gap:var(--s2); width:100%;
+    padding:6px 8px; min-height:38px; border-radius:var(--r-sm);
+    background:transparent; border:1px solid transparent; color:var(--muted);
+    font-size:13px; font-weight:500; text-align:left; cursor:pointer;
+    transition:background var(--t), color var(--t), border-color var(--t);
+  }
+  .rail-theme:hover{ background:var(--soft); color:var(--ink); border-color:var(--line); }
+  .rail-theme:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .rt-ico{ display:flex; flex:0 0 auto; color:var(--faint); }
+  .rail-theme:hover .rt-ico{ color:var(--ink); }
+  .rt-ico svg{ width:17px; height:17px; display:block; }
+  .rt-ico .i-moon{ display:none; }
+  :root[data-theme="dark"] .rt-ico .i-sun{ display:none; }
+  :root[data-theme="dark"] .rt-ico .i-moon{ display:block; }
+  .rt-lbl{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rt-track{
+    position:relative; flex:0 0 auto; width:38px; height:22px; border-radius:var(--r-pill);
+    background:var(--line-strong); transition:background var(--t);
+  }
+  .rt-knob{
+    position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 2px rgba(10,21,48,.28);
+    transition:transform var(--t);
+  }
+  :root[data-theme="dark"] .rt-track{ background:var(--accent); }
+  :root[data-theme="dark"] .rt-knob{ transform:translateX(16px); }
+  @media (prefers-reduced-motion: reduce){ .rt-knob{ transition:none; } }
+  body.authed.rail-mini .rail-theme{ width:auto; justify-content:center; padding:6px; }
+  body.authed.rail-mini .rt-lbl, body.authed.rail-mini .rt-track{ display:none; }
+  body.authed.rail-mini .rt-ico svg{ width:19px; height:19px; }
+  /* the rail owns the theme control once signed in; the login screen keeps its own */
+  body.authed .theme-btn{ display:none; }
 
   /* top bar: context on the left, account on the right */
   body.authed .nav-inner{ height:60px; gap:var(--s4); }
@@ -3139,6 +3223,140 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .nav-brand.top-brand{ display:none; }
   body:not(.authed) .rail-btn, body:not(.authed) .top-title{ display:none; }
   body:not(.authed) .nav-brand.top-brand{ display:flex; }
+
+  /* ============================================================
+     GLOBAL SEARCH — one field in the header, centred on the content
+     column. Serial, invoice, PO, tracking and RMA all resolve to a
+     record, so a result is a destination rather than a filter.
+     ============================================================ */
+  .gsearch{ display:none; }
+  body.authed .gsearch{
+    display:block; position:relative; flex:0 1 460px; min-width:0; margin-inline:auto;
+  }
+  body.authed .top-title{ flex:1 1 0; min-width:0; }
+  body.authed .nav-right{ flex:1 1 0; min-width:max-content; justify-content:flex-end; margin-left:0; }
+  @media (max-width:1240px){ body.authed .gsearch{ flex-basis:340px; } }
+  @media (max-width:1040px){ body.authed .gsearch{ flex-basis:250px; } }
+  .gs-field{
+    display:flex; align-items:center; gap:var(--s2); height:36px; padding:0 var(--s3);
+    background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill);
+    transition:background var(--t), border-color var(--t), box-shadow var(--t);
+  }
+  .gs-field:focus-within{ background:var(--paper); border-color:var(--accent); box-shadow:var(--ring); }
+  .gs-ico{ display:flex; flex:0 0 auto; color:var(--faint); }
+  .gs-ico svg{ width:16px; height:16px; display:block; }
+  .gs-field:focus-within .gs-ico{ color:var(--accent); }
+  #gsInput{
+    flex:1 1 auto; min-width:0; height:100%; padding:0; margin:0;
+    background:none; border:0; outline:none; box-shadow:none !important;
+    font:inherit; font-size:13.5px; color:var(--ink); min-height:0 !important; border-radius:0 !important;
+  }
+  #gsInput::placeholder{ color:var(--faint); }
+  .gs-x{
+    display:none; align-items:center; justify-content:center; flex:0 0 auto;
+    width:20px; height:20px; min-height:20px; padding:0; border:0; background:none;
+    color:var(--faint); cursor:pointer; border-radius:50% !important;
+  }
+  .gs-x:hover{ color:var(--ink); background:var(--line); }
+  .gs-x svg{ width:13px; height:13px; display:block; }
+  .gsearch.has-q .gs-x{ display:inline-flex; }
+  .gs-cancel{ display:none; }
+  .gs-btn{ display:none; }
+  .gs-scrim{ display:none; }
+
+  /* results */
+  .gs-panel{
+    display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:40;
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
+    box-shadow:var(--e3); overflow:hidden; max-height:min(70vh, 460px); overflow-y:auto;
+    animation:gsDrop 140ms cubic-bezier(.2,.7,.2,1);
+  }
+  @keyframes gsDrop{ from{ opacity:0; transform:translateY(-6px); } }
+  .gsearch.open .gs-panel{ display:block; }
+  .gs-group{
+    padding:var(--s3) var(--s4) 4px; font-size:10.5px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
+  }
+  .gs-row{
+    display:grid; grid-template-columns:28px minmax(0,1fr) auto; align-items:center;
+    gap:var(--s3); width:100%; padding:9px var(--s4); min-height:0;
+    background:none; border:0; border-radius:0 !important; text-align:left; cursor:pointer;
+    color:inherit; font:inherit;
+  }
+  .gs-row:hover, .gs-row.sel{ background:var(--soft); }
+  .gs-rico{
+    display:flex; align-items:center; justify-content:center;
+    width:28px; height:28px; border-radius:var(--r-sm);
+    background:var(--soft); color:var(--gs-hue, var(--accent));
+    border:1px solid var(--line);
+  }
+  .gs-row:hover .gs-rico, .gs-row.sel .gs-rico{ background:var(--paper); }
+  .gs-rico svg{ width:15px; height:15px; display:block; }
+  .gs-txt{ min-width:0; }
+  .gs-t{ display:block; font-size:13.5px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gs-t mark{ background:color-mix(in srgb, var(--accent) 22%, transparent); color:inherit; border-radius:2px; padding:0 1px; }
+  .gs-s{ display:block; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gs-tag{ flex:0 0 auto; font-size:11px; color:var(--faint); white-space:nowrap; }
+  .gs-empty{ padding:var(--s5) var(--s4); text-align:center; font-size:13px; color:var(--muted); }
+  .gs-more{
+    display:block; width:100%; padding:9px var(--s4); border:0; border-top:1px solid var(--line);
+    background:var(--soft); color:var(--muted); font:inherit; font-size:12px; text-align:center;
+    border-radius:0 !important; min-height:0;
+  }
+
+  /* phones: the field folds into a button, and opens as a sheet from the top */
+  @media (max-width:700px){
+    body.authed .gsearch{ display:none; }
+    body.authed .gs-btn{
+      display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+      width:36px; height:36px; min-height:36px; padding:0; margin-left:auto;
+      border-radius:50% !important; background:transparent; border:1px solid transparent;
+      color:var(--muted); cursor:pointer;
+    }
+    body.authed .gs-btn:hover{ background:var(--soft); color:var(--ink); }
+    .gs-btn svg{ width:18px; height:18px; display:block; }
+    body.authed .nav-right{ flex:0 0 auto; }
+
+    body.gs-open .gs-scrim{
+      display:block; position:fixed; inset:0; z-index:58;
+      background:var(--scrim); animation:gsFade 160ms ease-out;
+    }
+    @keyframes gsFade{ from{ opacity:0; } }
+    body.gs-open .gsearch{
+      display:block; position:fixed; top:0; left:0; right:0; z-index:60; margin:0;
+      padding:calc(var(--s3) + env(safe-area-inset-top)) var(--s4) var(--s3);
+      background:var(--paper); border-bottom:1px solid var(--line);
+      animation:gsSheet 220ms cubic-bezier(.2,.7,.2,1);
+    }
+    @keyframes gsSheet{ from{ opacity:0; transform:translateY(-100%); } }
+    body.gs-open .gs-field{ height:40px; }
+    body.gs-open .gs-cancel{
+      display:inline-flex; align-items:center; flex:0 0 auto; padding:0 0 0 var(--s2);
+      min-height:0; background:none; border:0; border-radius:0 !important;
+      color:var(--accent-fg); font:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+    }
+    body.gs-open .gs-panel{
+      position:static; margin-top:var(--s3); box-shadow:none; border-radius:var(--r-sm);
+      max-height:calc(100vh - 140px); animation:none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .gs-panel, body.gs-open .gsearch, body.gs-open .gs-scrim{ animation:none; }
+  }
+
+  /* Once the top bar is showing it already names the page, so the page
+     header is redundant there. Phones have no top-bar title, so it stays. */
+  @media (min-width:701px){
+    body.authed .page-brand{ display:none; }
+    body.authed .app-header:has(> .page-brand){ justify-content:flex-end; }
+    /* nothing but the title in it: the whole row goes */
+    body.authed .app-header:has(> .page-brand):not(:has(> :not(.page-brand))){ display:none; }
+  }
+
+  /* the greeting is a single line, so home starts higher than the other tools */
+  #toolHome{ margin-top:calc(var(--s5) * -1); }
+  #toolHome > .app-header{ margin-bottom:var(--s5); }
+  @media (max-width:700px){ #toolHome{ margin-top:calc(var(--s3) * -1); } }
 
   /* stats row — four numbers worth reading before anything else */
   .stat-row{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s4); margin-bottom:var(--s5); }
@@ -3280,8 +3498,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   @media (max-width:1000px){
     /* not enough width for labels and content both: the rail goes to icons */
     body.authed, body.authed.rail-mini{ padding-left:var(--rail-mini); }
-    body.authed .siderail{ width:var(--rail-mini); padding-inline:var(--s2); }
-    body.authed .rail-brand{ padding:var(--s2) 0 var(--s5); justify-content:center; }
+    body.authed .siderail{ width:var(--rail-mini); padding-inline:var(--s2); --rail-pad:var(--s2); }
+    body.authed .rail-head{ justify-content:center; padding-inline:0; }
+    body.authed .rail-brand{ padding:0; justify-content:center; }
     body.authed .rail-brand .nav-wordmark{ display:none; }
     body.authed .rail-brand .nav-logo.is-light,
     body.authed .rail-brand .nav-logo.is-dark{ display:none; }
@@ -3289,11 +3508,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     body.authed .siderail .nav-item{ justify-content:center; padding-inline:0; }
     body.authed .siderail .nav-item .nav-lbl{ display:none; }
     body.authed .siderail .nav-badge{ position:absolute; top:2px; right:10px; margin:0; }
-    body.authed .rail-foot{ text-align:center; padding-inline:0; }
-    .rail-btn{ display:none; }
+    body.authed .rail-foot{ align-items:center; padding-inline:0; }
+    /* the rail is locked to icons at this width, so there is nothing to toggle */
+    .rail-toggle{ display:none; }
+    body.authed .rail-theme{ width:auto; justify-content:center; padding:6px; }
+    body.authed .rt-lbl, body.authed .rt-track{ display:none; }
     .stat-row{ grid-template-columns:repeat(2, minmax(0,1fr)); }
   }
   @media (max-width:700px){
+    /* phones keep the bottom tab bar, so the header takes the theme control back */
+    body.authed .theme-btn{ display:inline-flex; }
+    .nav-ind{ display:none; }
+    body.authed .siderail .nav-item.active{ background:var(--ink-deep); }
     /* phones keep the bottom tab bar; the rail steps out entirely */
     body.authed, body.authed.rail-mini{ padding-left:env(safe-area-inset-left); }
     body.authed .siderail{ display:none; }
@@ -3304,6 +3530,54 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   @media (max-width:560px){ .qa-grid{ grid-template-columns:1fr; } }
   @media (max-width:430px){ .stat-row{ grid-template-columns:1fr; gap:var(--s3); } }
+  /* ============================================================
+     WIDESCREEN — past ~1660px the home page gains a third column
+     rather than stretching two. Quick actions become a right-hand
+     rail running the height of the chart and the order list, which
+     is how the cards stay their own size as the window grows.
+     ============================================================ */
+  @media (min-width:1660px){
+    body.authed #toolHome{
+      display:grid; gap:var(--s4);
+      grid-template-columns:minmax(0,1.7fr) minmax(0,1fr) minmax(0,.92fr);
+      grid-template-areas:
+        "head   head   head"
+        "stats  stats  stats"
+        "builds status quick"
+        "recent recent quick"
+        "inst   inst   inst";
+    }
+    body.authed #toolHome > .app-header{ grid-area:head; margin-bottom:0; padding-bottom:var(--s2); }
+    body.authed #toolHome > .stat-row{ grid-area:stats; margin-bottom:0; }
+    /* the two widget rows dissolve so their cards join the page grid */
+    body.authed #toolHome > .dash-grid{ display:contents; }
+    body.authed #homeBuilds{ grid-area:builds; }
+    body.authed #homeStatusCard{ grid-area:status; }
+    body.authed #homeRecentCard{ grid-area:recent; }
+    body.authed #homeQuick{ grid-area:quick; }
+    body.authed #installCard{ grid-area:inst; margin-top:0; }
+    /* the quick column spans two rows, so its tiles share out the height —
+       capped, so a shorter menu does not turn into six huge slabs */
+    body.authed #homeQuick .qa-grid{ flex:1 1 auto; grid-auto-rows:minmax(46px,1fr); }
+    body.authed #homeQuick .tile.qa{ max-height:92px; }
+    body.authed #homeBuilds .bars{ height:190px; }
+  }
+
+  /* boot: a held frame while the session is checked */
+  .boot-splash{ display:none; }
+  :root.nt-boot .boot-splash{
+    display:flex; align-items:center; justify-content:center;
+    min-height:min(50vh, 340px);
+  }
+  :root.nt-boot #loginView{ display:none !important; }
+  .boot-dot{
+    width:22px; height:22px; border-radius:50%;
+    border:2px solid var(--line); border-top-color:var(--accent);
+    animation:bootSpin 700ms linear infinite;
+  }
+  @keyframes bootSpin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .boot-dot{ animation-duration:2s; } }
+
   /* the RMA rate line draws itself in, matching the portal */
   @keyframes plotDraw{ from{ clip-path:inset(0 100% 0 0); } }
   #rmaTrendPlot > svg{ animation:plotDraw 900ms cubic-bezier(.2,.7,.2,1) backwards; }
@@ -3311,14 +3585,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 </style>
 </head>
 <body>
+<script>/* last known state, so the shell paints instead of a blank frame */
+(function(){try{if(localStorage.getItem('ntWasAuthed')==='1')document.body.classList.add('authed');}catch(e){}})();</script>
 
 <aside class="siderail" id="siderail">
-  <a class="nav-brand rail-brand" href="#">
+  <div class="rail-head">
+    <a class="nav-brand rail-brand" href="#">
       <img class="nav-logo is-light" src="logo.png" alt="Novatech" onerror="this.style.display='none';var t=document.getElementById('logoText');if(t)t.style.display='inline';">
       <img class="nav-logo is-dark" src="logo-dark.png" alt="Novatech" onerror="this.style.display='none';var t=document.getElementById('logoText');if(t)t.style.display='inline';">
       <img class="nav-logo is-mark" src="logo-mark.png" alt="" onerror="this.style.display='none';">
       <span class="nav-wordmark" id="logoText" style="display:none;">NOVATECH</span>
     </a>
+    <button type="button" class="rail-toggle in-rail" id="railToggle" title="Collapse sidebar" aria-label="Collapse sidebar"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14.5 6L9 12l5.5 6"/></svg></button>
+  </div>
     <div class="nav-menu">
       <a class="nav-item active" href="#" id="navHome"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z"/><path stroke-linecap="round" d="M12 15L12 18"/></g></svg><span class="nav-lbl">Home</span></a>
       <a class="nav-item" href="#" id="navOrders"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg><span class="nav-lbl">Orders</span></a>
@@ -3329,20 +3608,40 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <a class="nav-item" href="#" id="navBilling" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg><span class="nav-lbl">Billing</span></a>
       <a class="nav-item" href="#" id="navAdmin" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg><span class="nav-lbl">Admin</span></a>
     </div>
-    <div class="rail-foot"><span class="version" id="version">v3.9.11</span></div>
+    <div class="rail-foot">
+      <button type="button" class="rail-theme" id="themeSwitch" role="switch" aria-checked="false" aria-label="Dark mode" title="Dark mode">
+        <span class="rt-ico"><svg viewBox="0 0 24 24" class="i-sun"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4.5"/><path stroke-linecap="round" d="M12 2.5V4M12 20V21.5M21.5 12H20M4 12H2.5M18.7 5.3l-1.1 1.1M6.4 17.6l-1.1 1.1M18.7 18.7l-1.1-1.1M6.4 6.4L5.3 5.3"/></g></svg><svg viewBox="0 0 24 24" class="i-moon"><path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" d="M20.958 15.325c.204-.486-.379-.9-.88-.73a7 7 0 0 1-8.996-8.807c.18-.5-.22-1.096-.713-.895A8.5 8.5 0 1 0 20.958 15.325Z"/></svg></span>
+        <span class="rt-lbl">Dark mode</span>
+        <span class="rt-track"><span class="rt-knob"></span></span>
+      </button>
+      <span class="version" id="version">v3.9.11</span>
+    </div>
   </aside>
 
   <nav class="topnav">
     <div class="nav-inner">
-      <button type="button" class="rail-btn" id="railToggle" title="Collapse sidebar" aria-label="Collapse sidebar">
-        <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></g></svg>
-      </button>
+      <button type="button" class="rail-toggle in-top" id="railToggleTop" title="Expand sidebar" aria-label="Expand sidebar"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9.5 6L15 12l-5.5 6"/></svg></button>
       <a class="nav-brand top-brand" href="#">
         <img class="nav-logo is-light" src="logo.png" alt="Novatech" onerror="this.style.display='none';var t=document.getElementById('logoTextTop');if(t)t.style.display='inline';">
         <img class="nav-logo is-dark" src="logo-dark.png" alt="Novatech" onerror="this.style.display='none';var t=document.getElementById('logoTextTop');if(t)t.style.display='inline';">
         <span class="nav-wordmark" id="logoTextTop" style="display:none;">NOVATECH</span>
       </a>
       <div class="top-title" id="topTitle">Dashboard</div>
+      <div class="gsearch" id="gsearch">
+        <div class="gs-field">
+          <span class="gs-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></g></svg></span>
+          <input type="text" id="gsInput" autocomplete="off" spellcheck="false" enterkeyhint="go"
+                 placeholder="Search serial, invoice, PO, tracking or RMA"
+                 aria-label="Search" role="combobox" aria-expanded="false" aria-controls="gsPanel">
+          <button type="button" class="gs-x" id="gsClear" aria-label="Clear search" tabindex="-1">
+            <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M7 7l10 10M17 7L7 17"/></svg>
+          </button>
+          <button type="button" class="gs-cancel" id="gsCancel">Cancel</button>
+        </div>
+        <div class="gs-panel" id="gsPanel" role="listbox" aria-label="Search results"></div>
+      </div>
+      <button type="button" class="gs-btn" id="gsBtn" aria-label="Search"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></g></svg></button>
+      <div class="gs-scrim" id="gsScrim"></div>
       <div class="nav-right">
         <span class="auth-chip" id="authChip" style="display:none;"></span>
       <button type="button" class="theme-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">
@@ -3400,6 +3699,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
 <div class="controls">
 
+  <div class="boot-splash"><span class="boot-dot"></span></div>
+
   <div id="loginView">
     <div class="login-card">
       <h2 class="login-title">Sign in</h2>
@@ -3440,7 +3741,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <div class="brand">
         <div>
           <h1 id="homeGreet">Welcome</h1>
-          <p class="tagline">Novatech tools</p>
         </div>
       </div>
     </header>
@@ -3518,7 +3818,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     <div id="ordListPane">
       <header class="app-header">
-        <div class="brand">
+        <div class="brand page-brand">
           <div>
             <h1>B2B Orders</h1>
             <p class="tagline">Invoices, batches and shipments</p>
@@ -3594,7 +3894,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   <div id="toolAdmin" style="display:none;">
     <header class="app-header">
-      <div class="brand">
+      <div class="brand page-brand">
         <div>
           <h1>Admin</h1>
           <p class="tagline">Customers, configs, destinations, people</p>
@@ -3608,7 +3908,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   <div id="toolInventory" style="display:none;">
     <header class="app-header">
-      <div class="brand">
+      <div class="brand page-brand">
         <div>
           <h1>Inventory</h1>
           <p class="tagline">Parts on hand &middot; low stock &middot; activity log</p>
@@ -3657,7 +3957,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   <div id="toolTimeclock" style="display:none;">
     <header class="app-header">
-      <div class="brand">
+      <div class="brand page-brand">
         <div>
           <h1>Timeclock</h1>
           <p class="tagline">Hours and pay, every two weeks</p>
@@ -3756,7 +4056,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   <div id="toolRma" style="display:none;">
     <div id="rmaListPane">
       <header class="app-header">
-        <div class="brand">
+        <div class="brand page-brand">
           <div>
             <h1>RMA</h1>
             <p class="tagline">Warranty parts, tracked by serial number</p>
@@ -3815,7 +4115,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   <div id="toolMargins" style="display:none;">
     <header class="app-header">
-      <div class="brand">
+      <div class="brand page-brand">
         <div>
           <h1>Cost &amp; Margins</h1>
           <p class="tagline">Build costs &middot; profit &middot; margin per channel</p>
@@ -3840,7 +4140,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   <div id="toolBilling" style="display:none;">
     <header class="app-header">
-      <div class="brand">
+      <div class="brand page-brand">
         <div>
           <h1>Billing</h1>
           <p class="tagline">What has been invoiced, what has landed, what is still out</p>
@@ -4576,6 +4876,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   function renderAuth(){
+    /* the answer is in: stop holding the frame and remember it for next time */
+    document.documentElement.classList.remove('nt-boot');
+    try { localStorage.setItem('ntWasAuthed', (session && session.user) ? '1' : '0'); } catch(e){}
     if (session && session.user){
       authChip.style.display = '';
       authChip.innerHTML = '<span class="chip-email">' + session.user.email + '</span> <a id="signOutLink">Sign out</a>';
@@ -4673,7 +4976,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* declared here, not in the orders module below, so showTool() and
      renderAuth() can touch them no matter when they first run */
   let ordInited = false, admInited = false, ordCurrentId = null;
-  let ordAllUnits = [], ordAllBatches = [];   // list-level: every order, for serial search, RMAs and warranty
+  let ordAllUnits = [], ordAllBatches = [], ordAllTracking = [];   // list-level: every order, for serial search, RMAs and warranty
   let ordPerm = { view:false, manage:false, admin:false, catalog:false };
   function showTool(which){
     const views = { home: [navHome, toolHome], orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], billing: [navBilling, toolBilling], admin: [navAdmin, toolAdmin], rma: [navRma, toolRma] };
@@ -4710,20 +5013,253 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   document.querySelectorAll('.nav-brand').forEach(function(b){
     b.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
   });
+  /* the active-row indicator: one element that slides, so switching pages
+     reads as movement rather than two backgrounds crossfading */
+  (function(){
+    var menu = document.querySelector('.siderail .nav-menu');
+    if (!menu) return;
+    var ind = document.createElement('span');
+    ind.className = 'nav-ind';
+    ind.setAttribute('aria-hidden', 'true');
+    menu.insertBefore(ind, menu.firstChild);
+    function place(){
+      var a = menu.querySelector('.nav-item.active');
+      if (!a || a.offsetParent === null){ ind.style.opacity = '0'; return; }
+      ind.style.height = a.offsetHeight + 'px';
+      ind.style.transform = 'translateY(' + a.offsetTop + 'px)';
+      ind.style.opacity = '1';
+    }
+    /* placing synchronously keeps up with a click; the indicator's own style
+       writes are skipped so they cannot feed the observer back into itself */
+    new MutationObserver(function(recs){
+      for (var i = 0; i < recs.length; i++){
+        if (recs[i].target !== ind){ place(); return; }
+      }
+    }).observe(menu, { attributes:true, attributeFilter:['class','style'], subtree:true });
+    window.addEventListener('resize', place);
+    place();
+    requestAnimationFrame(place);
+    /* the first placement lands without animating */
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ ind.classList.add('ready'); }); });
+  })();
+
+  /* ---------------------------------------------------------------
+     GLOBAL SEARCH
+     Everything it matches is a unique identifier, so a hit is a place
+     to go, not a filter. Serials and invoices rank above the rest.
+     --------------------------------------------------------------- */
+  (function(){
+    var wrap = document.getElementById('gsearch');
+    if (!wrap) return;
+    var input  = document.getElementById('gsInput'),
+        panel  = document.getElementById('gsPanel'),
+        clearB = document.getElementById('gsClear'),
+        cancel = document.getElementById('gsCancel'),
+        openB  = document.getElementById('gsBtn'),
+        scrim  = document.getElementById('gsScrim');
+
+    var GS_ICO = {
+      serial:'<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path stroke-linecap="round" d="M8.5 20h7M12 16.5V20"/></g></svg>',
+      order:'<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.002C18.175 4.014 19.353 4.111 20.121 4.879C21 5.758 21 7.172 21 10v6c0 2.829 0 4.243-.879 5.122C19.243 22 17.828 22 15 22H9c-2.828 0-4.243 0-5.121-.878C3 20.243 3 18.828 3 16v-6c0-2.828 0-4.242.879-5.121C4.647 4.111 5.825 4.014 8 4.002"/><path stroke-linecap="round" d="M7 14.5h8M7 18h5.5"/><path d="M8 3.5A1.5 1.5 0 0 1 9.5 2h5A1.5 1.5 0 0 1 16 3.5v1A1.5 1.5 0 0 1 14.5 6h-5A1.5 1.5 0 0 1 8 4.5z"/></g></svg>',
+      tracking:'<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v10H3z"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="7" cy="18.5" r="1.6"/><circle cx="17" cy="18.5" r="1.6"/></g></svg>',
+      rma:'<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>'
+    };
+    var GS_HUE = { serial:'var(--hue-builds, var(--accent))', order:'var(--accent)',
+                   tracking:'var(--ok)', rma:'var(--hue-rma, var(--info))' };
+
+    var hits = [], sel = -1, warmed = false;
+
+    /* the lists load per view, so the first keystroke pulls them in */
+    function warm(){
+      if (warmed || !SB || !session) return;
+      warmed = true;
+      try { ordOpen(); } catch(e){}
+      var nav = document.getElementById('navRma');
+      if (nav && nav.style.display !== 'none'){ try { rmaOpen(); } catch(e){} }
+    }
+
+    function mark(text, q){
+      var s = String(text == null ? '' : text), at = s.toLowerCase().indexOf(q);
+      if (at < 0) return esc(s);
+      return esc(s.slice(0, at)) + '<mark>' + esc(s.slice(at, at + q.length)) + '</mark>' + esc(s.slice(at + q.length));
+    }
+
+    function find(raw){
+      var q = String(raw || '').trim().toLowerCase();
+      if (q.length < 2) return [];
+      var out = [];
+      function rank(v){
+        var s = String(v == null ? '' : v).toLowerCase();
+        if (!s) return 0;
+        if (s === q) return 4;
+        if (s.indexOf(q) === 0) return 3;
+        return s.indexOf(q) >= 0 ? 1 : 0;
+      }
+      function take(group, rows, cap){
+        rows.sort(function(a, b){ return b.r - a.r || String(a.title).localeCompare(String(b.title)); });
+        rows.slice(0, cap || 5).forEach(function(x){ x.group = group; out.push(x); });
+      }
+      var cust = {}, byOrder = {}, byBatch = {};
+      (typeof ordCustomers !== 'undefined' ? ordCustomers : []).forEach(function(c){ cust[c.id] = c.name; });
+      (typeof ordOrders !== 'undefined' ? ordOrders : []).forEach(function(o){ byOrder[o.id] = o; });
+      (typeof ordAllBatches !== 'undefined' ? ordAllBatches : []).forEach(function(b){ byBatch[b.id] = b; });
+      function goOrder(oid, bid){ return function(){ showTool('orders'); ordOpenOrder(oid, bid || undefined); }; }
+
+      var g = [];
+      (typeof ordAllUnits !== 'undefined' ? ordAllUnits : []).forEach(function(u){
+        var r = rank(u.serial); if (!r) return;
+        var o = byOrder[u.order_id], b = u.batch_id ? byBatch[u.batch_id] : null;
+        g.push({ r:r, kind:'serial', title:u.serial,
+          sub:(o ? o.invoice_no : 'No invoice') + (o && cust[o.customer_id] ? ' \u00b7 ' + cust[o.customer_id] : '') +
+              (b ? ' \u00b7 Batch ' + b.batch_no : ''),
+          tag:u.unit_status === 'shipped' ? 'Shipped' : (u.batch_id ? 'In batch' : 'Unassigned'),
+          go:o ? goOrder(o.id, u.batch_id) : null });
+      });
+      take('Serial number', g.filter(function(x){ return x.go; }), 6);
+
+      g = [];
+      (typeof ordOrders !== 'undefined' ? ordOrders : []).forEach(function(o){
+        var ri = rank(o.invoice_no), rp = rank(o.po_number);
+        if (!ri && !rp) return;
+        g.push({ r:Math.max(ri, rp), kind:'order',
+          title:ri >= rp ? o.invoice_no : o.po_number,
+          sub:(cust[o.customer_id] || 'Customer') + (ri >= rp && o.po_number ? ' \u00b7 PO ' + o.po_number : (rp > ri ? ' \u00b7 ' + o.invoice_no : '')),
+          tag:ri >= rp ? 'Invoice' : 'PO', go:goOrder(o.id) });
+      });
+      take('Order', g, 5);
+
+      g = [];
+      (typeof ordAllTracking !== 'undefined' ? ordAllTracking : []).forEach(function(t){
+        var r = rank(t.tracking_no); if (!r) return;
+        var b = byBatch[t.batch_id]; if (!b) return;
+        var o = byOrder[b.order_id];
+        g.push({ r:r, kind:'tracking', title:t.tracking_no,
+          sub:(o ? o.invoice_no + ' \u00b7 ' : '') + 'Batch ' + b.batch_no + (b.carrier ? ' \u00b7 ' + b.carrier : ''),
+          tag:'Shipment', go:o ? goOrder(o.id, b.id) : null });
+      });
+      (typeof rmaShipments !== 'undefined' ? rmaShipments : []).forEach(function(s){
+        var r = rank(s.tracking_no); if (!r) return;
+        var t = (typeof rmaTickets !== 'undefined' ? rmaTickets : []).find(function(x){ return x.id === s.rma_id; });
+        if (!t) return;
+        g.push({ r:r, kind:'tracking', title:s.tracking_no,
+          sub:'RMA-' + t.rma_no + ' \u00b7 ' + (s.direction === 'return' ? 'return leg' : 'outbound part'),
+          tag:'RMA', go:function(){ showTool('rma'); rmaOpenTicket(t.id); } });
+      });
+      take('Tracking', g.filter(function(x){ return x.go; }), 5);
+
+      g = [];
+      var bare = q.replace(/^rma[-\s]?/, '');
+      (typeof rmaTickets !== 'undefined' ? rmaTickets : []).forEach(function(t){
+        var no = 'rma-' + t.rma_no;
+        var r = rank(no);
+        if (!r && bare && String(t.rma_no).indexOf(bare) === 0) r = 3;
+        if (!r) r = rank(t.serial) ? 1 : 0;
+        if (!r) return;
+        var o = byOrder[t.order_id];
+        g.push({ r:r, kind:'rma', title:'RMA-' + t.rma_no,
+          sub:(t.serial || 'No serial') + (o ? ' \u00b7 ' + o.invoice_no : '') +
+              (cust[t.customer_id] ? ' \u00b7 ' + cust[t.customer_id] : ''),
+          tag:(t.status || '').replace(/_/g, ' '),
+          go:(function(id){ return function(){ showTool('rma'); rmaOpenTicket(id); }; })(t.id) });
+      });
+      take('RMA', g, 5);
+
+      return out;
+    }
+
+    function render(){
+      var raw = input.value.trim(), q = raw.toLowerCase();
+      wrap.classList.toggle('has-q', !!raw);
+      if (raw.length < 2){ hits = []; sel = -1; panel.innerHTML = ''; setOpen(false); return; }
+      hits = find(raw); sel = -1;
+      if (!hits.length){
+        panel.innerHTML = '<div class="gs-empty">Nothing matches \u201c' + esc(raw) + '\u201d</div>';
+      } else {
+        var html = '', last = '';
+        hits.forEach(function(h, n){
+          if (h.group !== last){ html += '<div class="gs-group">' + h.group + '</div>'; last = h.group; }
+          html += '<button type="button" class="gs-row" data-i="' + n + '" style="--gs-hue:' + GS_HUE[h.kind] + '">' +
+            '<span class="gs-rico">' + GS_ICO[h.kind] + '</span>' +
+            '<span class="gs-txt"><span class="gs-t">' + mark(h.title, q) + '</span>' +
+            '<span class="gs-s">' + esc(h.sub) + '</span></span>' +
+            '<span class="gs-tag">' + esc(h.tag || '') + '</span></button>';
+        });
+        panel.innerHTML = html;
+      }
+      setOpen(true);
+    }
+    function setOpen(on){
+      wrap.classList.toggle('open', !!on);
+      input.setAttribute('aria-expanded', on ? 'true' : 'false');
+    }
+    function highlight(n){
+      var rows = panel.querySelectorAll('.gs-row');
+      if (!rows.length) return;
+      sel = (n + rows.length) % rows.length;
+      rows.forEach(function(r, k){ r.classList.toggle('sel', k === sel); });
+      var el = rows[sel], pt = panel.scrollTop, ph = panel.clientHeight;
+      if (el.offsetTop < pt) panel.scrollTop = el.offsetTop;
+      else if (el.offsetTop + el.offsetHeight > pt + ph) panel.scrollTop = el.offsetTop + el.offsetHeight - ph;
+    }
+    function run(n){
+      var h = hits[n];
+      if (!h || !h.go) return;
+      close();
+      h.go();
+    }
+    function close(){
+      setOpen(false);
+      input.value = ''; wrap.classList.remove('has-q');
+      panel.innerHTML = ''; hits = []; sel = -1;
+      document.body.classList.remove('gs-open');
+    }
+
+    input.addEventListener('focus', warm);
+    input.addEventListener('input', render);
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'ArrowDown'){ e.preventDefault(); highlight(sel + 1); }
+      else if (e.key === 'ArrowUp'){ e.preventDefault(); highlight(sel - 1); }
+      else if (e.key === 'Enter'){ e.preventDefault(); run(sel < 0 ? 0 : sel); }
+      else if (e.key === 'Escape'){ e.preventDefault(); close(); }
+    });
+    panel.addEventListener('mousedown', function(e){
+      var r = e.target.closest('.gs-row');
+      if (r){ e.preventDefault(); run(+r.getAttribute('data-i')); }
+    });
+    clearB.addEventListener('click', function(){ input.value = ''; render(); input.focus(); });
+    cancel.addEventListener('click', close);
+    scrim.addEventListener('click', close);
+    openB.addEventListener('click', function(){
+      document.body.classList.add('gs-open');
+      warm();
+      setTimeout(function(){ input.focus(); }, 60);
+    });
+    document.addEventListener('click', function(e){
+      if (document.body.classList.contains('gs-open')) return;
+      if (!wrap.contains(e.target) && e.target !== openB) setOpen(false);
+    });
+  })();
+
   /* the rail collapses to icons and remembers it */
   (function(){
-    var btn = document.getElementById('railToggle'); if (!btn) return;
+    var btns = [document.getElementById('railToggle'), document.getElementById('railToggleTop')]
+      .filter(function(b){ return b; });
+    if (!btns.length) return;
     function label(){
       var mini = document.body.classList.contains('rail-mini');
-      btn.title = mini ? 'Expand sidebar' : 'Collapse sidebar';
-      btn.setAttribute('aria-label', btn.title);
+      btns.forEach(function(b){
+        b.title = mini ? 'Expand sidebar' : 'Collapse sidebar';
+        b.setAttribute('aria-label', b.title);
+      });
     }
     if (localStorage.getItem('ntRail') === 'mini') document.body.classList.add('rail-mini');
     label();
-    btn.addEventListener('click', function(){
-      document.body.classList.toggle('rail-mini');
-      localStorage.setItem('ntRail', document.body.classList.contains('rail-mini') ? 'mini' : 'full');
-      label();
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){
+        document.body.classList.toggle('rail-mini');
+        localStorage.setItem('ntRail', document.body.classList.contains('rail-mini') ? 'mini' : 'full');
+        label();
+      });
     });
   })();
   document.getElementById('homeOrdAll').addEventListener('click', function(){
@@ -6199,17 +6735,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
       if (bar) bar.setAttribute('content', dark ? 'black-translucent' : 'default');
     }
-    var btn = document.getElementById('themeBtn');
-    if (!btn) return;
+    var sw = document.getElementById('themeSwitch');
+    function syncSwitch(mode){
+      if (sw) sw.setAttribute('aria-checked', mode === 'dark' ? 'true' : 'false');
+    }
     var initial = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
     syncThemeColor(initial);
-    btn.addEventListener('click', function(){
+    syncSwitch(initial);
+    function flip(){
       var root = document.documentElement;
-      var isDark = root.getAttribute('data-theme') !== 'light';
-      var next = isDark ? 'light' : 'dark';
+      var next = root.getAttribute('data-theme') !== 'light' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
       try { localStorage.setItem('ntTheme', next); } catch(e){}
       syncThemeColor(next);
+      syncSwitch(next);
+    }
+    ['themeBtn', 'themeSwitch'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', flip);
     });
   })();
 
@@ -7057,6 +7600,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordOrders    = or_.data || [];
       ordAllUnits  = un.data || [];
       try { const ab = await SB.from('batches').select('*'); ordAllBatches = ab.data || []; } catch(e){ ordAllBatches = []; }
+      try {
+        const at = await SB.from('batch_tracking').select('batch_id,unit_id,tracking_no').limit(20000);
+        ordAllTracking = at.data || [];
+      } catch(e){ ordAllTracking = []; }
       ordCounts = {};
       ordUnitDates = [];
       (un.data || []).forEach(function(u){
