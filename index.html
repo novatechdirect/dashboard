@@ -484,6 +484,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     --content:2040px;
     --measure:940px;
     --scrim:rgba(10,21,48,.5);
+    /* liquid glass: one tinted surface value plus its opaque stand-in, and the
+       two easing curves every piece of chrome moves on */
+    --glass:rgba(48,52,62,.68); --glass-solid:#2c2f38;
+    --tab-chip:#f6f5f4; --tab-chip-ink:#15171d;
+    --ease-drawer:cubic-bezier(.32,.72,0,1);
+    --ease-out:cubic-bezier(.2,.8,.3,1);
 
     /* per-surface tile hues, each drawn from the brand spectrum so its
        color-mix tint lands on one of the pastel card tints */
@@ -529,6 +535,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     --e3:0 2px 6px rgba(0,0,0,.4), 0 20px 48px rgba(0,0,0,.55);
     --e4:rgba(0,0,0,.5) 0 16px 48px -8px;
     --scrim:rgba(4,6,9,.66);
+    --glass:rgba(24,28,36,.62); --glass-solid:#161a21;
+    --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#eef1f6;
     --hue-orders:#d6b6f6; --hue-inventory:#8a5a2b;   /* cardboard */ --hue-timeclock:#ff64c8;
     --hue-margins:#dd5b00; --hue-admin:#f5d75e; --hue-rma:#dcecfa;
     --hue-billing:#5fd2a8;
@@ -567,6 +575,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       --e3:0 2px 6px rgba(0,0,0,.4), 0 20px 48px rgba(0,0,0,.55);
       --e4:rgba(0,0,0,.5) 0 16px 48px -8px;
       --scrim:rgba(4,6,9,.66);
+      --glass:rgba(24,28,36,.62); --glass-solid:#161a21;
+      --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#eef1f6;
       --hue-orders:#d6b6f6; --hue-inventory:#8a5a2b;   /* cardboard */ --hue-timeclock:#ff64c8;
       --hue-margins:#dd5b00; --hue-admin:#f5d75e; --hue-rma:#dcecfa;
       --hue-billing:#5fd2a8;
@@ -1166,7 +1176,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .nav-logo{ height:24px; }
     .chip-email{ display:none; }
     .version{ display:none; }
-    .controls{ padding:20px 16px 64px; }
+    .controls{ padding:20px 10px 64px; }
     .bar{ flex-wrap:wrap; }
     .qbtn{ width:36px; height:36px; }
     .hist-toolbar{ flex-wrap:wrap; }
@@ -1185,47 +1195,76 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* --- v26: bottom tab bar --- */
   .tabbar{ display:none; }
   @media (max-width:700px){
+    /* liquid glass: a floating tinted sheet, blurred and saturated, with a lit
+       top edge and its own cast shadow */
     .tabbar.on{
-      position:fixed; bottom:0; left:0; right:0; z-index:30; display:flex;
-      background:color-mix(in srgb, var(--paper) 92%, transparent);
-      -webkit-backdrop-filter:saturate(180%) blur(12px); backdrop-filter:saturate(180%) blur(12px);
-      border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom);
+      position:fixed; z-index:30; display:flex;
+      left:10px; right:10px; bottom:calc(8px + env(safe-area-inset-bottom));
+      padding:5px; border-radius:22px; border:none;
+      background:var(--glass, rgba(24,26,32,.87));
+      -webkit-backdrop-filter:blur(28px) saturate(180%); backdrop-filter:blur(28px) saturate(180%);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 14px 34px -12px rgba(0,0,0,.55);
+      -webkit-tap-highlight-color:transparent; touch-action:manipulation;
     }
     .tab-btn{
-      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-      padding:8px 0 8px; min-height:52px; background:none; border:none; border-radius:0;
+      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+      padding:7px 0; min-height:50px; background:none; border:none; border-radius:16px;
       font-family:var(--font-ui); font-size:10px; font-weight:600; letter-spacing:.01em;
-      color:var(--muted); cursor:pointer; position:relative;
-      transition:color var(--t);
+      color:rgba(255,255,255,.64); cursor:pointer; position:relative; z-index:1;
+      transition:color 150ms var(--ease-out), transform 150ms var(--ease-out);
+      -webkit-user-select:none; user-select:none;
     }
     .tab-btn svg{ width:21px; height:21px; stroke-width:2; }
-    .tab-btn.active{ color:var(--accent-fg); }
-    .tab-btn.active::before{
-      content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
-      width:26px; height:2px; border-radius:0 0 2px 2px; background:var(--accent);
-      box-shadow:0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+    .tab-btn:active{ transform:scale(.96); }
+    /* the rail's sliding fill, inverted for the dark glass */
+    .tab-ind{
+      position:absolute; top:5px; left:0; width:0; height:0; z-index:0;
+      background:var(--tab-chip); border-radius:16px;
+      box-shadow:0 4px 14px -8px rgba(0,0,0,.45);
+      opacity:0; pointer-events:none; transition:none;
     }
-    .tab-btn:not(.active):active{ color:var(--ink); }
-    body.authed .controls{ padding-bottom:calc(108px + env(safe-area-inset-bottom)); }
+    .tab-ind.ready{
+      transition:transform 300ms var(--ease-drawer), width 300ms var(--ease-drawer),
+                 opacity 140ms linear;
+    }
+    .tab-btn.active, .tab-btn.active svg{ color:var(--tab-chip-ink); }
+    body.authed .controls{ padding-bottom:calc(112px + env(safe-area-inset-bottom)); }
     .nav-menu{ display:none; }
+  }
+
+  @media (max-width:700px){
+    /* switching a tool reads as a step forward, not a flash */
+    @keyframes viewIn{ from{ opacity:0; transform:translateY(6px); } }
+    body.authed #appView > div[id^="tool"]{ animation:viewIn 220ms cubic-bezier(.2,.7,.2,1); }
+    @media (prefers-reduced-motion: reduce){
+      body.authed #appView > div[id^="tool"]{ animation:none; }
+    }
   }
 
   /* Translucent chrome has to answer the other two display preferences too:
      frostier when transparency is reduced, near-solid with a hard edge when
      more contrast is asked for. */
   @media (prefers-reduced-transparency: reduce){
-    .topnav, .tabbar.on{
+    .topnav{
       background:var(--paper);
       -webkit-backdrop-filter:none; backdrop-filter:none;
     }
+    .tabbar.on, .tab-more-sheet, .tab-more-scrim{
+      background:var(--glass-solid, #1a1c22);
+      -webkit-backdrop-filter:none; backdrop-filter:none;
+    }
+    .tab-more-scrim{ background:var(--scrim); }
   }
   @media (prefers-contrast: more){
-    .topnav, .tabbar.on{
+    .topnav{
       background:var(--paper);
+      -webkit-backdrop-filter:none; backdrop-filter:none;
+    }
+    .tabbar.on, .tab-more-sheet{
+      background:var(--glass-solid, #1a1c22);
       -webkit-backdrop-filter:none; backdrop-filter:none;
     }
     .topnav{ border-bottom-color:var(--ink); }
-    .tabbar.on{ border-top-color:var(--ink); }
   }
 
   /* --- v27: install helper --- */
@@ -1424,6 +1463,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .mg-bar-count{ display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink); }
   .mg-bar-count .n{ font-family:var(--font-num); background:var(--accent-soft); color:var(--accent-fg); border-radius:var(--r-sm); padding:1px 8px; }
   body.mg-comparing .controls{ padding-bottom:180px; }
+  body.mlock{ overflow:hidden; }
 
   .mg-sect{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin:var(--s6) 0 var(--s3); }
   .mg-actions{ display:flex; gap:var(--s2); margin-left:auto; flex:0 0 auto; }
@@ -1471,7 +1511,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .mg-item input[type=text]{ min-width:0; }
     .mg-cmp-grid{ grid-template-columns:1fr; }
     .mg-deltas{ gap:var(--s4) var(--s5); }
-    .mg-bar{ bottom:calc(53px + env(safe-area-inset-bottom)); }
+    .mg-bar{ bottom:calc(76px + env(safe-area-inset-bottom)); }
     .mg-bar-inner{ padding:var(--s3); flex-wrap:wrap; }
     .mg-bar-inner button{ flex:1; }
     .mg-modal{ padding:var(--s4); }
@@ -1911,12 +1951,45 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .bill-age{ font-size:13px; color:var(--muted); margin:var(--s3) 0 0; }
   .bill-age b{ color:var(--warn-ink); font-weight:600; }
   .bill-pays{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-sm); padding:var(--s2) var(--s3); }
+  .bill-hold{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
   .bill-exp-acts{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s4); }
   @media (max-width:700px){
     .bill-exp-acts > *{ flex:1 1 auto; min-height:38px; justify-content:center; }
-    .hist-table.stack.bill-table tr.bill-exp{ display:block; }
-    .hist-table.stack.bill-table tr.bill-exp > td{ display:block; width:100%; }
+    /* the open/close marker is a real target, centred on the invoice line */
+    .hist-table.stack.bill-table td[data-l="Invoice"]{ align-items:center; }
+    .bill-chev{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:22px; height:22px; margin-right:8px; border-radius:50%;
+      background:var(--paper); border:1px solid var(--line-strong);
+      color:var(--muted); font-size:14px; line-height:1; vertical-align:middle;
+    }
+    .bill-row.open .bill-chev{ background:var(--ink); border-color:var(--ink); color:var(--on-ink); }
+    /* the expanded panel is a document, not a label/value row: it reads
+       left-aligned and full-bleed under the invoice it belongs to */
+    .hist-table.stack.bill-table tr.bill-exp{
+      display:block; padding:0; margin:-6px 0 12px; border:1px solid var(--line);
+      border-top:none; border-radius:0 0 var(--r-md) var(--r-md); overflow:hidden;
+    }
+    .hist-table.stack.bill-table tr.bill-exp > td{
+      display:block; width:100%; text-align:left; padding:0 !important;
+    }
     .hist-table.stack.bill-table tr.bill-exp > td::before{ content:none; }
+    .hist-table.stack.bill-table tr.bill-row.open{ border-radius:var(--r-md) var(--r-md) 0 0; margin-bottom:0; }
+    .bill-exp-in{ text-align:left; padding:var(--s4) var(--s4) var(--s4b); border-bottom:none; }
+    .bill-exp-in > *{ text-align:left; }
+    /* each section announces itself with a rule above its heading */
+    .bill-exp-in .bill-exp-h{
+      border-top:1px solid var(--line); padding-top:var(--s4); margin:var(--s4) 0 var(--s3);
+    }
+    .bill-exp-in .bill-exp-acts{
+      border-top:1px solid var(--line); padding-top:var(--s4); margin-top:var(--s4);
+    }
+    .bill-cap{ display:flex; flex-wrap:wrap; gap:2px var(--s3); font-size:12px; }
+    .bill-pays{ padding:var(--s3); }
+    .bill-pay-row{ display:flex; justify-content:space-between; align-items:baseline; gap:var(--s3); }
+    .bill-pay-m{ text-align:right; font-size:11.5px; color:var(--muted); }
+    .bill-doc-add{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .bill-doc-add select, .bill-doc-add button{ width:100%; min-height:38px; }
   }
   @media (max-width:700px){
     .bill-kpis, .bill-det{ grid-template-columns:1fr 1fr; }
@@ -2034,7 +2107,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .ord-line{ grid-template-columns:minmax(0,1fr); }
     .ord-gen{ grid-column:1; }
     .ord-gen{ width:100%; margin-top:var(--s2); }
-    .ord-gen input{ flex:1 1 auto; width:auto; }
+    /* the qty field holds at most four digits; the buttons take the rest */
+    .ord-gen input{ flex:0 0 68px; width:68px; text-align:center; padding:0 6px; }
+    .ord-gen button{ flex:1 1 0; min-width:0; white-space:nowrap; }
+    /* the count and its progress bar get room to breathe from the controls above */
+    .ord-line-q{ margin-top:var(--s4); }
+    .ord-line .ord-prog{ margin:10px 0 4px; }
     .ord-pool-actions{ width:100%; margin-left:0; }
     .ord-pool-actions button{ flex:1 1 auto; }
   }
@@ -2209,7 +2287,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   :root[data-demo]{ --demo-bar:44px; }
 
   /* the phone tab bar sits above the demo banner */
-  :root[data-demo] #tabbar{ bottom:calc(var(--demo-bar) + env(safe-area-inset-bottom)); }
+  :root[data-demo] #tabbar{ bottom:calc(var(--demo-bar) + 8px + env(safe-area-inset-bottom)); }
   :root[data-demo] body{ padding-bottom:var(--demo-bar); }
   @media print{ #demoBar{ display:none !important; } }
 
@@ -2524,7 +2602,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .mg-modal-foot button{ flex:1 1 auto; }
 
     /* the sticky selection bar has to clear the tab bar */
-    .ord-pool-bar{ bottom:calc(60px + env(safe-area-inset-bottom)); }
+    .ord-pool-bar{ bottom:calc(76px + env(safe-area-inset-bottom)); }
     .ord-pool-actions{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); width:100%; }
     .ord-pool-actions button{ width:100%; min-height:34px; }
     /* the two label PDFs are a pair; adding to a batch is the real action */
@@ -2584,6 +2662,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      Mobile layout pass — overflow, safe areas, stacked tools
      ===================================================================== */
   html{ overflow-x:clip; }
+  /* the rubber-band area past the top of the page is the html background,
+     not the body's — without this it flashes white in dark mode */
+  html{ background:var(--bg); }
   body{ -webkit-tap-highlight-color:transparent; }
   @media (max-width:700px){
     html, body{ overflow-x:hidden; max-width:100%; }
@@ -2626,7 +2707,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         min-height:36px !important; padding:4px 8px !important;
         font-size:11.5px !important; line-height:1.2;
       }
-      .ord-list-card{ background:transparent; border:none; box-shadow:none; padding:0; }
       .ord-list-card .ord-chips{ margin-bottom:var(--s4); }
     }
     .login-card{ max-width:none; padding:24px 20px; }
@@ -2655,14 +2735,63 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     /* the period picker needs the whole width for its long date labels, so it
        takes its own row and Prev / Next share the one below */
-    #tcAdminCard .inv-topbar{ grid-template-columns:minmax(0,1fr); }
-    #tcAdminCard .date-lbl{ width:100%; }
-    /* three compact controls across one row — they are navigation, not actions */
-    #tcAdminCard .inv-topbar-right{ width:100%; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+    /* the card reads top to bottom: nav, period, summary, then the utilities */
+    #tcAdminCard{ display:grid; grid-template-columns:1fr 1fr; gap:12px 8px; align-content:start; }
+    #tcAdminCard > *{ grid-column:1 / -1; }
+    #tcAdminCard .inv-topbar{ display:contents; }
+    #tcAdminCard .inv-topbar-right{ display:contents; }
+    #tcAdminCard .card-title{ order:0; }
+    #tcAdminCard #tcPrevPeriod{ order:1; grid-column:1; }
+    #tcAdminCard #tcNextPeriod{ order:2; grid-column:2; }
+    /* the options name the period in full, so the label is redundant */
+    #tcAdminCard .date-lbl{ order:3; grid-column:1 / -1; width:100%; font-size:0; gap:0; margin-top:4px; }
+    #tcAdminCard .date-lbl select{ width:100%; font-size:12.5px; }
+    #tcAdminCard .table-wrap{ order:5; margin-top:var(--s2); }
+    /* the picker already names the period, so the repeat line goes */
+    #tcAdminCard #tcPeriodRange{ display:none; }
+    #tcAdminCard .table-wrap{ order:5; }
+    #tcAdminCard #tcSummaryNote{ order:6; }
+    #tcAdminCard #tcCsvBtn{ order:7; grid-column:1; }
+    #tcAdminCard #tcViewToggle{ order:8; grid-column:2; }
+    /* the pay summary reads as a person card: name and pay on one line,
+       hours and rate beneath, note and action full width */
+    .hist-table.stack.tc-sum tr{
+      display:grid; grid-template-columns:minmax(0,1fr) auto;
+      gap:3px var(--s3); align-items:baseline; padding:12px; margin-bottom:8px;
+    }
+    .hist-table.stack.tc-sum td{ display:block; padding:0; text-align:left; }
+    .hist-table.stack.tc-sum td::before{ content:none; }
+    .hist-table.stack.tc-sum td[data-l="Employee"]{
+      grid-column:1; grid-row:1; font-weight:600; font-size:13.5px;
+      overflow:hidden; text-overflow:ellipsis;
+    }
+    .hist-table.stack.tc-sum td[data-l="Pay"]{
+      grid-column:2; grid-row:1; text-align:right; font-weight:600;
+      font-family:var(--font-num); font-variant-numeric:tabular-nums;
+    }
+    .hist-table.stack.tc-sum td[data-l="Hours"]{ grid-column:1; grid-row:2; font-size:12px; color:var(--muted); }
+    .hist-table.stack.tc-sum td[data-l="Rate"]{ grid-column:2; grid-row:2; font-size:12px; color:var(--muted); text-align:right; }
+    .hist-table.stack.tc-sum td[data-l="Hours"]::before,
+    .hist-table.stack.tc-sum td[data-l="Rate"]::before{
+      content:attr(data-l) " "; margin-right:5px; color:var(--faint);
+      font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase;
+    }
+    .hist-table.stack.tc-sum td[data-l="Note"]{
+      grid-column:1 / -1; grid-row:3; font-size:12px; color:var(--muted); text-wrap:pretty;
+    }
+    .hist-table.stack.tc-sum td.row-actions{
+      grid-column:1 / -1; grid-row:4; display:flex; gap:8px; margin-top:6px;
+    }
+    .hist-table.stack.tc-sum td.row-actions .mini{ flex:1 1 auto; }
     #tcAdminCard .inv-topbar-right button{
       width:100%; height:36px; min-height:36px !important;
       padding:0 8px !important; font-size:11.5px !important; line-height:1;
     }
+    /* Prev / Next are navigation, so they carry a fill the utilities don't */
+    #tcAdminCard #tcPrevPeriod, #tcAdminCard #tcNextPeriod{
+      background:var(--soft); border-color:var(--line-strong); color:var(--ink); font-weight:600;
+    }
+    #tcAdminCard #tcPrevPeriod:hover, #tcAdminCard #tcNextPeriod:hover{ background:var(--line); }
 
     .inv-row{
       display:grid; grid-template-columns:1fr auto auto;
@@ -2703,7 +2832,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     /* base card is 24px padding / 16px gap. On a phone the padding can come in
        a little, but the gap between cards needs to grow, not shrink. */
-    .card{ padding:20px 20px; margin-bottom:var(--s5); }
+    .card{ padding:16px 14px; margin-bottom:var(--s5); }
     .app-header{ margin-bottom:var(--s5); }
     #previewScroll{ margin-inline:-12px; padding-inline:12px; }
     .tile{ grid-template-columns:auto 1fr; }
@@ -2761,7 +2890,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .auth-chip a{ white-space:nowrap; }
   }
   @media (max-width:420px){
-    .mg-kpis{ grid-template-columns:1fr; }
+    .mg-kpis{ grid-template-columns:1fr 1fr; }
     .ord-sum, .sum{ grid-template-columns:1fr 1fr; }
   }
 
@@ -3062,20 +3191,49 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   @media (max-width:700px){
     #tabbar #tabMargins, #tabbar #tabAdmin, #tabbar #tabBilling{ display:none !important; }
   }
-  .tab-more-scrim{ position:fixed; inset:0; z-index:59; background:var(--scrim); display:none; }
-  .tab-more-scrim.on{ display:block; }
+  .tab-more-scrim{
+    position:fixed; inset:0; z-index:59; background:rgba(10,14,28,.34);
+    -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .tab-more-scrim.on{ opacity:1; pointer-events:auto; }
   .tab-more-sheet{
-    position:fixed; left:0; right:0; bottom:0; z-index:60; display:none;
-    background:var(--paper); border-top:1px solid var(--line); border-radius:var(--r-lg) var(--r-lg) 0 0;
-    padding:var(--s3) var(--s4) calc(var(--s5) + env(safe-area-inset-bottom)); box-shadow:var(--e3);
+    position:fixed; left:10px; right:10px; z-index:60;
+    bottom:calc(8px + env(safe-area-inset-bottom));
+    background:var(--glass); border:none; border-radius:22px;
+    -webkit-backdrop-filter:blur(28px) saturate(180%); backdrop-filter:blur(28px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 18px 44px -14px rgba(0,0,0,.6);
+    padding:8px; visibility:hidden; transform:translateY(12px); opacity:0;
+    transition:transform .3s var(--ease-drawer), opacity .2s ease, visibility 0s linear .3s;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
   }
-  .tab-more-sheet.on{ display:block; }
+  .tab-more-sheet.on{
+    visibility:visible; transform:none; opacity:1;
+    transition:transform .3s var(--ease-drawer), opacity .2s ease, visibility 0s;
+  }
   .tab-more-sheet button{
-    display:flex; width:100%; align-items:center; gap:var(--s3); padding:var(--s3) var(--s2); min-height:48px;
-    background:none; border:0; border-radius:var(--r-sm) !important; font-size:15px; color:var(--ink); text-align:left;
+    display:flex; width:100%; align-items:center; justify-content:flex-start;
+    gap:13px; padding:11px 12px; min-height:48px;
+    background:none; border:0; border-radius:12px !important; font-size:14.5px; font-weight:500;
+    color:rgba(255,255,255,.72); text-align:left;
+    -webkit-user-select:none; user-select:none;
+    transition:background .15s ease, color .15s ease, transform .15s var(--ease-out);
   }
-  .tab-more-sheet button:hover{ background:var(--soft); }
+  .tab-more-sheet button:active{ transform:scale(.97); color:#fff; background:rgba(255,255,255,.10); }
+  @media (hover:hover) and (pointer:fine){
+    .tab-more-sheet button:hover{ background:rgba(255,255,255,.10); color:#fff; }
+  }
+  /* the items arrive just behind the sheet, 30ms apart */
+  @keyframes moreItemIn{ from{ opacity:0; transform:translateY(8px); } }
+  .tab-more-sheet.on button{ animation:moreItemIn .28s var(--ease-out) backwards; }
+  .tab-more-sheet.on button:nth-child(2){ animation-delay:.03s; }
+  .tab-more-sheet.on button:nth-child(3){ animation-delay:.06s; }
+  .tab-more-sheet.on button:nth-child(4){ animation-delay:.09s; }
+  .tab-more-sheet.on button:nth-child(5){ animation-delay:.12s; }
   .tab-more-sheet svg{ width:20px; height:20px; }
+  @media (prefers-reduced-motion: reduce){
+    .tab-more-sheet, .tab-more-sheet.on, .tab-more-sheet.on button, .tab-ind.ready{ animation:none; transition:none; }
+  }
 
   /* ============================================================
      Notion geometry. Controls are 8px rectangles; {rounded.full}
@@ -3083,7 +3241,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      Appended last so it settles the radius for every control that
      declares its own, without touching their heights.
      ============================================================ */
-  button:not(.pill):not(.mg-pill):not(.status-select):not(.theme-btn):not(.qbtn):not(.cat-add):not(.mg-x):not(.chart-tab),
+  button:not(.pill):not(.mg-pill):not(.status-select):not(.theme-btn):not(.qbtn):not(.cat-add):not(.mg-x):not(.chart-tab):not(.gs-btn),
   input:where(:not([type="checkbox"]):not([type="radio"])), select:not(.status-select), textarea,
   .mini, .btn-sm, .sel-sm, .spec-select, .seg, .seg-btn,
   .tc-edit-input, .tc-edit-wide, .mg-inp, .date-lbl input,
@@ -3148,6 +3306,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   body.authed.rail-mini .rail-toggle.in-rail{ display:none; }
   body.authed:not(.rail-mini) .rail-toggle.in-top{ display:none; }
   .rail-brand .nav-logo{ height:26px; }
+  /* the brand lines up with the page title in the top bar */
+  body.authed .siderail{ padding-top:14px; }
+  body.authed .rail-head{ padding-top:0; }
+
   body.authed.rail-mini .rail-head{ justify-content:center; padding-inline:0; }
   body.authed.rail-mini .rail-brand{ padding:0; justify-content:center; }
   body.authed.rail-mini .rail-brand .nav-wordmark{ display:none; }
@@ -3179,6 +3341,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                left var(--t), opacity 140ms linear;
   }
   @supports not (color: color-mix(in srgb, red, blue)){ .nav-ind{ background:var(--accent-soft); } }
+  /* dark mode: the rail indicator and the wordmark share one soft off-white,
+     so neither punches a hole in the dark chrome */
+  :root[data-theme="dark"] .nav-ind{ background:var(--rail-ind, #d7dbe2); }
+  :root[data-theme="dark"] .nav-logo.is-dark,
+  :root[data-theme="dark"] .brand img.is-dark,
+  :root[data-theme="dark"] .rail-logo.is-dark{ filter:brightness(.845); }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme]) .nav-ind{ background:var(--rail-ind, #d7dbe2); }
+    :root:not([data-theme]) .nav-logo.is-dark,
+    :root:not([data-theme]) .brand img.is-dark,
+    :root:not([data-theme]) .rail-logo.is-dark{ filter:brightness(.845); }
+  }
+
   @media (prefers-reduced-motion: reduce){ .nav-ind.ready{ transition:opacity 140ms linear; } }
   .siderail .nav-item{ position:relative; z-index:1; }
   /* the indicator carries the fill now, so the row itself stays clear */
@@ -3331,15 +3506,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* phones: the field folds into a button, and opens as a sheet from the top */
   @media (max-width:700px){
     body.authed .gsearch{ display:none; }
+    /* the search control matches the theme toggle: same circle, same size */
     body.authed .gs-btn{
       display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
-      width:36px; height:36px; min-height:36px; padding:0; margin-left:auto;
-      border-radius:50% !important; background:transparent; border:1px solid transparent;
+      width:32px; height:32px; min-height:32px; padding:0; margin-left:auto;
+      border-radius:50% !important; background:var(--soft); border:1px solid var(--line);
       color:var(--muted); cursor:pointer;
+      transition:color var(--t), border-color var(--t);
     }
-    body.authed .gs-btn:hover{ background:var(--soft); color:var(--ink); }
-    .gs-btn svg{ width:18px; height:18px; display:block; }
+    body.authed .gs-btn:hover{ background:var(--soft); color:var(--ink); border-color:var(--line-strong); }
+    .gs-btn svg{ width:15px; height:15px; display:block; }
     body.authed .nav-right{ flex:0 0 auto; }
+    /* one spacing value across search → account pill → theme toggle */
+    body.authed .nav-inner{ gap:8px; }
+    body.authed .nav-right{ gap:8px; }
 
     body.gs-open .gs-scrim{
       display:block; position:fixed; inset:0; z-index:58;
@@ -3354,10 +3534,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     @keyframes gsSheet{ from{ opacity:0; transform:translateY(-100%); } }
     body.gs-open .gs-field{ height:40px; }
+    /* the phone sheet drops the accent tint — focus, icon, cancel and match
+       highlight all read in ink */
+    body.gs-open .gs-field:focus-within{
+      border-color:var(--ink); box-shadow:0 0 0 3px color-mix(in srgb, var(--ink) 12%, transparent);
+    }
+    body.gs-open .gs-field:focus-within .gs-ico{ color:var(--ink); }
+    body.gs-open .gs-rico{ color:var(--ink); }
+    body.gs-open .gs-t mark{ background:color-mix(in srgb, var(--ink) 16%, transparent); }
     body.gs-open .gs-cancel{
       display:inline-flex; align-items:center; flex:0 0 auto; padding:0 0 0 var(--s2);
       min-height:0; background:none; border:0; border-radius:0 !important;
-      color:var(--accent-fg); font:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+      color:var(--ink); font:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
     }
     body.gs-open .gs-panel{
       position:static; margin-top:var(--s3); box-shadow:none; border-radius:var(--r-sm);
@@ -3553,7 +3741,53 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     body.authed .nav-inner{ height:52px; gap:12px; }
   }
   @media (max-width:560px){ .qa-grid{ grid-template-columns:1fr; } }
-  @media (max-width:430px){ .stat-row{ grid-template-columns:1fr; gap:var(--s3); } }
+  /* phone: Builds reads title → chart → number, so the card loses its tall
+     header block and the bars come down to a glanceable strip */
+  @media (max-width:700px){
+    #homeBuilds{ display:flex; flex-direction:column; gap:var(--s1); }
+    #homeBuilds .chart-head, #homeBuilds .chart-kpi{ display:contents; }
+    #homeBuilds .card-title{ order:1; margin:0; }
+    #homeBuilds #hbarPlot{ order:2; }
+    #homeBuilds .chart-val{ order:3; font-size:18px; line-height:1.2; }
+    #homeBuilds .chart-sub{ order:4; font-size:11.5px; }
+    #homeBuilds .bars{ height:72px; gap:3px; margin-top:0; }
+    #homeBuilds .chart-axis{ margin-top:4px; font-size:10px; }
+    /* the Orders Builds chart takes the same compact treatment: title, chart,
+       then the number and range tabs underneath */
+    #homeHero{ display:flex; flex-direction:column; gap:var(--s1); }
+    #homeHero .chart-head, #homeHero .chart-kpi{ display:contents; }
+    #homeHero .card-title{ order:1; margin:0; }
+    #homeHero .chart-plot{ order:2; margin-top:var(--s2); }
+    #homeHero .chart-val{ order:3; font-size:18px; line-height:1.2; }
+    #homeHero .chart-sub{ order:4; font-size:11.5px; }
+    #homeHero .chart-tabs{ order:5; width:100%; margin-top:var(--s2); }
+    #homeHero .chart-axis{ margin-top:4px; font-size:10px; }
+    /* Timeclock hours chart: same compact order — title, chart, then the number */
+    #tcHoursCard{ display:flex; flex-direction:column; gap:var(--s1); }
+    #tcHoursCard .chart-kpi{ display:contents; }
+    #tcHoursCard .card-title{ order:1; margin:0; }
+    #tcHoursCard .chart-plot{ order:2; margin-top:var(--s2); }
+    #tcHoursCard .chart-val{ order:3; font-size:18px; line-height:1.2; }
+    #tcHoursCard .chart-sub{ order:4; font-size:11.5px; }
+    #tcHoursCard .chart-axis{ margin-top:4px; font-size:10px; }
+    /* the RMA charts read title → chart → number, like the rest */
+    #rmaCharts .chart-card{ display:flex; flex-direction:column; gap:var(--s1); }
+    #rmaCharts .chart-kpi{ display:contents; }
+    #rmaCharts .card-title{ order:1; margin:0; }
+    #rmaCharts .chart-head{ order:1; }
+    #rmaCharts .chart-plot{ order:2; margin-top:var(--s2); }
+    #rmaCharts .chart-val{ order:3; font-size:18px; line-height:1.2; }
+    #rmaCharts .chart-sub{ order:4; font-size:11.5px; }
+    #rmaCharts .rma-fail{ order:5; }
+    #rmaCharts .chart-axis{ margin-top:4px; font-size:10px; }
+  }
+  /* the four stats stay a 2 × 2 block on a phone rather than a tall stack */
+  @media (max-width:430px){
+    .stat-row{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--s3); }
+    .stat{ padding:var(--s3) var(--s4); }
+    .stat-val{ font-size:26px; }
+    .stat-lbl{ font-size:12px; }
+  }
   /* ============================================================
      WIDESCREEN — past ~1660px the home page gains a third column
      rather than stretching two. Quick actions become a right-hand
@@ -3998,6 +4232,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       <button class="ghost btn-sm" id="tcAsAdmin" type="button">Back to admin view</button>
     </p>
 
+    <section class="card" id="tcHoursCard" style="display:none;">
+      <div class="chart-kpi">
+        <h2 class="card-title" id="thTitle">Team hours</h2>
+        <div class="chart-val" id="thVal">&mdash;</div>
+        <div class="chart-sub" id="thSub"></div>
+      </div>
+      <div class="chart-plot" id="thPlot"></div>
+    </section>
+
     <section class="card">
       <h2 class="card-title">My hours</h2>
       <div id="tcNoProfile" style="display:none;"><p class="muted-line">You&rsquo;re signed in, but not on the team roster yet. Ask the admin to add you.</p></div>
@@ -4052,21 +4295,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       </div>
       <p class="muted-sm" id="tcPeriodRange" style="margin:0 0 var(--s3);"></p>
       <div class="table-wrap stack-wrap">
-        <table class="hist-table stack">
+        <table class="hist-table stack tc-sum">
           <thead><tr><th>Employee</th><th class="n">Hours</th><th class="n">Rate</th><th class="n">Pay</th><th>Note</th><th></th></tr></thead>
           <tbody id="tcSummaryBody"></tbody>
         </table>
       </div>
       <p class="muted-sm" id="tcSummaryNote"></p>
-    </section>
-
-    <section class="card" id="tcHoursCard" style="display:none;">
-      <div class="chart-kpi">
-        <h2 class="card-title">Team hours</h2>
-        <div class="chart-val" id="thVal">&mdash;</div>
-        <div class="chart-sub" id="thSub"></div>
-      </div>
-      <div class="chart-plot" id="thPlot"></div>
     </section>
 
     <section class="card" id="tcTeamCard" style="display:none;">
@@ -4904,11 +5138,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
   }
 
+  /* whatever the account last chose wins over this browser's copy */
+  function ntApplyAccountTheme(s){
+    try {
+      const t = s && s.user && s.user.user_metadata && s.user.user_metadata.theme;
+      if (t !== 'dark' && t !== 'light') return;
+      if (document.documentElement.getAttribute('data-theme') === t) return;
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('ntTheme', t);
+      document.documentElement.style.colorScheme = t;
+      document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){
+        if (!m.getAttribute('media')) m.setAttribute('content', t === 'dark' ? '#0e1116' : '#ffffff');
+      });
+      const sw = document.getElementById('themeSwitch');
+      if (sw) sw.setAttribute('aria-checked', t === 'dark' ? 'true' : 'false');
+    } catch(e){}
+  }
   function renderAuth(){
     /* the answer is in: stop holding the frame and remember it for next time */
     document.documentElement.classList.remove('nt-boot');
     try { localStorage.setItem('ntWasAuthed', (session && session.user) ? '1' : '0'); } catch(e){}
     if (session && session.user){
+      ntApplyAccountTheme(session);
       authChip.style.display = '';
       authChip.innerHTML = '<span class="chip-email">' + session.user.email + '</span> <a id="signOutLink">Sign out</a>';
       const link = document.getElementById('signOutLink');
@@ -5039,7 +5290,66 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
   }
   navHome.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
-  document.querySelectorAll('.nav-brand').forEach(function(b){
+  /* the phone tab bar mirrors the rail: one pill slides between tabs, and a
+     finger can drag along the bar to scrub through them */
+  (function(){
+    var bar = document.getElementById('tabbar');
+    if (!bar) return;
+    var ind = document.createElement('span');
+    ind.className = 'tab-ind';
+    ind.setAttribute('aria-hidden', 'true');
+    bar.insertBefore(ind, bar.firstChild);
+    var dragTo = null;
+    function target(){
+      return dragTo || bar.querySelector('.tab-btn.active');
+    }
+    function place(){
+      var a = target();
+      if (!a || a.offsetParent === null || !bar.classList.contains('on')){ ind.style.opacity = '0'; return; }
+      var w = Math.max(0, a.offsetWidth - 8);
+      ind.style.width = w + 'px';
+      ind.style.height = Math.max(0, a.offsetHeight - 4) + 'px';
+      ind.style.top = (a.offsetTop + 2) + 'px';
+      ind.style.transform = 'translateX(' + (a.offsetLeft + (a.offsetWidth - w) / 2) + 'px)';
+      ind.style.opacity = '1';
+      if (!ind.classList.contains('ready')) requestAnimationFrame(function(){ ind.classList.add('ready'); });
+    }
+    window.tabIndPlace = place;
+    new MutationObserver(function(){ place(); }).observe(bar, { subtree:true, attributes:true, attributeFilter:['class'] });
+    window.addEventListener('resize', place);
+    /* the first paint measures before webfonts and the bar's own layout have
+       settled, so re-place once everything is final */
+    requestAnimationFrame(place);
+    window.addEventListener('load', place);
+    setTimeout(place, 400);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+
+    /* drag to scrub: the pill follows the finger, the tab commits on release.
+       No pointer capture — a plain tap has to stay a plain click. */
+    var startBtn = null;
+    function btnAt(x, y){
+      var el = document.elementFromPoint(x, y);
+      return el && el.closest ? el.closest('#tabbar .tab-btn') : null;
+    }
+    bar.addEventListener('pointerdown', function(e){
+      startBtn = e.target.closest ? e.target.closest('.tab-btn') : null;
+    });
+    bar.addEventListener('pointermove', function(e){
+      if (!startBtn || !e.buttons && e.pointerType === 'mouse') return;
+      var b = btnAt(e.clientX, e.clientY);
+      if (b && b !== dragTo){ dragTo = b; place(); }
+    });
+    function end(e){
+      if (!startBtn) return;
+      var b = dragTo;
+      startBtn = null; dragTo = null;
+      if (b && !b.classList.contains('active')){ b.click(); }
+      place();
+    }
+    bar.addEventListener('pointerup', end);
+    bar.addEventListener('pointercancel', end);
+    bar.addEventListener('pointerleave', end);
+  })();  document.querySelectorAll('.nav-brand').forEach(function(b){
     b.addEventListener('click', function(e){ e.preventDefault(); showTool('home'); });
   });
   /* the active-row indicator: one element that slides, so switching pages
@@ -5313,7 +5623,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function tabMoreClose(){
     var s = document.getElementById('tabMoreSheet'), sc = document.getElementById('tabMoreScrim');
     if (s) s.classList.remove('on'); if (sc) sc.classList.remove('on');
+    document.body.classList.remove('mlock');
+    var more = document.getElementById('tabMore');
+    if (more) more.setAttribute('aria-expanded', 'false');
   }
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){
+      var s = document.getElementById('tabMoreSheet');
+      if (s && s.classList.contains('on')) tabMoreClose();
+    }
+  });
   (function(){
     var tm = document.getElementById('tabMargins'), ta = document.getElementById('tabAdmin'),
         tbl = document.getElementById('tabBilling'), more = document.getElementById('tabMore');
@@ -5332,8 +5651,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (tbl) new MutationObserver(sync).observe(tbl, { attributes:true, attributeFilter:['style'] });
     sync();
     more.addEventListener('click', function(){
-      document.getElementById('tabMoreSheet').classList.toggle('on');
-      document.getElementById('tabMoreScrim').classList.toggle('on');
+      var s = document.getElementById('tabMoreSheet'), sc = document.getElementById('tabMoreScrim');
+      var opening = !s.classList.contains('on');
+      s.classList.toggle('on', opening);
+      sc.classList.toggle('on', opening);
+      more.setAttribute('aria-expanded', opening ? 'true' : 'false');
+      document.body.classList.toggle('mlock', opening);
+      if (opening){ var f = s.querySelector('button:not([style*="none"])'); if (f) f.focus(); }
     });
     document.getElementById('tabMoreScrim').addEventListener('click', tabMoreClose);
     document.getElementById('tabMoreMargins').addEventListener('click', function(){ showTool('margins'); });
@@ -5848,8 +6172,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (isNaN(end.getTime())) return ymd;
     const start = new Date(end); start.setDate(end.getDate() - 13);
     const same = start.getMonth() === end.getMonth();
-    return start.toLocaleDateString(undefined, { month:'short', day:'numeric' }) + ' \u2013 '
-         + end.toLocaleDateString(undefined, same ? { day:'numeric' } : { month:'short', day:'numeric' })
+    return start.toLocaleDateString(undefined, { month:'long', day:'numeric' }) + ' \u2013 '
+         + end.toLocaleDateString(undefined, same ? { day:'numeric' } : { month:'long', day:'numeric' })
          + ', ' + end.getFullYear();
   }
   /* locked for staff once the grace week is up; admins are never locked out */
@@ -6781,6 +7105,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var next = root.getAttribute('data-theme') !== 'light' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
       try { localStorage.setItem('ntTheme', next); } catch(e){}
+      /* the preference belongs to the person, not the browser: it rides along
+         on their account so a new device opens in the mode they chose */
+      try {
+        if (window.SB && SB.auth && window.session && session.user){
+          SB.auth.updateUser({ data: { theme: next } });
+        }
+      } catch(e){}
       syncThemeColor(next);
       syncSwitch(next);
     }
@@ -6942,7 +7273,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.getElementById('hbVal').textContent = CH.nf(total);
     document.getElementById('hbSub').innerHTML = (total === 1 ? 'PC built' : 'PCs built') + ' \u00b7 ' + (hbRange === 'ytd' ? 'this year' : 'last ' + days + ' days')
       + ((prevTotal || total) ? ' &nbsp;' + CH.deltaHtml(total, prevTotal, hbRange === 'ytd' ? 'year' : days + ' days') : '');
-    CH.area(plot, series, { h:180, id:'hb', empty:'No builds logged in this period',
+    CH.area(plot, series, { h:(window.matchMedia && window.matchMedia('(max-width:700px)').matches) ? 110 : 180, id:'hb', empty:'No builds logged in this period',
       fmt:function(y){ return CH.nf(y) + (weekly ? ' that week' : ' that day'); },
       fmtX:function(d){ return weekly ? 'week of ' + CH.fmtShort(d) : CH.fmtShort(d); } });
     document.querySelectorAll('#hbTabs .chart-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-range') === hbRange); });
@@ -7052,8 +7383,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* ---- Timeclock: team hours by week ---- */
   function renderTcHours(){
     const card = document.getElementById('tcHoursCard'), plot = document.getElementById('thPlot'); if (!card || !plot) return;
-    if (!tcViewAdmin() || !tcHoursRows.length){ card.style.display = 'none'; return; }
-    const periods = {}; tcHoursRows.forEach(function(r){ periods[r.period_ending] = (periods[r.period_ending]||0) + (+r.hours||0); });
+    /* admins see the whole team; everyone else sees the same chart of their own
+       logged hours */
+    const admin = tcViewAdmin();
+    const myId = (tcMe && tcMe.user_id) || null;
+    const rows = admin ? tcHoursRows : tcHoursRows.filter(function(r){ return myId && r.user_id === myId; });
+    if (!rows.length){ card.style.display = 'none'; return; }
+    const title = document.getElementById('thTitle');
+    if (title) title.textContent = admin ? 'Team hours' : 'My hours by period';
+    const periods = {}; rows.forEach(function(r){ periods[r.period_ending] = (periods[r.period_ending]||0) + (+r.hours||0); });
     /* Nobody logs until the period is over, so the newest one or two periods
        are always empty. Anchor the series on the last Friday anyone actually
        logged; otherwise the line falls to zero at the right every fortnight
@@ -7067,7 +7405,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     card.style.display = '';
     document.getElementById('thVal').textContent = CH.nf(cur) + ' h';
     document.getElementById('thSub').innerHTML = 'period ending ' + CH.fmtShort(series[series.length-1].x) + ' &nbsp;' + CH.deltaHtml(cur, prev, 'period');
-    CH.area(plot, series, { h:160, id:'th', fmt:function(y){ return CH.nf(y) + ' h'; }, fmtX:function(d){ return 'period to ' + CH.fmtShort(d); } });
+    CH.area(plot, series, { h:(window.matchMedia && window.matchMedia('(max-width:700px)').matches) ? 100 : 160, id:'th', fmt:function(y){ return CH.nf(y) + ' h'; }, fmtX:function(d){ return 'period to ' + CH.fmtShort(d); } });
   }
 
   function setStat(id, val, sub, tone){
@@ -7823,7 +8161,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           : bal <= 0.005 ? '<span class="ord-chip ok">Paid</span>'
           : pd > 0.005 ? '<span class="ord-chip info">Part paid</span>'
           : '<span class="ord-chip warn">Unpaid</span>';
-        const held = r.gated ? ' <span class="ord-chip warn" title="Hidden from the customer portal until it is paid">On hold</span>' : '';
         const open = String(obOpenRow) === String(r.order_id);
         const pays = obPays[r.order_id];
         return '<tr class="ord-clickrow bill-row' + (open ? ' open' : '') + '" data-obrow="' + esc(r.order_id) + '">' +
@@ -7833,7 +8170,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<td class="bill-num" data-l="Total">' + (tot == null ? '<span class="bill-none">\u2014</span>' : obMoney(tot)) + '</td>' +
           '<td class="bill-num" data-l="Paid">' + (pd ? obMoney(pd) : '<span class="bill-none">\u2014</span>') + '</td>' +
           '<td class="bill-num" data-l="Balance">' + (bal == null ? '<span class="bill-none">\u2014</span>' : obMoney(bal)) + '</td>' +
-          '<td data-l="Status">' + chip + held + '</td></tr>' +
+          '<td data-l="Status">' + chip + '</td></tr>' +
           (open
             ? '<tr class="bill-exp"><td colspan="7">' +
                 '<div class="bill-exp-in">' +
@@ -7844,7 +8181,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                     : '<p class="muted-sm" style="margin:0;">No total set on this invoice yet.</p>') +
 
                   (obAging(r, bal) ? '<p class="bill-age">' + obAging(r, bal) + '</p>' : '') +
-                  (r.gated ? '<p class="bill-age"><span class="ord-chip warn">On hold</span> Hidden from the customer portal until it is paid in full.</p>' : '') +
+                  (r.gated ? '<p class="bill-age bill-hold"><span class="ord-chip warn">On hold</span><span class="bill-hold-t">Hidden from the customer portal until it is paid in full.</span></p>' : '') +
 
                   '<h3 class="bill-exp-h">Payments</h3>' +
                   (pays === undefined
@@ -10828,7 +11165,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const closedM = rmaTickets.filter(function(t){ return t.status === 'closed' && t.closed_at && new Date(t.closed_at) >= m0; }).length;
     document.getElementById(valId).textContent = CH.nf(total);
     document.getElementById(subId).textContent = 'opened in the last 12 weeks \u00b7 ' + CH.nf(closedM) + ' closed this month';
-    CH.area(plot, series, { h:150, id:plotId, fmt:function(y){ return CH.nf(y) + ' opened'; }, fmtX:function(d){ return 'week of ' + CH.fmtShort(d); } });
+    CH.area(plot, series, { h:(window.matchMedia && window.matchMedia('(max-width:700px)').matches) ? 100 : 150, id:plotId, fmt:function(y){ return CH.nf(y) + ' opened'; }, fmtX:function(d){ return 'week of ' + CH.fmtShort(d); } });
   }
   let rmaFailRange = localStorage.getItem('rmaFailRange') || 'all';
   function rmaFailInto(elId){
@@ -12899,7 +13236,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const SECTIONS = [
       ['homeChartsMain', 'Build charts'],
       ['homeRmaGrid',    'RMA charts'],
-      ['rmaCharts',      'RMA charts'],
       ['invTrends',      'Stock trend']
     ];
     const KEY = 'nt-charts-open';
