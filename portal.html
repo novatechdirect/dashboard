@@ -1493,8 +1493,18 @@
       transition:transform 300ms var(--ease-drawer), width 300ms var(--ease-drawer),
                  height 300ms var(--ease-drawer), opacity 140ms linear;
     }
+    /* the desktop rail's near-white indicator must not leak down here: at this
+       width the chip is the muted glass tint, same as the staff dashboard */
+    :root[data-theme="dark"] .nav-ind{ background:var(--tab-chip); }
+    @media (prefers-color-scheme: dark){
+      :root:not([data-theme]) .nav-ind{ background:var(--tab-chip); }
+    }
     body.authed .siderail .pmenu a.on,
     body.authed .siderail .pmenu a.on:hover{ background:transparent; color:var(--tab-chip-ink); }
+    body.authed .siderail .pmenu a.on > svg{ color:var(--tab-chip-ink); }
+    /* height:100% would fold the 112px tab-bar gutter into the viewport instead
+       of adding scroll room, clipping the last card short of the bottom */
+    body.authed{ height:auto; min-height:100%; }
     body.authed .siderail .pmenu a{ color:rgba(255,255,255,.64); -webkit-user-select:none; user-select:none; }
     body.authed .siderail .pmenu a:hover{ background:transparent; }
     body.authed .siderail .pmenu a:active{ transform:scale(.96); }
