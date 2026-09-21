@@ -1183,7 +1183,7 @@
      DASHBOARD SHELL — matches the staff dashboard: a fixed rail on
      desktop, a bottom tab bar on phones, the same card language.
      ============================================================ */
-  :root{ --rail:236px; --rail-mini:76px; }
+  :root{ --rail:284px; --rail-mini:76px; }
 
   .siderail{ display:none; }
   body.authed{ padding-left:var(--rail); transition:padding-left var(--t); }
@@ -1691,6 +1691,33 @@
       background:var(--glass-solid);
       -webkit-backdrop-filter:none; backdrop-filter:none;
     }
+  }
+  /* widescreen: the payments chart and the ageing bars are a pair, not a stack */
+  @media (min-width:1660px){
+    body.authed #listView:has(.bpay-card){
+      display:grid; gap:var(--s4);
+      grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
+    }
+    body.authed #listView:has(.bpay-card) > *{ grid-column:1 / -1; }
+    body.authed #listView:has(.bpay-card) > .bpay-card{ grid-column:1; margin-top:0; }
+    body.authed #listView:has(.bpay-card) > .bage-card{ grid-column:2; margin-top:0; }
+    /* both halves fill the row, so neither leaves a hole beneath it */
+    body.authed #listView:has(.bpay-card) > .bpay-card,
+    body.authed #listView:has(.bpay-card) > .bage-card{ display:flex; flex-direction:column; }
+    /* the ageing legend becomes a full-height breakdown rather than a wrapped
+       row with blank space under it */
+    body.authed #listView:has(.bpay-card) > .bage-card .bagekey{
+      flex-direction:column; flex-wrap:nowrap; flex:1 1 auto;
+      justify-content:space-between; gap:0;
+    }
+    body.authed #listView:has(.bpay-card) > .bage-card .bagekey > div{
+      display:flex; align-items:baseline; justify-content:space-between;
+      gap:var(--s4); width:100%; padding:var(--s2) 0; border-top:1px solid var(--line);
+    }
+    body.authed #listView:has(.bpay-card) > .bage-card .bagekey > div:first-child{ border-top:none; }
+    body.authed #listView:has(.bpay-card) > .bage-card .bagekey-v{ margin-top:0; }
+    /* the payments chart takes the slack on its side */
+    body.authed #listView:has(.bpay-card) > .bpay-card .bch{ flex:1 1 auto; min-height:150px; }
   }
   @keyframes plotDraw{ from{ clip-path:inset(0 100% 0 0); } }
   #rRatePlot > svg{ animation:plotDraw 900ms cubic-bezier(.2,.7,.2,1) backwards; }
@@ -3120,7 +3147,7 @@
       return '<span>' + (units ? num(Math.round(v)) : bshort(v)) + '</span>';
     }).join('');
 
-    return '<div class="card" style="margin-top:var(--s4);">' +
+    return '<div class="card bpay-card" style="margin-top:var(--s4);">' +
       '<div class="toolbar" style="align-items:flex-start;">' +
         '<div style="min-width:0;">' +
           '<h2 style="margin:0;font-size:15px;">' + (units ? 'Units delivered' : 'Payments received') + '</h2>' +
@@ -3166,7 +3193,7 @@
     ];
     const tot = rowsAge.reduce(function(s, b){ return s + Number(b[1] || 0); }, 0);
     if (!(tot > 0.005)) return '';
-    return '<div class="card" style="margin-top:var(--s4);">' +
+    return '<div class="card bage-card" style="margin-top:var(--s4);">' +
       '<h2 style="margin:0;font-size:15px;">How the balance ages</h2>' +
       '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">' +
         bmoneyBig(tot) + ' still owing, by how long it has been due.</p>' +
@@ -4137,6 +4164,11 @@
     requestAnimationFrame(place);
     window.addEventListener('load', place);
     setTimeout(place, 400);
+    if (window.ResizeObserver){
+      /* the phone bar's items appear with permissions; a width change after
+         first paint has to move the indicator with it */
+      new ResizeObserver(function(){ place(); }).observe(menu);
+    }
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
     /* the first placement lands without animating */
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ ind.classList.add('ready'); }); });

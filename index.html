@@ -3266,7 +3266,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      Navigation moves to a fixed left rail; the top bar keeps only
      context and account. Same tokens, same card language.
      ============================================================ */
-  :root{ --rail:248px; --rail-mini:76px; }
+  :root{ --rail:284px; --rail-mini:76px; }
 
   .siderail{ display:none; }
   body.authed{ padding-left:var(--rail); transition:padding-left var(--t); }
@@ -3821,6 +3821,34 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     body.authed #homeQuick .qa-grid{ flex:1 1 auto; grid-auto-rows:minmax(46px,1fr); }
     body.authed #homeQuick .tile.qa{ max-height:92px; }
     body.authed #homeBuilds .bars{ height:190px; }
+  }
+
+  /* ============================================================
+     WIDESCREEN — past ~1660px a lone chart or a three-figure panel beside
+     a full-width table reads as stretched. Only the pages with a genuinely
+     narrow companion piece pair up; the table pages keep their width.
+     ============================================================ */
+  @media (min-width:1660px){
+    /* Timeclock: the period table earns the width, the chart sits beside it */
+    body.authed #toolTimeclock{
+      display:grid; gap:var(--s4); grid-auto-flow:row dense;
+      grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+    }
+    body.authed #toolTimeclock > *{ grid-column:1 / -1; margin-bottom:0; }
+    /* a card paired with another fills its row: no hole under the shorter one —
+       the chart grows into the height instead of leaving it blank */
+    body.authed #toolTimeclock > .card{ display:flex; flex-direction:column; }
+    body.authed #tcHoursCard .chart-plot{
+      flex:1 1 auto; display:grid; grid-template-rows:minmax(140px,1fr) auto; min-height:0;
+    }
+    body.authed #tcHoursCard .chart-plot svg{ align-self:stretch; }
+    body.authed #toolTimeclock > #tcHoursCard{ grid-column:2; }
+    body.authed #toolTimeclock > #tcAdminCard{ grid-column:1; }
+    body.authed #toolTimeclock > .card:has(#tcMine){ grid-column:1; }
+    /* no chart to sit beside (nobody has logged hours yet): nothing should be
+       left holding an empty half-screen */
+    body.authed #toolTimeclock:has(#tcHoursCard[style*="none"]) > #tcAdminCard,
+    body.authed #toolTimeclock:has(#tcHoursCard[style*="none"]) > .card:has(#tcMine){ grid-column:1 / -1; }
   }
 
   .tc-preview{ display:flex; align-items:center; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; }
@@ -5317,7 +5345,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (!ind.classList.contains('ready')) requestAnimationFrame(function(){ ind.classList.add('ready'); });
     }
     window.tabIndPlace = place;
-    new MutationObserver(function(){ place(); }).observe(bar, { subtree:true, attributes:true, attributeFilter:['class'] });
+    /* the bar's own buttons appear and disappear with permissions, so watch
+       style as well as class — and never let the indicator's own writes
+       re-trigger the observer */
+    new MutationObserver(function(recs){
+      for (var i = 0; i < recs.length; i++){
+        if (recs[i].target !== ind){ place(); return; }
+      }
+    }).observe(bar, { subtree:true, attributes:true, attributeFilter:['class','style'] });
+    if (window.ResizeObserver){
+      var ro = new ResizeObserver(function(){ place(); });
+      ro.observe(bar);
+    }
     window.addEventListener('resize', place);
     /* the first paint measures before webfonts and the bar's own layout have
        settled, so re-place once everything is final */
@@ -7407,7 +7446,34 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     card.style.display = '';
     document.getElementById('thVal').textContent = CH.nf(cur) + ' h';
     document.getElementById('thSub').innerHTML = 'period ending ' + CH.fmtShort(series[series.length-1].x) + ' &nbsp;' + CH.deltaHtml(cur, prev, 'period');
-    CH.area(plot, series, { h:(window.matchMedia && window.matchMedia('(max-width:700px)').matches) ? 100 : 160, id:'th', fmt:function(y){ return CH.nf(y) + ' h'; }, fmtX:function(d){ return 'period to ' + CH.fmtShort(d); } });
+    thDraw(plot, series);
+  }
+  /* The card can be stretched to match the one beside it. Scaling the drawn
+     viewBox would turn the hover dot into an egg, so redraw at the height the
+     plot really has — once on arrival, and again whenever it changes. */
+  let thLastH = 0;
+  function thDraw(plot, series){
+    const axis = plot.querySelector('.chart-axis');
+    const avail = plot.clientHeight - (axis ? axis.offsetHeight + 8 : 0);
+    const base = (window.matchMedia && window.matchMedia('(max-width:700px)').matches) ? 100 : 160;
+    const h = avail > 140 ? Math.round(avail) : base;
+    thLastH = h;
+    CH.area(plot, series, { h:h, id:'th', fmt:function(y){ return CH.nf(y) + ' h'; }, fmtX:function(d){ return 'period to ' + CH.fmtShort(d); } });
+    if (!plot.__thFit){
+      plot.__thFit = true;
+      requestAnimationFrame(function(){
+        const a2 = plot.querySelector('.chart-axis');
+        const want = plot.clientHeight - (a2 ? a2.offsetHeight + 8 : 0);
+        if (want > 140 && Math.abs(want - thLastH) > 6) thDraw(plot, series);
+        if (window.ResizeObserver){
+          new ResizeObserver(function(){
+            const a3 = plot.querySelector('.chart-axis');
+            const w2 = plot.clientHeight - (a3 ? a3.offsetHeight + 8 : 0);
+            if (w2 > 140 && Math.abs(w2 - thLastH) > 6) thDraw(plot, series);
+          }).observe(plot);
+        }
+      });
+    }
   }
 
   function setStat(id, val, sub, tone){
