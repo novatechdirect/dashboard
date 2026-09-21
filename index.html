@@ -3797,13 +3797,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   @media (min-width:1660px){
     body.authed #toolHome{
       display:grid; gap:var(--s4);
-      grid-template-columns:minmax(0,1.7fr) minmax(0,1fr) minmax(0,.92fr);
+      /* four equal tracks, shared with the stat row above: the fourth stat and
+         the Quick actions column sit on the same two edges */
+      grid-template-columns:repeat(4, minmax(0,1fr));
       grid-template-areas:
-        "head   head   head"
-        "stats  stats  stats"
-        "builds status quick"
-        "recent recent quick"
-        "inst   inst   inst";
+        "head   head   head   head"
+        "stats  stats  stats  stats"
+        "builds builds status quick"
+        "recent recent recent quick"
+        "inst   inst   inst   inst";
     }
     body.authed #toolHome > .app-header{ grid-area:head; margin-bottom:0; padding-bottom:var(--s2); }
     body.authed #toolHome > .stat-row{ grid-area:stats; margin-bottom:0; }
