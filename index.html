@@ -405,7 +405,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet">
-<script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme')==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',t);var dark=t==='dark';var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++){metas[i].setAttribute('content',dark?'#0e1116':'#ffffff');}document.documentElement.style.colorScheme=dark?'dark':'light';}catch(e){}})();</script>
+<script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme')==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',t);var dark=t==='dark';var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++){metas[i].setAttribute('content',dark?'#0e1116':'#ffffff');}document.documentElement.style.colorScheme=dark?'dark':'light';var bar=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');if(bar)bar.setAttribute('content',dark?'black-translucent':'default');}catch(e){}})();</script>
 <script>/* the session resolves asynchronously; until it does, show neither screen
   rather than flashing the sign-in card at someone who is already signed in */
 (function(){try{document.documentElement.classList.add('nt-boot');
@@ -5182,6 +5182,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){
         m.setAttribute('content', t === 'dark' ? '#0e1116' : '#ffffff');
       });
+      /* the account theme lands after boot, so the status-bar style has to move
+         with it — otherwise a dark account on a light-booted app keeps iOS's
+         opaque white bar */
+      const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+      if (bar) bar.setAttribute('content', t === 'dark' ? 'black-translucent' : 'default');
       const sw = document.getElementById('themeSwitch');
       if (sw) sw.setAttribute('aria-checked', t === 'dark' ? 'true' : 'false');
     } catch(e){}
@@ -7131,9 +7136,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var metas = document.querySelectorAll('meta[name="theme-color"]');
       for (var i = 0; i < metas.length; i++){ metas[i].setAttribute('content', color); }
       document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-      /* apple-mobile-web-app-status-bar-style is read once at launch — writing
-         it here would pin the bar to whichever theme was active then. The
-         static `default` lets theme-color repaint the band on every toggle. */
+      /* iOS reads this at launch, so the boot script sets it too — translucent
+         in dark lets the page paint the status-bar band, `default` in light
+         keeps the black status-bar glyphs legible. */
+      var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+      if (bar) bar.setAttribute('content', dark ? 'black-translucent' : 'default');
     }
     var sw = document.getElementById('themeSwitch');
     function syncSwitch(mode){
