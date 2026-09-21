@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Novatech Dashboard</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)">
+<!-- one theme-color only: the app's own theme drives it, not the phone's.
+     A media-scoped pair would override this when the two disagree and paint
+     the iOS status bar white on a dark app. -->
 <meta name="theme-color" content="#0e1116">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
@@ -404,7 +405,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet">
-<script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme')==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',t);var dark=t==='dark';var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++){if(!metas[i].getAttribute('media'))metas[i].setAttribute('content',dark?'#0e1116':'#ffffff');}document.documentElement.style.colorScheme=dark?'dark':'light';}catch(e){}})();</script>
+<script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme')==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',t);var dark=t==='dark';var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++){metas[i].setAttribute('content',dark?'#0e1116':'#ffffff');}document.documentElement.style.colorScheme=dark?'dark':'light';var bar=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');if(bar)bar.setAttribute('content',dark?'black':'default');}catch(e){}})();</script>
 <script>/* the session resolves asynchronously; until it does, show neither screen
   rather than flashing the sign-in card at someone who is already signed in */
 (function(){try{document.documentElement.classList.add('nt-boot');
@@ -5179,7 +5180,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       localStorage.setItem('ntTheme', t);
       document.documentElement.style.colorScheme = t;
       document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){
-        if (!m.getAttribute('media')) m.setAttribute('content', t === 'dark' ? '#0e1116' : '#ffffff');
+        m.setAttribute('content', t === 'dark' ? '#0e1116' : '#ffffff');
       });
       const sw = document.getElementById('themeSwitch');
       if (sw) sw.setAttribute('aria-checked', t === 'dark' ? 'true' : 'false');
@@ -7128,12 +7129,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var dark = theme === 'dark';
       var color = dark ? '#0e1116' : '#ffffff';
       var metas = document.querySelectorAll('meta[name="theme-color"]');
-      for (var i = 0; i < metas.length; i++){
-        if (!metas[i].getAttribute('media')) metas[i].setAttribute('content', color);
-      }
+      for (var i = 0; i < metas.length; i++){ metas[i].setAttribute('content', color); }
       document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
       var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-      if (bar) bar.setAttribute('content', dark ? 'black-translucent' : 'default');
+      if (bar) bar.setAttribute('content', dark ? 'black' : 'default');
     }
     var sw = document.getElementById('themeSwitch');
     function syncSwitch(mode){
