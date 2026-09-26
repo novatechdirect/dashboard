@@ -1526,6 +1526,23 @@
     body.authed .pmenu .pbadge, body.authed.rail-mini .pmenu .pbadge{
       position:absolute; top:2px; right:50%; margin:0 -20px 0 0;
     }
+    /* icon-only bar: the open tab spells out its name inside the pill, the
+       rest stay as icons. Label width animates on the same curve as the pill. */
+    body.authed .pmenu a, body.authed.rail-mini .pmenu a{
+      flex:1 1 auto; flex-direction:row; gap:0; padding:0 10px; min-width:44px; font-size:13px;
+    }
+    body.authed .pmenu a > svg, body.authed.rail-mini .pmenu a > svg{ width:22px; height:22px; }
+    body.authed .pmenu a .nav-lbl, body.authed.rail-mini .pmenu a .nav-lbl{
+      max-width:0; opacity:0; overflow:hidden; white-space:nowrap; text-overflow:clip;
+      transition:max-width 300ms var(--ease-drawer), margin 300ms var(--ease-drawer), opacity 160ms linear;
+    }
+    body.authed .pmenu a.open .nav-lbl, body.authed.rail-mini .pmenu a.open .nav-lbl{
+      max-width:110px; margin-left:7px; opacity:1; transition-delay:0s, 0s, 90ms;
+    }
+    body.authed .pmenu .pbadge, body.authed.rail-mini .pmenu .pbadge{ top:3px; left:24px; right:auto; margin:0; }
+    .pmenu.ghost{ visibility:hidden !important; pointer-events:none !important; }
+    .pmenu.ghost *{ transition:none !important; animation:none !important; }
+    @media (prefers-reduced-motion: reduce){ body.authed .pmenu a .nav-lbl{ transition:none; } }
     .rail-btn{ display:none; }
     .stat-row{ gap:var(--s3); }
   }
@@ -4126,15 +4143,35 @@
     /* the rail stacks its rows, the phone bar lays them out in a line: the
        same indicator, measured on whichever axis is in play */
     function phone(){ return window.matchMedia('(max-width:700px)').matches; }
+    function ghostFor(a){
+      const idx = Array.prototype.indexOf.call(menu.children, a);
+      if (idx < 0 || !menu.parentNode) return null;
+      const g = menu.cloneNode(true);
+      g.removeAttribute('id');
+      g.classList.add('ghost');
+      g.style.cssText = 'position:absolute;left:' + menu.offsetLeft + 'px;top:' + menu.offsetTop + 'px;width:' + menu.offsetWidth + 'px;height:' + menu.offsetHeight + 'px;margin:0;';
+      Array.prototype.forEach.call(g.children, function(c, i){ c.classList.toggle('open', i === idx); });
+      menu.parentNode.insertBefore(g, menu.nextSibling);
+      return g.children[idx];
+    }
     function place(){
       const a = dragTo || menu.querySelector('a.on');
+      const ph = phone();
+      menu.querySelectorAll('a').forEach(function(x){
+        const want = ph && x === a;
+        if (x.classList.contains('open') !== want) x.classList.toggle('open', want);
+      });
       if (!a || a.offsetParent === null){ ind.style.opacity = '0'; return; }
-      if (phone()){
-        const w = Math.max(0, a.offsetWidth - 8);
+      if (ph){
+        /* labels are still growing: measure the settled layout on an invisible
+           copy and send the pill straight there */
+        const g = ghostFor(a), m = g || a;
+        const w = Math.max(0, m.offsetWidth - 8);
         ind.style.width = w + 'px';
-        ind.style.height = Math.max(0, a.offsetHeight - 4) + 'px';
-        ind.style.top = (a.offsetTop + 2) + 'px';
-        ind.style.transform = 'translateX(' + (a.offsetLeft + (a.offsetWidth - w) / 2) + 'px)';
+        ind.style.height = Math.max(0, m.offsetHeight - 4) + 'px';
+        ind.style.top = (m.offsetTop + 2) + 'px';
+        ind.style.transform = 'translateX(' + (m.offsetLeft + (m.offsetWidth - w) / 2) + 'px)';
+        if (g) g.parentNode.remove();
       } else {
         ind.style.width = '';
         ind.style.top = '0px';
