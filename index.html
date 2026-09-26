@@ -1230,6 +1230,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                  opacity 140ms linear;
     }
     .tab-btn.active, .tab-btn.active svg{ color:var(--tab-chip-ink); }
+    /* icon-only bar: the open tab spells out its name inside the pill, the
+       rest stay as icons. Label width animates on the same curve as the pill. */
+    .tabbar.on .tab-btn{ flex:1 1 auto; flex-direction:row; gap:0; padding:0 10px; min-width:44px; font-size:13px; letter-spacing:0; }
+    .tabbar.on .tab-btn svg{ width:22px; height:22px; flex:0 0 auto; }
+    .tabbar.on .tab-btn > span:not(.tab-badge){
+      display:block; max-width:0; opacity:0; overflow:hidden; white-space:nowrap;
+      transition:max-width 300ms var(--ease-drawer), margin 300ms var(--ease-drawer), opacity 160ms linear;
+    }
+    .tabbar.on .tab-btn.open > span:not(.tab-badge){ max-width:96px; margin-left:7px; opacity:1; transition-delay:0s, 0s, 90ms; }
+    .tabbar.ghost{ visibility:hidden !important; pointer-events:none !important; }
+    .tabbar.ghost *{ transition:none !important; animation:none !important; }
+    @media (prefers-reduced-motion: reduce){ .tabbar.on .tab-btn > span{ transition:none; } }
     body.authed .controls{ padding-bottom:calc(112px + env(safe-area-inset-bottom)); }
     .nav-menu{ display:none; }
   }
@@ -2829,8 +2841,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       scrollbar-width:none; justify-content:stretch;
     }
     .tabbar.on::-webkit-scrollbar{ display:none; }
-    .tab-btn{ min-width:56px; flex:1 1 0; padding:8px 2px 8px; font-size:10.5px; }
-    .tab-btn svg{ width:20px; height:20px; }
 
     /* base card is 24px padding / 16px gap. On a phone the padding can come in
        a little, but the gap between cards needs to grow, not shrink. */
@@ -3191,7 +3201,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* phones: Margins and Admin live behind More, so the bar stays at five */
   @media (max-width:700px){
-    #tabbar #tabMargins, #tabbar #tabAdmin, #tabbar #tabBilling{ display:none !important; }
+    #tabbar #tabMargins, #tabbar #tabAdmin, #tabbar #tabBilling,
+    [data-ghost-of] #tabMargins, [data-ghost-of] #tabAdmin, [data-ghost-of] #tabBilling{ display:none !important; }
   }
   .tab-more-scrim{
     position:fixed; inset:0; z-index:59; background:rgba(10,14,28,.34);
@@ -5342,14 +5353,35 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     function place(){
       var a = target();
+      var btns = bar.querySelectorAll('.tab-btn');
+      btns.forEach(function(b){ if (b.classList.contains('open') !== (b === a)) b.classList.toggle('open', b === a); });
       if (!a || a.offsetParent === null || !bar.classList.contains('on')){ ind.style.opacity = '0'; return; }
-      var w = Math.max(0, a.offsetWidth - 8);
+      /* the labels are still growing, so measure the settled layout on an
+         invisible copy and send the pill straight there */
+      var g = ghostFor(a), m = g || a;
+      var w = Math.max(0, m.offsetWidth - 8);
       ind.style.width = w + 'px';
-      ind.style.height = Math.max(0, a.offsetHeight - 4) + 'px';
-      ind.style.top = (a.offsetTop + 2) + 'px';
-      ind.style.transform = 'translateX(' + (a.offsetLeft + (a.offsetWidth - w) / 2) + 'px)';
+      ind.style.height = Math.max(0, m.offsetHeight - 4) + 'px';
+      ind.style.top = (m.offsetTop + 2) + 'px';
+      ind.style.transform = 'translateX(' + (m.offsetLeft + (m.offsetWidth - w) / 2) + 'px)';
+      if (g) g.parentNode.remove();
       ind.style.opacity = '1';
       if (!ind.classList.contains('ready')) requestAnimationFrame(function(){ ind.classList.add('ready'); });
+    }
+    function ghostFor(a){
+      var idx = Array.prototype.indexOf.call(bar.children, a);
+      if (idx < 0) return null;
+      var gb = bar.cloneNode(true);
+      /* ids stay: the phone hide rules key off them. The copy lives after the
+         real bar and is removed in the same task, so lookups still hit the bar. */
+      gb.removeAttribute('id');
+      gb.setAttribute('data-ghost-of', 'tabbar');
+      gb.classList.add('ghost');
+      var r = bar.getBoundingClientRect(), cs = getComputedStyle(bar);
+      gb.style.cssText = 'position:fixed;left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;right:auto;bottom:auto;';
+      Array.prototype.forEach.call(gb.children, function(c, i){ c.classList && c.classList.toggle('open', i === idx); });
+      document.body.appendChild(gb);
+      return gb.children[idx];
     }
     window.tabIndPlace = place;
     /* the bar's own buttons appear and disappear with permissions, so watch
