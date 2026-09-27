@@ -1482,7 +1482,13 @@
       border:none; border-radius:22px; padding:5px;
       background:var(--glass);
       -webkit-backdrop-filter:blur(28px) saturate(180%); backdrop-filter:blur(28px) saturate(180%);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 14px 34px -12px rgba(0,0,0,.55);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(255,255,255,.10),
+        inset 0 0 0 .5px rgba(255,255,255,.10), 0 0 0 .5px rgba(0,0,0,.22),
+        0 14px 34px -12px rgba(0,0,0,.55);
+      background-image:linear-gradient(to bottom, rgba(255,255,255,.09), rgba(255,255,255,0) 38%, rgba(255,255,255,0) 72%, rgba(255,255,255,.04));
+      transform-origin:50% 100%;
+      transition:transform 340ms var(--ease-drawer), background-color 340ms ease;
       -webkit-tap-highlight-color:transparent; touch-action:manipulation;
     }
     .rail-head, .rail-foot{ display:none; }
@@ -1519,7 +1525,7 @@
     body.authed .pmenu a, body.authed.rail-mini .pmenu a{
       flex:1 1 0; flex-direction:column; justify-content:center; gap:3px;
       padding:7px 2px; min-height:50px; font-size:10.5px; border-radius:16px !important;
-      transition:color 150ms var(--ease-out), transform 150ms var(--ease-out);
+      transition:color 240ms var(--ease-drawer), transform 150ms var(--ease-out);
     }
     body.authed .pmenu a .nav-lbl, body.authed.rail-mini .pmenu a .nav-lbl{ display:block; }
     body.authed .pmenu a > svg, body.authed.rail-mini .pmenu a > svg{ width:21px; height:21px; }
@@ -1537,12 +1543,14 @@
       transition:max-width 300ms var(--ease-drawer), margin 300ms var(--ease-drawer), opacity 160ms linear;
     }
     body.authed .pmenu a.open .nav-lbl, body.authed.rail-mini .pmenu a.open .nav-lbl{
-      max-width:110px; margin-left:7px; opacity:1; transition-delay:0s, 0s, 90ms;
+      max-width:var(--lw, 110px); margin-left:7px; opacity:1; transition-delay:0s, 0s, 90ms;
     }
     body.authed .pmenu .pbadge, body.authed.rail-mini .pmenu .pbadge{ top:3px; left:24px; right:auto; margin:0; }
+    /* scrolled down: a touch smaller and clearer, anchored to its bottom edge */
+    body.authed .siderail.bar-min, body.authed.rail-mini .siderail.bar-min{ transform:translateY(5px) scale(.88); background-color:color-mix(in srgb, var(--glass) 58%, transparent); }
     .pmenu.ghost{ visibility:hidden !important; pointer-events:none !important; }
     .pmenu.ghost *{ transition:none !important; animation:none !important; }
-    @media (prefers-reduced-motion: reduce){ body.authed .pmenu a .nav-lbl{ transition:none; } }
+    @media (prefers-reduced-motion: reduce){ body.authed .pmenu a .nav-lbl{ transition:none; } body.authed .siderail.bar-min{ transform:none; } }
     .rail-btn{ display:none; }
     .stat-row{ gap:var(--s3); }
   }
@@ -5410,6 +5418,55 @@
     lastKey = viewKey();
     scan(document.body);
   })();
+})();
+</script>
+<script>/* phone tab bar: each label grows to its exact width so the sliding pill and
+   the reflowing tabs run on one curve; the bar tucks down while scrolling
+   down and comes back on any scroll up, tap, or return to the top */
+(function(){
+  var BAR = '#siderail', LBL = '.pmenu a .nav-lbl';
+  var mq = matchMedia('(max-width:700px)');
+  function bar(){ return document.querySelector(BAR); }
+  function measure(){
+    var b = bar(); if (!b) return;
+    b.querySelectorAll(LBL).forEach(function(s){
+      var w = Math.ceil(s.scrollWidth) + 'px';
+      /* write only on change: the bar's own observers watch style attributes */
+      if (s.scrollWidth && s.style.getPropertyValue('--lw') !== w) s.style.setProperty('--lw', w);
+    });
+  }
+  var min = false;
+  function setMin(v){ if (v === min) return; min = v; var b = bar(); if (b) b.classList.toggle('bar-min', v); }
+  function init(){
+    var b = bar(); if (!b) return;
+    measure();
+    var mo = new MutationObserver(measure);
+    mo.observe(b, { attributes:true, subtree:true, attributeFilter:['class'] });
+    mo.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    addEventListener('resize', measure, { passive:true });
+    b.addEventListener('pointerdown', function(){ setMin(false); }, { passive:true });
+  }
+  var lastY = new WeakMap(), acc = 0;
+  addEventListener('scroll', function(e){
+    if (!mq.matches) { setMin(false); return; }
+    var t = e.target;
+    var el = (t === document || t === document.documentElement || t === document.body) ? document.scrollingElement : t;
+    if (!el || !el.getBoundingClientRect) return;
+    var b = bar(); if (b && b.contains(el)) return;
+    var max = el.scrollHeight - el.clientHeight;
+    if (max < 60) return;
+    var y = el.scrollTop, py = lastY.has(el) ? lastY.get(el) : y;
+    lastY.set(el, y);
+    if (y < 0 || y > max) return;            /* rubber-band */
+    var dy = y - py; if (!dy) return;
+    if ((dy > 0) !== (acc > 0)) acc = 0;
+    acc += dy;
+    if (y < 24) setMin(false);
+    else if (acc > 16) setMin(true);
+    else if (acc < -8) setMin(false);
+  }, { capture:true, passive:true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
 </body>
