@@ -8879,6 +8879,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ]);
     ordUnits   = un.data || [];
     ordBatches = ba.data || [];
+    /* a selection must never outlive its units' place in the pool: anything
+       batched since (here, in another tab, by a teammate) drops out of it */
+    (function(){
+      const free = new Set(ordUnits.filter(function(u){ return !u.batch_id; }).map(function(u){ return u.id; }));
+      Array.from(ordSel).forEach(function(id){ if (!free.has(id)) ordSel.delete(id); });
+    })();
     const mine = ln.data || [];
     ordLines = ordLines.filter(function(l){ return l.order_id !== id; }).concat(mine);
     if (ordBatches.length){
@@ -10608,9 +10614,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
     return '<option value="">Select a destination\u2026</option>' +
       list.map(function(l){
-        return '<option value="' + esc(l.id) + '"' + (l.id === sel ? ' selected' : '') + '>' + esc(ordLocLabel(l)) + '</option>';
+        return '<option value="' + esc(l.id) + '"' + (l.id === sel ? ' selected' : '') + '>' + esc(ordLocLabel(l) + ([l.city, l.state].filter(Boolean).length ? ' \u00b7 ' + [l.city, l.state].filter(Boolean).join(', ') : '')) + '</option>';
       }).join('') +
       '<option value="__new">+ New destination\u2026</option>';
+  }
+
+  /* the full street address under the destination picker, so two stores with
+     the same name can be told apart */
+  function ordDestAddrShow(bg){
+    const el = bg.querySelector('#ordBDestAddr'), sel = bg.querySelector('#ordBDest');
+    if (!el || !sel) return;
+    const l = ordLocations.find(function(x){ return String(x.id) === sel.value; });
+    const a = l ? ordLocAddress(l) : '';
+    el.textContent = a;
+    el.style.display = a ? '' : 'none';
   }
 
   function ordDestFieldsHtml(){
@@ -10652,15 +10669,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* ---- add selected units to a batch ---- */
   function ordAddToBatchModal(){
     const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
-    const sel = ordSelectedUnits();
-    if (!o || !sel.length) return;
+    /* only units still in the pool — a stale selection must not pull units
+       out of another batch */
+    const sel = ordSelectedUnits().filter(function(u){ return !u.batch_id; });
+    if (!o || !sel.length){ toast('None of the selected units are in the pool any more.', 'warn'); return; }
 
     const bg = mgModal(
       mgModalHead('Add ' + sel.length + ' unit' + (sel.length === 1 ? '' : 's') + ' to a batch',
                   'Invoice ' + esc(o.invoice_no) + ' \u00b7 a batch is one shipment to one store') +
       '<div class="mg-modal-body">' +
         '<div class="field"><label for="ordBDest">Destination</label>' +
-          '<select id="ordBDest">' + ordDestOptions() + '</select></div>' +
+          '<select id="ordBDest">' + ordDestOptions() + '</select>' + '<p class="muted-sm" id="ordBDestAddr" style="margin:6px 0 0;"></p>' + '</div>' +
         ordDestFieldsHtml() +
         '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
           '<div class="field"><label for="ordBCarrier">Carrier</label>' +
@@ -10688,13 +10707,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="err" id="ordBErr" style="margin-top:var(--s3);"></div>' +
       '</div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="ordBCancel">Cancel</button>' +
-      '<button class="primary" id="ordBSave" data-primary>Create batch</button></div>', true);
+      '<button class="primary" id="ordBSave" data-primary>Create batch of ' + ordNum(sel.length) + '</button></div>', true);
 
     const destEl = bg.querySelector('#ordBDest');
     const newWrap = bg.querySelector('#ordNewDest');
     destEl.addEventListener('change', function(){
       newWrap.style.display = (this.value === '__new') ? '' : 'none';
+      ordDestAddrShow(bg);
     });
+    ordDestAddrShow(bg);
 
     bg.querySelectorAll('[name="ordTrkMode"]').forEach(function(r){
       r.addEventListener('change', function(){
@@ -10775,15 +10796,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
         const ids = sel.map(function(u){ return u.id; });
         const up = await SB.from('pc_log')
-          .update({ batch_id: batch.id, unit_status: 'assigned' }).in('id', ids);
+          .update({ batch_id: batch.id, unit_status: 'assigned' }).in('id', ids).is('batch_id', null).select('id');
         if (up.error) throw up.error;
+        const moved = (up.data || []).length;
 
         mgCloseModal();
-        toast('Batch ' + batchNo + ' created with ' + sel.length + ' unit' + (sel.length === 1 ? '' : 's'), 'ok', 5000);
+        toast('Batch ' + batchNo + ' created with ' + moved + ' unit' + (moved === 1 ? '' : 's') +
+          (moved < sel.length ? ' — ' + (sel.length - moved) + ' were already in another batch and were left there' : ''),
+          moved < sel.length ? 'warn' : 'ok', 6000);
         ordSel.clear();
         await ordOpenOrder(o.id);
       } catch(e){
-        this.disabled = false; this.textContent = 'Create batch';
+        this.disabled = false; this.textContent = 'Create batch of ' + ordNum(sel.length);
         err.textContent = e.message || 'Could not create the batch.';
       }
     });
@@ -10819,7 +10843,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           ? '<p class="ord-warnline">This batch is already marked shipped. Changing it may not match what the customer has been told.</p>'
           : '') +
         '<div class="field"><label for="ordBDest">Destination</label>' +
-          '<select id="ordBDest">' + ordDestOptions(b.location_id) + '</select></div>' +
+          '<select id="ordBDest">' + ordDestOptions(b.location_id) + '</select>' + '<p class="muted-sm" id="ordBDestAddr" style="margin:6px 0 0;"></p>' + '</div>' +
         ordDestFieldsHtml() +
         '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
           '<div class="field"><label for="ordBCarrier">Carrier</label>' +
@@ -10847,13 +10871,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<p class="muted-sm">Saving replaces the tracking on this batch. Leave it empty to clear it.</p>' +
         '<div class="err" id="ordBErr" style="margin-top:var(--s3);"></div>' +
       '</div>' +
-      '<div class="mg-modal-foot"><button class="ghost" id="ordBCancel">Cancel</button>' +
+      '<div class="mg-modal-foot">' +
+        (!shipped
+          ? '<button class="ghost danger" id="ordBDel" type="button" style="margin-right:auto;" title="Delete this batch and put its units back in the pool">Delete batch</button>'
+          : '') +
+        '<button class="ghost" id="ordBCancel">Cancel</button>' +
       '<button class="primary" id="ordBSave" data-primary>Save changes</button></div>', true);
+    const delBtn = bg.querySelector('#ordBDel');
+    if (delBtn) delBtn.addEventListener('click', function(){ mgCloseModal(); ordReturnBatch(b); });
 
     const destEl = bg.querySelector('#ordBDest');
     destEl.addEventListener('change', function(){
       bg.querySelector('#ordNewDest').style.display = (this.value === '__new') ? '' : 'none';
+      ordDestAddrShow(bg);
     });
+    ordDestAddrShow(bg);
     bg.querySelectorAll('[name="ordTrkMode"]').forEach(function(r){
       r.addEventListener('change', function(){
         const unit = bg.querySelector('[name="ordTrkMode"]:checked').value === 'unit';
@@ -10923,33 +10955,46 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
   }
 
+  /* Delete a batch and undo everything creating it did: units go back to the
+     pool as built, the tracking rows go, and the batch row goes. Serial numbers
+     are issued at build time, not batching, so every unit keeps its serial.
+     The batch number frees up — if this was the newest batch the next one
+     created reuses it. */
   async function ordReturnBatch(b){
     const units = ordBatchUnits(b.id);
+    const shipped = b.status === 'shipped';
+    if (shipped){ toast('A shipped batch can\u2019t be deleted.', 'warn'); return; }
+    const n = units.length;
     const bg = mgModal(
-      mgModalHead('Return batch ' + b.batch_no + ' to the pool?', '') +
-      '<div class="mg-modal-body"><p>' + ordNum(units.length) + ' unit' + (units.length === 1 ? '' : 's') +
-      ' go back to the unassigned pool and the batch is deleted, along with its tracking numbers.</p>' +
-      (b.status === 'shipped' ? '<p class="ord-warnline">This batch is marked shipped.</p>' : '') +
-      '<div class="err" id="ordRErr"></div></div>' +
-      '<div class="mg-modal-foot"><button class="ghost" id="ordRCancel">Cancel</button>' +
-      '<button class="ghost danger" id="ordRGo" data-primary>Return to pool</button></div>');
+      mgModalHead('Delete batch ' + b.batch_no + '?', ordNum(n) + ' unit' + (n === 1 ? '' : 's') + ' in this batch') +
+      '<div class="mg-modal-body">' +
+        '<p>' + (n ? 'All ' + ordNum(n) + ' unit' + (n === 1 ? '' : 's') + ' go back to the unit pool, ready to batch again. ' : '') +
+        'The batch, its destination and its tracking numbers are removed. Serial numbers stay with their units — nothing is reissued.</p>' +
+        (b.opened_notified_at ? '<p class="muted-sm">The customer was already emailed that this batch was packed. That email can\u2019t be recalled; the batch simply disappears from their portal.</p>' : '') +
+        '<div class="err" id="ordRErr"></div></div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordRCancel">Keep it</button>' +
+      '<button class="ghost danger" id="ordRGo" data-primary>Delete batch</button></div>');
     bg.querySelector('#ordRCancel').addEventListener('click', mgCloseModal);
     bg.querySelector('#ordRGo').addEventListener('click', async function(){
-      this.disabled = true; this.textContent = 'Working\u2026';
+      this.disabled = true; this.textContent = 'Deleting\u2026';
       try {
-        if (units.length){
-          const u = await SB.from('pc_log').update({ batch_id: null, unit_status: 'built' })
-            .in('id', units.map(function(x){ return x.id; }));
-          if (u.error) throw u.error;
-        }
-        const d = await SB.from('batches').delete().eq('id', b.id);
+        /* by batch_id, not by the ids loaded on screen, so nothing is left behind */
+        const u = await SB.from('pc_log').update({ batch_id: null, unit_status: 'built', status: 'building' })
+          .eq('batch_id', b.id).select('id');
+        if (u.error) throw u.error;
+        const t = await SB.from('batch_tracking').delete().eq('batch_id', b.id);
+        if (t.error) throw t.error;
+        const d = await SB.from('batches').delete().eq('id', b.id).select('id');
         if (d.error) throw d.error;
+        if (!(d.data || []).length) throw new Error('The units are back in the pool, but the database would not delete the batch row. Your account may lack delete permission on batches.');
+        const back = (u.data || []).length;
         mgCloseModal();
-        toast('Batch ' + b.batch_no + ' returned to the pool', 'ok');
+        ordSel.clear();
+        toast('Batch ' + b.batch_no + ' deleted \u00b7 ' + back + ' unit' + (back === 1 ? '' : 's') + ' back in the pool', 'ok', 5000);
         await ordOpenOrder(ordCurrentId);
       } catch(e){
-        this.disabled = false; this.textContent = 'Return to pool';
-        bg.querySelector('#ordRErr').textContent = e.message || 'Could not do that.';
+        this.disabled = false; this.textContent = 'Delete batch';
+        bg.querySelector('#ordRErr').textContent = e.message || 'Could not delete the batch.';
       }
     });
   }
