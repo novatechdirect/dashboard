@@ -2099,7 +2099,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* Clear and Scan are utilities, not part of the selection cluster — on a
      wide row they sit at the far right, away from Select / Take / Select all */
   @media (min-width:701px){
-    .ord-pool-tools #ordSelNone{ margin-left:auto; }
+    .ord-pool-tools #ordSelAll{ margin-left:auto; }
   }
   .ord-pool-table tbody tr.sel{ background:var(--accent-soft); }
   .ord-mono{ font-family:var(--font-num); font-variant-numeric:tabular-nums; }
@@ -2253,6 +2253,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   /* ---- config name with spec popover ---- */
+  .ord-cfg-sum{ display:none; }
+  @media (min-width:1200px){
+    .ord-cfg-sum{ display:inline; margin-left:10px; color:var(--muted); font-size:12px; }
+  }
   .ord-cfg{
     border-bottom:1px dotted var(--line-strong); cursor:help;
     -webkit-tap-highlight-color:transparent;
@@ -7792,7 +7796,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       : ('Showing ' + (startIdx + 1) + '\u2013' + Math.min(startIdx + PAGE_SIZE, total) + ' of ' + total);
   }
 
-  async function deductForBuild(n, orderNo, spec){
+  /* undo = true puts the same parts back (units removed from the pool). The move
+     keeps reason 'build' and the "Order X " note prefix, so deleting the order
+     later still nets its moves to the right total. */
+  async function deductForBuild(n, orderNo, spec, undo){
     if (!n) return { moves: 0, warn: [] };
     if (!invItems.length) return { moves: 0, warn: ['inventory not loaded \u2014 nothing deducted'] };
     /* Every name here must be the RAW inv_items name, not the display string
@@ -7822,8 +7829,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const moves = [];
     const actor = (session && session.user && session.user.email) || null;
-    const note = 'Order ' + (orderNo || '?') + ' \u00b7 ' + n + ' PC' + (n===1?'':'s');
+    const note = 'Order ' + (orderNo || '?') + ' \u00b7 ' + n + ' PC' + (n===1?'':'s') + (undo ? ' removed from pool' : '');
     for (const dd of ded){
+      if (undo) dd.amt = -dd.amt;
       const after = (dd.it.qty|0) - dd.amt;
       const u = await SB.from('inv_items').update({ qty: after }).eq('id', dd.it.id);
       if (u.error){ warn.push('could not update ' + dd.it.name); continue; }
@@ -9020,8 +9028,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       obDetailCard(o) +
       (gated ? '' : ordPdfCard(o)) +
       '<section class="card">' +
-        '<h2 class="card-title">' + (gated ? '' : '<span class="ord-step s1">1</span>') + 'Line items <span class="card-sub">' +
-          (gated ? 'what this invoice covers' : 'what was ordered, and how many are built') + '</span></h2>' +
+        '<h2 class="card-title">' + (gated ? '' : '<span class="ord-step s1">1</span>') + 'Line items' + (gated ? '' : ' \u00b7 What needs to be built') + (gated ? ' <span class="card-sub">what this invoice covers</span>' : '') + '</h2>' +
         lineHtml +
         (gated ? '' : '<p class="card-note">Marking units built gives each one an NT serial number' +
           (o.deduct_inventory === false
@@ -9032,7 +9039,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
       (gated ? '' :
       '<section class="card">' +
-        '<h2 class="card-title"><span class="ord-step s2">2</span>Unit pool <span class="card-sub">units with serials but no destination yet \u00b7 select them to print labels or add them to a batch</span></h2>' +
+        '<h2 class="card-title"><span class="ord-step s2">2</span>Unit pool \u00b7 Already built <span class="card-sub">units with serials but no destination yet \u00b7 select them to print labels or add them to a batch</span></h2>' +
         '<div class="ord-pool-tools">' +
           '<select id="ordPoolCfg" class="sel-sm">' +
             '<option value="">All configs</option>' +
@@ -9054,6 +9061,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<span class="ord-pool-actions"><span class="ord-with">with these:</span>' +
             '<button class="ghost btn-sm" id="ordPrint46" type="button">4\u00d76 box PDF</button>' +
             '<button class="ghost btn-sm" id="ordPrintDymo" type="button">Dymo PDF</button>' +
+            (ordPerm.manage ? '<button class="ghost danger btn-sm" id="ordUnbuild" type="button" title="Delete these units and put them back to needs building">Remove from pool</button>' : '') +
             (ordPerm.manage ? '<button class="primary btn-sm" id="ordAddBatch" type="button">Add to batch</button>' : '') +
           '</span>' +
         '</div>' +
@@ -9242,7 +9250,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (r && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); ordOpenOrder(r.getAttribute('data-ordid'), r.getAttribute('data-ordbatch') || undefined); }
   });
   document.getElementById('ordBackBtn').addEventListener('click', function(){
-    ordCurrentId = null; ordSetUrl(null); ordShowList(); ordRenderList();
+    ordCurrentId = null; ordSel.clear(); ordSetUrl(null); ordShowList(); ordRenderList();
   });
   document.getElementById('ordChips').addEventListener('click', function(e){
     const b = e.target.closest('[data-ordfilter]');
@@ -9537,6 +9545,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       storage: (cfg.storage || '').trim()
     };
   }
+  /* the config name plus a one-line spec summary; the summary only shows on
+     wide screens, where the column has room for it */
+  function ordCfgCell(cfgId, fallback){
+    const cfg = ordCfgById(cfgId);
+    const s = cfg ? ordCfgSpecObj(cfg) : null;
+    const sum = s ? [s.cpu, s.gpu, s.ram, s.storage].filter(Boolean).join(' \u00b7 ') : '';
+    return ordCfgLabel(cfgId, fallback) + (sum ? '<span class="ord-cfg-sum">' + esc(sum) + '</span>' : '');
+  }
   function ordCfgSpecLines(cfg){
     const o = ordCfgSpecObj(cfg);
     return [['Case',o.case],['CPU',o.cpu],['GPU',o.gpu],['RAM',o.ram],['Storage',o.storage]]
@@ -9667,6 +9683,87 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
   }
 
+  /* ---------- remove units from the pool (undo "mark built") ----------
+     Deletes the selected pc_log rows so the line goes back to needing that many
+     built, puts their parts back in inventory, and winds the serial counter back
+     when these were the newest serials issued. Units in a batch or with an RMA
+     are never touched. */
+  function ordUnbuildModal(){
+    const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+    const all = ordSelectedUnits().filter(function(u){ return !u.batch_id; });
+    const rma = all.filter(function(u){ return rmaUnitFlag(u); });
+    const sel = all.filter(function(u){ return !rmaUnitFlag(u); });
+    if (!o || !sel.length){ toast(rma.length ? 'Those units have an RMA open and can\u2019t be removed.' : 'Select units in the pool first.', 'warn'); return; }
+    const tookStock = o.deduct_inventory !== false;
+    const n = sel.length;
+    const bg = mgModal(
+      mgModalHead('Remove ' + ordNum(n) + ' unit' + (n === 1 ? '' : 's') + ' from the pool?', 'They go back to needs building') +
+      '<div class="mg-modal-body">' +
+        '<p class="muted-sm" style="margin:0 0 var(--s3);">' + esc(sel.slice(0, 10).map(function(u){ return u.serial; }).join(', ')) +
+          (n > 10 ? ' and ' + (n - 10) + ' more' : '') + '</p>' +
+        '<p>These serial numbers are deleted and the line items go back to needing ' + (n === 1 ? 'this unit' : 'these units') + ' built. ' +
+        'If they were the newest serials issued, the counter winds back so the next build reuses them.</p>' +
+        (tookStock
+          ? '<label class="ord-check"><input type="checkbox" id="ordUbRestore" checked> Put the parts back into inventory</label>' +
+            '<p class="muted-sm">Leave that ticked unless the parts really were used.</p>'
+          : '<p class="muted-sm">This order doesn\u2019t take parts from inventory, so there is nothing to put back.</p>') +
+        (rma.length ? '<p class="ord-warnline">' + rma.length + ' selected unit' + (rma.length === 1 ? ' has' : 's have') + ' an RMA and will be left alone.</p>' : '') +
+        '<div class="err" id="ordUbErr"></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordUbCancel">Keep them</button>' +
+      '<button class="ghost danger" id="ordUbGo" data-primary>Remove ' + ordNum(n) + '</button></div>');
+    bg.querySelector('#ordUbCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordUbGo').addEventListener('click', async function(){
+      const box = bg.querySelector('#ordUbRestore');
+      const restore = tookStock && !!(box && box.checked);
+      this.disabled = true; this.textContent = 'Removing\u2026';
+      try {
+        /* only rows still unbatched in the database; whatever comes back is
+           exactly what was removed */
+        const d = await SB.from('pc_log').delete()
+          .in('id', sel.map(function(u){ return u.id; })).is('batch_id', null)
+          .select('id,serial,config_id');
+        if (d.error) throw d.error;
+        const gone = d.data || [];
+        if (!gone.length) throw new Error('Nothing was removed. The units may already be in a batch, or your account lacks delete permission.');
+
+        const warn = [];
+        if (restore){
+          const byCfg = {};
+          gone.forEach(function(u){ byCfg[u.config_id] = (byCfg[u.config_id] || 0) + 1; });
+          for (const cid of Object.keys(byCfg)){
+            const cfg = ordCfgById(cid);
+            if (!cfg){ warn.push('config missing, parts not returned for ' + byCfg[cid]); continue; }
+            const res = await deductForBuild(byCfg[cid], o.invoice_no, ordCfgDeductSpec(cfg), true);
+            if (res && res.warn) Array.prototype.push.apply(warn, res.warn);
+          }
+        }
+
+        let top = null;
+        gone.forEach(function(u){
+          const v = parseInt(String(u.serial || '').replace(/^\D*\d{2}/, ''), 10);
+          if (!isNaN(v) && (top === null || v > top)) top = v;
+        });
+        let reclaimed = null;
+        if (top !== null){
+          const rc = await SB.rpc('reclaim_serials', { p_customer: o.customer_id, p_top: top });
+          if (!rc.error) reclaimed = rc.data;
+        }
+
+        mgCloseModal();
+        gone.forEach(function(u){ ordSel.delete(u.id); });
+        toast(gone.length + ' unit' + (gone.length === 1 ? '' : 's') + ' removed from the pool' +
+              (restore ? ' \u00b7 parts back in inventory' : '') +
+              ((reclaimed !== null && reclaimed < top) ? ' \u00b7 serial numbers reclaimed' : ''), 'ok', 6000);
+        if (warn.length) toast('Inventory: ' + warn.join('; '), 'warn', 8000);
+        await ordOpenOrder(o.id);
+      } catch(e){
+        this.disabled = false; this.textContent = 'Remove ' + ordNum(n);
+        bg.querySelector('#ordUbErr').textContent = e.message || 'Could not remove the units.';
+      }
+    });
+  }
+
   /* ---------- unit pool ---------- */
   let ordResizeT = null;
   window.addEventListener('resize', function(){
@@ -9714,7 +9811,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         return '<tr data-uid="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' class="sel"' : '') + '>' +
           '<td class="chk-col" data-l=""><input type="checkbox" data-upick="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' checked' : '') + '></td>' +
           '<td class="ord-mono" data-l="Serial">' + esc(u.serial) + rmaUnitFlag(u) + '</td>' +
-          '<td data-l="Config">' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
+          '<td data-l="Config">' + ordCfgCell(u.config_id, cfgs[u.config_id]) + '</td>' +
           '<td data-l="Built">' + esc(fmtDate(u.generated_at || u.created_at)) + '</td>' +
         '</tr>';
       }).join('') +
@@ -9740,7 +9837,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const n = ordSel.size;
     bar.style.display = n ? '' : 'none';
     const lbl = document.getElementById('ordSelCount');
-    if (lbl) lbl.textContent = n + ' selected';
+    if (lbl){
+      /* say so when part of the selection is on another page */
+      const from = ordPoolPage * ordPageSize();
+      const onPage = new Set(ordPoolUnits().slice(from, from + ordPageSize()).map(function(u){ return u.id; }));
+      let off = 0; ordSel.forEach(function(id){ if (!onPage.has(id)) off++; });
+      lbl.textContent = n + ' selected' + (off ? ' (' + off + ' on other pages)' : '');
+    }
     const cfgIds = new Set();
     ordUnits.forEach(function(u){ if (ordSel.has(u.id)) cfgIds.add(u.config_id); });
     const note = document.getElementById('ordSelNote');
@@ -9855,6 +9958,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target.id === 'ordPrint46'){   if (ordLoadLabelState()) generatePdf();     return; }
     if (e.target.id === 'ordPrintDymo'){ if (ordLoadLabelState()) generatePdfDymo(); return; }
     if (e.target.id === 'ordAddBatch'){  ordAddToBatchModal(); return; }
+    if (e.target.id === 'ordUnbuild'){   ordUnbuildModal(); return; }
     if (e.target.id === 'ordCopyLink'){ ordCopy(ordLinkFor(ordCurrentId), 'Order link'); return; }
     if (e.target.id === 'ordOpenCust'){
       window.open(ordCustomerLinkFor(ordCurrentId), '_blank', 'noopener');
@@ -9971,7 +10075,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
   });
   ordDetailBody.addEventListener('change', function(e){
-    if (e.target.id === 'ordPoolCfg'){ ordPoolCfg = e.target.value; ordPoolPage = 0; ordRenderPool(); return; }
+    if (e.target.id === 'ordPoolCfg'){
+      ordPoolCfg = e.target.value; ordPoolPage = 0;
+      /* a filter must not leave invisible units selected */
+      const keep = new Set(ordPoolUnits().map(function(u){ return u.id; }));
+      Array.from(ordSel).forEach(function(id){ if (!keep.has(id)) ordSel.delete(id); });
+      ordRenderPool(); return;
+    }
     if (e.target.id === 'ordPdfInput'){
       const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
       if (o && e.target.files && e.target.files[0]) ordPdfUpload(o, e.target.files[0]);
@@ -10581,7 +10691,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '</tr></thead><tbody>' +
           bshown.map(function(u){
             return '<tr><td class="ord-mono" data-l="Serial">' + esc(u.serial) + rmaUnitFlag(u) + '</td>' +
-              '<td data-l="Config">' + ordCfgLabel(u.config_id, cfgs[u.config_id]) + '</td>' +
+              '<td data-l="Config">' + ordCfgCell(u.config_id, cfgs[u.config_id]) + '</td>' +
               '<td class="ord-mono" data-l="Tracking">' + ordTrackHtml(b.carrier, perUnit[u.id] ? [perUnit[u.id]] : batchWide) +
                 (perUnit[u.id] ? '' : (batchWide.length ? ordTrkTag(true) : '')) + '</td></tr>';
           }).join('') +
@@ -10678,6 +10788,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       mgModalHead('Add ' + sel.length + ' unit' + (sel.length === 1 ? '' : 's') + ' to a batch',
                   'Invoice ' + esc(o.invoice_no) + ' \u00b7 a batch is one shipment to one store') +
       '<div class="mg-modal-body">' +
+        '<p class="muted-sm" style="margin:0 0 var(--s3);"><b>' + ordNum(sel.length) + ' unit' + (sel.length === 1 ? '' : 's') + ':</b> ' +
+          esc(sel.slice(0, 8).map(function(u){ return u.serial; }).join(', ')) + (sel.length > 8 ? ' and ' + (sel.length - 8) + ' more' : '') + '</p>' +
         '<div class="field"><label for="ordBDest">Destination</label>' +
           '<select id="ordBDest">' + ordDestOptions() + '</select>' + '<p class="muted-sm" id="ordBDestAddr" style="margin:6px 0 0;"></p>' + '</div>' +
         ordDestFieldsHtml() +
