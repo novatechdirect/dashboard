@@ -4793,7 +4793,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                 active: true, is_admin: true, can_view_orders: true, can_manage_orders: true,
                 can_admin_orders: true, can_manage_catalog: true, can_manage_rma: true,
                 can_view_margins: true, rate: null }],
-      tc_employees: [], tc_hours: [],
+      tc_employees: [], tc_hours: [], tc_pay_rates: [],
       inv_items: [], inv_moves: [], build_components: [], builds: [],
       product_lines: [], margin_channels: [],
       rma_tickets: [], rma_parts: [], rma_shipments: [], rma_comments: [],
@@ -6208,6 +6208,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target.closest('#tcAsEmployee, #tcAsAdmin')){ tcPreview = !tcPreview; tcApplyView(); }
   });
   let tcHoursRows = [];       // rows visible to me (own, or all if admin)
+  let tcRates = [];           // tc_pay_rates: one row per rate change, keyed by effective_from
+  let tcRatesOk = true;       // false until supabase/timeclock-pay-rates.sql has been run
   let tcInited = false;
   let tcEditEmpId = null;
   let tcEditHoursUid = null;   // whose hours the admin is editing inline
@@ -6274,6 +6276,34 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const t = new Date(); t.setHours(12,0,0,0);
     return t > new Date(shiftFriday(ymd, TC_LOCK_DAYS) + 'T23:59:59');
   }
+  /* Rate history. A pay period is paid at the rate in effect on its first day.
+     With no history rows (migration not run yet) fall back to hourly_rate. */
+  const TC_START_RATE = '2000-01-01';
+  function tcTodayYMD(){ const t = new Date(); t.setHours(12,0,0,0); return fmtYMD(t); }
+  function tcRatesFor(empId){
+    return tcRates.filter(function(r){ return String(r.employee_id) === String(empId); })
+      .sort(function(a,b){ return a.effective_from < b.effective_from ? -1 : a.effective_from > b.effective_from ? 1 : 0; });
+  }
+  function tcRateOn(emp, ymd){
+    if (!emp) return null;
+    const rs = tcRatesFor(emp.id);
+    if (!rs.length) return emp.hourly_rate != null ? +emp.hourly_rate : null;
+    let r = null;
+    rs.forEach(function(x){ if (x.effective_from <= ymd) r = +x.rate; });
+    return r;
+  }
+  function tcRateForPeriod(emp, pe){ return tcRateOn(emp, shiftFriday(pe, -13)); }
+  function tcNextRate(emp){
+    const t = tcTodayYMD();
+    return tcRatesFor(emp.id).find(function(x){ return x.effective_from > t; }) || null;
+  }
+  /* keep tc_employees.hourly_rate mirroring today's rate */
+  async function tcSyncCurrentRate(emp){
+    const cur = tcRateOn(emp, tcTodayYMD());
+    if ((emp.hourly_rate == null ? null : +emp.hourly_rate) === cur) return;
+    const { error } = await SB.from('tc_employees').update({ hourly_rate: cur }).eq('id', emp.id);
+    if (!error) emp.hourly_rate = cur;
+  }
   function tcFindHours(uid, pe){
     return tcHoursRows.find(function(r){ return r.user_id && r.user_id === uid && r.period_ending === pe; }) || null;
   }
@@ -6295,6 +6325,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     tcIsAdmin = !!(tcMe && tcMe.is_admin && tcMe.active);
     const hrs = await SB.from('tc_hours').select('*').order('period_ending', { ascending: false }).limit(2000);
     tcHoursRows = hrs.data || [];
+    const pr = await SB.from('tc_pay_rates').select('*');
+    tcRatesOk = !pr.error;
+    tcRates = pr.data || [];
     if (tcIsAdmin){ initPeriodSelect(); renderTcSummary(); renderTcTeam(); }
     tcApplyView();
     renderHomeStatus();
@@ -6319,7 +6352,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     tcFillPeriodFields();
     const mine = tcHoursRows.filter(function(r){ return r.user_id === (tcMe.user_id || 'x'); }).slice(0, 12);
     document.getElementById('tcMineBody').innerHTML = mine.length ? mine.map(function(r){
-      const payCell = (tcMe.hourly_rate != null) ? ('$' + ((+r.hours) * (+tcMe.hourly_rate)).toFixed(2)) : '\u2014';
+      const rr = tcRateForPeriod(tcMe, r.period_ending);
+      const payCell = (rr != null) ? ('$' + ((+r.hours) * rr).toFixed(2)) : '\u2014';
       return '<tr><td data-l="Pay period">' + fmtPeriodRange(r.period_ending) + '</td>' +
         '<td class="n" data-l="Hours">' + (+r.hours) + '</td>' +
         '<td class="n" data-l="Est. pay">' + payCell + '</td>' +
@@ -6350,7 +6384,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function updateTcPay(){
     const el = document.getElementById('tcPayLine');
     if (!el) return;
-    const rate = (tcMe && tcMe.hourly_rate != null) ? +tcMe.hourly_rate : null;
+    const rate = tcMe ? tcRateForPeriod(tcMe, tcPeriodEl.value) : null;
     if (rate == null){ el.style.display = ''; el.className = 'builds-line'; el.textContent = 'No hourly rate on file yet \u2014 ask the admin to add it to see your pay estimate.'; return; }
     const hrs = parseFloat(tcHoursEl.value);
     if (isNaN(hrs) || hrs <= 0){ el.style.display = 'none'; return; }
@@ -6394,8 +6428,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const active = tcEmployees.filter(function(e){ return e.active && !e.is_admin; });
     let anyMissing = false;
     document.getElementById('tcSummaryBody').innerHTML = active.map(function(e){
-      const rate = e.hourly_rate != null ? +e.hourly_rate : null;
-      const rateCell = rate != null ? ('$' + rate.toFixed(2)) : '\u2014';
+      const rate = tcRateForPeriod(e, pe);
+      const prevRate = tcRateForPeriod(e, shiftFriday(pe, -14));
+      const rateCell = rate != null
+        ? ('$' + rate.toFixed(2) + (prevRate != null && prevRate !== rate ? ' <span class="mobo-hint" title="Was $' + prevRate.toFixed(2) + ' last period">new</span>' : ''))
+        : '\u2014';
       const name = esc(e.name || e.email);
       if (!e.user_id){
         return '<tr><td data-l="Employee">' + name + ' <span class="mobo-hint">(not signed in yet)</span></td>' +
@@ -6486,7 +6523,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     active.forEach(function(e){
       const row = tcFindHours(e.user_id, pe);
       const hours = row ? +row.hours : 0;
-      const rate = e.hourly_rate != null ? +e.hourly_rate : '';
+      const rr = tcRateForPeriod(e, pe);
+      const rate = rr != null ? rr : '';
       const pay = rate !== '' ? (hours * rate).toFixed(2) : '';
       lines.push([
         '"' + (e.name||'').replace(/"/g,'""') + '"', e.email,
@@ -6510,17 +6548,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         return '<tr>' +
           '<td><input class="tc-edit-wide" id="teName" value="' + esc(e.name||'') + '"></td>' +
           '<td><input class="tc-edit-wide" id="teEmail" value="' + esc(e.email||'') + '"></td>' +
-          '<td><input class="tc-edit-input" id="teRate" type="number" min="0" step="0.25" value="' + (e.hourly_rate != null ? e.hourly_rate : '') + '"></td>' +
+          '<td data-l="Rate">' + tcRateCell(e) + '</td>' +
           '<td><input class="tc-edit-wide" id="teDiscord" placeholder="Discord user ID" value="' + esc(e.discord_id||'') + '"></td>' +
           '<td><input type="checkbox" id="teAdmin"' + (e.is_admin ? ' checked' : '') + '></td>' +
           '<td><input type="checkbox" id="teActive"' + (e.active ? ' checked' : '') + '></td>' +
           '<td class="row-actions"><button class="mini" data-tesave="' + e.id + '">Save</button> <button class="mini" data-tecancel="1">Cancel</button></td>' +
-        '</tr>';
+        '</tr>' + tcRatePanel(e);
       }
       return '<tr>' +
         '<td data-l="Name">' + esc(e.name||'') + '</td>' +
         '<td data-l="Email">' + esc(e.email||'') + (e.user_id ? '' : ' <span class="mobo-hint">(not signed in yet)</span>') + '</td>' +
-        '<td data-l="Rate">' + (e.hourly_rate != null ? ('$' + (+e.hourly_rate).toFixed(2)) : '\u2014') + '</td>' +
+        '<td data-l="Rate">' + tcRateCell(e) + '</td>' +
         '<td data-l="Discord">' + (e.discord_id ? '\u2713' : '\u2014') + '</td>' +
         '<td data-l="Admin">' + (e.is_admin ? '\u2713' : '') + '</td>' +
         '<td data-l="Active">' + (e.active ? '\u2713' : '\u2014') + '</td>' +
@@ -6540,6 +6578,49 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     body.innerHTML = rows.join('');
   }
+  function tcRateCell(e){
+    const cur = tcRateOn(e, tcTodayYMD());
+    const nx = tcNextRate(e);
+    return (cur != null ? ('$' + cur.toFixed(2)) : '\u2014') +
+      (nx ? ' <span class="mobo-hint">\u2192 $' + (+nx.rate).toFixed(2) + ' from ' + fmtDay(nx.effective_from) + '</span>' : '');
+  }
+  /* rate history + "schedule a change" form, shown under the row being edited */
+  function tcRatePanel(e){
+    let inner;
+    if (!tcRatesOk){
+      inner = '<p class="muted-sm" style="margin:0;">Rate history isn\u2019t set up yet. Run <b>supabase/timeclock-pay-rates.sql</b> in Supabase, then reload.</p>';
+    } else {
+      const t = tcTodayYMD();
+      const rs = tcRatesFor(e.id);
+      let curId = null;
+      rs.forEach(function(r){ if (r.effective_from <= t) curId = r.id; });
+      const hist = rs.length ? rs.slice().reverse().map(function(r){
+        const when = r.effective_from <= TC_START_RATE ? 'Starting rate'
+          : 'From ' + fmtDay(r.effective_from) + ' <span class="mobo-hint">(' + fmtPeriodRange(shiftFriday(r.effective_from, 13)) + ' onward)</span>';
+        const tag = r.id === curId ? 'Current' : (r.effective_from > t ? 'Scheduled' : '');
+        return '<tr><td data-l="Effective">' + when + '</td>' +
+          '<td class="n" data-l="Rate"><b>$' + (+r.rate).toFixed(2) + '</b></td>' +
+          '<td data-l="">' + (tag ? '<span class="mobo-hint">' + tag + '</span>' : '') + '</td>' +
+          '<td class="row-actions" data-l="">' + (rs.length > 1 ? '<button class="mini del-btn" data-trdel="' + esc(String(r.id)) + '" data-emp="' + esc(String(e.id)) + '" title="Remove this rate change">\u00d7</button>' : '') + '</td></tr>';
+      }).join('') : '<tr><td colspan="4" class="muted-sm">No rate on file yet.</td></tr>';
+      const cur = currentPeriodEnd();
+      const opts = [];
+      for (let i = 6; i >= -12; i--){
+        const pe = shiftFriday(cur, 14 * i), st = shiftFriday(pe, -13);
+        const tagO = i === 0 ? ' \u00b7 current period' : (i === 1 ? ' \u00b7 next period' : '');
+        opts.push('<option value="' + st + '"' + (i === 1 ? ' selected' : '') + '>' + fmtPeriodRange(pe) + tagO + '</option>');
+      }
+      inner = '<div class="inv-cat" style="margin:0 0 8px;">Pay rate history</div>' +
+        '<table class="hist-table stack"><thead><tr><th>Effective</th><th class="n">Rate</th><th></th><th></th></tr></thead><tbody>' + hist + '</tbody></table>' +
+        '<div class="inv-menu-row" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;">' +
+          '<label class="date-lbl">New rate $/hr <input class="tc-edit-input" id="trRate" type="number" min="0" step="0.25"></label>' +
+          '<label class="date-lbl">Starting pay period <select id="trFrom" class="sel-sm">' + opts.join('') + '</select></label>' +
+          '<button class="mini" data-tradd="' + esc(String(e.id)) + '">Add rate change</button>' +
+        '</div>' +
+        '<p class="muted-sm" style="margin:8px 0 0;">Changes start on the first day of a pay period. Earlier periods stay at the rate that was in effect then.</p>';
+    }
+    return '<tr class="tc-rate-row"><td colspan="7" style="background:var(--surface-2, transparent);">' + inner + '</td></tr>';
+  }
   document.getElementById('tcAddEmp').addEventListener('click', function(){
     tcAddingEmp = true; tcEditEmpId = null; renderTcTeam();
     const n = document.getElementById('teName'); if (n) n.focus();
@@ -6554,11 +6635,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     } else if (btn.hasAttribute('data-tesave')){
       const id = btn.getAttribute('data-tesave');
       const emp = tcEmployees.find(function(x){ return String(x.id) === String(id); });
-      const rateV = document.getElementById('teRate').value;
       const payload = {
         name: document.getElementById('teName').value.trim(),
         email: document.getElementById('teEmail').value.trim().toLowerCase(),
-        hourly_rate: rateV === '' ? null : parseFloat(rateV),
         discord_id: (document.getElementById('teDiscord').value.trim() || null),
         is_admin: document.getElementById('teAdmin').checked,
         active: document.getElementById('teActive').checked
@@ -6573,6 +6652,37 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       Object.assign(emp, payload);
       tcEditEmpId = null;
       renderTcTeam(); renderTcSummary();
+    } else if (btn.hasAttribute('data-tradd')){
+      const id = btn.getAttribute('data-tradd');
+      const emp = tcEmployees.find(function(x){ return String(x.id) === String(id); });
+      const rate = parseFloat(document.getElementById('trRate').value);
+      const from = document.getElementById('trFrom').value;
+      if (!emp) return;
+      if (isNaN(rate) || rate < 0){ toast('Enter the new hourly rate.', 'err'); return; }
+      const logged = emp.user_id ? tcHoursRows.filter(function(r){
+        return r.user_id === emp.user_id && shiftFriday(r.period_ending, -13) >= from && tcRateForPeriod(emp, r.period_ending) !== rate;
+      }) : [];
+      if (logged.length && !(await mgConfirm('This reprices ' + logged.length + ' pay period' + (logged.length === 1 ? '' : 's') + ' ' + (emp.name || 'they') + ' already logged, from ' + fmtPeriodRange(shiftFriday(from, 13)) + ' on. Continue?'))) return;
+      btn.disabled = true;
+      const row = { employee_id: emp.id, rate: rate, effective_from: from };
+      const { data, error } = await SB.from('tc_pay_rates').upsert(row, { onConflict: 'employee_id,effective_from' }).select();
+      if (error){ btn.disabled = false; toast('Rate change failed: ' + (error.message||'error'), 'err'); return; }
+      tcRates = tcRates.filter(function(r){ return !(String(r.employee_id) === String(emp.id) && r.effective_from === from); });
+      tcRates.push((data && data[0]) || Object.assign({ id: 'tmp-' + Date.now() }, row));
+      await tcSyncCurrentRate(emp);
+      toast('$' + rate.toFixed(2) + '/hr starts ' + fmtDay(from) + '.');
+      renderTcTeam(); renderTcSummary();
+    } else if (btn.hasAttribute('data-trdel')){
+      const rid = btn.getAttribute('data-trdel');
+      const emp = tcEmployees.find(function(x){ return String(x.id) === btn.getAttribute('data-emp'); });
+      const r = tcRates.find(function(x){ return String(x.id) === rid; });
+      if (!emp || !r) return;
+      if (!(await mgConfirm('Remove the $' + (+r.rate).toFixed(2) + '/hr rate ' + (r.effective_from <= TC_START_RATE ? '(starting rate)' : 'from ' + fmtDay(r.effective_from)) + '? Periods it covered fall back to the rate before it.'))) return;
+      const { error } = await SB.from('tc_pay_rates').delete().eq('id', r.id);
+      if (error){ toast('Remove failed: ' + (error.message||'error'), 'err'); return; }
+      tcRates = tcRates.filter(function(x){ return x !== r; });
+      await tcSyncCurrentRate(emp);
+      renderTcTeam(); renderTcSummary();
     } else if (btn.hasAttribute('data-teadd')){
       const rateV = document.getElementById('teRate').value;
       const row = {
@@ -6586,7 +6696,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (!row.email){ toast('Email is required \u2014 it links their login.', 'err'); return; }
       const { data, error } = await SB.from('tc_employees').insert(row).select();
       if (error){ toast('Add failed: ' + (error.message||'error'), 'err'); return; }
-      if (data && data[0]) tcEmployees.push(data[0]);
+      if (data && data[0]){
+        tcEmployees.push(data[0]);
+        if (row.hourly_rate != null && tcRatesOk){
+          const rr = await SB.from('tc_pay_rates').insert({ employee_id: data[0].id, rate: row.hourly_rate, effective_from: TC_START_RATE }).select();
+          if (!rr.error) tcRates.push((rr.data && rr.data[0]) || { id: 'tmp-' + Date.now(), employee_id: data[0].id, rate: row.hourly_rate, effective_from: TC_START_RATE });
+        }
+      }
       tcAddingEmp = false;
       renderTcTeam(); renderTcSummary();
     }
