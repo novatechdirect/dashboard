@@ -2059,6 +2059,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-line-main{ min-width:0; }
   .ord-line:last-child{ border-bottom:0; }
   .ord-line-n{ font-weight:600; font-size:13.5px; }
+  /* desktop: the full build under the name; phones keep the tap-for-specs popover */
+  .ord-line-spec{ display:none; }
+  @media (min-width:701px){
+    .ord-line-spec{ display:flex; flex-wrap:wrap; gap:4px 18px; margin-top:6px; font-size:12.5px; color:var(--muted); line-height:1.45; }
+  }
   .ord-line-q{
     grid-column:1 / -1; justify-content:center;
     display:flex; align-items:baseline; gap:var(--s2); flex-wrap:wrap;
@@ -2142,6 +2147,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     background:var(--paper); border:1px solid var(--accent-line);
     border-radius:var(--r-md); box-shadow:var(--e2);
   }
+  @keyframes ordBarIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .ord-pool-bar{ animation:none; } }
+  @media (min-width:701px){
+    /* desktop: a tinted, raised bar so a live selection can't be missed */
+    .ord-pool-bar{
+      padding:20px 24px;
+      background:color-mix(in srgb, var(--accent) 9%, var(--paper));
+      border:1.5px solid var(--accent);
+      box-shadow:0 8px 24px -8px color-mix(in srgb, var(--accent) 35%, transparent), var(--e2);
+      animation:ordBarIn 220ms ease-out;
+    }
+    .ord-pool-bar .ord-pool-actions .ghost:not(.danger){ background:var(--paper); }
+    .ord-sel-count{ font-size:16px; font-weight:700; color:var(--ink); }
+    /* .btn-sm pins size with !important, so these have to match it */
+    .ord-pool-bar .ord-pool-actions .btn-sm{ min-height:52px !important; padding:0 26px !important; font-size:15px !important; font-weight:600; }
+    .ord-with{ font-size:13.5px; }
+  }
   .ord-sel-count{ font-family:var(--font-num); font-weight:600; font-size:13px; font-variant-numeric:tabular-nums; }
   .ord-sel-note{ color:var(--warn); font-size:12px; flex:1 1 auto; }
   .ord-pool-actions{ display:flex; gap:var(--s2); margin-left:auto; }
@@ -2180,13 +2202,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* sits over the serial column, so it reads as "copy this list" */
   .ord-batch-bar{ display:flex; margin-bottom:var(--s3); }
   .ord-batch-head{
-    display:grid; grid-template-columns:130px minmax(0,1fr) 150px auto;
+    display:grid; grid-template-columns:130px minmax(0,1fr) auto 150px auto;
     gap:var(--s3); align-items:center; padding:var(--s3) var(--s4); background:var(--paper);
     /* collapsed batches read as an even stack whether or not they have tracking */
     min-height:66px;
   }
   .ord-batch-id{ display:flex; flex-direction:column; gap:var(--s1); align-items:flex-start; }
   .ord-batch-no{ font-weight:600; font-size:13.5px; }
+  /* its own column, just left of the unit count and tracking */
+  .ord-batch-age{ font-size:12px; color:var(--faint); white-space:nowrap; text-align:right; }
+  /* a just-created batch gets a ring that fades, so the eye lands on it after the scroll */
+  .ord-batch.is-new{ animation:ordBatchFocus 2.8s ease-out; }
+  @keyframes ordBatchFocus{
+    0%,55%{ border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+    100%{ box-shadow:0 0 0 3px transparent; }
+  }
+  @media (prefers-reduced-motion: reduce){ .ord-batch.is-new{ animation-duration:0s; outline:2px solid var(--accent); outline-offset:-1px; } }
   .ord-batch-store{ font-weight:600; font-size:13.5px; }
   .ord-batch-meta{ text-align:right; font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:13px; }
   .ord-batch-meta .ord-sub{ font-family:var(--font-ui); }
@@ -2248,10 +2279,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
        forty batches on an order, every line in the header is paid for forty
        times over. */
     .ord-batch-head{
-      grid-template-columns:max-content minmax(0,1fr); grid-template-areas:"id meta" "dest dest" "btns btns";
+      grid-template-columns:max-content minmax(0,1fr); grid-template-areas:"id meta" "dest dest" "age age" "btns btns";
       gap:var(--s1) var(--s3); min-height:0; padding:10px 12px;
     }
     .ord-batch-id{ grid-area:id; flex-direction:row; align-items:center; justify-content:flex-start; gap:var(--s2); flex-wrap:nowrap; }
+    .ord-batch-age{ grid-area:age; text-align:left; }
+    .ord-batch-age:empty{ display:none; }
     /* tracking lives in the details; the header keeps units and the ship date */
     .ord-batch-meta .ord-trk-grp, .ord-batch-meta .ord-batch-dot{ display:none; }
     .ord-batch-meta .ord-batch-ship{ flex-wrap:nowrap; }
@@ -5314,10 +5347,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
   }
 
-  /* whatever the account last chose wins over this browser's copy */
+  /* This browser's last choice wins. The account copy only seeds a device that
+     has never picked a mode; a stale account value used to override the local
+     pick on every load and snap the app back to dark. */
   function ntApplyAccountTheme(s){
     try {
       const t = s && s.user && s.user.user_metadata && s.user.user_metadata.theme;
+      const local = localStorage.getItem('ntTheme');
+      if (local === 'dark' || local === 'light') return;
       if (t !== 'dark' && t !== 'light') return;
       if (document.documentElement.getAttribute('data-theme') === t) return;
       document.documentElement.setAttribute('data-theme', t);
@@ -9214,7 +9251,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const made = madeBy[l.config_id] || 0;
       const left = Math.max(0, (+l.qty_ordered || 0) - made);
       return '<div class="ord-line">' +
-        '<div class="ord-line-main"><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') + '</div></div>' +
+        '<div class="ord-line-main"><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') + '</div>' +
+          (function(){
+            const c = l.config_id ? ordCfgById(l.config_id) : null;
+            const ls = c ? ordCfgSpecLines(c) : [];
+            return ls.length ? '<div class="ord-line-spec">' + ls.map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' : '';
+          })() +
+        '</div>' +
         (ordPerm.manage && left && !gated
           ? '<div class="ord-gen">' +
               '<span class="ord-gen-lbl">Qty</span>' +
@@ -9290,32 +9333,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="ord-sum-c is-ok" title="In a batch that has been marked shipped"><div class="ord-sum-v">' + ordNum(st.shipped) + '</div><div class="ord-sum-l">' + ntIco('truck', 'nt-ico nt-ico-sm') + '<span>Shipped</span></div></div>' +
       '</div>' +
 
-      (gated ? '' :
-      '<div class="ord-flow">' +
-        '<span class="ord-flow-s s1"><b>1</b> Mark units built</span>' +
-        '<span class="ord-flow-a">\u2192</span>' +
-        '<span class="ord-flow-s s2"><b>2</b> Group into a batch</span>' +
-        '<span class="ord-flow-a">\u2192</span>' +
-        '<span class="ord-flow-s s3"><b>3</b> Add tracking</span>' +
-        '<span class="ord-flow-a">\u2192</span>' +
-        '<span class="ord-flow-s s3"><b>4</b> Mark shipped</span>' +
-      '</div>') +
-
       obDetailCard(o) +
       (gated ? '' : ordPdfCard(o)) +
       '<section class="card">' +
         '<h2 class="card-title">' + (gated ? '' : '<span class="ord-step s1">1</span>') + 'Line items' + (gated ? '' : ' \u00b7 What needs to be built') + (gated ? ' <span class="card-sub">what this invoice covers</span>' : '') + '</h2>' +
         lineHtml +
-        (gated ? '' : '<p class="card-note">Marking units built gives each one an NT serial number' +
-          (o.deduct_inventory === false
-            ? ' and drops it into the unit pool below. <b>Inventory is not touched on this order</b> \u2014 change that with Edit.'
-            : ', takes its parts out of inventory, and drops it into the unit pool below \u2014 ready to be labelled and put in a batch.') +
-        '</p>') +
       '</section>' +
 
       (gated ? '' :
       '<section class="card">' +
-        '<h2 class="card-title"><span class="ord-step s2">2</span>Unit pool \u00b7 Already built <span class="card-sub">units with serials but no destination yet \u00b7 select them to print labels or add them to a batch</span></h2>' +
+        '<h2 class="card-title"><span class="ord-step s2">2</span>Unit pool \u00b7 Already built</h2>' +
         '<div class="ord-pool-tools">' +
           '<select id="ordPoolCfg" class="sel-sm">' +
             '<option value="">All configs</option>' +
@@ -9334,7 +9361,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="ord-pool-bar" id="ordPoolBar" style="display:none;">' +
           '<span class="ord-sel-count" id="ordSelCount"></span>' +
           '<span class="ord-sel-note" id="ordSelNote"></span>' +
-          '<span class="ord-pool-actions"><span class="ord-with">with these:</span>' +
+          '<span class="ord-pool-actions">' +
             '<button class="ghost btn-sm" id="ordPrint46" type="button">4\u00d76 box PDF</button>' +
             '<button class="ghost btn-sm" id="ordPrintDymo" type="button">Dymo PDF</button>' +
             (ordPerm.manage ? '<button class="ghost danger btn-sm" id="ordUnbuild" type="button" title="Delete these units and put them back to needs building">Remove from pool</button>' : '') +
@@ -9344,15 +9371,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</section>' +
 
       '<section class="card">' +
-        '<h2 class="card-title"><span class="ord-step s3">3</span>Batches <span class="card-sub">one batch = one shipment to one store \u00b7 add tracking, then mark it shipped</span></h2>' +
+        '<h2 class="card-title"><span class="ord-step s3">3</span>Batches</h2>' +
         '<div id="ordBatchBody"></div>' +
-        '<p class="card-note">Marking a batch shipped stamps the ship date and flips its units to shipped. ' +
-        'The customer sees it in their portal straight away, tracking numbers included. ' +
-        'A shipped serial number is retired for good \u2014 even if the order is deleted later, that number is never issued again.</p>' +
       '</section>') +
 
       '<section class="card" id="ordNotesCard">' +
-        '<h2 class="card-title">Notes <span class="card-sub">where this order stands \u00b7 shared notes appear in the customer\u2019s portal and email their order contacts</span></h2>' +
+        '<h2 class="card-title">Notes</h2>' +
         '<div id="ordNotesBody"><p class="onote-empty">Loading\u2026</p></div>' +
       '</section>';
 
@@ -9413,7 +9437,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             '<p>' + esc(n.body) + '</p>' +
           '</div>';
         }).join('') + '</div>'
-      : '<p class="onote-empty">Nothing noted yet. A note here is the quickest way to explain a delay, a part shortage, or a change of plan.</p>';
+      : '';
 
     const compose = ordPerm.manage
       ? '<div class="rma-compose">' +
@@ -9427,9 +9451,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             '<span class="spacer"></span>' +
             '<button class="primary btn-sm" id="ordNotePost" type="button">Post note</button>' +
           '</div>' +
-          '<p class="card-note" style="margin:0;">' + (ordNoteAud === 'shared'
-            ? 'This posts to the customer\u2019s portal and emails whoever is listed for their order notifications.'
-            : 'Only Novatech sees this. Nothing is emailed.') + '</p>' +
         '</div>'
       : '';
     host.innerHTML = thread + compose;
@@ -10901,6 +10922,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return ordUnits.filter(function(u){ return u.batch_id === bid; });
   }
 
+  function ordAgo(ts){
+    const s = Math.max(0, (Date.now() - new Date(ts).getTime()) / 1000);
+    if (!isFinite(s)) return '';
+    if (s < 60) return 'Created just now';
+    const m = Math.floor(s / 60); if (m < 60) return 'Created ' + m + ' min ago';
+    const hr = Math.floor(m / 60); if (hr < 24) return 'Created ' + hr + ' hour' + (hr === 1 ? '' : 's') + ' ago';
+    const d = Math.floor(hr / 24); return 'Created ' + d + ' day' + (d === 1 ? '' : 's') + ' ago';
+  }
+  /* keep the ages honest while the page sits open */
+  setInterval(function(){
+    document.querySelectorAll('.ord-batch-age[data-age]').forEach(function(el){ el.textContent = ordAgo(el.getAttribute('data-age')); });
+  }, 60000);
+  function ordFocusBatch(bid){
+    const el = document.querySelector('.ord-batch[data-bid="' + (window.CSS && CSS.escape ? CSS.escape(String(bid)) : bid) + '"]');
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - Math.max(96, (window.innerHeight - el.offsetHeight) / 3);
+    window.scrollTo({ top: Math.max(0, top), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    el.classList.remove('is-new'); void el.offsetWidth; el.classList.add('is-new');
+    setTimeout(function(){ el.classList.remove('is-new'); }, 3200);
+  }
+
   function ordRenderBatches(){
     const host = document.getElementById('ordBatchBody');
     if (!host) return;
@@ -10929,6 +10971,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             '</div>' +
             '<div class="ord-sub">' + esc(ordLocAddress(loc) || 'No address on file') + '</div>' +
           '</div>' +
+          '<div class="ord-batch-age"' + (b.created_at ? ' data-age="' + esc(b.created_at) + '" title="' + esc(new Date(b.created_at).toLocaleString()) + '">' + ordAgo(b.created_at) : '>') + '</div>' +
           '<div class="ord-batch-meta">' +
             '<div class="ord-mono">' + ordNum(units.length) + ' unit' + (units.length === 1 ? '' : 's') + '</div>' +
             '<div class="ord-sub ord-batch-ship">' +
@@ -11194,6 +11237,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           moved < sel.length ? 'warn' : 'ok', 6000);
         ordSel.clear();
         await ordOpenOrder(o.id);
+        requestAnimationFrame(function(){ ordFocusBatch(batch.id); });
       } catch(e){
         this.disabled = false; this.textContent = 'Create batch of ' + ordNum(sel.length);
         err.textContent = e.message || 'Could not create the batch.';
