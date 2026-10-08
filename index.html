@@ -1827,7 +1827,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-prog i{ display:block; height:100%; transition:width var(--t-slow); }
   .ord-prog i.shipped{ background:var(--ok); }
   .ord-prog i.assigned{ background:var(--accent); }
-  .ord-prog i.built{ background:var(--line-strong); }
+  /* built but not yet in a batch: the same yellow as the Building filter */
+  .ord-prog i.built{ background:#e6b800; }
   .ord-prog-lbl{ font-family:var(--font-num); font-size:11.5px; color:var(--muted); margin-top:4px; letter-spacing:0; }
 
   .ord-chip{
@@ -1885,7 +1886,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-sum-l{ display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); line-height:1.3; }
   .ord-sum-l span{ min-width:0; text-wrap:balance; }
   .ord-sum-c.is-ok  .ord-sum-v{ color:var(--ok); }
-  .ord-sum-c.is-rem .ord-sum-v{ color:var(--warn); }
+  .ord-sum-c.is-rem .ord-sum-v{ color:var(--muted); }
+  .ord-sum-c.is-assigned .ord-sum-v{ color:var(--accent-fg); }
+  /* the built yellow, deepened on light grounds so the number stays legible */
+  .ord-sum-c.is-built .ord-sum-v{ color:#a88600; }
+  :root[data-theme="dark"] .ord-sum-c.is-built .ord-sum-v{ color:#e6b800; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme]) .ord-sum-c.is-built .ord-sum-v{ color:#e6b800; } }
 
   /* skinny progress rail above the tiles */
   .ord-prog-rail{ margin-bottom:var(--s4); }
@@ -1894,6 +1900,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     border:1px solid var(--line); border-radius:var(--r-pill);
   }
   .ord-prog-track i{ display:block; height:100%; transition:width var(--t-slow); }
+  /* one key entry per segment, in bar order */
+  .ord-prog-cap.ord-prog-key{ justify-content:flex-start; flex-wrap:wrap; gap:var(--s1) var(--s4); }
+  .ord-prog-key span{ display:inline-flex; align-items:center; gap:6px; }
+  .ord-prog-key i{ width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
   .ord-prog-cap{
     display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3);
     margin-top:var(--s2); font-size:12px; color:var(--muted);
@@ -2062,7 +2072,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* desktop: the full build under the name; phones keep the tap-for-specs popover */
   .ord-line-spec{ display:none; }
   @media (min-width:701px){
-    .ord-line-spec{ display:flex; flex-wrap:wrap; gap:4px 18px; margin-top:6px; font-size:12.5px; color:var(--muted); line-height:1.45; }
+    .ord-line-spec{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:6px; font-size:12.5px; color:var(--muted); line-height:1.45; }
+    .ord-spec-i{ display:inline-flex; align-items:center; gap:6px; }
+    .ord-spec-i svg{ width:15px; height:15px; flex:0 0 auto; color:var(--faint); }
   }
   .ord-line-q{
     grid-column:1 / -1; justify-content:center;
@@ -7661,8 +7673,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (!tot){ body.innerHTML = '<div class="chart-empty">Nothing in the pipeline</div>'; return; }
     const segs = [
       { l:'Shipped', n:shipped, c:'var(--ok)' },
-      { l:'In a batch', n:batched, c:'var(--info)' },
-      { l:'Ready to assign', n:pool, c:'var(--accent)' },
+      { l:'In a batch', n:batched, c:'var(--accent)' },
+      { l:'Ready to assign', n:pool, c:'#e6b800' },
       { l:'Remaining to build', n:toBuild, c:'var(--line-strong)', k:'rem' }
     ];
     body.innerHTML = '<div class="pipe-bar">' + segs.map(function(s){ return s.n ? '<i class="'+(s.k||'')+'" style="width:'+(s.n/tot*100)+'%;background:'+s.c+'" title="'+s.l+': '+s.n+'"></i>' : ''; }).join('') + '</div>'
@@ -9254,8 +9266,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="ord-line-main"><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') + '</div>' +
           (function(){
             const c = l.config_id ? ordCfgById(l.config_id) : null;
-            const ls = c ? ordCfgSpecLines(c) : [];
-            return ls.length ? '<div class="ord-line-spec">' + ls.map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' : '';
+            if (!c) return '';
+            const o = ordCfgSpecObj(c);
+            const items = [['case','Case'],['cpu','CPU'],['gpu','GPU'],['ram','RAM'],['storage','Storage']]
+              .filter(function(k){ return o[k[0]] !== ''; })
+              .map(function(k){
+                return '<span class="ord-spec-i" title="' + k[1] + '"><svg viewBox="0 0 24 24" aria-label="' + k[1] + '" role="img">' + ORD_PART_ICO[k[0]] + '</svg>' + esc(o[k[0]]) + '</span>';
+              });
+            return items.length ? '<div class="ord-line-spec">' + items.join('') + '</div>' : '';
           })() +
         '</div>' +
         (ordPerm.manage && left && !gated
@@ -9313,23 +9331,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       (st.ordered && !gated ? (function(){
         const segs = [
           ['Shipped', st.shipped, 'var(--ok)'],
-          ['In a batch', st.assigned, 'var(--info)'],
-          ['Ready to assign', st.built, 'var(--accent)'],
-          ['Remaining to build', st.remaining, 'var(--line-strong)', 'rem']
+          ['In a batch', st.assigned, 'var(--accent)'],
+          ['Built', st.built, '#e6b800'],
+          ['To build', st.remaining, 'var(--line-strong)', 'rem']
         ];
-        const done = Math.round(st.shipped / st.ordered * 100);
         return '<div class="ord-prog-rail"><div class="ord-prog-track">' + segs.map(function(s){
             return s[1] ? '<i class="' + (s[3] || '') + '" style="width:' + (s[1]/st.ordered*100) + '%;background:' + s[2] + '" title="' + s[0] + ': ' + ordNum(s[1]) + '"></i>' : '';
-          }).join('') + '</div>' +
-          '<div class="ord-prog-cap"><span><b>' + done + '%</b> shipped</span>' +
-          '<span>' + (st.remaining ? '<b>' + ordNum(st.remaining) + '</b> left to build' : 'all ' + ordNum(st.ordered) + ' built') + '</span></div></div>';
+          }).join('') + '</div></div>';
       })() : '') +
 
       '<div class="ord-sum">' +
         '<div class="ord-sum-c" title="Total quantity across every line item on this invoice"><div class="ord-sum-v">' + ordNum(st.ordered) + '</div><div class="ord-sum-l">' + ntIco('clipboard', 'nt-ico nt-ico-sm') + '<span>Ordered</span></div></div>' +
         '<div class="ord-sum-c is-rem" title="Ordered units with no serial number yet"><div class="ord-sum-v">' + ordNum(st.remaining) + '</div><div class="ord-sum-l">' + ntIco('checklist', 'nt-ico nt-ico-sm') + '<span>To build</span></div></div>' +
-        '<div class="ord-sum-c" title="Serial numbers generated, not yet in a batch"><div class="ord-sum-v">' + ordNum(st.built) + '</div><div class="ord-sum-l">' + ntIco('checkcircle', 'nt-ico nt-ico-sm') + '<span>Built (in pool)</span></div></div>' +
-        '<div class="ord-sum-c" title="In a batch with a destination, but not shipped yet"><div class="ord-sum-v">' + ordNum(st.assigned) + '</div><div class="ord-sum-l">' + ntIco('box', 'nt-ico nt-ico-sm') + '<span>Assigned</span></div></div>' +
+        '<div class="ord-sum-c is-built" title="Serial numbers generated, not yet in a batch"><div class="ord-sum-v">' + ordNum(st.built) + '</div><div class="ord-sum-l">' + ntIco('checkcircle', 'nt-ico nt-ico-sm') + '<span>Built (in pool)</span></div></div>' +
+        '<div class="ord-sum-c is-assigned" title="In a batch with a destination, but not shipped yet"><div class="ord-sum-v">' + ordNum(st.assigned) + '</div><div class="ord-sum-l">' + ntIco('box', 'nt-ico nt-ico-sm') + '<span>Assigned</span></div></div>' +
         '<div class="ord-sum-c is-ok" title="In a batch that has been marked shipped"><div class="ord-sum-v">' + ordNum(st.shipped) + '</div><div class="ord-sum-l">' + ntIco('truck', 'nt-ico nt-ico-sm') + '<span>Shipped</span></div></div>' +
       '</div>' +
 
@@ -9850,6 +9865,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const sum = s ? [s.cpu, s.gpu, s.ram, s.storage].filter(Boolean).join(' \u00b7 ') : '';
     return ordCfgLabel(cfgId, fallback) + (sum ? '<span class="ord-cfg-sum">' + esc(sum) + '</span>' : '');
   }
+  /* one glyph per part, same 1.5px line as the rest of the app's icons */
+  const ORD_PART_ICO = {
+    case:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M9 6.5h6M9 9.5h6"/><circle cx="12" cy="16.5" r="1.5"/></g>',
+    cpu:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></g>',
+    gpu:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5h18a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6"/><path d="M2 4.5v15"/><circle cx="10" cy="12" r="3"/><path d="M16.5 10v4M19 10v4M7 17.5v2.5h6v-2.5"/></g>',
+    ram:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h18a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"/><path d="M6 10.5v2M10 10.5v2M14 10.5v2M18 10.5v2M5 15.5v2M19 15.5v2M11 15.5v2M13 15.5v2"/></g>',
+    storage:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="2"/><path d="M6 12h6M16.5 12h.01M19 12h.01"/></g>'
+  };
   function ordCfgSpecLines(cfg){
     const o = ordCfgSpecObj(cfg);
     return [['Case',o.case],['CPU',o.cpu],['GPU',o.gpu],['RAM',o.ram],['Storage',o.storage]]
