@@ -817,6 +817,7 @@
   /* the action sits at the right edge of the header at every width */
   .bhead > div:last-child{ justify-self:end; }
   .bacts{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .bhead .bacts{ margin-top:0; align-items:center; }
   /* between phone and desktop there is not room for four columns: the batch
      and its status take the first line, the rest pairs up below */
   @media (min-width:821px) and (max-width:980px){
@@ -845,6 +846,8 @@
     letter-spacing:0.07em; color:var(--muted); font-style:normal;
   }
   .carrier i{ font-style:normal; }
+  .trk-btn{ display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:999px; font-size:12.5px; font-weight:600; color:var(--accent-ink); background:var(--accent); text-decoration:none; white-space:nowrap; font-family:inherit; }
+  .trk-btn:hover{ background:var(--accent-hover); color:var(--accent-ink); }
   .trk-tag{
     display:inline-block; margin-left:6px; font-size:9.5px; font-weight:600;
     letter-spacing:.08em; text-transform:uppercase; color:var(--faint);
@@ -2790,7 +2793,9 @@
     if (st.remaining === 0) return { c:'w', l:'Awaiting shipment' };
     return { c:'n', l:'In production' };
   }
+  function isTrackLink(v){ return /^https?:\/\/\S+$/i.test(String(v || '').trim()); }
   function trackUrl(carrier, n){
+    if (isTrackLink(n)) return String(n).trim();
     const e = encodeURIComponent(String(n||'').trim());
     if (!e) return '';
     switch (String(carrier||'').trim().toLowerCase()){
@@ -2808,7 +2813,7 @@
     if (!c) return '';
     const k = c.toLowerCase();
     const slug = k.replace(/[^a-z0-9]+/g, '');
-    const short = k === 'fedex' ? 'FDX' : k === 'freight' ? 'FRT' : k === 'other' ? 'SHIP' : c.toUpperCase();
+    const short = k === 'fedex' ? 'FDX' : k === 'freight' ? 'FRT' : k === 'other' ? 'SHIP' : k === 'uber freight' ? 'UBER' : c.toUpperCase();
     return '<span class="carrier" title="' + esc(c) + '">' +
       '<img src="carriers/' + esc(slug) + '.png" alt="' + esc(c) + '"' +
         ' onload="this.closest(\'.carrier\').classList.add(\'has-logo\')"' +
@@ -2828,6 +2833,7 @@
     if (!list.length) return '<span class="muted">\u2014</span>';
     return list.map(function(n){
       const u = trackUrl(carrier, n);
+      if (isTrackLink(n)) return '<a class="trk-btn" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">Track shipment \u2197</a>';
       return u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(n) + '</a>' : esc(n);
     }).join(', ');
   }
@@ -3871,7 +3877,9 @@
         const bu = units.filter(function(u){ return u.batch_id === b.id; });
         const tk = tracking.filter(function(t){ return t.batch_id === b.id; });
         const per = {}; tk.forEach(function(t){ if (t.unit_id) per[t.unit_id] = t.tracking_no; });
-        const wide = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
+        const wideAll = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
+        const trackLink = wideAll.find(isTrackLink) || '';
+        const wide = wideAll.filter(function(n){ return !isTrackLink(n); });
         const shipped = b.status === 'shipped';
         return '<div class="batch">' +
           '<div class="bhead" data-head="' + esc(b.id) + '" role="button" tabindex="0" title="Click for serials and tracking">' +
@@ -3889,6 +3897,7 @@
                 : carrierBadge(b.carrier)) +
               '<span>' + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</span></div></div>' +
             '<div class="bacts">' +
+              (trackLink ? '<a class="btn primary" style="padding:8px 12px;min-height:34px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;" href="' + esc(trackLink) + '" target="_blank" rel="noopener noreferrer">Track shipment \u2197</a>' : '') +
               '<button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
           '</div>' +
           '<div class="bbody" id="bb_' + esc(b.id) + '"><div class="bbody-in"><div class="bbody-pad">' +
@@ -4097,7 +4106,7 @@
         const r = rank(t.tracking_no); if (!r) return;
         const b = byBatch[t.batch_id]; if (!b) return;
         const o = byOrder[b.order_id];
-        g.push({ r:r, kind:'tracking', title:t.tracking_no,
+        g.push({ r:r, kind:'tracking', title:isTrackLink(t.tracking_no) ? 'Tracking link' : t.tracking_no,
           sub:(o ? o.invoice_no + ' \u00b7 ' : '') + 'Batch ' + b.batch_no + (b.carrier ? ' \u00b7 ' + b.carrier : ''),
           tag:'Shipment', go:o ? function(){ openOrder(o.id); } : null });
       });
