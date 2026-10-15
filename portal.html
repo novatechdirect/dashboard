@@ -202,6 +202,7 @@
   .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); padding:10px 18px; min-height:40px; }
   .btn.primary:hover{ background:var(--accent-hover); border-color:var(--accent-hover); box-shadow:none; }
   .btn.sm{ padding:4px 12px; min-height:28px; font-size:12.5px; }
+  .back .btn, .toolbar .btn, .staffbadge{ white-space:nowrap; }
   .icon-btn{
     display:inline-flex; align-items:center; justify-content:center;
     width:32px; height:32px; min-height:32px; padding:0; border:1px solid var(--line-strong);
@@ -328,47 +329,6 @@
   .pipen{ margin-left:auto; font-weight:600; font-variant-numeric:tabular-nums; }
   @media (max-width:640px){ .pipeleg{ grid-template-columns:minmax(0,1fr); gap:var(--s2); } .pipev{ font-size:24px; } }
 
-  /* Paging redraws the whole detail view, so remember which batches were
-     open and put them back. */
-  function batchesOpen(){
-    const ids = [];
-    document.querySelectorAll('.bbody').forEach(function(b){
-      if (b.classList.contains('open')) ids.push(b.id.replace(/^bb_/, ''));
-    });
-    return ids;
-  }
-  function reopenBatches(ids){
-    ids.forEach(function(id){
-      const bd = document.getElementById('bb_' + id);
-      if (!bd) return;
-      bd.classList.add('open', 'instant');
-      requestAnimationFrame(function(){ bd.classList.remove('instant'); });
-      const btn = document.querySelector('[data-x="' + id + '"]');
-      if (btn) btn.textContent = 'Hide';
-    });
-  }
-  document.addEventListener('click', function(e){
-    const pv = e.target.closest('[data-bprev]'), nx = e.target.closest('[data-bnext]');
-    if (!pv && !nx) return;
-    const id = (pv || nx).getAttribute(pv ? 'data-bprev' : 'data-bnext');
-    batchPage[id] = (batchPage[id] || 0) + (pv ? -1 : 1);
-    const open = batchesOpen();
-    if (currentId) openOrder(currentId);
-    reopenBatches(open);
-  });
-  document.addEventListener('change', function(e){
-    const sel = e.target.closest('[data-rows]');
-    if (!sel) return;
-    const n = parseInt(sel.value, 10);
-    rowsPer = ROW_OPTS.indexOf(n) >= 0 ? n : 30;   /* 0 means All, and 0 is falsy */
-    try { localStorage.setItem('portalRows', String(rowsPer)); } catch(err){}
-    batchPage = {};
-    const open = batchesOpen();
-    if (currentId) openOrder(currentId);
-    reopenBatches(open);
-  });
-
-
   /* ---------- demo mode ---------- */
   #demoBar{
     position:fixed; left:0; right:0; bottom:0; z-index:9999;
@@ -434,53 +394,49 @@
      shape of the account: how it ages, what has moved month to month, and
      the invoices themselves. */
 
-  /* the balance, on the brand ground, with a settled meter under it */
-  .bhero{
-    display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:var(--s5);
-    padding:var(--s5) var(--s5b, var(--s5)); border-radius:var(--r-lg);
-    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
-    color:var(--accent-ink); box-shadow:var(--e2); align-items:start;
+  /* same card language as the admin billing view */
+  .card-title{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--faint); margin:0 0 var(--s2); }
+  .card-sub{ font-size:12px; font-weight:400; color:var(--muted); letter-spacing:0; text-transform:none; margin-left:var(--s2); }
+  .chart-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; }
+  .chart-kpi{ display:flex; flex-direction:column; gap:var(--s1); min-width:0; }
+  .chart-kpi .card-title{ margin:0 0 var(--s2); }
+  .chart-sub{ font-size:13px; color:var(--muted); display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
+  .chart-tabs{ display:inline-flex; flex-wrap:wrap; gap:var(--s1); flex:0 0 auto; }
+  .chart-tab{
+    font:inherit; font-size:12px; font-weight:500; padding:4px 12px; min-height:28px; white-space:nowrap;
+    border-radius:var(--r-pill); border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer;
+    transition:color var(--t), border-color var(--t), background var(--t);
   }
-  .bhero-k{ font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; opacity:.72; }
-  .bhero-v{
-    margin-top:var(--s1); font-size:44px; font-weight:600; line-height:1.05;
-    letter-spacing:-1.5px; font-variant-numeric:tabular-nums;
+  .chart-tab:hover{ color:var(--ink); border-color:var(--line-strong); }
+  #bStmt, #bCsv{ white-space:nowrap; }
+  .chart-tab.on{ background:var(--ink-deep); color:var(--on-ink); border-color:var(--ink-deep); }
+  .bill-kpis{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s4); margin-top:var(--s4); }
+  .bill-k{ min-width:0; }
+  .bill-kv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:-0.4px; font-variant-numeric:tabular-nums; line-height:1.2; }
+  .bill-kl{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); }
+  .bill-ks{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .bill-k.paid .bill-kv{ color:var(--ok); }
+  .bill-k.due .bill-kv{ color:var(--warn-ink, var(--warn)); }
+  .bill-rail{ display:flex; height:8px; margin-top:var(--s4); overflow:hidden; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
+  .bill-rail i{ display:block; height:100%; background:var(--ok); transition:width var(--t-slow); }
+  .bill-cap{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:2px var(--s3); margin-top:var(--s2); font-size:12px; color:var(--muted); }
+  .bill-cap b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+  .bill-det{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s3) var(--s4); margin-top:var(--s5); padding-top:var(--s4); border-top:1px solid var(--line); }
+  .bill-det-v{ font-family:var(--font-num); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .bill-det-v.hot{ color:var(--bad); }
+  .bill-det-l{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:2px; }
+  .bill-det-s{ font-size:12px; color:var(--muted); margin-top:2px; }
+  @media (max-width:700px){
+    .bill-kpis, .bill-det{ grid-template-columns:1fr 1fr; }
+    .bill-kv{ font-size:22px; }
+    .card-sub{ display:block; margin-left:0; margin-top:4px; line-height:1.45; }
   }
-  .bhero-s{ margin-top:var(--s2); font-size:13px; opacity:.82; }
-  .bmeter{
-    margin-top:var(--s4); height:8px; border-radius:var(--r-pill);
-    background:rgba(255,255,255,.22); overflow:hidden;
-  }
-  .bmeter-f{ height:100%; border-radius:var(--r-pill); background:var(--accent-ink); transition:width var(--t-slow); }
-  .bmeter-l{ margin-top:var(--s2); font-size:12px; opacity:.82; font-variant-numeric:tabular-nums; }
-  /* the right column: the next thing that needs doing */
-  .bhero-side{ display:flex; flex-direction:column; gap:var(--s3); }
-  .bhero-box{
-    padding:var(--s3) var(--s4); border-radius:var(--r-md);
-    background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.18);
-  }
-  .bhero-box.hot{ background:rgba(255,255,255,.2); border-color:var(--accent-ink); }
-  .bhero-box .bhero-k{ opacity:.8; }
-  .bhero-box b{ display:block; margin-top:2px; font-size:19px; letter-spacing:-0.4px; font-variant-numeric:tabular-nums; }
-  .bhero-box span{ font-size:12px; opacity:.8; }
-
-  /* three plain figures in a row — cards would compete with the hero */
-  .bquick{
-    display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
-    border:1px solid var(--line); border-radius:var(--r-md); background:var(--paper);
-    margin-top:var(--s4); overflow:hidden;
-  }
-  .bquick > div{ padding:var(--s4); border-left:1px solid var(--line); min-width:0; }
-  .bquick > div:first-child{ border-left:none; }
-  .bquick-k{ font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
-  .bquick-v{ margin-top:2px; font-size:22px; font-weight:600; letter-spacing:-0.6px; font-variant-numeric:tabular-nums; }
-  .bquick-s{ font-size:12px; color:var(--muted); }
-  .bquick .hot{ color:var(--bad); }
+  @media (max-width:420px){ .bill-kpis, .bill-det{ grid-template-columns:1fr; } }
 
   /* aging: one bar, because five boxes of money say less than their shares */
-  .bagebar{ display:flex; height:14px; border-radius:var(--r-pill); overflow:hidden; background:var(--soft); margin-top:var(--s4); }
+  .bagebar{ display:flex; height:8px; border-radius:var(--r-pill); overflow:hidden; background:var(--soft); border:1px solid var(--line); margin-top:var(--s4); }
   .bagebar i{ display:block; min-width:2px; transition:flex-basis var(--t-slow); }
-  .bagebar i.g0{ background:var(--accent); }
+  .bagebar i.g0{ background:color-mix(in srgb, var(--warn) 32%, var(--paper)); }
   .bagebar i.g1{ background:color-mix(in srgb, var(--warn) 60%, var(--paper)); }
   .bagebar i.g2{ background:var(--warn); }
   .bagebar i.g3{ background:color-mix(in srgb, var(--bad) 70%, var(--warn)); }
@@ -515,12 +471,12 @@
   .bch-col:hover{ background:var(--soft); }
   .bch-bar{
     width:100%; max-width:44px; border-radius:var(--r-xs) var(--r-xs) 0 0;
-    background:linear-gradient(180deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 62%, var(--paper)) 100%);
+    background:var(--ok);
     transition:height var(--t-slow);
   }
   .bch-col.none .bch-bar{ background:var(--line); }
   .bch-col.units .bch-bar{
-    background:linear-gradient(180deg, var(--ok) 0%, color-mix(in srgb, var(--ok) 55%, var(--paper)) 100%);
+    background:color-mix(in srgb, var(--ink) 72%, var(--paper));
   }
   .bch-tip{
     position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%);
@@ -536,25 +492,18 @@
   }
   .bch-tot{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); margin-top:var(--s4); font-size:12.5px; color:var(--muted); }
   .bch-tot b{ color:var(--ink); font-variant-numeric:tabular-nums; }
-  .bseg{ display:flex; gap:2px; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
-  .bseg button{
-    appearance:none; border:none; background:none; cursor:pointer; font:inherit; font-size:12px;
-    padding:5px 12px; border-radius:var(--r-pill); color:var(--muted); min-height:30px;
-  }
-  .bseg button.on{ background:var(--paper); color:var(--ink); font-weight:600; box-shadow:var(--e1); }
-  .bseg button:hover{ color:var(--ink); }
   .bchart-bar{ width:100%; max-width:34px; background:var(--accent); border-radius:var(--r-sm) var(--r-sm) 0 0; min-height:2px; }
   .btabs{ display:flex; gap:var(--s2); }
   .binv{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s2); overflow:hidden; background:var(--paper); }
   .binv-h{
-    display:grid; grid-template-columns:minmax(0,1.5fr) 96px repeat(2, minmax(0,1fr)) auto;
+    display:grid; grid-template-columns:minmax(0,1.5fr) 96px repeat(2, minmax(max-content,1fr)) auto;
     gap:var(--s3) var(--s4); align-items:center; padding:var(--s4); cursor:pointer;
     transition:background var(--t);
   }
   .binv.open{ border-color:var(--line-strong); box-shadow:var(--e1); }
   /* how much of this invoice is settled, at a glance */
   .binv-m{ height:6px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; }
-  .binv-m i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--accent); }
+  .binv-m i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--ok); }
   .binv-m.full i{ background:var(--ok); }
   .binv-m.late i{ background:var(--bad); }
   .binv-mp{ margin-top:3px; font-size:10.5px; color:var(--faint); font-variant-numeric:tabular-nums; }
@@ -562,7 +511,7 @@
   .binv-h:focus-visible{ outline:none; box-shadow:var(--ring); }
   .binv-no{ font-weight:600; }
   .binv-sub{ font-size:12px; color:var(--muted); }
-  .binv-n{ text-align:right; font-variant-numeric:tabular-nums; }
+  .binv-n{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .binv-n b{ display:block; }
   .binv-n span{ font-size:11px; color:var(--muted); letter-spacing:.04em; text-transform:uppercase; }
   .binv-b{ padding:0 var(--s4) var(--s4); border-top:1px solid var(--line); }
@@ -578,19 +527,10 @@
   .bdoc-m{ color:var(--muted); font-size:12px; white-space:nowrap; }
   .bacts{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s4); }
   @media (max-width:860px){
-    .bhero{ grid-template-columns:minmax(0,1fr); gap:var(--s4); padding:var(--s4b) var(--s4); }
-    .bhero-v{ font-size:38px; }
-    .bhero-side{ flex-direction:row; }
-    .bhero-side > *{ flex:1 1 0; }
     .binv-h{ grid-template-columns:minmax(0,1fr) 88px auto; }
     .binv-n.hide-sm{ display:none; }
   }
   @media (max-width:560px){
-    .bquick{ grid-template-columns:minmax(0,1fr); }
-    .bquick > div{ border-left:none; border-top:1px solid var(--line); }
-    .bquick > div:first-child{ border-top:none; }
-    .bhero-side{ flex-direction:column; }
-    .bhero-v{ font-size:34px; letter-spacing:-1px; }
     .bagekey{ gap:var(--s3) var(--s4); }
     .bch-y{ display:none; }
     .bch{ grid-template-columns:minmax(0,1fr); }
@@ -658,6 +598,7 @@
   .rchart{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); min-width:0; }
   .rchart h2{ font-size:13px; font-weight:600; margin:0; }
   .rchart-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s3); flex-wrap:wrap; }
+  .rchart-head h2{ flex:1 1 150px; min-width:0; }
   .rchart-val{ font-size:28px; font-weight:600; line-height:1.25; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; margin-top:var(--s2); }
   .rchart-sub{ font-size:12.5px; color:var(--muted); line-height:1.5; }
   .rchart-plot{ position:relative; margin-top:var(--s4); }
@@ -1255,9 +1196,10 @@
   .siderail .pmenu{ position:relative; }
   .nav-ind{
     position:absolute; left:calc(var(--rail-pad, var(--s3)) * -1); right:0; top:0; height:38px;
-    background:var(--ink-deep); border-radius:0 var(--r-pill) var(--r-pill) 0;
+    background:color-mix(in srgb, var(--charcoal) 11%, transparent); border-radius:0 var(--r-pill) var(--r-pill) 0;
     opacity:0; pointer-events:none; z-index:0; transition:none;
   }
+  @supports not (color: color-mix(in srgb, red, blue)){ .nav-ind{ background:var(--accent-soft); } }
   .nav-ind.ready{
     transition:transform 200ms cubic-bezier(.2,.7,.2,1), height 200ms cubic-bezier(.2,.7,.2,1),
                left var(--t), opacity 140ms linear;
@@ -1279,7 +1221,11 @@
   .siderail .pmenu a{ position:relative; z-index:1; }
   /* the indicator carries the fill now, so the row itself stays clear */
   body.authed .siderail .pmenu a.on,
-  body.authed .siderail .pmenu a.on:hover{ background:transparent; color:var(--on-ink); }
+  body.authed .siderail .pmenu a.on:hover{ background:transparent; color:var(--ink); font-weight:600; }
+  @media (min-width:701px){
+    :root[data-theme="dark"] body.authed .siderail .pmenu a.on{ color:var(--on-ink); }
+    @media (prefers-color-scheme: dark){ :root:not([data-theme]) body.authed .siderail .pmenu a.on{ color:var(--on-ink); } }
+  }
   body.authed.rail-mini .pmenu a{ justify-content:center; padding-inline:0; }
   body.authed.rail-mini .pmenu a .nav-lbl{ display:none; }
   body.authed.rail-mini .pmenu .pbadge{ position:absolute; top:2px; right:10px; margin:0; }
@@ -2070,14 +2016,14 @@
       part_requested: 'RTX 4060', created_at: demoStamp(-11), updated_at: demoStamp(-2),
       contact_id: 'demo-cc-1', ship_to: 'Demo Gaming Co\nAttn: Ravi Patel\n1180 Riverside Dr\nAustin, TX 78701'
     });
-    db.rma_parts.push({ id: demoId('p'), rma_id: rma, part_name: 'RTX 4060', qty: 1, status: 'approved', created_at: demoStamp(-9) });
+    db.rma_parts.push({ id: demoId('p'), rma_id: rma, description: 'RTX 4060', qty: 1, status: 'approved', created_at: demoStamp(-9) });
     db.rma_comments.push({ id: demoId('c'), rma_id: rma, author_type: 'customer', author_name: 'Ravi Patel',
       body: 'Swapped the cable and tried a second monitor, same result.', internal: false, created_at: demoStamp(-10) });
     db.rma_comments.push({ id: demoId('c'), rma_id: rma, author_type: 'staff', author_name: 'Novatech',
       body: 'Approved \u2014 replacement card goes out today, return label is in the box.', internal: false, created_at: demoStamp(-9) });
     db.rma_events.push({ id: demoId('e'), rma_id: rma, kind: 'status', from_val: 'new', to_val: 'approved',
       detail: null, actor_type: 'staff', actor_name: 'Novatech', created_at: demoStamp(-9) });
-    db.rma_shipments.push({ id: demoId('s'), rma_id: rma, direction: 'out', carrier: 'UPS',
+    db.rma_shipments.push({ id: demoId('s'), rma_id: rma, direction: 'outbound', carrier: 'UPS',
       tracking_no: '1Z999AA10523456788', ship_date: demoDay(-9), created_at: demoStamp(-9) });
 
     /* a plausible mail history for the Email tab */
@@ -2103,7 +2049,7 @@
   }
 
   function demoFrom(name){
-    let filters = [], ord = null, lim = null, one = false, maybe = false;
+    let filters = [], ord = null, lim = null, off = 0, one = false, maybe = false;
     let mode = 'select', payload = null, conflict = null;
     const add = function(op, col, val){ filters.push({ op: op, col: col, val: val }); return api; };
     /* The signed-in person is real; the fixture rows are not. Matching them on
@@ -2152,7 +2098,7 @@
             return (a > b ? 1 : -1) * (ord.asc ? 1 : -1);
           });
         }
-        if (lim != null) out = out.slice(0, lim);
+        if (lim != null || off) out = out.slice(off, lim != null ? off + lim : undefined);
       } else if (mode === 'insert'){
         const rows = (Array.isArray(payload) ? payload : [payload]).map(stamp);
         rows.forEach(function(r){ tbl.push(r); });
@@ -2196,7 +2142,7 @@
       not: function(c, op, v){ return add(op === 'is' ? 'notis' : 'neq', c, v); },
       or: function(){ return api; },
       limit: function(n){ lim = n; return api; },
-      range: function(f, t){ lim = t + 1; return api; },
+      range: function(f, t){ off = f; lim = t - f + 1; return api; },
       order: function(c, o){ ord = { col: c, asc: !(o && o.ascending === false) }; return api; },
       single: function(){ one = true; return api; },
       maybeSingle: function(){ maybe = true; return api; },
@@ -2669,14 +2615,83 @@
   async function signIn(){
     const err = $('loginErr'); err.textContent = '';
     const btn = $('go'); btn.disabled = true; btn.textContent = 'Signing in\u2026';
-    const r = await SB.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
-    btn.disabled = false; btn.textContent = 'Sign in';
-    if (r.error) err.textContent = r.error.message || 'Could not sign in.';
+    try {
+      const r = await SB.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
+      if (r.error) err.textContent = r.error.message || 'Could not sign in.';
+    } catch(e){
+      err.textContent = 'Could not reach the sign-in service. Check your connection and try again.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Sign in';
+    }
   }
   $('signOut').addEventListener('click', function(){ SB.auth.signOut(); });
 
   /* ---------- data ---------- */
+  /* The API hands back at most 1000 rows per request, and a long id list
+     makes a URL the gateway refuses. Page every big read and chunk the ids,
+     so a large account sees all of its units instead of the first thousand. */
+  async function sbAll(make){
+    const PAGE = 1000; let out = [];
+    for (let from = 0; ; from += PAGE){
+      const r = await make().range(from, from + PAGE - 1);
+      if (r.error) return { data: out, error: r.error };
+      const d = r.data || []; out = out.concat(d);
+      if (d.length < PAGE) return { data: out, error: null };
+    }
+  }
+  async function sbIn(make, ids){
+    const CH = 100; let out = [];
+    for (let i = 0; i < ids.length; i += CH){
+      const part = ids.slice(i, i + CH);
+      const r = await sbAll(function(){ return make(part); });
+      if (r.error) return { data: out, error: r.error };
+      out = out.concat(r.data);
+    }
+    return { data: out, error: null };
+  }
+  let dataAt = 0, refreshing = false;
+  async function fetchData(){
+    const cid = me.customer_id;
+    const [c, o, cf, lo] = await Promise.all([
+      SB.from('customers').select('*').eq('id', cid).limit(1),
+      SB.from('orders').select('*').eq('customer_id', cid).eq('archived', false).order('created_at', { ascending:false }),
+      SB.from('configs').select('*').eq('customer_id', cid),
+      SB.from('ship_to_locations').select('*').eq('customer_id', cid)
+    ]);
+    const e1 = o.error || c.error || cf.error || lo.error; if (e1) throw e1;
+    const ords = o.data || [], ids = ords.map(function(x){ return x.id; });
+    let ln = [], ba = [], un = [], tr = [];
+    if (ids.length){
+      const r = await Promise.all([
+        sbIn(function(p){ return SB.from('order_lines').select('*').in('order_id', p).order('position'); }, ids),
+        sbIn(function(p){ return SB.from('batches').select('*').in('order_id', p).order('batch_no'); }, ids),
+        sbIn(function(p){ return SB.from('pc_log').select('id,serial,order_id,batch_id,config_id,unit_status').in('order_id', p).order('serial'); }, ids)
+      ]);
+      const e2 = r[0].error || r[1].error || r[2].error; if (e2) throw e2;
+      ln = r[0].data; ba = r[1].data; un = r[2].data;
+      const bids = ba.map(function(b){ return b.id; });
+      if (bids.length){
+        const t = await sbIn(function(p){ return SB.from('batch_tracking').select('*').in('batch_id', p).order('id'); }, bids);
+        if (t.error) throw t.error;
+        tr = t.data;
+      }
+    }
+    /* chunks come back in chunk order; put the lists back in reading order */
+    ln.sort(function(a, b){ return (a.position || 0) - (b.position || 0); });
+    ba.sort(function(a, b){ return (a.batch_no || 0) - (b.batch_no || 0); });
+    un.sort(function(a, b){ return String(a.serial).localeCompare(String(b.serial), undefined, { numeric:true }); });
+    customer = (c.data || [])[0]; orders = ords; configs = cf.data || []; locations = lo.data || [];
+    lines = ln; batches = ba; units = un; tracking = tr;
+    $('custName').textContent = customer ? customer.name : '';
+    await loadRma();
+    dataAt = Date.now();
+  }
+  function billReset(){
+    billSeq++; billState = 'idle'; billSum = null; billInv = []; billSeries = [];
+    billPays = {}; billDocs = {}; billOpen = null;
+  }
   async function load(){
+    $('detailView').style.display = 'none'; $('listView').style.display = '';
     $('listView').innerHTML =
       '<div class="page-head"><h1>Your orders</h1></div>' +
       '<div class="skel-card"><div class="skel skel-line" style="width:32%"></div>' +
@@ -2685,17 +2700,6 @@
         '<div class="skel skel-line" style="width:55%"></div></div>' +
       '<div class="skel-card"><div class="skel skel-line" style="width:36%"></div>' +
         '<div class="skel skel-line" style="width:48%"></div></div>';
-    const [c, o, cf, lo] = await Promise.all([
-      SB.from('customers').select('*').eq('id', me.customer_id).limit(1),
-      SB.from('orders').select('*').eq('customer_id', me.customer_id).eq('archived', false).order('created_at', { ascending:false }),
-      SB.from('configs').select('*').eq('customer_id', me.customer_id),
-      SB.from('ship_to_locations').select('*').eq('customer_id', me.customer_id)
-    ]);
-    customer = (c.data || [])[0];
-    orders = o.data || [];
-    configs = cf.data || [];
-    locations = lo.data || [];
-    $('custName').textContent = customer ? customer.name : '';
     const pick = $('staffPick');
     if (isStaff && pick){
       pick.style.display = '';
@@ -2706,28 +2710,19 @@
       $('viewAs').addEventListener('change', async function(){
         viewAs = this.value;
         me = { customer_id: viewAs };
-        currentId = null; query = ''; setUrl(null);
-        billState = 'idle'; billSum = null; billInv = []; billSeries = [];
-        billPays = {}; billDocs = {}; billOpen = null;
-        $('detailView').style.display = 'none';
+        currentId = null; rmaCurrent = null; query = ''; setUrl(null);
+        billReset();
         await load();
       });
     }
-    const ids = orders.map(function(x){ return x.id; });
-    if (ids.length){
-      const [ln, ba, un] = await Promise.all([
-        SB.from('order_lines').select('*').in('order_id', ids).order('position'),
-        SB.from('batches').select('*').in('order_id', ids).order('batch_no'),
-        SB.from('pc_log').select('id,serial,order_id,batch_id,config_id,unit_status').in('order_id', ids).order('serial')
-      ]);
-      lines = ln.data || []; batches = ba.data || []; units = un.data || [];
-      const bids = batches.map(function(b){ return b.id; });
-      if (bids.length){
-        const tr = await SB.from('batch_tracking').select('*').in('batch_id', bids);
-        tracking = tr.data || [];
-      } else tracking = [];
-    } else { lines = []; batches = []; units = []; tracking = []; }
-    await loadRma();
+    try { await fetchData(); }
+    catch(e){
+      $('listView').innerHTML = pnavHtml() + '<div class="card"><h1>Could not load your orders</h1>' +
+        '<p class="muted">' + esc((e && e.message) || 'The connection dropped.') + '</p>' +
+        '<button class="btn primary" id="loadRetry" type="button">Try again</button></div>';
+      $('loadRetry').addEventListener('click', load);
+      return;
+    }
     const wantR = readRmaLink();
     if (wantR){ pview = 'rmas'; }
     renderList();
@@ -2739,6 +2734,29 @@
       else toast('That RMA is not on your account.', 'bad', 6000);
     }
   }
+  /* A tab left open all day goes stale. Coming back to it after a few minutes
+     re-reads everything and redraws the same screen, with drafts kept. */
+  async function softRefresh(){
+    if (!session || !me || refreshing || modalBg) return;
+    refreshing = true;
+    const open = batchesOpen(), y = window.scrollY;
+    const rb = $('rmaBody'), rmaDraft = rb ? rb.value : '';
+    try { await fetchData(); } catch(e){ refreshing = false; return; }
+    refreshing = false;
+    billReset();
+    if (currentId && orders.some(function(o){ return o.id === currentId; })){
+      openOrder(currentId); reopenBatches(open);
+    } else if (rmaCurrent && rmaTickets.some(function(t){ return t.id === rmaCurrent; })){
+      openRma(rmaCurrent);
+      const nb = $('rmaBody'); if (nb && rmaDraft) nb.value = rmaDraft;
+    } else {
+      currentId = null; rmaCurrent = null; renderList();
+    }
+    window.scrollTo(0, y);
+  }
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible' && dataAt && Date.now() - dataAt > 5 * 60000) softRefresh();
+  });
   async function loadRma(){
     try {
       const cid = me.customer_id;
@@ -3105,7 +3123,7 @@
   });
   document.addEventListener('keydown', function(e){
     const b = e.target.closest && e.target.closest('[data-pview]'); if (!b || (e.key !== 'Enter' && e.key !== ' ')) return;
-    e.preventDefault(); pview = b.getAttribute('data-pview'); rmaCurrent = null; currentId = null; renderList();
+    e.preventDefault(); pview = b.getAttribute('data-pview'); rmaCurrent = null; currentId = null; pipeShown = null; renderList();
   });
   function renderList(){
     setUrl(null);
@@ -3154,7 +3172,10 @@
     const pv = $('listView').querySelector('.pipev');
     if (pv && pipeShown !== pv.textContent){ pipeShown = pv.textContent; pCountUp(pv); }
     const qi = $('q');
-    if (qi) qi.addEventListener('input', function(){ query = this.value; renderList(); $('q').focus(); });
+    if (qi) qi.addEventListener('input', function(){
+      const pos = this.selectionStart; query = this.value; renderList();
+      const n = $('q'); n.focus(); try { n.setSelectionRange(pos, pos); } catch(e){}
+    });
     const lk = $('lookup');
     if (lk) lk.addEventListener('click', serialLookup);
   }
@@ -3255,16 +3276,16 @@
     }).join('');
 
     return '<div class="card bpay-card" style="margin-top:var(--s4);">' +
-      '<div class="toolbar" style="align-items:flex-start;">' +
-        '<div style="min-width:0;">' +
-          '<h2 style="margin:0;font-size:15px;">' + (units ? 'Units delivered' : 'Payments received') + '</h2>' +
-          '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">' +
+      '<div class="chart-head">' +
+        '<div class="chart-kpi">' +
+          '<h2 class="card-title">' + (units ? 'Units delivered' : 'Payments received') + '</h2>' +
+          '<div class="chart-sub">' +
             (units ? 'Units on batches marked shipped, by month.' : 'By month, as recorded against your invoices.') +
-          '</p>' +
+          '</div>' +
         '</div>' +
-        '<div class="bseg" role="group" aria-label="What to chart">' +
-          '<button type="button" data-bchart="money" class="' + (units ? '' : 'on') + '">Money</button>' +
-          '<button type="button" data-bchart="units" class="' + (units ? 'on' : '') + '">Units</button>' +
+        '<div class="chart-tabs" role="group" aria-label="What to chart">' +
+          '<button type="button" data-bchart="money" class="chart-tab' + (units ? '' : ' on') + '">Money</button>' +
+          '<button type="button" data-bchart="units" class="chart-tab' + (units ? ' on' : '') + '">Units</button>' +
         '</div>' +
       '</div>' +
       '<div class="bch">' +
@@ -3301,9 +3322,8 @@
     const tot = rowsAge.reduce(function(s, b){ return s + Number(b[1] || 0); }, 0);
     if (!(tot > 0.005)) return '';
     return '<div class="card bage-card" style="margin-top:var(--s4);">' +
-      '<h2 style="margin:0;font-size:15px;">How the balance ages</h2>' +
-      '<p class="muted" style="margin:var(--s1) 0 0;font-size:13px;">' +
-        bmoneyBig(tot) + ' still owing, by how long it has been due.</p>' +
+      '<div class="chart-kpi"><h2 class="card-title">How the balance ages</h2>' +
+      '<div class="chart-sub">' + bmoneyBig(tot) + ' still owing, by how long it has been due.</div></div>' +
       '<div class="bagebar">' + rowsAge.map(function(b){
         const v = Number(b[1] || 0);
         if (!(v > 0.005)) return '';
@@ -3313,7 +3333,7 @@
       '<div class="bagekey">' + rowsAge.map(function(b){
         const v = Number(b[1] || 0);
         return '<div><div class="bagekey-k"><i class="' + b[2] + '" style="background:' +
-            (b[2] === 'g0' ? 'var(--accent)' : b[2] === 'g1' ? 'color-mix(in srgb, var(--warn) 60%, var(--paper))' :
+            (b[2] === 'g0' ? 'color-mix(in srgb, var(--warn) 32%, var(--paper))' : b[2] === 'g1' ? 'color-mix(in srgb, var(--warn) 60%, var(--paper))' :
              b[2] === 'g2' ? 'var(--warn)' : b[2] === 'g3' ? 'color-mix(in srgb, var(--bad) 70%, var(--warn))' : 'var(--bad)') +
             '"></i>' + b[0] + '</div>' +
           '<div class="bagekey-v' + (v > 0.005 ? '' : ' zero') + '">' + bmoney(v) + '</div></div>';
@@ -3321,8 +3341,11 @@
     '</div>';
   }
 
+  let billSeq = 0, billHistAll = false;
+  const HIST_N = 10;
   async function loadBilling(){
     if (billState === 'loading') return;
+    const seq = ++billSeq;
     billState = 'loading';
     /* Staff have no customer_users row, so the functions need to be told
        which customer to answer for. A customer login ignores the argument. */
@@ -3332,6 +3355,7 @@
       SB.rpc('portal_billing_invoices', { p_customer: scope }),
       SB.rpc('portal_billing_series', { p_months: 12, p_customer: scope })
     ]);
+    if (seq !== billSeq) return;
     if (sm.error || iv.error){
       billState = 'error';
       billErr = ((sm.error || iv.error) || {}).message || 'Could not load billing.';
@@ -3346,91 +3370,30 @@
   function renderBilling(){
     if (!canBill && !isStaff){ pview = 'orders'; return renderList(); }
     const host = $('listView');
-    if (billState === 'idle'){
+    if (billState === 'idle' || billState === 'loading'){
       host.innerHTML = pnavHtml() + '<h1>Billing</h1>' +
         '<div class="skel-card"><div class="skel skel-line" style="width:30%"></div>' +
         '<div class="skel skel-line" style="width:60%"></div></div>';
-      loadBilling().then(function(){ if (pview === 'billing') renderBilling(); });
+      if (billState === 'idle') loadBilling().then(function(){ if (pview === 'billing' && !currentId && !rmaCurrent) renderBilling(); });
       return;
     }
-    if (billState === 'loading') return;
     if (billState === 'error'){
       host.innerHTML = pnavHtml() + '<h1>Billing</h1>' +
-        '<div class="card"><p class="muted">' + esc(billErr) + '</p></div>';
+        '<div class="card"><p class="muted">' + esc(billErr) + '</p>' +
+        '<button class="btn primary" id="billRetry" type="button">Try again</button></div>';
+      $('billRetry').addEventListener('click', billRefresh);
       return;
     }
 
     const sum = billSum || {};
     const open = billInv.filter(function(x){ return Number(x.balance || 0) > 0.005 || x.invoice_total == null; });
     const paid = billInv.filter(function(x){ return x.invoice_total != null && Number(x.balance || 0) <= 0.005; });
-    const rows = billTab === 'paid' ? paid : open;
-    const invoiced = Number(sum.invoiced || 0);
-    const settled = invoiced > 0 ? Math.min(100, Number(sum.paid || 0) / invoiced * 100) : 0;
-    const overdue = Number(sum.overdue || 0);
-    const clear = !(Number(sum.outstanding || 0) > 0.005);
-
-    host.innerHTML = pnavHtml() +
-      '<h1>Billing</h1>' +
-      '<p class="muted" style="margin-top:0;">' + (isStaff
-        ? 'Exactly what this customer\u2019s billing viewer sees. Reading only \u2014 the remittance notice is theirs to send.'
-        : 'What you have paid, what is still owed, and when it is due. Everything here is read-only except your PO numbers and documents you attach.') + '</p>' +
-
-      '<div class="bhero">' +
-        '<div style="min-width:0;">' +
-          '<div class="bhero-k">' + (clear ? 'Account balance' : 'Balance outstanding') + '</div>' +
-          '<div class="bhero-v">' + bmoneyBig(sum.outstanding) + '</div>' +
-          '<div class="bhero-s">' + (clear
-            ? 'Nothing owing. Everything invoiced has been settled.'
-            : num(sum.open_count || 0) + (Number(sum.open_count) === 1 ? ' invoice open' : ' invoices open') +
-              (overdue > 0.005 ? ' \u00b7 ' + bmoneyBig(overdue) + ' of it past due' : ' \u00b7 none of it past due')) + '</div>' +
-          '<div class="bmeter" role="img" aria-label="' + Math.round(settled) + ' percent of everything invoiced is paid">' +
-            '<div class="bmeter-f" style="width:' + settled.toFixed(1) + '%"></div></div>' +
-          '<div class="bmeter-l">' + bmoneyBig(sum.paid) + ' paid of ' + bmoneyBig(invoiced) + ' invoiced \u00b7 ' +
-            Math.round(settled) + '% settled</div>' +
-        '</div>' +
-        '<div class="bhero-side">' +
-          '<div class="bhero-box">' +
-            '<div class="bhero-k">Next payment due</div>' +
-            '<b>' + (sum.next_due_date ? bmoneyBig(sum.next_due_amount) : '\u2014') + '</b>' +
-            '<span>' + (sum.next_due_date ? esc(fmtDate(sum.next_due_date)) : 'no dated invoice open') + '</span>' +
-          '</div>' +
-          '<div class="bhero-box' + (overdue > 0.005 ? ' hot' : '') + '">' +
-            '<div class="bhero-k">Past due</div>' +
-            '<b>' + bmoneyBig(overdue) + '</b>' +
-            '<span>' + (overdue > 0.005 ? 'needs attention' : 'nothing overdue') + '</span>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-
-      '<div class="bquick">' +
-        '<div><div class="bquick-k">Invoiced to date</div>' +
-          '<div class="bquick-v">' + bmoneyBig(invoiced) + '</div>' +
-          '<div class="bquick-s">' + num(billInv.length) + (billInv.length === 1 ? ' invoice' : ' invoices') + ' on file</div></div>' +
-        '<div><div class="bquick-k">Paid to date</div>' +
-          '<div class="bquick-v">' + bmoneyBig(sum.paid) + '</div>' +
-          '<div class="bquick-s">across ' + num(paid.length) + (paid.length === 1 ? ' settled invoice' : ' settled invoices') + '</div></div>' +
-        '<div><div class="bquick-k">Oldest unpaid</div>' +
-          '<div class="bquick-v' + (Number(sum.b_90_plus || 0) > 0.005 ? ' hot' : '') + '">' +
-            (function(){
-              const late = open.reduce(function(m, r){ return Math.max(m, Number(r.days_late || 0)); }, 0);
-              return late > 0 ? num(late) + 'd' : '\u2014';
-            })() + '</div>' +
-          '<div class="bquick-s">' + (open.some(function(r){ return Number(r.days_late || 0) > 0; })
-            ? 'past its due date' : 'nothing has run late') + '</div></div>' +
-      '</div>' +
-
-      billChartHtml() +
-      billAgeHtml(sum) +
-
-      '<div class="card" style="margin-top:var(--s4);">' +
-        '<div class="toolbar"><div class="btabs">' +
-          '<button class="btn sm' + (billTab === 'open' ? ' primary' : '') + '" data-btab="open" type="button">Open (' + open.length + ')</button>' +
-          '<button class="btn sm' + (billTab === 'paid' ? ' primary' : '') + '" data-btab="paid" type="button">Paid in full (' + paid.length + ')</button>' +
-        '</div>' +
-        '<button class="btn sm" id="bStmt" type="button">Statement</button>' +
-        '<button class="btn sm" id="bCsv" type="button">Download CSV</button></div>' +
-
-        (rows.length ? rows.map(function(r){
+    /* the balance card speaks for open invoices only */
+    const tot = function(list, k){ return list.reduce(function(s, r){ return s + Number(r[k] || 0); }, 0); };
+    const invoiced = tot(open, 'invoice_total'), openPaid = tot(open, 'paid');
+    const settled = invoiced > 0 ? Math.min(100, openPaid / invoiced * 100) : 0;
+    const paidTot = tot(paid, 'invoice_total');
+    const invHtml = function(r){
           const isOpen = String(billOpen) === String(r.order_id);
           const chip = BILL_CHIP[r.state] === undefined ? '' : BILL_CHIP[r.state];
           return '<div class="binv' + (isOpen ? ' open' : '') + '" data-binv="' + esc(r.order_id) + '">' +
@@ -3491,10 +3454,90 @@
                 '</div>'
               : '') +
           '</div>';
-        }).join('')
-        : '<div class="empty"><p>' + (billTab === 'paid' ? 'Nothing paid in full yet.' : 'Nothing outstanding.') + '</p>' +
-          '<p class="muted">' + (billTab === 'paid' ? 'Settled invoices move here.' : 'Invoices appear here as NovaTech issues them.') + '</p></div>') +
-      '</div>';
+    };
+    const overdue = Number(sum.overdue || 0);
+    const clear = !(Number(sum.outstanding || 0) > 0.005);
+
+    host.innerHTML = pnavHtml() +
+      '<h1>Billing</h1>' +
+
+      '<section class="card">' +
+        '<div class="chart-kpi"><h2 class="card-title">Open balance</h2>' +
+          '<div class="chart-sub">' + (open.length
+            ? num(open.length) + (open.length === 1 ? ' open invoice' : ' open invoices') +
+              (overdue > 0.005 ? ' \u00b7 ' + bmoneyBig(overdue) + ' past due' : ' \u00b7 none past due')
+            : 'Nothing open. Everything invoiced has been settled.') + '</div></div>' +
+        '<div class="bill-kpis">' +
+          '<div class="bill-k"><div class="bill-kv">' + bmoney(invoiced) + '</div><div class="bill-kl">Invoiced</div>' +
+            '<div class="bill-ks">on open invoices</div></div>' +
+          '<div class="bill-k paid"><div class="bill-kv">' + bmoney(openPaid) + '</div><div class="bill-kl">Paid</div>' +
+            '<div class="bill-ks">' + (invoiced > 0 ? Math.round(settled) + '% of it so far' : 'nothing open') + '</div></div>' +
+          '<div class="bill-k' + (clear ? '' : ' due') + '"><div class="bill-kv">' + bmoney(sum.outstanding) + '</div><div class="bill-kl">Outstanding</div>' +
+            '<div class="bill-ks">' + (clear ? 'nothing owing'
+              : 'across ' + num(sum.open_count || 0) + (Number(sum.open_count) === 1 ? ' invoice' : ' invoices')) + '</div></div>' +
+        '</div>' +
+        '<div class="bill-rail" role="img" aria-label="' + Math.round(settled) + ' percent of open invoices is paid">' +
+          '<i style="width:' + settled.toFixed(1) + '%"></i></div>' +
+        '<div class="bill-cap"><span><b>' + bmoney(openPaid) + '</b> paid</span>' +
+          '<span><b>' + bmoney(sum.outstanding) + '</b> still owing</span></div>' +
+        '<div class="bill-det">' +
+          '<div><div class="bill-det-v">' + (sum.next_due_date ? bmoneyBig(sum.next_due_amount) : '\u2014') + '</div>' +
+            '<div class="bill-det-l">Next payment due</div>' +
+            '<div class="bill-det-s">' + (sum.next_due_date ? esc(fmtDate(sum.next_due_date)) : 'no dated invoice open') + '</div></div>' +
+          '<div><div class="bill-det-v' + (overdue > 0.005 ? ' hot' : '') + '">' + bmoneyBig(overdue) + '</div>' +
+            '<div class="bill-det-l">Past due</div>' +
+            '<div class="bill-det-s">' + (overdue > 0.005 ? 'needs attention' : 'nothing overdue') + '</div></div>' +
+          '<div><div class="bill-det-v' + (Number(sum.b_90_plus || 0) > 0.005 ? ' hot' : '') + '">' +
+            (function(){
+              const late = open.reduce(function(m, r){ return Math.max(m, Number(r.days_late || 0)); }, 0);
+              return late > 0 ? num(late) + 'd' : '\u2014';
+            })() + '</div>' +
+            '<div class="bill-det-l">Oldest unpaid</div>' +
+            '<div class="bill-det-s">' + (open.some(function(r){ return Number(r.days_late || 0) > 0; })
+              ? 'past its due date' : 'nothing has run late') + '</div></div>' +
+        '</div>' +
+      '</section>' +
+
+      billChartHtml() +
+      billAgeHtml(sum) +
+
+      '<section class="card" style="margin-top:var(--s4);">' +
+        '<div class="chart-head" style="margin-bottom:var(--s4);">' +
+          '<div class="chart-kpi"><h2 class="card-title">Open invoices</h2>' +
+            '<div class="chart-sub">click one for payments and documents</div></div>' +
+          '<div style="display:flex;gap:var(--s2);flex:0 0 auto;">' +
+            '<button class="btn sm" id="bStmt" type="button">Statement</button>' +
+            '<button class="btn sm" id="bCsv" type="button">Download CSV</button></div>' +
+        '</div>' +
+
+        (open.length ? open.map(invHtml).join('')
+        : '<div class="empty"><p>Nothing outstanding.</p>' +
+          '<p class="muted">Invoices appear here as NovaTech issues them.</p></div>') +
+      '</section>' +
+
+      /* settled invoices and lifetime totals live apart from what is owed now */
+      '<section class="card" style="margin-top:var(--s4);">' +
+        '<div class="chart-kpi" style="margin-bottom:var(--s4);"><h2 class="card-title">Paid in full</h2>' +
+          '<div class="chart-sub">' + (paid.length
+            ? num(paid.length) + (paid.length === 1 ? ' invoice' : ' invoices') + ' settled'
+            : 'Settled invoices move here.') + '</div></div>' +
+        (paid.length
+          ? (billHistAll ? paid : paid.slice(0, HIST_N)).map(invHtml).join('') +
+            (paid.length > HIST_N
+              ? '<div style="display:flex;justify-content:center;margin-top:var(--s3);">' +
+                  '<button class="btn sm" id="bHistMore" type="button">' +
+                  (billHistAll ? 'Show fewer' : 'Show all ' + num(paid.length)) + '</button></div>'
+              : '')
+          : '') +
+        '<div class="bill-det">' +
+          '<div><div class="bill-det-v">' + bmoney(paidTot) + '</div><div class="bill-det-l">Settled invoices</div>' +
+            '<div class="bill-det-s">' + num(paid.length) + (paid.length === 1 ? ' invoice' : ' invoices') + '</div></div>' +
+          '<div><div class="bill-det-v">' + bmoney(sum.invoiced) + '</div><div class="bill-det-l">Invoiced, all time</div>' +
+            '<div class="bill-det-s">' + num(billInv.length) + (billInv.length === 1 ? ' invoice' : ' invoices') + ' on file</div></div>' +
+          '<div><div class="bill-det-v">' + bmoney(sum.paid) + '</div><div class="bill-det-l">Paid, all time</div>' +
+            '<div class="bill-det-s">' + (Number(sum.invoiced) > 0 ? Math.round(Math.min(100, Number(sum.paid || 0) / Number(sum.invoiced) * 100)) + '% of invoiced' : '\u2014') + '</div></div>' +
+        '</div>' +
+      '</section>';
   }
 
   async function billOpenRow(id){
@@ -3517,7 +3560,7 @@
   }
 
   async function billRefresh(){
-    billState = 'idle'; billPays = {}; billDocs = {};
+    billReset();
     renderBilling();
   }
 
@@ -3604,13 +3647,22 @@
     }
   }
 
+  /* The tab opens inside the click; the signed link arrives after it */
+  function openSoon(){ try { return window.open('about:blank', '_blank'); } catch(e){ return null; } }
+  function openTo(w, url){
+    if (w && !w.closed){ try { w.opener = null; } catch(e){} w.location.href = url; return; }
+    const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
   async function billSignedOpen(bucket, path){
+    const w = openSoon();
     const r = await SB.storage.from(bucket).createSignedUrl(path, 120);
     if (r.error || !r.data || !r.data.signedUrl){
+      if (w) w.close();
       toast('Could not open that file: ' + ((r.error && r.error.message) || 'no link returned'), 'bad', 7000);
       return;
     }
-    window.open(r.data.signedUrl, '_blank', 'noopener');
+    openTo(w, r.data.signedUrl);
   }
 
   function billCsv(){
@@ -3681,6 +3733,7 @@
     const cm = e.target.closest('[data-bchart]');
     if (cm){ billChart = cm.getAttribute('data-bchart'); renderBilling(); return; }
     if (e.target.closest('#bCsv')){ billCsv(); return; }
+    if (e.target.closest('#bHistMore')){ billHistAll = !billHistAll; renderBilling(); return; }
     if (e.target.closest('#bStmt')){ billStatement(); return; }
 
     const po = e.target.closest('[data-bpo]');
@@ -3723,6 +3776,8 @@
         const bad = rm.error || (del && del.error);
         if (bad){ ddel.disabled = false; toast(bad.message, 'bad', 7000); return; }
         billDocs[id] = (billDocs[id] || []).filter(function(x){ return x.id !== d.id; });
+        const row = billInv.find(function(x){ return String(x.order_id) === String(id); });
+        if (row) row.docs = billDocs[id].length;
         renderBilling(); toast('Document removed', 'ok');
       })();
       return;
@@ -3772,6 +3827,7 @@
     return d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
   }
 
+  const noteDraft = {};
   function renderNotes(){
     const host = $('notesBody'); if (!host) return;
     if (notesErr){
@@ -3800,6 +3856,12 @@
           '<button class="btn primary sm" id="notePost" type="button">Post note</button>' +
         '</div>' +
       '</div>');
+    const ta = $('noteIn');
+    if (ta){
+      const key = notesFor;
+      ta.value = noteDraft[key] || '';
+      ta.addEventListener('input', function(){ noteDraft[key] = ta.value; });
+    }
   }
 
   document.addEventListener('click', async function(e){
@@ -3827,6 +3889,7 @@
         post.disabled = false; post.textContent = 'Post note';
         toast(r.error.message, 'bad', 8000); return;
       }
+      delete noteDraft[notesFor];
       await notesLoad(notesFor);
       toast('Posted \u2014 NovaTech has been told', 'ok');
     }
@@ -3948,8 +4011,18 @@
        belongs on the billing view, behind its own permission. */
     $('csv').addEventListener('click', function(){ exportCsv(o); });
     $('prt').addEventListener('click', function(){
+      const keep = rowsPer, open = batchesOpen(), id = o.id;
+      rowsPer = 0; openOrder(id);
       document.querySelectorAll('.bbody').forEach(function(x){ x.classList.add('open', 'instant'); });
-      window.print();
+      let done = false;
+      const restore = function(){
+        if (done) return; done = true;
+        window.removeEventListener('afterprint', restore);
+        rowsPer = keep;
+        if (currentId === id){ openOrder(id); reopenBatches(open); }
+      };
+      window.addEventListener('afterprint', restore);
+      setTimeout(function(){ window.print(); setTimeout(restore, 1500); }, 60);
     });
     /* the whole header row is the target; the buttons inside it keep their own jobs */
     function toggleBatch(id){
@@ -4686,7 +4759,7 @@
     const t = rmaTickets.find(function(x){ return x.id === id; }); if (!t) return;
     rmaCurrent = id; currentId = null; setRmaUrl(id); pview = 'rmas'; syncMenu();
     const u = units.find(function(x){ return String(x.id) === String(t.unit_id); });
-    const o = orders.find(function(x){ return x.id === t.order_id; });
+    const o = orders.find(function(x){ return x.id === (t.order_id || (u && u.order_id)); });
     const b = unitBatch(u), cfg = u ? cfgById(u.config_id) : null, w = u ? rmaWarranty(u) : null;
     const st = RMA_ST[t.status] || { l:t.status, c:'n', next:'' };
     const parts = rmaParts.filter(function(x){ return x.rma_id === id && x.status !== 'denied'; });
@@ -4841,7 +4914,7 @@
   const R_SLIP_CSS = 'body{font:14px/1.5 -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;color:#1a1a1a;margin:0;padding:40px;max-width:720px}h1{font-size:26px;margin:0 0 2px;letter-spacing:-.5px}.k{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#787671;margin:22px 0 6px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px 0;border-bottom:1px solid #e5e3df;vertical-align:top}th{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#787671;font-weight:600}.n{text-align:right;white-space:nowrap}.big{font-size:24px;font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace}.box{border:1px solid #c8c4be;border-radius:8px;padding:12px 14px;white-space:pre-wrap;min-height:44px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:2px solid #1a1a1a;padding-bottom:14px}.muted{color:#5d5b54}@media print{body{padding:0}}';
   function returnSlip(t){
     const u = units.find(function(x){ return String(x.id) === String(t.unit_id); }), cfg = u ? cfgById(u.config_id) : null;
-    const o = orders.find(function(x){ return x.id === t.order_id; });
+    const o = orders.find(function(x){ return x.id === (t.order_id || (u && u.order_id)); });
     const parts = rmaParts.filter(function(x){ return x.rma_id === t.id && x.status !== 'denied'; });
     const em = (session && session.user && session.user.email || '').toLowerCase();
     const c = rmaContacts.find(function(x){ return (x.email || '').toLowerCase() === em; }) || rmaContacts[0] || null;
@@ -4888,9 +4961,10 @@
   document.addEventListener('click', async function(e){
     const el = e.target.closest('[data-att]'); if (!el) return;
     const x = rmaAttachments.find(function(y){ return y.id === el.getAttribute('data-att'); }); if (!x) return;
+    const w = openSoon();
     const r = await SB.storage.from(RMA_BUCKET).createSignedUrl(x.path, 120);
-    if (r.error || !r.data){ toast('Could not open the file.', 'bad'); return; }
-    window.open(r.data.signedUrl, '_blank', 'noopener');
+    if (r.error || !r.data){ if (w) w.close(); toast('Could not open the file.', 'bad'); return; }
+    openTo(w, r.data.signedUrl);
   });
   function shrink(file){
     return new Promise(function(res, rej){
@@ -4914,7 +4988,12 @@
       const up = await SB.storage.from(RMA_BUCKET).upload(path, blob, { contentType: type, upsert: false });
       if (up.error){ toast('Upload failed: ' + up.error.message, 'bad'); continue; }
       const ins = await SB.from('rma_attachments').insert({ rma_id: t.id, comment_id: commentId || null, path: path, filename: f.name, size_bytes: blob.size, content_type: type, uploaded_by: session.user.id, uploaded_by_type: 'customer' }).select().single();
-      if (!ins.error && ins.data) rmaAttachments.push(ins.data);
+      if (ins.error){
+        await SB.storage.from(RMA_BUCKET).remove([path]);
+        toast('Could not attach ' + f.name + ': ' + ins.error.message, 'bad', 7000);
+        continue;
+      }
+      if (ins.data) rmaAttachments.push(ins.data);
     }
   }
 
@@ -5120,6 +5199,7 @@
       '<button class="btn primary" id="snGo" type="button">Look up</button></div>');
 
     const out = bg.querySelector('#snOut');
+    setTimeout(function(){ const i = bg.querySelector('#snIn'); if (i) i.focus(); }, 30);
     bg.querySelector('#snClose').addEventListener('click', closeModal);
     bg.querySelector('#snIn').addEventListener('keydown', function(e){ if (e.key === 'Enter') run(); });
     bg.querySelector('#snGo').addEventListener('click', run);
@@ -5367,7 +5447,7 @@
      batch paging) never refill. */
   (function(){
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var SEL = '.bar i, .oprog-bar i, .pipebar i, .bmeter-f, .bagebar i, .bch-bar, .binv-m i, .rfail-bar i';
+    var SEL = '.bar i, .oprog-bar i, .pipebar i, .bill-rail i, .bagebar i, .bch-bar, .binv-m i, .rfail-bar i';
     var PROPS = ['width', 'height', 'flex-basis'];
     var FILL = 620, STEP = 45, MAXDELAY = 270, GRACE = 900;
     var armed = true, disarming = 0, observer = null, lastKey = null;

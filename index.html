@@ -2207,7 +2207,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* ---- batches ---- */
   .ord-head-r{ display:flex; align-items:center; gap:var(--s2); }
-  .ord-batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; }
+  .ord-batch{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden; container:ordbatch / inline-size; }
+  .ord-batch-head > *{ min-width:0; }
+  .ord-batch-store, .ord-batch-dest .ord-sub{ overflow-wrap:anywhere; text-wrap:pretty; }
   .ord-batch-head{ cursor:pointer; }
   .ord-batch-head:hover{ background:var(--soft, var(--paper)); }
   .ord-batch-head button, .ord-batch-head a{ cursor:pointer; }
@@ -2284,6 +2286,22 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-miss{ color:var(--bad); font-style:italic; }
   .ord-warnline{ color:var(--warn); font-size:12.5px; font-weight:600; }
   .ord-check{ display:flex; align-items:center; gap:var(--s2); font-size:13.5px; margin:var(--s3) 0; cursor:pointer; }
+  /* Mid-width tiles (squarer screens, narrow windows): five columns don't fit,
+     so the buttons drop to a second row and the store gets the room. */
+  @media (min-width:701px){
+    @container ordbatch (max-width:1080px){
+      .ord-batch-head{
+        grid-template-columns:110px minmax(0,1fr) auto;
+        grid-template-areas:"id dest meta" "age btns btns";
+        row-gap:var(--s2); align-items:start;
+      }
+      .ord-batch-id{ grid-area:id; }
+      .ord-batch-dest{ grid-area:dest; }
+      .ord-batch-meta{ grid-area:meta; max-width:240px; }
+      .ord-batch-age{ grid-area:age; text-align:left; align-self:center; }
+      .ord-batch-btns{ grid-area:btns; margin-left:0; justify-content:flex-end; flex-wrap:wrap; }
+    }
+  }
 
   @media (max-width:700px){
     /* Batch number and status left, unit count and shipment right, then the
