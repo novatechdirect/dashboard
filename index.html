@@ -2320,6 +2320,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-trk{ color:var(--accent-fg); text-decoration:none; border-bottom:1px solid var(--accent-line); }
   .ord-trk:hover{ color:var(--accent-hover); border-bottom-color:var(--accent-hover); }
   .ord-trk:focus-visible{ outline:none; box-shadow:var(--ring); border-radius:2px; }
+  .ord-trk-btn{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:999px; font-family:var(--font-ui); font-size:12px; font-weight:600; color:var(--accent-ink); background:var(--accent); text-decoration:none; white-space:nowrap; }
+  .ord-trk-btn:hover{ background:var(--accent-hover); color:var(--accent-ink); }
+  .ord-trk-btn:focus-visible{ outline:none; box-shadow:var(--ring); }
   .ord-trk-plain{ color:var(--ink); border-bottom:1px dotted var(--line-strong); cursor:help; }
   .ord-trk-none{ color:var(--faint); }
   .ord-trk-hint{ color:var(--faint); font-family:var(--font-ui); font-size:11.5px; }
@@ -10350,6 +10353,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (bnx){ const id = bnx.getAttribute('data-bnext'); ordBatchPage[id] = (ordBatchPage[id] || 0) + 1; ordRenderBatches();
       const bd = document.getElementById('ordBatchBody_' + id); if (bd) bd.style.display = ''; return; }
     if (e.target.closest('#ordMergeBtn')){ ordMergeBatchesModal(); return; }
+    const btk = e.target.closest('[data-btrack]');
+    if (btk){ window.open(btk.getAttribute('data-btrack'), '_blank', 'noopener'); return; }
     const bs = bfind('data-bship');  if (bs){ ordMarkShipped(bs); return; }
     const be = bfind('data-bedit');  if (be){ ordEditBatchModal(be); return; }
     const bd = bfind('data-bdel');   if (bd){ ordReturnBatch(bd); return; }
@@ -10899,7 +10904,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   /* Carrier tracking links. Only carriers with a known public URL get linked;
      anything else renders as plain text rather than a guessed link. */
+  function ordIsTrackLink(v){ return /^https?:\/\/\S+$/i.test(String(v || '').trim()); }
   function ordTrackUrl(carrier, num){
+    if (ordIsTrackLink(num)) return String(num).trim();   /* a pasted tracking page, e.g. Uber Freight */
     const n = encodeURIComponent(String(num || '').trim());
     if (!n) return '';
     switch (String(carrier || '').trim().toLowerCase()){
@@ -10917,7 +10924,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (!c) return '';
     const k = c.toLowerCase();
     const slug = k.replace(/[^a-z0-9]+/g, '');
-    const short = k === 'fedex' ? 'FDX' : k === 'freight' ? 'FRT' : k === 'other' ? 'SHIP' : c.toUpperCase();
+    const short = k === 'fedex' ? 'FDX' : k === 'freight' ? 'FRT' : k === 'other' ? 'SHIP' : k === 'uber freight' ? 'UBER' : c.toUpperCase();
     return '<span class="ord-carrier" title="' + esc(c) + '">' +
       '<img src="carriers/' + esc(slug) + '.png" alt="' + esc(c) + '"' +
         ' onload="this.closest(\'.ord-carrier\').classList.add(\'has-logo\')"' +
@@ -10936,6 +10943,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (!list.length) return '<span class="ord-trk-none">\u2014</span>';
     return list.map(function(n){
       const url = ordTrackUrl(carrier, n);
+      if (ordIsTrackLink(n)) return '<a class="ord-trk-btn" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(url) + '">Track \u2197</a>';
       return url
         ? '<a class="ord-trk" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(n) + '</a>'
         : '<span class="ord-trk-plain" title="Set a carrier on this batch to link the number">' + esc(n) + '</span>';
@@ -10984,7 +10992,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const units = ordBatchUnits(b.id);
       const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; });
       const perUnit = {}; tk.forEach(function(t){ if (t.unit_id) perUnit[t.unit_id] = t.tracking_no; });
-      const batchWide = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
+      const batchWideAll = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
+      const trackLink = batchWideAll.find(ordIsTrackLink) || '';
+      const batchWide = batchWideAll.filter(function(n){ return !ordIsTrackLink(n); });
       const shipped = b.status === 'shipped';
       return '<div class="ord-batch" data-bid="' + esc(b.id) + '">' +
         '<div class="ord-batch-head" title="Click for serials and tracking">' +
@@ -11013,6 +11023,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
               '<span>' + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not shipped') + '</span></div>' +
           '</div>' +
           '<div class="ord-batch-btns">' +
+            (trackLink ? '<button class="primary btn-sm" data-btrack="' + esc(trackLink) + '" type="button" title="' + esc(trackLink) + '">Track \u2197</button>' : '') +
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
             '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
             (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
@@ -11142,7 +11153,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
           '<div class="field"><label for="ordBCarrier">Carrier</label>' +
             '<select id="ordBCarrier">' +
-              ['UPS','FedEx','USPS','Freight','Other'].map(function(c){
+              ['UPS','FedEx','USPS','Uber Freight','Freight','Other'].map(function(c){
                 return '<option' + (c === 'UPS' ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
               '<option value="">\u2014 none \u2014</option>' +
             '</select></div>' +
@@ -11160,7 +11171,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<div id="ordTrkPreview" class="ord-trk-preview"></div>' +
         '</div>' +
         '<div id="ordTrkBatch" style="display:none;">' +
-          '<input id="ordTrkOne" type="text" placeholder="One tracking number for the pallet" autocomplete="off">' +
+          '<input id="ordTrkOne" type="text" placeholder="One tracking number, or paste a tracking link (e.g. Uber Freight)" autocomplete="off">' +
         '</div>' +
         '<div class="err" id="ordBErr" style="margin-top:var(--s3);"></div>' +
       '</div>' +
@@ -11407,7 +11418,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="ord-cfg-grid" style="margin-top:var(--s3);">' +
           '<div class="field"><label for="ordBCarrier">Carrier</label>' +
             '<select id="ordBCarrier"><option value="">\u2014</option>' +
-            ['UPS','FedEx','USPS','Freight','Other'].map(function(c){
+            ['UPS','FedEx','USPS','Uber Freight','Freight','Other'].map(function(c){
               return '<option' + (b.carrier === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
             '</select></div>' +
           '<div class="field"><label for="ordBDate">Ship date</label>' +
@@ -11425,7 +11436,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<div id="ordTrkPreview" class="ord-trk-preview"></div>' +
         '</div>' +
         '<div id="ordTrkBatch"' + (wasPerUnit ? ' style="display:none;"' : '') + '>' +
-          '<input id="ordTrkOne" type="text" autocomplete="off" placeholder="One tracking number for the pallet" value="' + esc(batchWide[0] || '') + '">' +
+          '<input id="ordTrkOne" type="text" autocomplete="off" placeholder="One tracking number, or paste a tracking link (e.g. Uber Freight)" value="' + esc(batchWide[0] || '') + '">' +
         '</div>' +
         '<p class="muted-sm">Saving replaces the tracking on this batch. Leave it empty to clear it.</p>' +
         '<div class="err" id="ordBErr" style="margin-top:var(--s3);"></div>' +
