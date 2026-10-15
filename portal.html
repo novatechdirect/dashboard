@@ -494,17 +494,39 @@
   .bch-tot b{ color:var(--ink); font-variant-numeric:tabular-nums; }
   .bchart-bar{ width:100%; max-width:34px; background:var(--accent); border-radius:var(--r-sm) var(--r-sm) 0 0; min-height:2px; }
   .btabs{ display:flex; gap:var(--s2); }
-  .binv{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s2); overflow:hidden; background:var(--paper); }
+  .binv{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s2); overflow:hidden; background:var(--paper); container-type:inline-size; }
+  /* one fixed track per figure, so every row lines up and the bar gets real width */
   .binv-h{
-    display:grid; grid-template-columns:minmax(0,1.5fr) 96px repeat(2, minmax(max-content,1fr)) auto;
-    gap:var(--s3) var(--s4); align-items:center; padding:var(--s4); cursor:pointer;
+    display:grid; grid-template-columns:minmax(150px,1.1fr) minmax(120px,1fr) 128px 128px 104px;
+    gap:var(--s3) var(--s5); align-items:center; padding:var(--s4) var(--s4b, var(--s5)); cursor:pointer;
     transition:background var(--t);
   }
+  .binv-h > :last-child{ justify-self:end; }
+  @container (max-width:720px){
+    .binv-h{ grid-template-columns:minmax(130px,1fr) minmax(64px,120px) 104px 88px; gap:var(--s3) var(--s4); }
+    .binv-n.hide-sm{ display:none; }
+  }
+  @container (max-width:460px){
+    .binv-h{ grid-template-columns:minmax(0,1fr) auto; padding:var(--s3) var(--s4); }
+    .binv-h > .binv-n{ display:none; }
+    .binv-m-wrap{ grid-column:1 / -1; grid-row:2; }
+  }
+  /* payment state: green settled, yellow part paid, amber nothing in yet, red late */
+  .bst{
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+    font-size:12px; font-weight:600; color:var(--ink);
+  }
+  .bst::before{ content:""; width:8px; height:8px; border-radius:50%; background:var(--bst, var(--stone)); flex:0 0 auto; }
+  .bst.paid{ --bst:var(--ok); }
+  .bst.part{ --bst:#e6b800; }
+  .bst.open{ --bst:var(--warn); }
+  .bst.late{ --bst:var(--bad); }
   .binv.open{ border-color:var(--line-strong); box-shadow:var(--e1); }
   /* how much of this invoice is settled, at a glance */
-  .binv-m{ height:6px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; }
+  .binv-m{ height:6px; border-radius:var(--r-pill); background:var(--line); box-shadow:inset 0 0 0 1px var(--line-strong); overflow:hidden; }
   .binv-m i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--ok); }
   .binv-m.full i{ background:var(--ok); }
+  .binv-m.part i{ background:#e6b800; }
   .binv-m.late i{ background:var(--bad); }
   .binv-mp{ margin-top:3px; font-size:10.5px; color:var(--faint); font-variant-numeric:tabular-nums; }
   .binv-h:hover{ background:var(--soft); }
@@ -526,16 +548,10 @@
   .bdoc-n{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
   .bdoc-m{ color:var(--muted); font-size:12px; white-space:nowrap; }
   .bacts{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s4); }
-  @media (max-width:860px){
-    .binv-h{ grid-template-columns:minmax(0,1fr) 88px auto; }
-    .binv-n.hide-sm{ display:none; }
-  }
   @media (max-width:560px){
     .bagekey{ gap:var(--s3) var(--s4); }
     .bch-y{ display:none; }
     .bch{ grid-template-columns:minmax(0,1fr); }
-    .binv-h{ grid-template-columns:minmax(0,1fr) auto; padding:var(--s3) var(--s4); }
-    .binv-m-wrap{ display:none; }
   }
 
   /* ---------- RMAs ---------- */
@@ -3237,7 +3253,7 @@
     const b = +n || 0; if (!b) return '';
     return b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
   }
-  const BILL_CHIP = { paid:'ok', overdue:'bad', 'part paid':'warn', open:'', unpriced:'' };
+  const BILL_CHIP = { paid:'paid', overdue:'late', 'part paid':'part', open:'open', unpriced:'' };
 
   /* Axis figures want to be short: $187k reads at a glance where $187,225.00
      just makes the reader count digits. */
@@ -3408,13 +3424,13 @@
                 const pct = tot > 0 ? Math.min(100, Number(r.paid || 0) / tot * 100) : 0;
                 const full = tot > 0 && Number(r.balance || 0) <= 0.005;
                 return '<div class="binv-m-wrap">' +
-                  '<div class="binv-m' + (full ? ' full' : r.days_late > 0 ? ' late' : '') + '">' +
+                  '<div class="binv-m' + (full ? ' full' : r.days_late > 0 ? ' late' : pct > 0 ? ' part' : '') + '">' +
                     '<i style="width:' + (tot > 0 ? pct.toFixed(1) : 0) + '%"></i></div>' +
                   '<div class="binv-mp">' + (tot > 0 ? Math.round(pct) + '% paid' : 'not priced') + '</div></div>';
               })() +
               '<div class="binv-n hide-sm"><b>' + bmoney(r.invoice_total) + '</b><span>invoiced</span></div>' +
               '<div class="binv-n"><b>' + (r.invoice_total == null ? '\u2014' : bmoney(r.balance)) + '</b><span>balance</span></div>' +
-              '<div><span class="chip ' + chip + '">' + esc(r.state) + '</span></div>' +
+              '<div><span class="bst ' + chip + '">' + esc(({ paid:'Paid', 'part paid':'Part paid', open:'Not paid', overdue:'Overdue', unpriced:'Not priced' })[r.state] || r.state) + '</span></div>' +
             '</div>' +
             (isOpen
               ? '<div class="binv-b' + (String(billFresh) === String(r.order_id) ? ' fresh' : '') + '">' +
