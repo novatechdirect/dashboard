@@ -10349,6 +10349,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const bnx = e.target.closest('[data-bnext]');
     if (bnx){ const id = bnx.getAttribute('data-bnext'); ordBatchPage[id] = (ordBatchPage[id] || 0) + 1; ordRenderBatches();
       const bd = document.getElementById('ordBatchBody_' + id); if (bd) bd.style.display = ''; return; }
+    if (e.target.closest('#ordMergeBtn')){ ordMergeBatchesModal(); return; }
     const bs = bfind('data-bship');  if (bs){ ordMarkShipped(bs); return; }
     const be = bfind('data-bedit');  if (be){ ordEditBatchModal(be); return; }
     const bd = bfind('data-bdel');   if (bd){ ordReturnBatch(bd); return; }
@@ -10975,7 +10976,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
     const cfgs = {}; ordConfigs.forEach(function(c){ cfgs[c.id] = c.name; });
-    host.innerHTML = ordBatches.map(function(b){
+    const openCount = ordBatches.filter(function(b){ return b.status !== 'shipped'; }).length;
+    host.innerHTML = (ordPerm.manage && openCount >= 2
+      ? '<div style="display:flex;justify-content:flex-end;margin:0 0 var(--s3);"><button class="ghost btn-sm" id="ordMergeBtn" type="button" title="Combine open batches into one">Merge batches</button></div>'
+      : '') + ordBatches.map(function(b){
       const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
       const units = ordBatchUnits(b.id);
       const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; });
@@ -11264,6 +11268,106 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       } catch(e){
         this.disabled = false; this.textContent = 'Create batch of ' + ordNum(sel.length);
         err.textContent = e.message || 'Could not create the batch.';
+      }
+    });
+  }
+
+  /* ---- merge open batches into one ----
+     Units move to the kept batch with their serials and status untouched.
+     Per-unit tracking moves with its unit. A merged batch's batch-wide
+     tracking becomes per-unit tracking on each of its units, so it still
+     covers exactly the machines it covered before. The emptied batches are
+     deleted. */
+  function ordMergeBatchesModal(){
+    const open = ordBatches.filter(function(b){ return b.status !== 'shipped'; });
+    if (open.length < 2){ toast('You need at least two open batches to merge.', 'warn'); return; }
+    const row = function(b){
+      const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
+      const n = ordBatchUnits(b.id).length;
+      return '<div style="display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:var(--s3);align-items:center;padding:10px 0;border-top:1px solid var(--line);">' +
+        '<input type="checkbox" data-mpick="' + esc(b.id) + '" aria-label="Include batch ' + b.batch_no + '">' +
+        '<label style="display:flex;align-items:center;gap:6px;white-space:nowrap;" title="Keep this batch; the others merge into it"><input type="radio" name="ordMKeep" value="' + esc(b.id) + '"> Keep</label>' +
+        '<div style="min-width:0;"><b>Batch ' + b.batch_no + '</b> <span class="muted-sm">' + esc(ordLocName(loc)) + (ordLocNum(loc) ? ' \u00b7 Store ' + esc(ordLocNum(loc)) : '') + '</span></div>' +
+        '<span class="ord-mono">' + ordNum(n) + ' unit' + (n === 1 ? '' : 's') + '</span>' +
+      '</div>';
+    };
+    const bg = mgModal(
+      mgModalHead('Merge batches', 'Tick the batches to combine, then pick the one to keep') +
+      '<div class="mg-modal-body">' +
+        '<div style="border-bottom:1px solid var(--line);">' + open.map(row).join('') + '</div>' +
+        '<p class="muted-sm" id="ordMSum" style="margin:var(--s3) 0 0;"></p>' +
+        '<p class="muted-sm" style="margin:var(--s2) 0 0;">Units keep their serial numbers and tracking. The kept batch\u2019s destination, carrier and ship date apply to all of them. Shipped batches can\u2019t be merged.</p>' +
+        '<div class="err" id="ordMErr" style="margin-top:var(--s3);"></div>' +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="ordMCancel">Cancel</button>' +
+      '<button class="primary" id="ordMGo" data-primary disabled>Merge</button></div>', true);
+
+    const picks = function(){ return Array.from(bg.querySelectorAll('[data-mpick]:checked')).map(function(c){ return c.getAttribute('data-mpick'); }); };
+    function sync(e){
+      const t = e && e.target;
+      if (t && t.name === 'ordMKeep'){ const c = bg.querySelector('[data-mpick="' + t.value + '"]'); if (c) c.checked = true; }
+      let ids = picks();
+      let keep = bg.querySelector('[name="ordMKeep"]:checked');
+      if (keep && ids.indexOf(keep.value) < 0){ keep.checked = false; keep = null; }
+      if (!keep && ids.length){
+        /* default to the lowest-numbered ticked batch */
+        const first = open.filter(function(b){ return ids.indexOf(b.id) >= 0; })[0];
+        keep = bg.querySelector('[name="ordMKeep"][value="' + first.id + '"]'); keep.checked = true;
+      }
+      const kb = keep ? open.find(function(b){ return b.id === keep.value; }) : null;
+      const others = open.filter(function(b){ return ids.indexOf(b.id) >= 0 && (!kb || b.id !== kb.id); });
+      const units = open.filter(function(b){ return ids.indexOf(b.id) >= 0; }).reduce(function(a, b){ return a + ordBatchUnits(b.id).length; }, 0);
+      const go = bg.querySelector('#ordMGo');
+      go.disabled = !(kb && others.length);
+      go.textContent = (kb && others.length) ? 'Merge into batch ' + kb.batch_no : 'Merge';
+      bg.querySelector('#ordMSum').textContent = (kb && others.length)
+        ? 'Batch' + (others.length === 1 ? ' ' : 'es ') + others.map(function(b){ return b.batch_no; }).join(', ') + ' \u2192 batch ' + kb.batch_no + ' \u00b7 ' + ordNum(units) + ' units in total'
+        : 'Tick at least two batches.';
+    }
+    bg.addEventListener('change', sync);
+    sync();
+    bg.querySelector('#ordMCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#ordMGo').addEventListener('click', async function(){
+      const err = bg.querySelector('#ordMErr'); err.textContent = '';
+      const keepId = (bg.querySelector('[name="ordMKeep"]:checked') || {}).value;
+      const kb = open.find(function(b){ return b.id === keepId; });
+      const srcs = open.filter(function(b){ return picks().indexOf(b.id) >= 0 && b.id !== keepId; });
+      if (!kb || !srcs.length) return;
+      this.disabled = true; this.textContent = 'Merging\u2026';
+      try {
+        let moved = 0;
+        for (const s of srcs){
+          /* batch-wide tracking on the source becomes per-unit before its units leave */
+          const tk = ordTracking.filter(function(t){ return t.batch_id === s.id; });
+          const hasOwn = {}; tk.forEach(function(t){ if (t.unit_id) hasOwn[t.unit_id] = true; });
+          const wide = tk.filter(function(t){ return !t.unit_id; });
+          if (wide.length){
+            const rows = [];
+            ordBatchUnits(s.id).forEach(function(u){ if (!hasOwn[u.id]) rows.push({ batch_id: kb.id, tracking_no: wide[0].tracking_no, unit_id: u.id }); });
+            if (rows.length){ const ins = await SB.from('batch_tracking').insert(rows); if (ins.error) throw ins.error; }
+            const dw = await SB.from('batch_tracking').delete().eq('batch_id', s.id).is('unit_id', null);
+            if (dw.error) throw dw.error;
+          }
+          const mt = await SB.from('batch_tracking').update({ batch_id: kb.id }).eq('batch_id', s.id);
+          if (mt.error) throw mt.error;
+          const mu = await SB.from('pc_log').update({ batch_id: kb.id }).eq('batch_id', s.id).select('id');
+          if (mu.error) throw mu.error;
+          moved += (mu.data || []).length;
+          const left = await SB.from('pc_log').select('id', { count: 'exact', head: true }).eq('batch_id', s.id);
+          if (left.error) throw left.error;
+          if (left.count) throw new Error('Batch ' + s.batch_no + ' still has units in it, so it was not deleted.');
+          const d = await SB.from('batches').delete().eq('id', s.id).select('id');
+          if (d.error) throw d.error;
+          if (!(d.data || []).length) throw new Error('Units moved, but batch ' + s.batch_no + ' could not be deleted. Your account may lack delete permission on batches.');
+        }
+        mgCloseModal();
+        toast('Merged ' + ordNum(moved) + ' unit' + (moved === 1 ? '' : 's') + ' into batch ' + kb.batch_no, 'ok', 5000);
+        await ordOpenOrder(ordCurrentId);
+        requestAnimationFrame(function(){ ordFocusBatch(kb.id); });
+      } catch(e){
+        err.textContent = (e.message || 'Could not merge.') + ' Reopening the order shows what was merged so far.';
+        this.textContent = 'Merge';
+        await ordOpenOrder(ordCurrentId);
       }
     });
   }
