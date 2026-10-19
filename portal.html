@@ -2544,13 +2544,11 @@
     SB.auth.onAuthStateChange(function(_e, s){
       const uid = s && s.user ? s.user.id : null;
       session = s;
-      liveRtSync();
       applyAccountTheme(s);
       if (uid === authUid) return;
       authUid = uid; render();
     });
     render();
-    liveRtSync();
   }
   async function render(){
     /* the answer is in: stop holding the frame and remember it for next time */
@@ -2754,13 +2752,13 @@
       else toast('That RMA is not on your account.', 'bad', 6000);
     }
   }
-  /* Live refresh. Every 30 seconds while the tab is on screen, and on coming
+  /* Live refresh. Every 10 seconds while the tab is on screen, and on coming
      back to it, everything is re-read; only when something differs is the
      same screen redrawn in place, with open batches, scroll, the focused
      search box and drafts kept. It never redraws under someone mid-edit: a
      focused field, an open dialog, a chosen file, selected text or input in
      the last few seconds waits for the next check. */
-  const LIVE_MS = 30000;
+  const LIVE_MS = 10000;
   let liveInputAt = 0, livePending = false, liveTimer = null;
   ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){
     document.addEventListener(ev, function(){ liveInputAt = Date.now(); }, { capture:true, passive:true });
@@ -2847,7 +2845,6 @@
     return true;
   }
   async function softRefresh(){
-    liveRtSync();
     if (refreshing){ if (liveHint) liveHintSoon(); return; }
     if (!session || !me || !dataAt || document.visibilityState !== 'visible') return;
     if (liveBusy()){ if (liveHint || livePending) liveHintSoon(3000); return; }
@@ -2883,50 +2880,8 @@
     liveHintT = setTimeout(function(){ liveHintT = null; softRefresh(); }, Math.max(ms || 600, (gap || 2000) - (Date.now() - liveLastTick)));
   }
 
-  /* Live notifications (supabase/realtime-on.sql). A change only brings the
-     next check forward; the check is the same one the timer runs. The
-     database sends a customer only changes to rows they can already read, so
-     another customer's activity never reaches this tab. One schema-wide
-     subscription, so a table that is not switched on sends nothing instead of
-     failing the connection. While connected the timer slows to every 2
-     minutes as a backstop; after a dropped connection it checks at once.
-     Three failures in a row and it stays on the 30-second timer. */
-  var LIVE_TABLES = ['orders', 'order_lines', 'batches', 'batch_tracking', 'pc_log', 'customers', 'configs',
-    'ship_to_locations', 'order_payments', 'order_customer_docs', 'rma_tickets', 'rma_parts', 'rma_shipments',
-    'rma_comments', 'rma_attachments', 'rma_events', 'customer_contacts'];
-  var liveChan = null, liveRtOk = false, liveRtDown = false, liveRtErr = 0, liveRtGaveUp = false, liveRtUid = null;
-  function liveRtSync(){
-    var uid = session && session.user ? session.user.id : null;
-    var want = !!(SB_LIVE && uid && !DEMO.on && typeof SB_LIVE.channel === 'function');
-    if (liveChan && (!want || uid !== liveRtUid)) liveRtStop();
-    if (want && !liveChan && !liveRtGaveUp) liveRtStart(uid);
-  }
-  function liveRtStart(uid){
-    liveRtUid = uid; liveRtOk = false; liveRtDown = false;
-    var ch = SB_LIVE.channel('nt-portal-' + Math.random().toString(36).slice(2));
-    liveChan = ch;
-    ch.on('postgres_changes', { event:'*', schema:'public' }, function(m){
-      if (liveChan !== ch || !m) return;
-      if (LIVE_TABLES.indexOf(m.table) >= 0){ liveHint = true; liveHintSoon(600, m.table === 'pc_log' ? 10000 : 2000); }
-    }).subscribe(function(status){
-      if (liveChan !== ch) return;
-      if (status === 'SUBSCRIBED'){
-        liveRtErr = 0; liveRtOk = true;
-        if (liveRtDown){ liveRtDown = false; liveSoon(500); }
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
-        liveRtOk = false; liveRtDown = true;
-        if (++liveRtErr >= 3){ liveRtGaveUp = true; liveRtStop(); }
-      }
-    });
-  }
-  function liveRtStop(){
-    var ch = liveChan; liveChan = null; liveRtOk = false;
-    if (ch){ try { SB_LIVE.removeChannel(ch); } catch(e){} }
-  }
-  window.ntLiveStatus = function(){ return { connected: liveRtOk, gaveUp: liveRtGaveUp, lastCheck: liveLastTick ? new Date(liveLastTick).toLocaleTimeString() : null }; };
+  window.ntLiveStatus = function(){ return { lastCheck: liveLastTick ? new Date(liveLastTick).toLocaleTimeString() : null }; };
   setInterval(function(){
-    liveRtSync();
-    if (liveRtOk && Date.now() - liveLastTick < 120000) return;
     softRefresh();
   }, LIVE_MS);
   document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') liveSoon(400); });

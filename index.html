@@ -5368,7 +5368,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     SB.auth.onAuthStateChange(function(_ev, s){
       const uid = s && s.user ? s.user.id : null;
       session = s;
-      liveRtSync();
       /* TOKEN_REFRESHED fires roughly hourly, and SIGNED_IN fires again when
          the tab regains focus. Re-booting on those reset the whole app to
          Home mid-task. Only a change of who is signed in needs a re-render. */
@@ -5379,7 +5378,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
     renderAuth();
     if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
-    liveRtSync();
   }
 
   /* This browser's last choice wins. The account copy only seeds a device that
@@ -14609,13 +14607,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   })();
 
   /* ================= LIVE REFRESH =================
-     While a page is open, every 30 seconds (and on coming back to the tab)
+     While a page is open, every 10 seconds (and on coming back to the tab)
      a light probe of its tables is compared with the last one. Only a real
      difference redraws the page, in place: scroll, open batches, the focused
      search box and anything typed in a reply box are kept. It never redraws
      under someone mid-edit: a focused field, an open dialog, a chosen file,
      selected text or input in the last few seconds waits for the next check. */
-  var LIVE_MS = 30000, liveSig = {}, liveRunning = false, liveInputAt = 0, liveTimer = null;
+  var LIVE_MS = 10000, liveSig = {}, liveRunning = false, liveInputAt = 0, liveTimer = null;
   ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){
     document.addEventListener(ev, function(){ liveInputAt = Date.now(); }, { capture:true, passive:true });
   });
@@ -14775,7 +14773,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      for the starting point. */
   function liveRebase(k){ if (!liveSig) return; delete liveSig[k]; liveSoon(300); }
   async function liveTick(){
-    liveRtSync();
     if (liveRunning){ if (liveHint) liveHintSoon(); return; }
     if (!SB || !session || document.visibilityState !== 'visible') return;
     var act = liveActive(); if (!act) return;
@@ -14819,64 +14816,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     liveHintT = setTimeout(function(){ liveHintT = null; liveTick(); }, Math.max(ms || 600, (gap || 2000) - (Date.now() - liveLastTick)));
   }
 
-  /* Live notifications (supabase/realtime-on.sql). A change on a table the
-     open page shows only brings the next check forward: the check itself, with
-     its busy guard and compare, is the one the timer runs, so there is no
-     second way to redraw. Notifications obey the same read rules as queries.
-     One schema-wide subscription, so a table that is not switched on simply
-     sends nothing instead of failing the whole connection. While connected the
-     timer slows to every 2 minutes as a backstop; after a dropped connection
-     it checks at once for anything missed. Three failures in a row and it
-     stays on the 30-second timer until the page is reloaded. */
-  var LIVE_ORD_T = ['orders', 'order_lines', 'batches', 'batch_tracking', 'pc_log', 'customers', 'configs', 'order_payments'];
-  var LIVE_TABLES = {
-    home: LIVE_ORD_T, orders: LIVE_ORD_T,
-    inventory: ['inv_items', 'inv_moves'],
-    timeclock: ['tc_employees', 'tc_hours', 'tc_pay_rates'],
-    margins: ['margin_channels', 'product_lines', 'builds', 'build_components'],
-    billing: ['orders', 'order_lines', 'order_payments'],
-    rma: ['rma_tickets', 'rma_parts', 'rma_shipments', 'rma_comments', 'rma_attachments', 'rma_events', 'customer_contacts']
-  };
-  var liveChan = null, liveRtOk = false, liveRtDown = false, liveRtErr = 0, liveRtGaveUp = false, liveRtUid = null;
-  function liveRtSync(){
-    var uid = session && session.user ? session.user.id : null;
-    var want = !!(SB_LIVE && uid && !DEMO.on && typeof SB_LIVE.channel === 'function');
-    if (liveChan && (!want || uid !== liveRtUid)) liveRtStop();
-    if (want && !liveChan && !liveRtGaveUp) liveRtStart(uid);
-  }
-  function liveRtStart(uid){
-    liveRtUid = uid; liveRtOk = false; liveRtDown = false;
-    var ch = SB_LIVE.channel('nt-admin-' + Math.random().toString(36).slice(2));
-    liveChan = ch;
-    ch.on('postgres_changes', { event:'*', schema:'public' }, function(m){
-      if (liveChan !== ch || !m) return;
-      var act = liveActive();
-      liveNote('notified: ' + m.table + (act ? ' (on ' + act.page + ')' : ''));
-      if (act && (LIVE_TABLES[act.page] || []).indexOf(m.table) >= 0){ liveHint = true; liveHintSoon(600, m.table === 'pc_log' ? 10000 : 2000); }
-    }).subscribe(function(status){
-      if (liveChan !== ch) return;
-      if (status === 'SUBSCRIBED'){
-        liveRtErr = 0; liveRtOk = true;
-        if (liveRtDown){ liveRtDown = false; liveSoon(500); }
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
-        liveRtOk = false; liveRtDown = true;
-        if (++liveRtErr >= 3){ liveRtGaveUp = true; liveRtStop(); }
-      }
-    });
-  }
-  function liveRtStop(){
-    var ch = liveChan; liveChan = null; liveRtOk = false;
-    if (ch){ try { SB_LIVE.removeChannel(ch); } catch(e){} }
-  }
   window.ntLiveStatus = function(){
     var a = liveActive();
-    return { connected: liveRtOk, gaveUp: liveRtGaveUp, page: a ? a.page : null,
+    return { page: a ? a.page : null,
       waitingFor: a ? (liveBusyWhy(a.root, a.page) || null) : null,
       lastCheck: liveLastTick ? new Date(liveLastTick).toLocaleTimeString() : null, log: liveLog.slice() };
   };
   setInterval(function(){
-    liveRtSync();
-    if (liveRtOk && Date.now() - liveLastTick < 120000) return;
     liveTick();
   }, LIVE_MS);
   /* coming back to the tab: check at once rather than after a pause */
