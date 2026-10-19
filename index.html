@@ -4627,10 +4627,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         </div>
       </div>
     </header>
+    <div class="mg-kpis" id="mgKpis"></div>
     <section class="card">
       <div class="mg-pills" id="mgChannelBar"></div>
     </section>
-    <div class="mg-kpis" id="mgKpis"></div>
     <div class="mg-actions" id="mgActions">
       <button class="ghost btn-sm" id="mgCompareBtn">Compare</button>
       <button class="primary btn-sm" id="mgAddBtn">+ Add build</button>
@@ -5528,7 +5528,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (which === 'orders' && SB && session){ ordOpen(); }
     if (which === 'admin' && SB && session){ admOpen(); }
     if (which === 'rma' && SB && session){ rmaOpen(); }
-    liveSoon();
+    liveSoon(1200);
+    try { mgRenderBar(); } catch(e){}
     if (which === 'home'){
       renderHomeBars(); renderHomeDonut();
       if (window.ntCountUp) window.ntCountUp(document.getElementById('statBldVal'));
@@ -6075,6 +6076,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     renderInventory();
     if (silent) return loadInvMoves(true);
     loadInvMoves();
+    liveRebase('inventory');
   }
 
   function invByName(n){ return invItems.find(function(it){ return it.name === n; }); }
@@ -6527,6 +6529,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (tcIsAdmin){ initPeriodSelect(); renderTcSummary(); renderTcTeam(); }
     tcApplyView();
     renderHomeStatus();
+    if (silent !== true) liveRebase('timeclock');
   }
 
   function renderTcMine(){
@@ -6934,18 +6937,75 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (b) b.innerHTML = '<div class="skel-card"><div class="skel skel-line w40"></div><div class="skel skel-line w80" style="margin-top:14px;"></div><div class="skel skel-line w60"></div></div>'.repeat(3);
   }
   async function mgLoad(silent){
-    if (silent !== true) mgSkeleton();
+    silent = silent === true;
+    if (!silent) mgSkeleton();
     const res = await Promise.all([
       SB.from('margin_channels').select('*').order('created_at'),
       SB.from('product_lines').select('*').order('created_at'),
       SB.from('builds').select('*').order('created_at'),
       SB.from('build_components').select('*').order('position')
     ]);
+    if (silent){
+      if (res.some(function(r){ return r.error; })) return;
+      /* an edit started while this was in flight: keep it, load theirs later */
+      if (mgDirty() || mgSaving){ mgRemoteWaiting = true; mgRenderBar(); return; }
+    }
     mgChannels = res[0].data || []; mgLines = res[1].data || [];
     mgBuilds = res[2].data || []; mgComps = res[3].data || [];
+    mgHasChCol = mgBuilds.some(function(b){ return 'channel_id' in b; });
+    mgBase = mgSnap(); mgRemoteWaiting = false;
     if (!mgChannels.some(function(c){ return c.id === mgChannelId; })) mgChannelId = mgChannels.length ? mgChannels[0].id : 'amazon';
     mgRenderAll();
+    if (!silent) liveRebase('margins');
   }
+
+  /* Save / Discard. mgBase is the last copy known to be on the server. Edits
+     change only the arrays in memory, and Save sends just the fields that
+     differ, so a teammate's change to another field or build is never
+     written over. Each write that succeeds is folded into mgBase at once, so
+     a save that half fails can simply be retried. */
+  let mgBase = null, mgHasChCol = false, mgSaving = false, mgRemoteWaiting = false, mgTmpSeq = 0;
+  function mgCopy(x){ return JSON.parse(JSON.stringify(x)); }
+  function mgSnap(){ return { ch: mgCopy(mgChannels), b: mgCopy(mgBuilds), c: mgCopy(mgComps) }; }
+  function mgBaseAdd(k, rows){ if (mgBase) (rows || []).forEach(function(r){ mgBase[k].push(mgCopy(r)); }); }
+  function mgBaseDropBuild(id){
+    if (!mgBase) return;
+    mgBase.b = mgBase.b.filter(function(x){ return x.id !== id; });
+    mgBase.c = mgBase.c.filter(function(c){ return c.build_id !== id; });
+  }
+  function mgNum(v){ return v == null || v === '' ? null : +v; }
+  function mgChanges(){
+    var out = { ch: [], b: [], cUp: [], cAdd: [], cDel: [] };
+    if (!mgBase) return out;
+    mgChannels.forEach(function(c){
+      var o = mgBase.ch.find(function(x){ return x.id === c.id; }); if (!o) return;
+      var p = {};
+      ['fee_pct', 'fba_fee_pct', 'fba_ship'].forEach(function(f){ if (mgNum(c[f]) !== mgNum(o[f])) p[f] = mgNum(c[f]); });
+      if (Object.keys(p).length) out.ch.push({ id: c.id, patch: p });
+    });
+    mgBuilds.forEach(function(b){
+      var o = mgBase.b.find(function(x){ return x.id === b.id; }); if (!o) return;
+      var p = {};
+      if (mgNum(b.sale_price) !== mgNum(o.sale_price)) p.sale_price = +b.sale_price || 0;
+      if (mgHasChCol && (b.channel_id || null) !== (o.channel_id || null)) p.channel_id = b.channel_id || null;
+      if (Object.keys(p).length) out.b.push({ id: b.id, patch: p });
+    });
+    var live = {}; mgBuilds.forEach(function(b){ live[b.id] = 1; });
+    var cur = {}; mgComps.forEach(function(c){ cur[String(c.id)] = c; });
+    mgBase.c.forEach(function(o){
+      var c = cur[String(o.id)];
+      if (!c){ if (live[o.build_id]) out.cDel.push(o.id); return; }
+      var p = {};
+      if ((c.name || '') !== (o.name || '')) p.name = c.name || '';
+      if (mgNum(c.cost) !== mgNum(o.cost)) p.cost = +c.cost || 0;
+      if (mgNum(c.position) !== mgNum(o.position)) p.position = +c.position || 0;
+      if (Object.keys(p).length) out.cUp.push({ id: o.id, patch: p });
+    });
+    mgComps.forEach(function(c){ if (/^tmp-/.test(String(c.id)) && live[c.build_id]) out.cAdd.push(mgCopy(c)); });
+    return out;
+  }
+  function mgCount(ch){ return ch.ch.length + ch.b.length + ch.cUp.length + ch.cAdd.length + ch.cDel.length; }
+  function mgDirty(){ return !!mgBase && mgCount(mgChanges()) > 0; }
 
   function mgCh(){ return mgChannels.find(function(c){ return c.id === mgChannelId; }) || mgChannels[0] || { id: '', name: '', fee_pct: 0 }; }
   function mgIsFba(){ return mgCh().id === 'amazon' && mgAmazonMode === 'fba'; }
@@ -6953,16 +7013,40 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function mgFbaShip(){ const c = mgCh(); return +(c.fba_ship == null ? 10 : c.fba_ship); }
   function mgChName(){ const c = mgCh(); return c.name + (c.id === 'amazon' ? (mgIsFba() ? ' FBA' : ' FBM') : ''); }
   function mgIsShip(n){ return /^ship/i.test((n || '').trim()); }
-  function mgItemCost(it){ return (mgIsFba() && mgIsShip(it.name)) ? mgFbaShip() : +(it.cost || 0); }
+  /* Pricing context for a build. Lineup builds follow the channel picked at
+     the top. One-off builds are priced as B2B (no fee) unless their own
+     "Priced as" says otherwise. */
+  function mgIsOneOff(b){ var l = b && mgLines.find(function(x){ return x.id === b.line_id; }); return !!(l && l.category === 3); }
+  function mgCtx(b){
+    if (!mgIsOneOff(b)) return { fee: mgFeePct(), fba: mgIsFba(), ship: mgFbaShip(), name: mgChName() };
+    var v = b.channel_id || '', fba = /:fba$/.test(v), id = v.replace(/:fba$/, '');
+    var c = id && mgChannels.find(function(x){ return x.id === id; });
+    if (!c) return { fee: 0, fba: false, ship: 0, name: 'B2B' };
+    return {
+      fee: fba ? +(c.fba_fee_pct == null ? 13 : c.fba_fee_pct) : +(c.fee_pct || 0),
+      fba: fba, ship: +(c.fba_ship == null ? 10 : c.fba_ship),
+      name: c.name + (c.id === 'amazon' ? (fba ? ' FBA' : ' FBM') : '')
+    };
+  }
+  function mgChOptions(sel){
+    var o = '<option value=""' + (!sel ? ' selected' : '') + '>B2B \u00b7 0% fee</option>';
+    mgChannels.forEach(function(c){
+      var amz = c.id === 'amazon';
+      o += '<option value="' + esc(c.id) + '"' + (sel === c.id ? ' selected' : '') + '>' + esc(c.name) + (amz ? ' FBM' : '') + ' \u00b7 ' + (+c.fee_pct || 0) + '% fee</option>';
+      if (amz) o += '<option value="' + esc(c.id) + ':fba"' + (sel === c.id + ':fba' ? ' selected' : '') + '>' + esc(c.name) + ' FBA \u00b7 ' + (c.fba_fee_pct == null ? 13 : +c.fba_fee_pct) + '% fee</option>';
+    });
+    return o;
+  }
+  function mgItemCost(it, x){ x = x || mgCtx(null); return (x.fba && mgIsShip(it.name)) ? x.ship : +(it.cost || 0); }
   function mgItems(bid){ return mgComps.filter(function(c){ return c.build_id === bid; }); }
   function mgLineBuilds(lid){ return mgBuilds.filter(function(b){ return b.line_id === lid; }); }
   function mgFindBuild(id){ return mgBuilds.find(function(b){ return b.id === id; }); }
   function mgLineOf(b){ return mgLines.find(function(l){ return l.id === b.line_id; }) || { name: '?' }; }
   function mgCalc(b){
-    const price = +(b.sale_price || 0);
-    let comp = 0; mgItems(b.id).forEach(function(it){ comp += mgItemCost(it); });
-    const fee = price * mgFeePct() / 100, cost = comp + fee, profit = price - cost;
-    return { price: price, comp: comp, fee: fee, cost: cost, profit: profit, pct: price ? profit / price * 100 : 0 };
+    const x = mgCtx(b), price = +(b.sale_price || 0);
+    let comp = 0; mgItems(b.id).forEach(function(it){ comp += mgItemCost(it, x); });
+    const fee = price * x.fee / 100, cost = comp + fee, profit = price - cost;
+    return { price: price, comp: comp, fee: fee, cost: cost, profit: profit, pct: price ? profit / price * 100 : 0, ctx: x };
   }
   /* one money rule for the whole tool: always two decimals, sign in front */
   function mgMoney(n){
@@ -7050,16 +7134,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   function mgStat(lbl, val, neg){ return '<span class="mg-stat"><span class="lbl">' + lbl + '</span><span class="val ' + (neg ? 'neg' : 'pos') + '">' + val + '</span></span>'; }
   function mgSumBox(b, c, editable){
-    var fbaNote = (mgIsFba() && mgItems(b.id).some(function(i){ return mgIsShip(i.name); }))
+    var x = c.ctx;
+    var fbaNote = (x.fba && mgItems(b.id).some(function(i){ return mgIsShip(i.name); }))
       ? '<div class="mg-note">' + MG_SVG + '<circle cx="12" cy="12" r="9.2"/><path d="M12 11v5M12 8h.01"/></svg>' +
-        '<span>Shipping counted at ' + mgMoney(mgFbaShip()) + ' \u2014 inbound to the FBA warehouse, not to the customer.</span></div>'
+        '<span>Shipping counted at ' + mgMoney(x.ship) + ' \u2014 inbound to the FBA warehouse, not to the customer.</span></div>'
+      : '';
+    var pricedAs = (editable && mgIsOneOff(b))
+      ? (mgHasChCol
+        ? '<label class="mg-price-lbl" for="mgchs-' + b.id + '" style="margin-top:var(--s3);">Priced as</label>' +
+          '<select class="spec-select" style="height:36px;" id="mgchs-' + b.id + '" data-mgchsel="' + b.id + '">' + mgChOptions(b.channel_id || '') + '</select>'
+        : '<p class="muted-sm" style="margin:var(--s2) 0 0;">Priced as B2B, no fee. Run margins-oneoff-channel.sql to pick another channel.</p>')
       : '';
     return '<div class="mg-sum-box">'
       + (editable
         ? '<label class="mg-price-lbl" for="mgp-' + b.id + '">Sale price</label>' +
-          '<input class="mg-price-inp" id="mgp-' + b.id + '" type="number" step="0.01" data-mgprice="' + b.id + '" value="' + (+b.sale_price) + '">'
+          '<input class="mg-price-inp" id="mgp-' + b.id + '" type="number" step="0.01" data-mgprice="' + b.id + '" value="' + (+b.sale_price) + '">' + pricedAs
         : '<div class="mg-sum-line strong" style="margin-top:0;"><span>Sale price</span><span>' + mgMoney(c.price) + '</span></div>')
-      + '<div class="mg-sum-line"><span>' + esc(mgChName()) + ' fee &middot; ' + mgFeePct() + '%</span><span>' + mgMoney(c.fee) + '</span></div>'
+      + '<div class="mg-sum-line"><span>' + esc(x.name) + ' fee &middot; ' + x.fee + '%</span><span>' + mgMoney(c.fee) + '</span></div>'
       + '<div class="mg-sum-line"><span>Components</span><span>' + mgMoney(c.comp) + '</span></div>'
       + '<div class="mg-sum-line strong top"><span>Total cost</span><span>' + mgMoney(c.cost) + '</span></div>'
       + '<div class="mg-sum-line strong"><span>Profit</span><span style="color:' + (c.profit >= 0 ? 'var(--ok)' : 'var(--bad)') + ';">' + mgMoney(c.profit) + '</span></div>'
@@ -7071,7 +7162,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     var items = mgItems(b.id);
     return '<div class="mg-panel"><div class="col-items"><p class="mg-h">Component breakdown &middot; ' + items.length + ' parts</p>'
       + items.map(function(it){
-          var cst = mgItemCost(it), swapped = mgIsFba() && mgIsShip(it.name);
+          var cst = mgItemCost(it, c.ctx), swapped = c.ctx.fba && mgIsShip(it.name);
           return '<div class="mg-vrow' + (cst > 0 ? '' : ' zero') + (swapped ? ' sub' : '') + '">' +
             '<span class="v-name">' + esc(it.name || '(unnamed)') + (swapped ? ' \u2192 FBA warehouse' : '') + '</span>' +
             '<span class="v-cost">' + mgMoney(cst) + '</span></div>';
@@ -7119,7 +7210,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const shown = open ? ordered : ordered.slice(0, 1);
     return '<section class="card"><div class="mg-line-head">'
       + '<span class="mg-line-name">' + esc(line.name) + '</span>'
-      + (line.category === 3 ? '<span class="mg-chip oneoff">One-off</span>' : '')
+      + (line.category === 3 ? '<span class="mg-chip oneoff">One-off' + (ordered[0] ? ' \u00b7 ' + esc(mgCtx(ordered[0]).name) : '') + '</span>' : '')
       + (bs.length > 1 ? '<button class="mini' + (open ? ' on' : '') + '" style="margin-left:auto;" data-mghist="' + line.id + '" aria-expanded="' + open + '">' + (open ? 'Hide history' : 'History \u00b7 ' + (bs.length - 1)) + '</button>' : '')
       + '</div>'
       + shown.map(function(b){ return mgRowHtml(b, line.category !== 3 && b.id === ordered[0].id); }).join('')
@@ -7161,31 +7252,60 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     el.innerHTML = tileStat(mgPct(avg), 'avg margin on ' + mgChName() + ' \u00b7 ' + cur.length + ' builds');
     el.className = 'tile-status ' + (avg >= MG_TARGET ? 'ok' : 'warn');
   }
+  /* One bottom bar for unsaved changes and for compare mode, shown only on
+     this page. */
   function mgRenderBar(){
     var bar = document.getElementById('mgBar');
-    if (mgCompare) document.body.classList.add('mg-comparing');
-    if (!mgCompare){
+    var dirty = mgIsAdmin && mgDirty();
+    var show = toolMargins.style.display !== 'none' && (mgCompare || dirty);
+    if (!show){
       /* the padding the bar reserves stays until it has finished leaving */
       if (bar && !bar.classList.contains('leaving')){
         bar.removeAttribute('id');
         bar.classList.add('leaving');
         setTimeout(function(){
           bar.remove();
-          document.body.classList.remove('mg-comparing');
+          if (!document.getElementById('mgBar')) document.body.classList.remove('mg-comparing');
         }, 160);
       } else if (!bar){
         document.body.classList.remove('mg-comparing');
       }
       return;
     }
-    if (!bar){ bar = document.createElement('div'); bar.id = 'mgBar'; bar.className = 'mg-bar'; document.body.appendChild(bar); }
-    bar.innerHTML = '<div class="mg-bar-inner">'
-      + '<span class="mg-bar-count"><span class="n">' + mgSel.length + '/2</span>'
-      + (mgSel.length === 2 ? 'Ready to compare' : 'Select ' + (2 - mgSel.length) + ' more build' + (mgSel.length === 1 ? '' : 's')) + '</span>'
-      + '<button class="primary btn-sm" style="margin-left:auto;" id="mgDoCompare"' + (mgSel.length === 2 ? '' : ' disabled') + '>Compare</button>'
-      + '<button class="ghost btn-sm" id="mgCancelCompare">Cancel</button></div>';
-    bar.querySelector('#mgDoCompare').addEventListener('click', mgShowCompare);
-    bar.querySelector('#mgCancelCompare').addEventListener('click', function(){ mgCompare = false; mgSel = []; mgRenderAll(); });
+    document.body.classList.add('mg-comparing');
+    if (!bar){
+      bar = document.createElement('div'); bar.id = 'mgBar'; bar.className = 'mg-bar';
+      bar.addEventListener('click', mgBarClick);
+      document.body.appendChild(bar);
+    }
+    /* rebuilt only when what it offers changes: pressing Save blurs a field,
+       which redraws the page, and the click must still land on the button */
+    var key = [dirty, mgSaving, mgRemoteWaiting, mgCompare, mgSel.length].join('|');
+    if (bar.getAttribute('data-k') === key) return;
+    bar.setAttribute('data-k', key);
+    var h = '';
+    if (dirty){
+      h += '<span class="mg-bar-count">Unsaved changes</span>'
+        + (mgRemoteWaiting ? '<span class="muted-sm">A teammate also changed margins. Their edits load once you save or discard.</span>' : '')
+        + '<button class="ghost btn-sm" style="margin-left:auto;" data-mgbar="discard"' + (mgSaving ? ' disabled' : '') + '>Discard</button>'
+        + '<button class="primary btn-sm" data-mgbar="save"' + (mgSaving ? ' disabled' : '') + '>' + (mgSaving ? 'Saving\u2026' : 'Save changes') + '</button>';
+    }
+    if (mgCompare){
+      if (dirty) h += '<span aria-hidden="true" style="width:1px;align-self:stretch;background:var(--line);"></span>';
+      h += '<span class="mg-bar-count"><span class="n">' + mgSel.length + '/2</span>'
+        + (mgSel.length === 2 ? 'Ready to compare' : 'Select ' + (2 - mgSel.length) + ' more build' + (mgSel.length === 1 ? '' : 's')) + '</span>'
+        + '<button class="primary btn-sm"' + (dirty ? '' : ' style="margin-left:auto;"') + ' data-mgbar="compare"' + (mgSel.length === 2 ? '' : ' disabled') + '>Compare</button>'
+        + '<button class="ghost btn-sm" data-mgbar="cancel">Cancel</button>';
+    }
+    bar.innerHTML = '<div class="mg-bar-inner">' + h + '</div>';
+  }
+  function mgBarClick(e){
+    var b = e.target.closest('[data-mgbar]'); if (!b || b.disabled) return;
+    var a = b.getAttribute('data-mgbar');
+    if (a === 'save') mgSave();
+    else if (a === 'discard') mgDiscardAsk();
+    else if (a === 'compare') mgShowCompare();
+    else if (a === 'cancel'){ mgCompare = false; mgSel = []; mgRenderAll(); }
   }
 
   function mgModal(html, wide){
@@ -7237,9 +7357,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     var parts = String(text || '').split(/\n\s*\n/);
     var title = parts[0].trim(), body = parts.slice(1).join(' ').trim();
     var first = (title.match(/^([A-Z][a-z]+)/) || [])[1] || '';
-    var verbs = { Delete:1, Remove:1, Archive:1, Cancel:1, Release:1, Stop:1, Permanently:1, Return:1, Clear:1, Reset:1 };
+    var verbs = { Delete:1, Remove:1, Archive:1, Cancel:1, Release:1, Stop:1, Permanently:1, Return:1, Clear:1, Reset:1, Discard:1 };
     var cta = verbs[first] ? (first === 'Permanently' ? 'Delete' : first) : 'Yes';
-    var danger = /^(Delete|Remove|Permanently|Cancel|Stop|Return)/.test(first);
+    var danger = /^(Delete|Remove|Permanently|Cancel|Stop|Return|Discard)/.test(first);
     return new Promise(function(resolve){
       var bg = mgModal(
         mgModalHead(esc(title), '') +
@@ -7273,7 +7393,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       function line(lbl, val, style){ return '<div class="mg-sum-line"><span>' + lbl + '</span><b' + (style ? ' style="' + style + '"' : '') + '>' + val + '</b></div>'; }
       return '<div class="mg-cmp-col' + (idx === win ? ' win' : '') + '">'
         + '<div class="c-name">' + esc(x.l.name) + '</div>'
-        + '<div class="c-meta">' + esc(x.b.quarter) + ' &middot; ' + esc(mgChName()) + '</div>'
+        + '<div class="c-meta">' + esc(x.b.quarter) + ' &middot; ' + esc(x.c.ctx.name) + '</div>'
         + line('Sale price', mgMoney(x.c.price)) + line('Channel fee', mgMoney(x.c.fee))
         + line('Components', mgMoney(x.c.comp)) + line('Total cost', mgMoney(x.c.cost))
         + line('Profit', mgMoney(x.c.profit), 'color:' + (x.c.profit >= 0 ? 'var(--ok)' : 'var(--bad)') + ';')
@@ -7283,7 +7403,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         + '</div>'
         + '<p class="mg-h" style="margin-top:var(--s4);">Components</p>'
         + mgItems(x.b.id).filter(function(i){ return +i.cost > 0 || mgIsShip(i.name); }).map(function(i){
-            return '<div class="mg-vrow" style="font-size:12px;"><span class="v-name">' + esc(i.name) + '</span><span class="v-cost">' + mgMoney(mgItemCost(i)) + '</span></div>';
+            return '<div class="mg-vrow" style="font-size:12px;"><span class="v-name">' + esc(i.name) + '</span><span class="v-cost">' + mgMoney(mgItemCost(i, x.c.ctx)) + '</span></div>';
           }).join('')
         + '</div>';
     }
@@ -7297,7 +7417,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return '<span class="mg-delta ' + dir + '"><span class="d-lbl">' + lbl + '</span>' +
         '<span class="d-val">' + ico + (diff >= 0 ? '+' : '') + (isPct ? diff.toFixed(1) + ' pts' : mgMoney(diff)) + '</span></span>';
     }
-    mgModal(mgModalHead('Compare builds', 'Priced on ' + esc(mgChName()) + ' \u00b7 arrows show whether the right-hand build is better')
+    mgModal(mgModalHead('Compare builds', (cols.some(function(x){ return mgIsOneOff(x.b); }) ? 'Each build on its own channel' : 'Priced on ' + esc(mgChName())) + ' \u00b7 arrows show whether the right-hand build is better')
       + '<div class="mg-cmp-grid">' + colHtml(cols[0], 0) + colHtml(cols[1], 1) + '</div>'
       + '<div class="mg-deltas">'
       + d('Price', a.price, b2.price, false) + d('Cost', a.cost, b2.cost, true)
@@ -7349,6 +7469,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     var rc = await SB.from('build_components').insert(items).select();
     if (rc.data) mgComps = mgComps.concat(rc.data);
+    mgBaseAdd('b', [rb.data]); mgBaseAdd('c', rc.data);
     mgCloseModal(); mgOpenBuild = rb.data.id; mgViewBuild = null; mgRenderAll();
     toast(line.name + ' \u00b7 ' + q + ' added \u2014 edit the components below.', 'ok');
   }
@@ -7367,7 +7488,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var id = nm.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
       var r = await SB.from('margin_channels').insert({ id: id, name: nm.trim(), fee_pct: fee }).select().single();
       if (r.error){ toast('Could not save: ' + r.error.message, 'err'); return; }
-      mgChannels.push(r.data); mgChannelId = id; localStorage.setItem('mgChannel', id);
+      mgChannels.push(r.data); mgBaseAdd('ch', [r.data]); mgChannelId = id; localStorage.setItem('mgChannel', id);
       mgCloseModal(); mgRenderAll();
       toast(r.data.name + ' added at ' + fee + '% fee.', 'ok');
     });
@@ -7405,6 +7526,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (!items.length){ ['Case & fans', 'GPU', 'CPU', 'Motherboard', 'RAM', 'SSD', 'PSU', 'CPU cooler', 'Shipping'].forEach(function(n, i){ items.push({ build_id: rb.data.id, name: n, cost: 0, position: i }); }); }
     var rc = await SB.from('build_components').insert(items).select();
     if (rc.data) mgComps = mgComps.concat(rc.data);
+    mgBaseAdd('b', [rb.data]); mgBaseAdd('c', rc.data);
     mgCloseModal(); mgOpenBuild = rb.data.id; mgViewBuild = null; mgRenderAll();
   }
 
@@ -7418,15 +7540,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (t = e.target.closest('[data-mghist]')){ var lid = t.getAttribute('data-mghist'); mgOpenHist[lid] = !mgOpenHist[lid]; mgRenderAll(); return; }
     if (t = e.target.closest('[data-mgview]')){ var v = t.getAttribute('data-mgview'); mgViewBuild = (mgViewBuild === v ? null : v); mgOpenBuild = null; mgRenderAll(); return; }
     if (t = e.target.closest('[data-mgedit]')){ var ed = t.getAttribute('data-mgedit'); mgOpenBuild = (mgOpenBuild === ed ? null : ed); mgViewBuild = null; mgRenderAll(); return; }
+    /* adding and removing components are drafts too; Save writes them */
     if (t = e.target.closest('[data-mgrm]')){
       var cid = t.getAttribute('data-mgrm');
-      await SB.from('build_components').delete().eq('id', cid);
       mgComps = mgComps.filter(function(c){ return String(c.id) !== String(cid); }); mgRenderAll(); return;
     }
     if (t = e.target.closest('[data-mgadditem]')){
       var bid = t.getAttribute('data-mgadditem');
-      var r2 = await SB.from('build_components').insert({ build_id: bid, name: '', cost: 0, position: mgItems(bid).length }).select().single();
-      if (r2.data) mgComps.push(r2.data); mgRenderAll(); return;
+      var pos = mgItems(bid).reduce(function(m, c){ return Math.max(m, +c.position || 0); }, -1) + 1;
+      var tmp = 'tmp-' + (++mgTmpSeq);
+      mgComps.push({ id: tmp, build_id: bid, name: '', cost: 0, position: pos });
+      mgRenderAll();
+      var ni = toolMargins.querySelector('input[data-mgitem="' + tmp + '"][data-f="name"]'); if (ni) ni.focus();
+      return;
     }
     if (t = e.target.closest('[data-mgdel]')){
       var did = t.getAttribute('data-mgdel');
@@ -7442,6 +7568,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         await SB.from('builds').delete().eq('id', did);
         mgBuilds = mgBuilds.filter(function(x){ return x.id !== did; });
         mgComps = mgComps.filter(function(c){ return c.build_id !== did; });
+        mgBaseDropBuild(did);
         if (!mgLineBuilds(l.id).length){ await SB.from('product_lines').delete().eq('id', l.id); mgLines = mgLines.filter(function(x){ return x.id !== l.id; }); }
         mgOpenBuild = null; mgViewBuild = null; mgSel = mgSel.filter(function(x){ return x !== did; }); mgRenderAll();
         toast(l.name + ' \u00b7 ' + b.quarter + ' deleted.', 'ok');
@@ -7449,30 +7576,95 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
   });
-  toolMargins.addEventListener('change', async function(e){
-    var el = e.target;
+  /* Edits are drafts until Save. Each keystroke updates the figures held in
+     memory, so Save never misses a value still being typed; leaving a field
+     redraws the totals. */
+  function mgApplyField(el){
+    if (!el || !el.getAttribute) return false;
     if (el.id === 'mgFeeInput'){
-      var v = parseFloat(el.value) || 0; var c = mgCh();
-      if (mgIsFba()){ c.fba_fee_pct = v; await SB.from('margin_channels').update({ fba_fee_pct: v }).eq('id', c.id); }
-      else { c.fee_pct = v; await SB.from('margin_channels').update({ fee_pct: v }).eq('id', c.id); }
-      mgRenderAll(); return;
+      var c = mgCh(), v = parseFloat(el.value) || 0;
+      if (mgIsFba()) c.fba_fee_pct = v; else c.fee_pct = v;
+      return true;
     }
-    if (el.id === 'mgFbaShipInput'){
-      var v2 = parseFloat(el.value) || 0; var c2 = mgCh();
-      c2.fba_ship = v2; await SB.from('margin_channels').update({ fba_ship: v2 }).eq('id', c2.id); mgRenderAll(); return;
-    }
+    if (el.id === 'mgFbaShipInput'){ mgCh().fba_ship = parseFloat(el.value) || 0; return true; }
     if (el.hasAttribute('data-mgprice')){
-      var bid = el.getAttribute('data-mgprice'); var b = mgFindBuild(bid); if (!b) return;
-      b.sale_price = parseFloat(el.value) || 0;
-      await SB.from('builds').update({ sale_price: b.sale_price }).eq('id', bid); mgRenderAll(); return;
+      var b = mgFindBuild(el.getAttribute('data-mgprice')); if (!b) return false;
+      b.sale_price = parseFloat(el.value) || 0; return true;
+    }
+    if (el.hasAttribute('data-mgchsel')){
+      var b2 = mgFindBuild(el.getAttribute('data-mgchsel')); if (!b2) return false;
+      b2.channel_id = el.value || null; return true;
     }
     if (el.hasAttribute('data-mgitem')){
-      var cid = el.getAttribute('data-mgitem'), f = el.getAttribute('data-f');
-      var it = mgComps.find(function(c){ return String(c.id) === String(cid); }); if (!it) return;
-      if (f === 'name'){ it.name = el.value; await SB.from('build_components').update({ name: it.name }).eq('id', cid); }
-      else { it.cost = parseFloat(el.value) || 0; await SB.from('build_components').update({ cost: it.cost }).eq('id', cid); }
-      mgRenderAll(); return;
+      var cid = el.getAttribute('data-mgitem');
+      var it = mgComps.find(function(x){ return String(x.id) === String(cid); }); if (!it) return false;
+      if (el.getAttribute('data-f') === 'name') it.name = el.value; else it.cost = parseFloat(el.value) || 0;
+      return true;
     }
+    return false;
+  }
+  toolMargins.addEventListener('input', function(e){ if (mgApplyField(e.target)) mgRenderBar(); });
+  async function mgSave(){
+    if (mgSaving || !mgBase) return;
+    var ch = mgChanges();
+    if (!mgCount(ch)){ mgRenderBar(); return; }
+    mgSaving = true; mgRenderBar();
+    var errs = [];
+    function find(list, id){ return list.find(function(x){ return String(x.id) === String(id); }); }
+    try {
+      var i, r;
+      for (i = 0; i < ch.ch.length; i++){
+        r = await SB.from('margin_channels').update(ch.ch[i].patch).eq('id', ch.ch[i].id);
+        if (r.error) errs.push(r.error.message); else Object.assign(find(mgBase.ch, ch.ch[i].id) || {}, ch.ch[i].patch);
+      }
+      for (i = 0; i < ch.b.length; i++){
+        r = await SB.from('builds').update(ch.b[i].patch).eq('id', ch.b[i].id);
+        if (r.error) errs.push(r.error.message); else Object.assign(find(mgBase.b, ch.b[i].id) || {}, ch.b[i].patch);
+      }
+      for (i = 0; i < ch.cUp.length; i++){
+        r = await SB.from('build_components').update(ch.cUp[i].patch).eq('id', ch.cUp[i].id);
+        if (r.error) errs.push(r.error.message); else Object.assign(find(mgBase.c, ch.cUp[i].id) || {}, ch.cUp[i].patch);
+      }
+      if (ch.cDel.length){
+        r = await SB.from('build_components').delete().in('id', ch.cDel);
+        if (r.error) errs.push(r.error.message);
+        else mgBase.c = mgBase.c.filter(function(x){ return ch.cDel.indexOf(x.id) < 0; });
+      }
+      for (i = 0; i < ch.cAdd.length; i++){
+        var a = ch.cAdd[i];
+        r = await SB.from('build_components').insert({ build_id: a.build_id, name: a.name || '', cost: +a.cost || 0, position: +a.position || 0 }).select().single();
+        if (r.error || !r.data){ errs.push((r.error && r.error.message) || 'Could not add a component'); continue; }
+        var row = find(mgComps, a.id); if (row) row.id = r.data.id;
+        mgBase.c.push(mgCopy(r.data));
+      }
+    } catch(e){ errs.push((e && e.message) || String(e)); }
+    mgSaving = false;
+    mgRenderAll();
+    if (errs.length){ toast('Some changes did not save: ' + errs[0], 'err', 8000); return; }
+    toast('Margins saved.', 'ok');
+    if (mgRemoteWaiting) await mgLoad(true);
+  }
+  function mgDiscard(){
+    if (!mgBase || mgSaving) return;
+    mgChannels = mgCopy(mgBase.ch); mgBuilds = mgCopy(mgBase.b); mgComps = mgCopy(mgBase.c);
+    if (mgOpenBuild && !mgFindBuild(mgOpenBuild)) mgOpenBuild = null;
+    mgRenderAll();
+    if (mgRemoteWaiting) mgLoad(true);
+  }
+  function mgDiscardAsk(){
+    mgConfirm('Discard unsaved changes?\n\nPrices, fees and components go back to what was last saved.').then(function(ok){ if (ok) mgDiscard(); });
+  }
+  document.addEventListener('keydown', function(e){
+    if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && (e.key === 's' || e.key === 'S') && mgIsAdmin && toolMargins.style.display !== 'none'){
+      e.preventDefault();
+      if (e.target && 'value' in e.target) mgApplyField(e.target);
+      mgSave();
+    }
+  });
+  window.addEventListener('beforeunload', function(e){ if (mgIsAdmin && mgDirty()){ e.preventDefault(); e.returnValue = ''; } });
+  toolMargins.addEventListener('change', function(e){
+    var el = e.target;
+    if (mgApplyField(el)){ mgRenderAll(); return; }
     if (el.classList.contains('mg-cmp-chk')){
       var sid = el.getAttribute('data-mgsel');
       mgSel = mgSel.filter(function(x){ return x !== sid; });
@@ -8477,6 +8669,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (ordPerm.admin) await obLoad();
     ordRenderList();
     renderHomeStatus();
+    if (silent !== true) liveRebase('orders');
   }
 
   function ordOrdered(oid){
@@ -9259,6 +9452,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
     if (ordPerm.admin && !obPays[id]) await obLoadPays(id);
     ordRenderDetail(o);
+    if (silent !== true) liveRebase('detail:' + id);
     if (focusBatch){
       const card = document.querySelector('.ord-batch[data-bid="' + focusBatch + '"]');
       if (card){
@@ -11782,6 +11976,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     rmaRenderList();
     if (rmaCurrentId) rmaRenderDetail();
     rmaTileStatus();
+    liveRebase('rma');
   }
   function rmaTileStatus(){
     const open = rmaTickets.filter(function(t){ return RMA_OPEN.indexOf(t.status) >= 0; });
@@ -14473,7 +14668,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     detail: function(){ return ordOpenOrder(ordCurrentId, null, true); },
     inventory: function(){ return loadInventory(true); },
     timeclock: function(){ return tcLoadAll(true); },
-    margins: function(){ return mgLoad(true); },
+    /* unsaved margin edits are never replaced: flag that theirs are waiting */
+    margins: async function(){
+      if (mgDirty() || mgSaving){ if (!mgRemoteWaiting){ mgRemoteWaiting = true; mgRenderBar(); } throw new Error('deferred'); }
+      await mgLoad(true);
+    },
     billing: async function(){ await obLoad(); obRender(); },
     rma: function(){ return rmaLoadAll(); }
   };
@@ -14483,25 +14682,54 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return null;
   }
   function liveSearchy(a){ return a.type === 'search' || /search|filter|query/i.test(a.id || ''); }
-  function liveBusy(root){
-    if (Date.now() - liveInputAt < 4000) return true;
-    if (ordLoading || rmaLoading || invOpenAdjust || invAddCat || tcEditEmpId || tcEditHoursUid || rmaEditPart) return true;
-    if (document.querySelector('.mg-modal-bg, dialog[open], [aria-modal="true"]')) return true;
+  /* A field only counts as mid-edit while this window has focus and its value
+     has moved since it was focused or last committed. A cursor merely left in
+     a field, or a window in the background, no longer holds updates back. */
+  var liveFocusVal = null;
+  document.addEventListener('focusin', function(e){ var t = e.target; liveFocusVal = (t && 'value' in t) ? t.value : null; }, true);
+  document.addEventListener('change', function(e){ var t = e.target; if (t === document.activeElement && 'value' in t) liveFocusVal = t.value; }, true);
+  function liveEditing(){
+    if (!document.hasFocus()) return false;
     var a = document.activeElement;
-    if (a && a !== document.body && a.matches && a.matches('textarea, select, input, [contenteditable]') &&
-        !(a.type === 'checkbox' || a.type === 'radio' || a.type === 'button' || liveSearchy(a))) return true;
+    if (!a || a === document.body || !a.matches) return false;
+    if (a.isContentEditable) return true;
+    if (!a.matches('textarea, input, select') || liveSearchy(a) || /^(checkbox|radio|button|submit|file)$/.test(a.type)) return false;
+    return a.value !== liveFocusVal;
+  }
+  function liveBusy(root){
+    if (document.hasFocus() && Date.now() - liveInputAt < 2500) return true;
+    if (ordLoading || rmaLoading || invOpenAdjust || invAddCat || tcEditEmpId || tcEditHoursUid || rmaEditPart || mgSaving) return true;
+    if (document.querySelector('.mg-modal-bg, dialog[open], [aria-modal="true"]')) return true;
+    if (liveEditing()) return true;
     if (Array.prototype.some.call(root.querySelectorAll('input[type=file]'), function(f){ return f.files && f.files.length; })) return true;
     var s = window.getSelection && window.getSelection();
     return !!(s && !s.isCollapsed && String(s).trim());
   }
+  /* how to find "the same" element again after a redraw: its id, else its data-* attributes */
+  function liveKeyOf(el){
+    if (!el || !el.tagName) return null;
+    if (el.id) return '#' + CSS.escape(el.id);
+    var s = el.tagName.toLowerCase(), n = 0;
+    for (var i = 0; i < el.attributes.length; i++){
+      var at = el.attributes[i];
+      if (at.name.indexOf('data-') === 0){ s += '[' + at.name + '="' + CSS.escape(at.value) + '"]'; n++; }
+    }
+    return n ? s : null;
+  }
+  function liveFind(k){ try { return document.querySelector(k); } catch(e){ return null; } }
   function liveKeep(root){
     var drafts = [], open = [], scrollers = [], y = window.scrollY, a = document.activeElement, focus = null;
-    root.querySelectorAll('textarea[id]').forEach(function(t){ if (t.value && t.value !== t.defaultValue) drafts.push([t.id, t.value]); });
+    root.querySelectorAll('textarea, input[type=text], input:not([type])').forEach(function(t){
+      if (t.value && t.value !== t.defaultValue){ var k = liveKeyOf(t); if (k) drafts.push([k, t.value]); }
+    });
     root.querySelectorAll('[id^="ordBatchBody_"]').forEach(function(b){ if (b.style.display !== 'none') open.push(b.id); });
     for (var el = root; el; el = el.parentElement){ if (el.scrollTop) scrollers.push([el, el.scrollTop]); }
-    if (a && a.id && liveSearchy(a)){ try { focus = [a.id, a.selectionStart, a.selectionEnd]; } catch(e){ focus = [a.id]; } }
+    if (a && a !== document.body){
+      var fk = liveKeyOf(a);
+      if (fk){ focus = [fk, null, null]; try { focus[1] = a.selectionStart; focus[2] = a.selectionEnd; } catch(e){} }
+    }
     return function(){
-      drafts.forEach(function(d){ var t = document.getElementById(d[0]); if (t && !t.value) t.value = d[1]; });
+      drafts.forEach(function(d){ var t = liveFind(d[0]); if (t && !t.value) t.value = d[1]; });
       open.forEach(function(id){
         var b = document.getElementById(id); if (!b || b.style.display !== 'none') return;
         b.style.display = '';
@@ -14511,17 +14739,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       scrollers.forEach(function(s){ s[0].scrollTop = s[1]; });
       window.scrollTo(0, y);
       if (focus){
-        var f = document.getElementById(focus[0]);
-        if (f && document.activeElement !== f){ f.focus({ preventScroll:true }); try { if (focus[1] != null) f.setSelectionRange(focus[1], focus[2]); } catch(e){} }
+        var f = liveFind(focus[0]);
+        if (f && document.activeElement !== f){
+          f.focus({ preventScroll:true });
+          try { if (focus[1] != null) f.setSelectionRange(focus[1], focus[2]); } catch(e){}
+        }
       }
     };
   }
-  async function liveTick(){
-    liveRtSync();
-    if (liveRunning){ if (liveHint) liveHintSoon(); return; }
-    if (!SB || !session || document.visibilityState !== 'visible') return;
-    var act = liveActive(); if (!act) return;
-    var p = act.page, keys = [];
+  function liveKeys(p){
+    var keys = [];
     if ((p === 'orders' || p === 'home') && ordInited) keys.push('orders');
     if (p === 'orders' && liveDetailOpen()) keys.push('detail:' + ordCurrentId);
     if (p === 'inventory' && invLoaded) keys.push('inventory');
@@ -14529,33 +14756,50 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (p === 'margins' && mgInited && mgIsAdmin) keys.push('margins');
     if (p === 'billing' && obLoaded && ordPerm.admin) keys.push('billing');
     if (p === 'rma' && rmaInited) keys.push('rma');
+    return keys;
+  }
+  /* A page that just loaded drops its old fingerprint and takes a fresh one
+     straight away, so the first change after opening it is never mistaken
+     for the starting point. */
+  function liveRebase(k){ if (!liveSig) return; delete liveSig[k]; liveSoon(300); }
+  async function liveTick(){
+    liveRtSync();
+    if (liveRunning){ if (liveHint) liveHintSoon(); return; }
+    if (!SB || !session || document.visibilityState !== 'visible') return;
+    var act = liveActive(); if (!act) return;
+    var p = act.page, keys = liveKeys(p);
     if (!keys.length) return;
-    if (liveBusy(act.root)){ if (liveHint) liveHintSoon(3000); return; }
-    liveRunning = true; liveHint = false; liveLastTick = Date.now();
+    var busy = liveBusy(act.root);
+    /* while busy, only fingerprints that are missing are taken: probing never touches the screen */
+    var todo = busy ? keys.filter(function(k){ return liveSig[k] === undefined; }) : keys;
+    if (!todo.length){ if (liveHint) liveHintSoon(1500); return; }
+    liveRunning = true; liveLastTick = Date.now();
+    if (!busy) liveHint = false;
     try {
-      for (var i = 0; i < keys.length; i++){
-        var k = keys[i], name = k.split(':')[0], sig;
+      for (var i = 0; i < todo.length; i++){
+        var k = todo[i], name = k.split(':')[0], sig;
         try { sig = JSON.stringify((await Promise.all(LIVE_PROBES[name]())).map(liveRows)); }
         catch(e){ continue; }
         if (liveSig[k] === undefined){ liveSig[k] = sig; continue; }
         if (sig === liveSig[k]) continue;
         var now = liveActive();
         if (!now || now.page !== p) break;
-        if (liveBusy(act.root)){ liveHint = true; liveHintSoon(3000); break; }
+        if (liveBusy(act.root)){ liveHint = true; break; }
         var restore = liveKeep(act.root);
         try { await LIVE_APPLY[name](); liveSig[k] = sig; } catch(e){}
         restore();
         if (name === 'orders') break;
       }
     } finally { liveRunning = false; }
+    if (liveHint) liveHintSoon(1500);
   }
   function liveSoon(ms){ clearTimeout(liveTimer); liveTimer = setTimeout(liveTick, ms == null ? 4500 : ms); }
-  /* at most one check per 5 seconds however many changes arrive, and never
+  /* at most one check per 2 seconds however many changes arrive, and never
      starved: a steady stream of changes cannot keep pushing the check back */
   var liveHint = false, liveHintT = null, liveLastTick = 0;
   function liveHintSoon(ms){
     if (liveHintT) return;
-    liveHintT = setTimeout(function(){ liveHintT = null; liveTick(); }, Math.max(ms || 1500, 5000 - (Date.now() - liveLastTick)));
+    liveHintT = setTimeout(function(){ liveHintT = null; liveTick(); }, Math.max(ms || 600, 2000 - (Date.now() - liveLastTick)));
   }
 
   /* Live notifications (supabase/realtime-on.sql). A change on a table the

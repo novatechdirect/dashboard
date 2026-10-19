@@ -2770,25 +2770,52 @@
       rmaTickets, rmaParts, rmaShipments, rmaComments, rmaAttachments, rmaEvents, rmaContacts, rmaReturnAddress]);
   }
   function liveSearchy(a){ return a.type === 'search' || /search|filter|query/i.test(a.id || ''); }
-  function liveBusy(){
-    if (Date.now() - liveInputAt < 4000 || modalBg) return true;
+  /* A field only counts as mid-edit while this window has focus and its value
+     has moved since it was focused or last committed. */
+  var liveFocusVal = null;
+  document.addEventListener('focusin', function(e){ var t = e.target; liveFocusVal = (t && 'value' in t) ? t.value : null; }, true);
+  document.addEventListener('change', function(e){ var t = e.target; if (t === document.activeElement && 'value' in t) liveFocusVal = t.value; }, true);
+  function liveEditing(){
+    if (!document.hasFocus()) return false;
     const a = document.activeElement;
-    if (a && a !== document.body && a.matches && a.matches('textarea, select, input, [contenteditable]') &&
-        !(a.type === 'checkbox' || a.type === 'radio' || a.type === 'button' || liveSearchy(a))) return true;
+    if (!a || a === document.body || !a.matches) return false;
+    if (a.isContentEditable) return true;
+    if (!a.matches('textarea, input, select') || liveSearchy(a) || /^(checkbox|radio|button|submit|file)$/.test(a.type)) return false;
+    return a.value !== liveFocusVal;
+  }
+  function liveBusy(){
+    if ((document.hasFocus() && Date.now() - liveInputAt < 2500) || modalBg) return true;
+    if (liveEditing()) return true;
     if (Array.prototype.some.call(document.querySelectorAll('input[type=file]'), function(f){ return f.files && f.files.length; })) return true;
     const s = window.getSelection && window.getSelection();
     return !!(s && !s.isCollapsed && String(s).trim());
   }
+  function liveKeyOf(el){
+    if (!el || !el.tagName) return null;
+    if (el.id) return '#' + CSS.escape(el.id);
+    let s = el.tagName.toLowerCase(), n = 0;
+    for (let i = 0; i < el.attributes.length; i++){
+      const at = el.attributes[i];
+      if (at.name.indexOf('data-') === 0){ s += '[' + at.name + '="' + CSS.escape(at.value) + '"]'; n++; }
+    }
+    return n ? s : null;
+  }
+  function liveFind(k){ try { return document.querySelector(k); } catch(e){ return null; } }
   function liveKeep(){
     const drafts = [], y = window.scrollY, a = document.activeElement;
     let focus = null;
-    document.querySelectorAll('#listView textarea[id], #detailView textarea[id]').forEach(function(t){ if (t.value && t.value !== t.defaultValue) drafts.push([t.id, t.value]); });
-    if (a && a.id && liveSearchy(a)){ try { focus = [a.id, a.selectionStart, a.selectionEnd]; } catch(e){ focus = [a.id]; } }
+    document.querySelectorAll('#listView textarea, #detailView textarea, #listView input[type=text], #detailView input[type=text]').forEach(function(t){
+      if (t.value && t.value !== t.defaultValue){ const k = liveKeyOf(t); if (k) drafts.push([k, t.value]); }
+    });
+    if (a && a !== document.body){
+      const fk = liveKeyOf(a);
+      if (fk){ focus = [fk, null, null]; try { focus[1] = a.selectionStart; focus[2] = a.selectionEnd; } catch(e){} }
+    }
     return function(){
-      drafts.forEach(function(d){ const t = document.getElementById(d[0]); if (t && !t.value) t.value = d[1]; });
+      drafts.forEach(function(d){ const t = liveFind(d[0]); if (t && !t.value) t.value = d[1]; });
       window.scrollTo(0, y);
       if (focus){
-        const f = document.getElementById(focus[0]);
+        const f = liveFind(focus[0]);
         if (f && document.activeElement !== f){ f.focus({ preventScroll:true }); try { if (focus[1] != null) f.setSelectionRange(focus[1], focus[2]); } catch(e){} }
       }
     };
@@ -2847,12 +2874,12 @@
     restore();
   }
   function liveSoon(ms){ clearTimeout(liveTimer); liveTimer = setTimeout(softRefresh, ms == null ? 4500 : ms); }
-  /* at most one check per 5 seconds however many changes arrive, and never
+  /* at most one check per 2 seconds however many changes arrive, and never
      starved: a steady stream of changes cannot keep pushing the check back */
   var liveHint = false, liveHintT = null, liveLastTick = 0;
   function liveHintSoon(ms){
     if (liveHintT) return;
-    liveHintT = setTimeout(function(){ liveHintT = null; softRefresh(); }, Math.max(ms || 1500, 5000 - (Date.now() - liveLastTick)));
+    liveHintT = setTimeout(function(){ liveHintT = null; softRefresh(); }, Math.max(ms || 600, 2000 - (Date.now() - liveLastTick)));
   }
 
   /* Live notifications (supabase/realtime-on.sql). A change only brings the
