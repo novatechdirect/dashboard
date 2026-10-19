@@ -2877,9 +2877,10 @@
   /* at most one check per 2 seconds however many changes arrive, and never
      starved: a steady stream of changes cannot keep pushing the check back */
   var liveHint = false, liveHintT = null, liveLastTick = 0;
-  function liveHintSoon(ms){
+  /* gap: the least time between checks. Unit logging (pc_log) uses 10 seconds. */
+  function liveHintSoon(ms, gap){
     if (liveHintT) return;
-    liveHintT = setTimeout(function(){ liveHintT = null; softRefresh(); }, Math.max(ms || 600, 2000 - (Date.now() - liveLastTick)));
+    liveHintT = setTimeout(function(){ liveHintT = null; softRefresh(); }, Math.max(ms || 600, (gap || 2000) - (Date.now() - liveLastTick)));
   }
 
   /* Live notifications (supabase/realtime-on.sql). A change only brings the
@@ -2906,7 +2907,7 @@
     liveChan = ch;
     ch.on('postgres_changes', { event:'*', schema:'public' }, function(m){
       if (liveChan !== ch || !m) return;
-      if (LIVE_TABLES.indexOf(m.table) >= 0){ liveHint = true; liveHintSoon(); }
+      if (LIVE_TABLES.indexOf(m.table) >= 0){ liveHint = true; liveHintSoon(600, m.table === 'pc_log' ? 10000 : 2000); }
     }).subscribe(function(status){
       if (liveChan !== ch) return;
       if (status === 'SUBSCRIBED'){
