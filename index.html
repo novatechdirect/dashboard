@@ -14696,15 +14696,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (!a.matches('textarea, input, select') || liveSearchy(a) || /^(checkbox|radio|button|submit|file)$/.test(a.type)) return false;
     return a.value !== liveFocusVal;
   }
-  function liveBusy(root){
-    if (document.hasFocus() && Date.now() - liveInputAt < 2500) return true;
-    if (ordLoading || rmaLoading || invOpenAdjust || invAddCat || tcEditEmpId || tcEditHoursUid || rmaEditPart || mgSaving) return true;
-    if (document.querySelector('.mg-modal-bg, dialog[open], [aria-modal="true"]')) return true;
-    if (liveEditing()) return true;
-    if (Array.prototype.some.call(root.querySelectorAll('input[type=file]'), function(f){ return f.files && f.files.length; })) return true;
-    var s = window.getSelection && window.getSelection();
-    return !!(s && !s.isCollapsed && String(s).trim());
+  /* Why the open page should not be redrawn right now, or '' if it can be.
+     Flags that belong to one page only count on that page, and a text
+     selection only counts in the window being used. */
+  function liveBusyWhy(root, p){
+    var focused = document.hasFocus();
+    if (focused && Date.now() - liveInputAt < 2500) return 'recent input';
+    if ((p === 'orders' || p === 'home') && ordLoading) return 'orders loading';
+    if (p === 'rma' && (rmaLoading || rmaEditPart)) return 'rma editing';
+    if (p === 'inventory' && (invOpenAdjust || invAddCat)) return 'inventory editing';
+    if (p === 'timeclock' && (tcEditEmpId || tcEditHoursUid)) return 'timeclock editing';
+    if (p === 'margins' && mgSaving) return 'saving';
+    if (document.querySelector('.mg-modal-bg, dialog[open], [aria-modal="true"]')) return 'dialog open';
+    if (liveEditing()) return 'typing';
+    if (Array.prototype.some.call(root.querySelectorAll('input[type=file]'), function(f){ return f.files && f.files.length; })) return 'file chosen';
+    var sel = focused && window.getSelection && window.getSelection();
+    if (sel && !sel.isCollapsed && String(sel).trim()) return 'text selected';
+    return '';
   }
+  function liveBusy(root){ var a = liveActive(); return !!liveBusyWhy(root, a ? a.page : ''); }
+  var liveLog = [];
+  function liveNote(s){ liveLog.push(new Date().toLocaleTimeString() + ' ' + s); if (liveLog.length > 40) liveLog.shift(); }
   /* how to find "the same" element again after a redraw: its id, else its data-* attributes */
   function liveKeyOf(el){
     if (!el || !el.tagName) return null;
@@ -14769,7 +14781,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     var act = liveActive(); if (!act) return;
     var p = act.page, keys = liveKeys(p);
     if (!keys.length) return;
-    var busy = liveBusy(act.root);
+    var why = liveBusyWhy(act.root, p), busy = !!why;
+    if (busy) liveNote(p + ': waiting (' + why + ')');
     /* while busy, only fingerprints that are missing are taken: probing never touches the screen */
     var todo = busy ? keys.filter(function(k){ return liveSig[k] === undefined; }) : keys;
     if (!todo.length){ if (liveHint) liveHintSoon(1500); return; }
@@ -14779,14 +14792,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       for (var i = 0; i < todo.length; i++){
         var k = todo[i], name = k.split(':')[0], sig;
         try { sig = JSON.stringify((await Promise.all(LIVE_PROBES[name]())).map(liveRows)); }
-        catch(e){ continue; }
-        if (liveSig[k] === undefined){ liveSig[k] = sig; continue; }
-        if (sig === liveSig[k]) continue;
+        catch(e){ liveNote(k + ': check failed ' + ((e && e.message) || e)); continue; }
+        if (liveSig[k] === undefined){ liveSig[k] = sig; liveNote(k + ': starting point taken'); continue; }
+        if (sig === liveSig[k]){ liveNote(k + ': no change'); continue; }
         var now = liveActive();
         if (!now || now.page !== p) break;
-        if (liveBusy(act.root)){ liveHint = true; break; }
+        var why2 = liveBusyWhy(act.root, p);
+        if (why2){ liveHint = true; liveNote(k + ': changed, waiting (' + why2 + ')'); break; }
         var restore = liveKeep(act.root);
-        try { await LIVE_APPLY[name](); liveSig[k] = sig; } catch(e){}
+        try { await LIVE_APPLY[name](); liveSig[k] = sig; liveNote(k + ': updated'); }
+        catch(e){ liveNote(k + ': not updated (' + ((e && e.message) || e) + ')'); }
         restore();
         if (name === 'orders') break;
       }
@@ -14834,6 +14849,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ch.on('postgres_changes', { event:'*', schema:'public' }, function(m){
       if (liveChan !== ch || !m) return;
       var act = liveActive();
+      liveNote('notified: ' + m.table + (act ? ' (on ' + act.page + ')' : ''));
       if (act && (LIVE_TABLES[act.page] || []).indexOf(m.table) >= 0){ liveHint = true; liveHintSoon(); }
     }).subscribe(function(status){
       if (liveChan !== ch) return;
@@ -14850,14 +14866,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     var ch = liveChan; liveChan = null; liveRtOk = false;
     if (ch){ try { SB_LIVE.removeChannel(ch); } catch(e){} }
   }
-  window.ntLiveStatus = function(){ return { connected: liveRtOk, gaveUp: liveRtGaveUp, lastCheck: liveLastTick ? new Date(liveLastTick).toLocaleTimeString() : null }; };
+  window.ntLiveStatus = function(){
+    var a = liveActive();
+    return { connected: liveRtOk, gaveUp: liveRtGaveUp, page: a ? a.page : null,
+      waitingFor: a ? (liveBusyWhy(a.root, a.page) || null) : null,
+      lastCheck: liveLastTick ? new Date(liveLastTick).toLocaleTimeString() : null, log: liveLog.slice() };
+  };
   setInterval(function(){
     liveRtSync();
     if (liveRtOk && Date.now() - liveLastTick < 120000) return;
     liveTick();
   }, LIVE_MS);
-  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') liveSoon(); });
-  window.addEventListener('focus', function(){ liveSoon(); });
+  /* coming back to the tab: check at once rather than after a pause */
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') liveSoon(400); });
+  window.addEventListener('focus', function(){ liveSoon(400); });
 
 })();
 </script>

@@ -2787,7 +2787,7 @@
     if ((document.hasFocus() && Date.now() - liveInputAt < 2500) || modalBg) return true;
     if (liveEditing()) return true;
     if (Array.prototype.some.call(document.querySelectorAll('input[type=file]'), function(f){ return f.files && f.files.length; })) return true;
-    const s = window.getSelection && window.getSelection();
+    const s = document.hasFocus() && window.getSelection && window.getSelection();
     return !!(s && !s.isCollapsed && String(s).trim());
   }
   function liveKeyOf(el){
@@ -2928,8 +2928,8 @@
     if (liveRtOk && Date.now() - liveLastTick < 120000) return;
     softRefresh();
   }, LIVE_MS);
-  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') liveSoon(); });
-  window.addEventListener('focus', function(){ liveSoon(); });
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') liveSoon(400); });
+  window.addEventListener('focus', function(){ liveSoon(400); });
   async function loadRma(){
     try {
       const cid = me.customer_id;
