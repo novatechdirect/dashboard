@@ -5368,6 +5368,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     SB.auth.onAuthStateChange(function(_ev, s){
       const uid = s && s.user ? s.user.id : null;
       session = s;
+      liveRtSync();
       /* TOKEN_REFRESHED fires roughly hourly, and SIGNED_IN fires again when
          the tab regains focus. Re-booting on those reset the whole app to
          Home mid-task. Only a change of who is signed in needs a re-render. */
@@ -5378,6 +5379,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     });
     renderAuth();
     if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
+    liveRtSync();
   }
 
   /* This browser's last choice wins. The account copy only seeds a device that
@@ -5526,6 +5528,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (which === 'orders' && SB && session){ ordOpen(); }
     if (which === 'admin' && SB && session){ admOpen(); }
     if (which === 'rma' && SB && session){ rmaOpen(); }
+    liveSoon();
     if (which === 'home'){
       renderHomeBars(); renderHomeDonut();
       if (window.ntCountUp) window.ntCountUp(document.getElementById('statBldVal'));
@@ -6061,14 +6064,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   const lowCard = document.getElementById('lowCard');
   const lowList = document.getElementById('lowList');
 
-  async function loadInventory(){
+  async function loadInventory(silent){
+    silent = silent === true;
     if (!SB || !session) return;
-    invBody.innerHTML = '<p class="muted-line">Loading&hellip;</p>';
+    if (!silent) invBody.innerHTML = '<p class="muted-line">Loading&hellip;</p>';
     const { data, error } = await SB.from('inv_items').select('*').eq('archived', false)
       .order('category').order('sort_order').order('name');
     if (error){ invBody.innerHTML = '<p class="muted-line">Could not load inventory: ' + esc(error.message||'error') + '. Make sure the inventory tables are set up.</p>'; return; }
     invItems = data || [];
     renderInventory();
+    if (silent) return loadInvMoves(true);
     loadInvMoves();
   }
 
@@ -6338,12 +6343,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let invHistPage = 0;
   const INV_HIST_PAGE = 20;   // activity rows per page
 
-  async function loadInvMoves(){
-    invHistBody.innerHTML = '<tr><td colspan="6"><div class="skel skel-line w80" style="margin:6px 0;"></div></td></tr>'.repeat(4);
+  async function loadInvMoves(silent){
+    if (silent !== true) invHistBody.innerHTML = '<tr><td colspan="6"><div class="skel skel-line w80" style="margin:6px 0;"></div></td></tr>'.repeat(4);
     const { data, error } = await SB.from('inv_moves').select('*').order('created_at', { ascending: false }).limit(1000);
     if (error){ invHistBody.innerHTML = '<tr><td colspan="6" class="muted-sm">Could not load: ' + esc(error.message||'') + '</td></tr>'; return; }
     invMovesRows = data || [];
-    invHistPage = 0;
+    if (silent !== true) invHistPage = 0;
     renderInvMoves();
   }
   function renderInvMoves(){
@@ -6507,8 +6512,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     await tcLoadAll();
   }
 
-  async function tcLoadAll(){
-    try { await SB.rpc('tc_link_profile'); } catch(e){}
+  async function tcLoadAll(silent){
+    if (silent !== true){ try { await SB.rpc('tc_link_profile'); } catch(e){} }
     const emp = await SB.from('tc_employees').select('*').order('name');
     tcEmployees = emp.data || [];
     const myEmail = ((session && session.user && session.user.email) || '').toLowerCase();
@@ -6928,8 +6933,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     var b = document.getElementById('mgBody');
     if (b) b.innerHTML = '<div class="skel-card"><div class="skel skel-line w40"></div><div class="skel skel-line w80" style="margin-top:14px;"></div><div class="skel skel-line w60"></div></div>'.repeat(3);
   }
-  async function mgLoad(){
-    mgSkeleton();
+  async function mgLoad(silent){
+    if (silent !== true) mgSkeleton();
     const res = await Promise.all([
       SB.from('margin_channels').select('*').order('created_at'),
       SB.from('product_lines').select('*').order('created_at'),
@@ -8421,10 +8426,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     await ordLoadAll();
   }
 
-  async function ordLoadAll(){
+  async function ordLoadAll(silent){
     if (!SB || !session || ordLoading) return;
     ordLoading = true;
-    ordListBody.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:62%"></div></div>'.repeat(3);
+    if (silent !== true) ordListBody.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:62%"></div></div>'.repeat(3);
     try {
       const [cu, cf, lo, or_, un] = await Promise.all([
         /* every customer, archived included: an archived one still has to
@@ -8461,6 +8466,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         ordLines = ln.data || [];
       } else ordLines = [];
     } catch(e){
+      if (silent === true){ ordLoading = false; return; }
       ordListBody.innerHTML = '<div class="empty"><div class="empty-ico">!</div><p>Could not load orders.</p>' +
         '<p class="muted-sm">' + esc(e.message || String(e)) + '</p></div>';
       ordLoading = false;
@@ -9208,12 +9214,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ordDetailPane.style.display = '';
   }
 
-  async function ordOpenOrder(id, focusBatch){
+  async function ordOpenOrder(id, focusBatch, silent){
     if (ordCurrentId !== id){ ordSel.clear(); ordPoolCfg = ''; ordPoolPage = 0; ordBatchPage = {}; }
     ordCurrentId = id;
     ordShowDetail();
     ordSetUrl(id, focusBatch);
-    ordDetailBody.innerHTML = '<div class="skel-card"><div class="skel skel-line" style="width:38%"></div><div class="skel skel-line"></div></div>';
+    if (silent !== true) ordDetailBody.innerHTML = '<div class="skel-card"><div class="skel skel-line" style="width:38%"></div><div class="skel skel-line"></div></div>';
     if (!ordInited){ ordInited = true; await ordLoadPerms(); await ordLoadAll(); }
     let o = ordOrders.find(function(x){ return x.id === id; });
     if (!o){
@@ -14406,6 +14412,208 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     scan(document.body);
   })();
+
+  /* ================= LIVE REFRESH =================
+     While a page is open, every 30 seconds (and on coming back to the tab)
+     a light probe of its tables is compared with the last one. Only a real
+     difference redraws the page, in place: scroll, open batches, the focused
+     search box and anything typed in a reply box are kept. It never redraws
+     under someone mid-edit: a focused field, an open dialog, a chosen file,
+     selected text or input in the last few seconds waits for the next check. */
+  var LIVE_MS = 30000, liveSig = {}, liveRunning = false, liveInputAt = 0, liveTimer = null;
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){
+    document.addEventListener(ev, function(){ liveInputAt = Date.now(); }, { capture:true, passive:true });
+  });
+  function liveN(t){ return SB.from(t).select('id', { count:'exact', head:true }); }
+  function liveRows(r){
+    if (!r) return null;
+    if (r.error) throw r.error;
+    if (r.data == null && typeof r.count === 'number') return r.count;
+    return (r.data || []).slice().sort(function(a, b){ return String(a.id).localeCompare(String(b.id)); });
+  }
+  var LIVE_PROBES = {
+    orders: function(){
+      var pc = function(){ return SB.from('pc_log').select('id', { count:'exact', head:true }).not('order_id', 'is', null); };
+      var q = [
+        SB.from('orders').select('*').eq('archived', false),
+        SB.from('order_lines').select('*'),
+        SB.from('batches').select('*'),
+        SB.from('customers').select('*'),
+        SB.from('configs').select('*'),
+        pc(), pc().eq('unit_status', 'shipped'), pc().eq('unit_status', 'assigned'), pc().not('batch_id', 'is', null),
+        liveN('batch_tracking')
+      ];
+      if (ordPerm.admin) q.push(SB.rpc('order_billing'));
+      return q;
+    },
+    detail: function(){ return [SB.from('pc_log').select('id,serial,batch_id,unit_status').eq('order_id', ordCurrentId)]; },
+    inventory: function(){ return [SB.from('inv_items').select('*').eq('archived', false), liveN('inv_moves')]; },
+    timeclock: function(){
+      return [SB.from('tc_employees').select('*'),
+        SB.from('tc_hours').select('*').order('period_ending', { ascending:false }).limit(2000),
+        SB.from('tc_pay_rates').select('*')];
+    },
+    margins: function(){
+      return [SB.from('margin_channels').select('*'), SB.from('product_lines').select('*'),
+        SB.from('builds').select('*'), SB.from('build_components').select('*')];
+    },
+    billing: function(){ return [SB.rpc('order_billing')]; },
+    rma: function(){
+      return [SB.from('rma_tickets').select('*').order('created_at', { ascending:false }).limit(2000),
+        SB.from('rma_parts').select('*'), SB.from('rma_shipments').select('*'),
+        liveN('rma_comments'), liveN('rma_attachments'), liveN('rma_events'), SB.from('app_settings').select('*')];
+    }
+  };
+  function liveDetailOpen(){ return !!(ordCurrentId && ordDetailPane.style.display !== 'none'); }
+  var LIVE_APPLY = {
+    orders: async function(){
+      await ordLoadAll(true);
+      if (liveDetailOpen()){ await ordOpenOrder(ordCurrentId, null, true); delete liveSig['detail:' + ordCurrentId]; }
+    },
+    detail: function(){ return ordOpenOrder(ordCurrentId, null, true); },
+    inventory: function(){ return loadInventory(true); },
+    timeclock: function(){ return tcLoadAll(true); },
+    margins: function(){ return mgLoad(true); },
+    billing: async function(){ await obLoad(); obRender(); },
+    rma: function(){ return rmaLoadAll(); }
+  };
+  function liveActive(){
+    var v = { home:toolHome, orders:toolOrders, inventory:toolInventory, timeclock:toolTimeclock, margins:toolMargins, billing:toolBilling, rma:toolRma };
+    for (var k in v){ if (v[k] && v[k].style.display !== 'none') return { page:k, root:v[k] }; }
+    return null;
+  }
+  function liveSearchy(a){ return a.type === 'search' || /search|filter|query/i.test(a.id || ''); }
+  function liveBusy(root){
+    if (Date.now() - liveInputAt < 4000) return true;
+    if (ordLoading || rmaLoading || invOpenAdjust || invAddCat || tcEditEmpId || tcEditHoursUid || rmaEditPart) return true;
+    if (document.querySelector('.mg-modal-bg, dialog[open], [aria-modal="true"]')) return true;
+    var a = document.activeElement;
+    if (a && a !== document.body && a.matches && a.matches('textarea, select, input, [contenteditable]') &&
+        !(a.type === 'checkbox' || a.type === 'radio' || a.type === 'button' || liveSearchy(a))) return true;
+    if (Array.prototype.some.call(root.querySelectorAll('input[type=file]'), function(f){ return f.files && f.files.length; })) return true;
+    var s = window.getSelection && window.getSelection();
+    return !!(s && !s.isCollapsed && String(s).trim());
+  }
+  function liveKeep(root){
+    var drafts = [], open = [], scrollers = [], y = window.scrollY, a = document.activeElement, focus = null;
+    root.querySelectorAll('textarea[id]').forEach(function(t){ if (t.value && t.value !== t.defaultValue) drafts.push([t.id, t.value]); });
+    root.querySelectorAll('[id^="ordBatchBody_"]').forEach(function(b){ if (b.style.display !== 'none') open.push(b.id); });
+    for (var el = root; el; el = el.parentElement){ if (el.scrollTop) scrollers.push([el, el.scrollTop]); }
+    if (a && a.id && liveSearchy(a)){ try { focus = [a.id, a.selectionStart, a.selectionEnd]; } catch(e){ focus = [a.id]; } }
+    return function(){
+      drafts.forEach(function(d){ var t = document.getElementById(d[0]); if (t && !t.value) t.value = d[1]; });
+      open.forEach(function(id){
+        var b = document.getElementById(id); if (!b || b.style.display !== 'none') return;
+        b.style.display = '';
+        var card = b.closest('.ord-batch'), btn = card && card.querySelector('[data-bexpand]');
+        if (btn) btn.textContent = 'Hide';
+      });
+      scrollers.forEach(function(s){ s[0].scrollTop = s[1]; });
+      window.scrollTo(0, y);
+      if (focus){
+        var f = document.getElementById(focus[0]);
+        if (f && document.activeElement !== f){ f.focus({ preventScroll:true }); try { if (focus[1] != null) f.setSelectionRange(focus[1], focus[2]); } catch(e){} }
+      }
+    };
+  }
+  async function liveTick(){
+    liveRtSync();
+    if (liveRunning){ if (liveHint) liveHintSoon(); return; }
+    if (!SB || !session || document.visibilityState !== 'visible') return;
+    var act = liveActive(); if (!act) return;
+    var p = act.page, keys = [];
+    if ((p === 'orders' || p === 'home') && ordInited) keys.push('orders');
+    if (p === 'orders' && liveDetailOpen()) keys.push('detail:' + ordCurrentId);
+    if (p === 'inventory' && invLoaded) keys.push('inventory');
+    if (p === 'timeclock' && tcInited) keys.push('timeclock');
+    if (p === 'margins' && mgInited && mgIsAdmin) keys.push('margins');
+    if (p === 'billing' && obLoaded && ordPerm.admin) keys.push('billing');
+    if (p === 'rma' && rmaInited) keys.push('rma');
+    if (!keys.length) return;
+    if (liveBusy(act.root)){ if (liveHint) liveHintSoon(3000); return; }
+    liveRunning = true; liveHint = false; liveLastTick = Date.now();
+    try {
+      for (var i = 0; i < keys.length; i++){
+        var k = keys[i], name = k.split(':')[0], sig;
+        try { sig = JSON.stringify((await Promise.all(LIVE_PROBES[name]())).map(liveRows)); }
+        catch(e){ continue; }
+        if (liveSig[k] === undefined){ liveSig[k] = sig; continue; }
+        if (sig === liveSig[k]) continue;
+        var now = liveActive();
+        if (!now || now.page !== p) break;
+        if (liveBusy(act.root)){ liveHint = true; liveHintSoon(3000); break; }
+        var restore = liveKeep(act.root);
+        try { await LIVE_APPLY[name](); liveSig[k] = sig; } catch(e){}
+        restore();
+        if (name === 'orders') break;
+      }
+    } finally { liveRunning = false; }
+  }
+  function liveSoon(ms){ clearTimeout(liveTimer); liveTimer = setTimeout(liveTick, ms == null ? 4500 : ms); }
+  /* at most one check per 5 seconds however many changes arrive, and never
+     starved: a steady stream of changes cannot keep pushing the check back */
+  var liveHint = false, liveHintT = null, liveLastTick = 0;
+  function liveHintSoon(ms){
+    if (liveHintT) return;
+    liveHintT = setTimeout(function(){ liveHintT = null; liveTick(); }, Math.max(ms || 1500, 5000 - (Date.now() - liveLastTick)));
+  }
+
+  /* Live notifications (supabase/realtime-on.sql). A change on a table the
+     open page shows only brings the next check forward: the check itself, with
+     its busy guard and compare, is the one the timer runs, so there is no
+     second way to redraw. Notifications obey the same read rules as queries.
+     One schema-wide subscription, so a table that is not switched on simply
+     sends nothing instead of failing the whole connection. While connected the
+     timer slows to every 2 minutes as a backstop; after a dropped connection
+     it checks at once for anything missed. Three failures in a row and it
+     stays on the 30-second timer until the page is reloaded. */
+  var LIVE_ORD_T = ['orders', 'order_lines', 'batches', 'batch_tracking', 'pc_log', 'customers', 'configs', 'order_payments'];
+  var LIVE_TABLES = {
+    home: LIVE_ORD_T, orders: LIVE_ORD_T,
+    inventory: ['inv_items', 'inv_moves'],
+    timeclock: ['tc_employees', 'tc_hours', 'tc_pay_rates'],
+    margins: ['margin_channels', 'product_lines', 'builds', 'build_components'],
+    billing: ['orders', 'order_lines', 'order_payments'],
+    rma: ['rma_tickets', 'rma_parts', 'rma_shipments', 'rma_comments', 'rma_attachments', 'rma_events', 'customer_contacts']
+  };
+  var liveChan = null, liveRtOk = false, liveRtDown = false, liveRtErr = 0, liveRtGaveUp = false, liveRtUid = null;
+  function liveRtSync(){
+    var uid = session && session.user ? session.user.id : null;
+    var want = !!(SB_LIVE && uid && !DEMO.on && typeof SB_LIVE.channel === 'function');
+    if (liveChan && (!want || uid !== liveRtUid)) liveRtStop();
+    if (want && !liveChan && !liveRtGaveUp) liveRtStart(uid);
+  }
+  function liveRtStart(uid){
+    liveRtUid = uid; liveRtOk = false; liveRtDown = false;
+    var ch = SB_LIVE.channel('nt-admin-' + Math.random().toString(36).slice(2));
+    liveChan = ch;
+    ch.on('postgres_changes', { event:'*', schema:'public' }, function(m){
+      if (liveChan !== ch || !m) return;
+      var act = liveActive();
+      if (act && (LIVE_TABLES[act.page] || []).indexOf(m.table) >= 0){ liveHint = true; liveHintSoon(); }
+    }).subscribe(function(status){
+      if (liveChan !== ch) return;
+      if (status === 'SUBSCRIBED'){
+        liveRtErr = 0; liveRtOk = true;
+        if (liveRtDown){ liveRtDown = false; liveSoon(500); }
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+        liveRtOk = false; liveRtDown = true;
+        if (++liveRtErr >= 3){ liveRtGaveUp = true; liveRtStop(); }
+      }
+    });
+  }
+  function liveRtStop(){
+    var ch = liveChan; liveChan = null; liveRtOk = false;
+    if (ch){ try { SB_LIVE.removeChannel(ch); } catch(e){} }
+  }
+  window.ntLiveStatus = function(){ return { connected: liveRtOk, gaveUp: liveRtGaveUp, lastCheck: liveLastTick ? new Date(liveLastTick).toLocaleTimeString() : null }; };
+  setInterval(function(){
+    liveRtSync();
+    if (liveRtOk && Date.now() - liveLastTick < 120000) return;
+    liveTick();
+  }, LIVE_MS);
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') liveSoon(); });
+  window.addEventListener('focus', function(){ liveSoon(); });
 
 })();
 </script>

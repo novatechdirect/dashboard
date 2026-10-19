@@ -2544,11 +2544,13 @@
     SB.auth.onAuthStateChange(function(_e, s){
       const uid = s && s.user ? s.user.id : null;
       session = s;
+      liveRtSync();
       applyAccountTheme(s);
       if (uid === authUid) return;
       authUid = uid; render();
     });
     render();
+    liveRtSync();
   }
   async function render(){
     /* the answer is in: stop holding the frame and remember it for next time */
@@ -2696,6 +2698,8 @@
     ln.sort(function(a, b){ return (a.position || 0) - (b.position || 0); });
     ba.sort(function(a, b){ return (a.batch_no || 0) - (b.batch_no || 0); });
     un.sort(function(a, b){ return String(a.serial).localeCompare(String(b.serial), undefined, { numeric:true }); });
+    /* staff switched customer while this was in flight: a newer read owns the screen */
+    if (!me || me.customer_id !== cid) return 'stale';
     customer = (c.data || [])[0]; orders = ords; configs = cf.data || []; locations = lo.data || [];
     lines = ln; batches = ba; units = un; tracking = tr;
     $('custName').textContent = customer ? customer.name : '';
@@ -2731,7 +2735,7 @@
         await load();
       });
     }
-    try { await fetchData(); }
+    try { if (await fetchData() === 'stale') return; }
     catch(e){
       $('listView').innerHTML = pnavHtml() + '<div class="card"><h1>Could not load your orders</h1>' +
         '<p class="muted">' + esc((e && e.message) || 'The connection dropped.') + '</p>' +
@@ -2750,29 +2754,155 @@
       else toast('That RMA is not on your account.', 'bad', 6000);
     }
   }
-  /* A tab left open all day goes stale. Coming back to it after a few minutes
-     re-reads everything and redraws the same screen, with drafts kept. */
+  /* Live refresh. Every 30 seconds while the tab is on screen, and on coming
+     back to it, everything is re-read; only when something differs is the
+     same screen redrawn in place, with open batches, scroll, the focused
+     search box and drafts kept. It never redraws under someone mid-edit: a
+     focused field, an open dialog, a chosen file, selected text or input in
+     the last few seconds waits for the next check. */
+  const LIVE_MS = 30000;
+  let liveInputAt = 0, livePending = false, liveTimer = null;
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){
+    document.addEventListener(ev, function(){ liveInputAt = Date.now(); }, { capture:true, passive:true });
+  });
+  function liveSig(){
+    return JSON.stringify([customer, orders, configs, locations, lines, batches, units, tracking,
+      rmaTickets, rmaParts, rmaShipments, rmaComments, rmaAttachments, rmaEvents, rmaContacts, rmaReturnAddress]);
+  }
+  function liveSearchy(a){ return a.type === 'search' || /search|filter|query/i.test(a.id || ''); }
+  function liveBusy(){
+    if (Date.now() - liveInputAt < 4000 || modalBg) return true;
+    const a = document.activeElement;
+    if (a && a !== document.body && a.matches && a.matches('textarea, select, input, [contenteditable]') &&
+        !(a.type === 'checkbox' || a.type === 'radio' || a.type === 'button' || liveSearchy(a))) return true;
+    if (Array.prototype.some.call(document.querySelectorAll('input[type=file]'), function(f){ return f.files && f.files.length; })) return true;
+    const s = window.getSelection && window.getSelection();
+    return !!(s && !s.isCollapsed && String(s).trim());
+  }
+  function liveKeep(){
+    const drafts = [], y = window.scrollY, a = document.activeElement;
+    let focus = null;
+    document.querySelectorAll('#listView textarea[id], #detailView textarea[id]').forEach(function(t){ if (t.value && t.value !== t.defaultValue) drafts.push([t.id, t.value]); });
+    if (a && a.id && liveSearchy(a)){ try { focus = [a.id, a.selectionStart, a.selectionEnd]; } catch(e){ focus = [a.id]; } }
+    return function(){
+      drafts.forEach(function(d){ const t = document.getElementById(d[0]); if (t && !t.value) t.value = d[1]; });
+      window.scrollTo(0, y);
+      if (focus){
+        const f = document.getElementById(focus[0]);
+        if (f && document.activeElement !== f){ f.focus({ preventScroll:true }); try { if (focus[1] != null) f.setSelectionRange(focus[1], focus[2]); } catch(e){} }
+      }
+    };
+  }
+  /* billing is re-read in place, without passing through 'loading', so a click
+     landing mid-check never strands the page on a skeleton */
+  async function liveBilling(cid){
+    if (billState !== 'ready') return false;
+    const scope = isStaff && me ? me.customer_id : null;
+    const [sm, iv, sr] = await Promise.all([
+      SB.rpc('portal_billing_summary', { p_customer: scope }),
+      SB.rpc('portal_billing_invoices', { p_customer: scope }),
+      SB.rpc('portal_billing_series', { p_months: 12, p_customer: scope })
+    ]);
+    if (sm.error || iv.error || !me || me.customer_id !== cid || billState !== 'ready') return false;
+    const nSum = (sm.data || [])[0] || null, nInv = iv.data || [], nSer = sr.error ? [] : (sr.data || []);
+    if (JSON.stringify([nSum, nInv, nSer]) === JSON.stringify([billSum, billInv, billSeries])) return false;
+    const id = billOpen, np = {}, nd = {};
+    if (id != null){
+      const [p, d] = await Promise.all([
+        SB.rpc('portal_billing_payments', { p_order: id, p_customer: scope }),
+        SB.from('order_customer_docs').select('*').eq('order_id', id).order('created_at', { ascending:false })
+      ]);
+      np[id] = p.error ? [] : (p.data || []);
+      nd[id] = d.error ? [] : (d.data || []);
+    }
+    if (!me || me.customer_id !== cid) return false;
+    billSum = nSum; billInv = nInv; billSeries = nSer; billPays = np; billDocs = nd;
+    return true;
+  }
   async function softRefresh(){
-    if (!session || !me || refreshing || modalBg) return;
-    refreshing = true;
-    const open = batchesOpen(), y = window.scrollY;
-    const rb = $('rmaBody'), rmaDraft = rb ? rb.value : '';
-    try { await fetchData(); } catch(e){ refreshing = false; return; }
+    liveRtSync();
+    if (refreshing){ if (liveHint) liveHintSoon(); return; }
+    if (!session || !me || !dataAt || document.visibilityState !== 'visible') return;
+    if (liveBusy()){ if (liveHint || livePending) liveHintSoon(3000); return; }
+    refreshing = true; liveHint = false; liveLastTick = Date.now();
+    const cid = me.customer_id, before = livePending ? '' : liveSig();
+    let billNow = false;
+    try {
+      if (await fetchData() === 'stale'){ refreshing = false; return; }
+      billNow = await liveBilling(cid);
+    } catch(e){ refreshing = false; return; }
     refreshing = false;
-    billReset();
+    if (!me || me.customer_id !== cid) return;
+    if (!billNow && !livePending && liveSig() === before) return;
+    if (liveBusy()){ livePending = true; liveHintSoon(3000); return; }
+    livePending = false;
+    const open = batchesOpen(), restore = liveKeep();
     if (currentId && orders.some(function(o){ return o.id === currentId; })){
       openOrder(currentId); reopenBatches(open);
     } else if (rmaCurrent && rmaTickets.some(function(t){ return t.id === rmaCurrent; })){
       openRma(rmaCurrent);
-      const nb = $('rmaBody'); if (nb && rmaDraft) nb.value = rmaDraft;
     } else {
       currentId = null; rmaCurrent = null; renderList();
     }
-    window.scrollTo(0, y);
+    restore();
   }
-  document.addEventListener('visibilitychange', function(){
-    if (document.visibilityState === 'visible' && dataAt && Date.now() - dataAt > 5 * 60000) softRefresh();
-  });
+  function liveSoon(ms){ clearTimeout(liveTimer); liveTimer = setTimeout(softRefresh, ms == null ? 4500 : ms); }
+  /* at most one check per 5 seconds however many changes arrive, and never
+     starved: a steady stream of changes cannot keep pushing the check back */
+  var liveHint = false, liveHintT = null, liveLastTick = 0;
+  function liveHintSoon(ms){
+    if (liveHintT) return;
+    liveHintT = setTimeout(function(){ liveHintT = null; softRefresh(); }, Math.max(ms || 1500, 5000 - (Date.now() - liveLastTick)));
+  }
+
+  /* Live notifications (supabase/realtime-on.sql). A change only brings the
+     next check forward; the check is the same one the timer runs. The
+     database sends a customer only changes to rows they can already read, so
+     another customer's activity never reaches this tab. One schema-wide
+     subscription, so a table that is not switched on sends nothing instead of
+     failing the connection. While connected the timer slows to every 2
+     minutes as a backstop; after a dropped connection it checks at once.
+     Three failures in a row and it stays on the 30-second timer. */
+  var LIVE_TABLES = ['orders', 'order_lines', 'batches', 'batch_tracking', 'pc_log', 'customers', 'configs',
+    'ship_to_locations', 'order_payments', 'order_customer_docs', 'rma_tickets', 'rma_parts', 'rma_shipments',
+    'rma_comments', 'rma_attachments', 'rma_events', 'customer_contacts'];
+  var liveChan = null, liveRtOk = false, liveRtDown = false, liveRtErr = 0, liveRtGaveUp = false, liveRtUid = null;
+  function liveRtSync(){
+    var uid = session && session.user ? session.user.id : null;
+    var want = !!(SB_LIVE && uid && !DEMO.on && typeof SB_LIVE.channel === 'function');
+    if (liveChan && (!want || uid !== liveRtUid)) liveRtStop();
+    if (want && !liveChan && !liveRtGaveUp) liveRtStart(uid);
+  }
+  function liveRtStart(uid){
+    liveRtUid = uid; liveRtOk = false; liveRtDown = false;
+    var ch = SB_LIVE.channel('nt-portal-' + Math.random().toString(36).slice(2));
+    liveChan = ch;
+    ch.on('postgres_changes', { event:'*', schema:'public' }, function(m){
+      if (liveChan !== ch || !m) return;
+      if (LIVE_TABLES.indexOf(m.table) >= 0){ liveHint = true; liveHintSoon(); }
+    }).subscribe(function(status){
+      if (liveChan !== ch) return;
+      if (status === 'SUBSCRIBED'){
+        liveRtErr = 0; liveRtOk = true;
+        if (liveRtDown){ liveRtDown = false; liveSoon(500); }
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+        liveRtOk = false; liveRtDown = true;
+        if (++liveRtErr >= 3){ liveRtGaveUp = true; liveRtStop(); }
+      }
+    });
+  }
+  function liveRtStop(){
+    var ch = liveChan; liveChan = null; liveRtOk = false;
+    if (ch){ try { SB_LIVE.removeChannel(ch); } catch(e){} }
+  }
+  window.ntLiveStatus = function(){ return { connected: liveRtOk, gaveUp: liveRtGaveUp, lastCheck: liveLastTick ? new Date(liveLastTick).toLocaleTimeString() : null }; };
+  setInterval(function(){
+    liveRtSync();
+    if (liveRtOk && Date.now() - liveLastTick < 120000) return;
+    softRefresh();
+  }, LIVE_MS);
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') liveSoon(); });
+  window.addEventListener('focus', function(){ liveSoon(); });
   async function loadRma(){
     try {
       const cid = me.customer_id;
@@ -2781,6 +2911,7 @@
         SB.from('customer_contacts').select('*').eq('customer_id', cid),
         SB.from('app_settings').select('*').eq('key', 'rma_return_address')
       ]);
+      if (!me || me.customer_id !== cid) return;
       rmaTickets = r[0].data || []; rmaContacts = r[1].data || [];
       const ra = (r[2].data || [])[0]; rmaReturnAddress = ra ? (ra.value || '') : '';
       const ids = rmaTickets.map(function(t){ return t.id; });
@@ -2792,6 +2923,7 @@
           SB.from('rma_attachments').select('*').in('rma_id', ids).order('created_at'),
           SB.from('rma_events').select('*').in('rma_id', ids).order('created_at')
         ]);
+        if (!me || me.customer_id !== cid) return;
         rmaParts = s[0].data || []; rmaShipments = s[1].data || []; rmaComments = s[2].data || [];
         rmaAttachments = s[3].data || []; rmaEvents = s[4].data || [];
       } else { rmaParts = []; rmaShipments = []; rmaComments = []; rmaAttachments = []; rmaEvents = []; }
