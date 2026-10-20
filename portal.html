@@ -783,6 +783,19 @@
     .bhead > div:last-child{ grid-column:1 / -1; justify-self:end; }
   }
   .bhead b{ font-size:13.5px; }
+  /* desktop: fixed tracks so every card in the stack lines up, buttons on one line.
+     Keyed to the card's own width, so a narrow window falls back to the flowing layout. */
+  .batch{ container:pbatch / inline-size; }
+  @container pbatch (min-width:900px){
+    .bhead{ grid-template-columns:160px minmax(0,1fr) 240px 240px; min-height:84px; }
+    .bhead > .bno{ justify-content:flex-start; }
+    .bhead > .mono{ text-align:left; white-space:nowrap; overflow:hidden; }
+    .bhead > .mono .bship{ flex-wrap:nowrap; }
+    .bhead .bacts{ flex-wrap:nowrap; white-space:nowrap; }
+  }
+  @container pbatch (min-width:1100px){
+    .bhead{ grid-template-columns:190px minmax(0,1fr) 300px 240px; }
+  }
   /* sits over the serial column, so it reads as "copy this list" */
   .bbar{ display:flex; margin-bottom:var(--s3); }
   .bhead:hover{ background:var(--soft); }
@@ -820,7 +833,7 @@
     :root:not([data-theme]) .carrier.has-logo img{ filter:brightness(1.1) saturate(1.05); }
   }
   .storenum{
-    display:inline-block; margin-left:var(--s2); font-family:var(--font-num); font-size:11px;
+    display:inline-block; white-space:nowrap; margin-left:var(--s2); font-family:var(--font-num); font-size:11px;
     font-weight:600; color:var(--muted); background:var(--soft); border:1px solid var(--line);
     border-radius:var(--r-pill); padding:2px 8px; vertical-align:middle;
   }
@@ -4072,24 +4085,28 @@
         const tk = tracking.filter(function(t){ return t.batch_id === b.id; });
         const per = {}; tk.forEach(function(t){ if (t.unit_id) per[t.unit_id] = t.tracking_no; });
         const wideAll = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
-        const trackLink = wideAll.find(isTrackLink) || '';
         const wide = wideAll.filter(function(n){ return !isTrackLink(n); });
+        /* a full link wins; otherwise build one from the carrier and the first number */
+        const firstNo = wide[0] || (tk.find(function(t){ return t.unit_id && t.tracking_no; }) || {}).tracking_no || '';
+        const trackLink = wideAll.find(isTrackLink) || (firstNo ? trackUrl(b.carrier, firstNo) : '');
         const shipped = b.status === 'shipped';
         return '<div class="batch">' +
           '<div class="bhead" data-head="' + esc(b.id) + '" role="button" tabindex="0" title="Click for serials and tracking">' +
             '<div class="bno"><b>Batch ' + b.batch_no + '</b>' +
               '<span class="chip ' + (shipped?'k':'w') + '">' + (shipped?'Shipped':'Preparing') + '</span></div>' +
             '<div><b>' + esc(locName(b)) + '</b>' +
-              (locNum(b) ? '<span class="storenum">Store ' + esc(locNum(b)) + '</span>' : '') +
+              (locNum(b) ? '<span class="storenum">' + esc(locNum(b)) + '</span>' : '') +
               '<div class="sub">' + esc(locLine(b) || '') + '</div></div>' +
-            '<div class="mono">' + num(bu.length) + ' units<div class="sub bship">' +
+            '<div class="mono">' + num(bu.length) + ' units' +
+              (b.ship_date ? '' : '<span class="muted" style="font-family:var(--font-ui);font-size:12px;"> \u00b7 not yet shipped</span>') +
+              '<div class="sub bship">' +
               (wide.length
                 ? '<span class="trk-grp">' + carrierBadge(b.carrier) +
                   trackHtml(b.carrier, [wide[0]]) +
                   (wide.length > 1 ? '<span class="muted">+' + num(wide.length - 1) + '</span>' : '') +
-                  '</span><span class="bdot">&middot;</span>'
+                  '</span>' + (b.ship_date ? '<span class="bdot">&middot;</span>' : '')
                 : carrierBadge(b.carrier)) +
-              '<span>' + (b.ship_date ? esc(fmtDate(b.ship_date)) : 'not yet shipped') + '</span></div></div>' +
+              (b.ship_date ? '<span>' + esc(fmtDate(b.ship_date)) + '</span>' : '') + '</div></div>' +
             '<div class="bacts">' +
               (trackLink ? '<a class="btn primary" style="padding:8px 12px;min-height:34px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;" href="' + esc(trackLink) + '" target="_blank" rel="noopener noreferrer">Track shipment \u2197</a>' : '') +
               '<button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
