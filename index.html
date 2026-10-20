@@ -11429,6 +11429,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   function ordDestFieldsHtml(){
     return '<div class="ord-newdest" id="ordNewDest" style="display:none;">' +
+      ordAddrPasteHtml('ordDPaste') +
       '<div class="ord-cfg-grid">' +
         '<div class="field"><label for="ordDStore">Store name</label><input id="ordDStore" type="text" placeholder="Rent-A-Center" autocomplete="off"></div>' +
         '<div class="field"><label for="ordDNum">Store number</label><input id="ordDNum" type="text" placeholder="4471" autocomplete="off"></div>' +
@@ -11442,6 +11443,88 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<p class="muted-sm">Saved to this customer\u2019s destination list for next time.</p>' +
     '</div>';
   }
+
+  /* ---------- paste a whole address, fill the boxes ----------
+     Handles the shapes people actually copy: one field per line, or one line
+     with commas. Only fields it finds are written, so nothing typed is lost. */
+  const ADDR_STATES = { alabama:'AL', alaska:'AK', arizona:'AZ', arkansas:'AR', california:'CA', colorado:'CO', connecticut:'CT', delaware:'DE',
+    'district of columbia':'DC', florida:'FL', georgia:'GA', hawaii:'HI', idaho:'ID', illinois:'IL', indiana:'IN', iowa:'IA', kansas:'KS',
+    kentucky:'KY', louisiana:'LA', maine:'ME', maryland:'MD', massachusetts:'MA', michigan:'MI', minnesota:'MN', mississippi:'MS',
+    missouri:'MO', montana:'MT', nebraska:'NE', nevada:'NV', 'new hampshire':'NH', 'new jersey':'NJ', 'new mexico':'NM', 'new york':'NY',
+    'north carolina':'NC', 'north dakota':'ND', ohio:'OH', oklahoma:'OK', oregon:'OR', pennsylvania:'PA', 'rhode island':'RI',
+    'south carolina':'SC', 'south dakota':'SD', tennessee:'TN', texas:'TX', utah:'UT', vermont:'VT', virginia:'VA', washington:'WA',
+    'west virginia':'WV', wisconsin:'WI', wyoming:'WY', 'puerto rico':'PR' };
+  const ADDR_CODES = new Set(Object.keys(ADDR_STATES).map(function(k){ return ADDR_STATES[k]; }));
+  function ordAddrPasteHtml(id){
+    return '<div class="field" style="margin-bottom:var(--s3);"><label for="' + id + '">Paste full address</label>' +
+      '<textarea id="' + id + '" rows="3" autocomplete="off" style="resize:vertical;min-height:72px;"></textarea></div>';
+  }
+  function ordParseAddress(raw){
+    const out = {};
+    let text = String(raw || '').replace(/\r/g, '').replace(/[\t\u00a0]+/g, ' ');
+    const ph = text.match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?:\s*(?:x|ext\.?)\s*\d+)?/i);
+    if (ph){ out.phone = ph[0].trim(); text = text.replace(ph[0], ''); }
+    let parts = text.split('\n').map(function(s){ return s.replace(/^(phone|tel|ph)\s*[:.]?\s*$/i, '').trim().replace(/^,|,$/g, '').trim(); }).filter(Boolean);
+    if (parts.length === 1) parts = parts[0].split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    parts = parts.filter(function(s){ return !/^(usa|us|u\.s\.a?\.?|united states( of america)?)$/i.test(s); });
+    if (!parts.length) return out;
+
+    /* the city / state / ZIP line: last one with a ZIP, or a state at its end */
+    const stRe = '([A-Za-z]{2}|' + Object.keys(ADDR_STATES).join('|') + ')';
+    const cszRe = new RegExp('^(.*?)[,\\s]+' + stRe + '\\.?[,\\s]+(\\d{5}(?:-\\d{4})?)$', 'i');
+    const szRe = new RegExp('^' + stRe + '\\.?[,\\s]+(\\d{5}(?:-\\d{4})?)$', 'i');
+    let ci = -1;
+    for (let i = parts.length - 1; i >= 0; i--){
+      let m = parts[i].match(cszRe), st;
+      if (m && (st = ordAddrState(m[2]))){ out.city = m[1].replace(/,$/, '').trim(); out.state = st; out.zip = m[3]; ci = i; break; }
+      m = parts[i].match(szRe);
+      if (m && (st = ordAddrState(m[1]))){ out.state = st; out.zip = m[2]; ci = i; break; }
+      m = parts[i].match(/^(\d{5}(?:-\d{4})?)$/);
+      if (m && i > 0 && (st = ordAddrState(parts[i - 1]))){ out.state = st; out.zip = m[1]; ci = i - 1; parts.splice(i, 1); break; }
+    }
+    if (ci < 0) ci = parts.length;
+    else if (!out.city && ci > 0){ out.city = parts[ci - 1]; parts.splice(ci - 1, 1); ci--; }
+
+    const before = parts.slice(0, ci);
+    let si = before.findIndex(function(s){ return /^\d+[a-z]?\b/i.test(s) || /^(p\.?\s*o\.?\s*box|rr\s|route\s|hc\s)/i.test(s); });
+    if (si < 0) si = Math.max(0, before.length - 1);
+    const names = before.slice(0, si), street = before.slice(si);
+    if (street.length){
+      out.address1 = street[0];
+      if (street.length > 1) out.address2 = street.slice(1).join(', ');
+    }
+    if (names.length){
+      let nm = names[0];
+      const num = nm.match(/\s*(?:store\s*)?(?:#|no\.?\s*|store\s+)\s*([A-Za-z0-9-]+)\s*$/i);
+      if (num){ out.store_number = num[1]; nm = nm.slice(0, num.index).replace(/[\s,\-\u2013]+$/, ''); }
+      out.store_name = nm;
+      if (names.length > 1 && !out.store_number) out.store_number = names.slice(1).join(' ');
+    }
+    return out;
+  }
+  function ordAddrState(s){
+    s = String(s || '').trim().replace(/\.$/, '');
+    if (/^[A-Za-z]{2}$/.test(s) && ADDR_CODES.has(s.toUpperCase())) return s.toUpperCase();
+    return ADDR_STATES[s.toLowerCase()] || '';
+  }
+  const ADDR_FIELDS = {
+    ordDPaste: { store_name:'ordDStore', store_number:'ordDNum', address1:'ordDAddr1', address2:'ordDAddr2', city:'ordDCity', state:'ordDState', zip:'ordDZip', phone:'ordDPhone' },
+    admLPaste: { store_name:'admLStore', store_number:'admLNum', address1:'admLA1', address2:'admLA2', city:'admLCity', state:'admLState', zip:'admLZip', phone:'admLPhone' }
+  };
+  let ordAddrT = null;
+  document.addEventListener('input', function(e){
+    const map = e.target && ADDR_FIELDS[e.target.id];
+    if (!map) return;
+    const src = e.target;
+    clearTimeout(ordAddrT);
+    ordAddrT = setTimeout(function(){
+      const p = ordParseAddress(src.value), scope = src.closest('.mg-modal') || document;
+      Object.keys(map).forEach(function(k){
+        const el = scope.querySelector('#' + map[k]);
+        if (el && p[k]){ el.value = p[k]; el.dispatchEvent(new Event('input', { bubbles:true })); }
+      });
+    }, 200);
+  });
 
   async function ordSaveNewDest(bg, customerId){
     const store = bg.querySelector('#ordDStore').value.trim();
@@ -14192,6 +14275,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         ? '<div class="field" style="margin-bottom:var(--s3);"><label for="admLCust">Customer</label>' +
           admCustSelect('admLCust', admCustFilter || ordCustomers[0].id, '') + '</div>'
         : '') +
+      ordAddrPasteHtml('admLPaste') +
       '<div class="ord-cfg-grid">' +
         f('admLStore','Store name',loc.store_name) + f('admLNum','Store number',loc.store_number) +
         f('admLA1','Address',loc.address1) + f('admLA2','Address line 2',loc.address2) +
