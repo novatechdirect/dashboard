@@ -11825,15 +11825,29 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<p>' + (n ? 'All ' + ordNum(n) + ' unit' + (n === 1 ? '' : 's') + ' go back to the unit pool, ready to batch again. ' : '') +
         'The batch, its destination and its tracking numbers are removed. Serial numbers stay with their units — nothing is reissued.</p>' +
         (b.opened_notified_at ? '<p class="muted-sm">The customer was already emailed that this batch was packed. That email can\u2019t be recalled; the batch simply disappears from their portal.</p>' : '') +
+        (n ? '<p style="margin:var(--s4) 0 var(--s2);font-weight:600;">Are these units already printed?</p>' +
+          '<div style="display:flex;flex-direction:column;gap:var(--s2);">' +
+            '<label class="ord-check"><input type="radio" name="ordRPrinted" value="1"> Yes, return them as printed</label>' +
+            '<label class="ord-check"><input type="radio" name="ordRPrinted" value="0"> No, return them unprinted</label>' +
+          '</div>' : '') +
         '<div class="err" id="ordRErr"></div></div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="ordRCancel">Keep it</button>' +
       '<button class="ghost danger" id="ordRGo" data-primary>Delete batch</button></div>');
     bg.querySelector('#ordRCancel').addEventListener('click', mgCloseModal);
-    bg.querySelector('#ordRGo').addEventListener('click', async function(){
+    const rGo = bg.querySelector('#ordRGo');
+    if (n){
+      rGo.disabled = true;
+      bg.querySelectorAll('input[name="ordRPrinted"]').forEach(function(r){ r.addEventListener('change', function(){ rGo.disabled = false; }); });
+    }
+    rGo.addEventListener('click', async function(){
+      const pick = bg.querySelector('input[name="ordRPrinted"]:checked');
+      if (n && !pick) return;
       this.disabled = true; this.textContent = 'Deleting\u2026';
       try {
         /* by batch_id, not by the ids loaded on screen, so nothing is left behind */
-        const u = await SB.from('pc_log').update({ batch_id: null, unit_status: 'built', status: 'building' })
+        const back2 = { batch_id: null, unit_status: 'built', status: 'building' };
+        if (pick && (DEMO.on || ordHasPrintedCol())) back2.printed_at = pick.value === '1' ? new Date().toISOString() : null;
+        const u = await SB.from('pc_log').update(back2)
           .eq('batch_id', b.id).select('id');
         if (u.error) throw u.error;
         const t = await SB.from('batch_tracking').delete().eq('batch_id', b.id);
