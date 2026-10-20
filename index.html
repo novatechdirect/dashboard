@@ -11491,6 +11491,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const stRe = '([A-Za-z]{2}|' + Object.keys(ADDR_STATES).join('|') + ')';
     const cszRe = new RegExp('^(.*?)[,\\s]+' + stRe + '\\.?[,\\s]+(\\d{5}(?:-\\d{4})?)$', 'i');
     const szRe = new RegExp('^' + stRe + '\\.?[,\\s]+(\\d{5}(?:-\\d{4})?)$', 'i');
+    const csRe = new RegExp('^(.*?)[,\\s]+' + stRe + '\\.?$', 'i');
     let ci = -1;
     for (let i = parts.length - 1; i >= 0; i--){
       let m = parts[i].match(cszRe), st;
@@ -11499,6 +11500,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (m && (st = ordAddrState(m[1]))){ out.state = st; out.zip = m[2]; ci = i; break; }
       m = parts[i].match(/^(\d{5}(?:-\d{4})?)$/);
       if (m && i > 0 && (st = ordAddrState(parts[i - 1]))){ out.state = st; out.zip = m[1]; ci = i - 1; parts.splice(i, 1); break; }
+      /* no ZIP: only the closing line counts, and the city can't start with a
+         number, so "100 Oak Ct" never reads as Connecticut */
+      if (i === parts.length - 1){
+        m = parts[i].match(csRe);
+        if (m && !/^\d/.test(m[1]) && (st = ordAddrState(m[2]))){ out.city = m[1].replace(/,$/, '').trim(); out.state = st; ci = i; break; }
+        if ((st = ordAddrState(parts[i])) && i > 0 && !/^\d/.test(parts[i - 1])){ out.state = st; ci = i; break; }
+      }
     }
     if (ci < 0) ci = parts.length;
     else if (!out.city && ci > 0){ out.city = parts[ci - 1]; parts.splice(ci - 1, 1); ci--; }
@@ -11541,6 +11549,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         const el = scope.querySelector('#' + map[k]);
         if (el && p[k]){ el.value = p[k]; el.dispatchEvent(new Event('input', { bubbles:true })); }
       });
+      if (!p.zip && p.address1 && (p.city || p.state)) acFindZip(scope, map, p);
     }, 200);
   });
 
@@ -11586,26 +11595,59 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       } catch(err){ acClose(t); }
     }, 250);
   });
+  async function acDetails(pid, token){
+    const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(pid) + '?sessionToken=' + encodeURIComponent(token || ''), {
+      headers:{ 'X-Goog-Api-Key':GOOGLE_PLACES_KEY, 'X-Goog-FieldMask':'addressComponents' }
+    });
+    const j = await r.json();
+    if (j.error) throw new Error(j.error.message || 'lookup failed');
+    const c = {};
+    (j.addressComponents || []).forEach(function(x){ (x.types || []).forEach(function(ty){ if (!c[ty]) c[ty] = x; }); });
+    const g = function(k, short){ return c[k] ? ((short ? c[k].shortText : c[k].longText) || '') : ''; };
+    return {
+      address1: [g('street_number'), g('route', true)].filter(Boolean).join(' '),
+      address2: g('subpremise') ? '#' + g('subpremise') : '',
+      city: g('locality') || g('postal_town') || g('sublocality') || g('administrative_area_level_3'),
+      state: g('administrative_area_level_1', true),
+      zip: g('postal_code') + (g('postal_code') && g('postal_code_suffix') ? '-' + g('postal_code_suffix') : '')
+    };
+  }
+  /* A pasted address with no ZIP: find it on Google and fill only what was
+     missing. The house number has to match, so a near miss never lands. */
+  let acZipSeq = 0;
+  async function acFindZip(scope, map, p){
+    if (!GOOGLE_PLACES_KEY) return;
+    const my = ++acZipSeq, tok = acToken();
+    const zipEl = scope.querySelector('#' + map.zip);
+    try {
+      const r = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'X-Goog-Api-Key':GOOGLE_PLACES_KEY },
+        body: JSON.stringify({ input:[p.address1, p.city, p.state].filter(Boolean).join(', '), includedRegionCodes:['us'],
+          includedPrimaryTypes:['street_address','premise','subpremise'], sessionToken:tok })
+      });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error.message || 'lookup failed');
+      const pred = ((j.suggestions || [])[0] || {}).placePrediction;
+      if (my !== acZipSeq) return;
+      if (!pred){ toast('Couldn\u2019t find a ZIP for that address. Add it by hand.', 'warn', 6000); return; }
+      const v = await acDetails(pred.placeId, tok);
+      if (my !== acZipSeq) return;
+      const n = (String(p.address1).match(/^\d+/) || [])[0];
+      if (!v.zip || (n && v.address1.indexOf(n + ' ') !== 0)){ toast('Couldn\u2019t match that address on Google. Add the ZIP by hand.', 'warn', 6000); return; }
+      if (zipEl && !zipEl.value.trim()) zipEl.value = v.zip;
+      ['city', 'state'].forEach(function(k){ const el = scope.querySelector('#' + map[k]); if (el && !el.value.trim() && v[k]) el.value = v[k]; });
+      toast('ZIP ' + v.zip + ' filled from Google', 'ok');
+    } catch(err){
+      if (my === acZipSeq) toast('ZIP lookup failed: ' + (err.message || 'error'), 'warn');
+    }
+  }
   async function acPick(input, pid){
     const map = ADDR_AC[input.id], scope = input.closest('.mg-modal') || document;
     acClose(input); acSeq++;
     try {
-      const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(pid) + '?sessionToken=' + encodeURIComponent(acSess || ''), {
-        headers:{ 'X-Goog-Api-Key':GOOGLE_PLACES_KEY, 'X-Goog-FieldMask':'addressComponents' }
-      });
-      const j = await r.json();
+      const vals = await acDetails(pid, acSess);
       acSess = null;
-      if (j.error) throw new Error(j.error.message || 'lookup failed');
-      const c = {};
-      (j.addressComponents || []).forEach(function(x){ (x.types || []).forEach(function(ty){ if (!c[ty]) c[ty] = x; }); });
-      const g = function(k, short){ return c[k] ? ((short ? c[k].shortText : c[k].longText) || '') : ''; };
-      const vals = {
-        address1: [g('street_number'), g('route', true)].filter(Boolean).join(' '),
-        address2: g('subpremise') ? '#' + g('subpremise') : '',
-        city: g('locality') || g('postal_town') || g('sublocality') || g('administrative_area_level_3'),
-        state: g('administrative_area_level_1', true),
-        zip: g('postal_code') + (g('postal_code') && g('postal_code_suffix') ? '-' + g('postal_code_suffix') : '')
-      };
       Object.keys(vals).forEach(function(k){
         const el = scope.querySelector('#' + map[k]);
         if (el && vals[k]) el.value = vals[k];
