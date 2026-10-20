@@ -2155,7 +2155,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-pool-table tbody tr.sel{ background:var(--accent-soft); }
   .ord-printed{
     display:inline-flex; align-items:center; gap:4px; white-space:nowrap;
-    font-size:11.5px; font-weight:600; line-height:1; padding:4px 9px 4px 7px; border-radius:var(--r-pill);
+    font-size:11.5px; font-weight:500; line-height:1; padding:4px 9px 4px 7px; border-radius:var(--r-pill);
     background:var(--ok-bg); color:var(--ok-ink); border:1px solid var(--ok-line);
   }
   .ord-printed svg{ width:14px; height:14px; color:var(--ok); flex:0 0 auto; }
@@ -10398,7 +10398,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<td class="chk-col" data-l=""><input type="checkbox" data-upick="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' checked' : '') + '></td>' +
           '<td class="ord-mono" data-l="Serial">' + esc(u.serial) + rmaUnitFlag(u) + '</td>' +
           '<td data-l="Config">' + ordCfgCell(u.config_id, cfgs[u.config_id]) + '</td>' +
-          '<td class="ord-printed-c" data-l="Label">' + (u.printed_at ? '<span class="ord-printed" title="Label printed ' + esc(fmtDate(u.printed_at)) + '">' + ntIco('printcheck') + 'printed</span>' : '') + '</td>' +
+          '<td class="ord-printed-c" data-l="Label">' + (u.printed_at ? '<span class="ord-printed" data-age="' + esc(u.printed_at) + '" title="' + esc(new Date(u.printed_at).toLocaleString()) + '">' + ntIco('printcheck') + '<span class="ord-printed-t">' + ordAgoRel(u.printed_at) + '</span></span>' : '') + '</td>' +
           '<td data-l="Built">' + esc(fmtDate(u.generated_at || u.created_at)) + '</td>' +
         '</tr>';
       }).join('') +
@@ -11247,17 +11247,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return ordUnits.filter(function(u){ return u.batch_id === bid; });
   }
 
-  function ordAgo(ts){
+  function ordAgoRel(ts){
     const s = Math.max(0, (Date.now() - new Date(ts).getTime()) / 1000);
     if (!isFinite(s)) return '';
-    if (s < 60) return 'Created just now';
-    const m = Math.floor(s / 60); if (m < 60) return 'Created ' + m + ' min ago';
-    const hr = Math.floor(m / 60); if (hr < 24) return 'Created ' + hr + ' hour' + (hr === 1 ? '' : 's') + ' ago';
-    const d = Math.floor(hr / 24); return 'Created ' + d + ' day' + (d === 1 ? '' : 's') + ' ago';
+    if (s < 60) return 'just now';
+    const m = Math.floor(s / 60); if (m < 60) return m + ' min ago';
+    const hr = Math.floor(m / 60); if (hr < 24) return hr + ' hour' + (hr === 1 ? '' : 's') + ' ago';
+    const d = Math.floor(hr / 24); return d + ' day' + (d === 1 ? '' : 's') + ' ago';
   }
+  function ordAgo(ts){ const r = ordAgoRel(ts); return r ? 'Created ' + r : ''; }
   /* keep the ages honest while the page sits open */
   setInterval(function(){
     document.querySelectorAll('.ord-batch-age[data-age]').forEach(function(el){ el.textContent = ordAgo(el.getAttribute('data-age')); });
+    document.querySelectorAll('.ord-printed[data-age] .ord-printed-t').forEach(function(el){ el.textContent = ordAgoRel(el.parentNode.getAttribute('data-age')); });
   }, 60000);
   function ordFocusBatch(bid){
     const el = document.querySelector('.ord-batch[data-bid="' + (window.CSS && CSS.escape ? CSS.escape(String(bid)) : bid) + '"]');
