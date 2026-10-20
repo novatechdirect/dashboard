@@ -2165,6 +2165,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   #ordMarkPrinted .nt-ico{ color:var(--ok); }
   #ordAddBatch .nt-ico{ color:inherit; }
   #ordMarkPrinted span{ pointer-events:none; }
+  .addr-ac{
+    position:absolute; left:0; right:0; top:100%; margin-top:4px; z-index:60;
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
+    box-shadow:0 10px 28px rgba(0,0,0,.16); overflow:hidden;
+  }
+  .addr-ac .addr-ac-i{
+    display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; gap:2px;
+    width:100%; height:auto; min-height:0; padding:9px 12px; margin:0; text-align:left;
+    background:none; border:0; border-radius:0; box-shadow:none; cursor:pointer; font:inherit; color:var(--ink);
+  }
+  .addr-ac .addr-ac-i + .addr-ac-i{ border-top:1px solid var(--line); }
+  .addr-ac .addr-ac-i b{ font-weight:600; font-size:13.5px; }
+  .addr-ac .addr-ac-i span{ font-size:12px; color:var(--muted); }
+  .addr-ac .addr-ac-i:hover, .addr-ac .addr-ac-i.hi{ background:var(--soft); }
+  .addr-ac-g{ font-size:10.5px; color:var(--faint); text-align:right; padding:5px 12px 6px; border-top:1px solid var(--line); }
   .ord-pool-bar .ord-pool-actions button.ord-printed-btn:hover:not(:disabled){ border-color:var(--ok); background:var(--ok-bg); }
   .ord-mono{ font-family:var(--font-num); font-variant-numeric:tabular-nums; }
   .ord-pool-bar{
@@ -4929,6 +4944,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   // ---- Supabase (database) ----
   const SUPABASE_URL = 'https://vajrnbniwkvnkkkigeit.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_mF1sD8UO4CHuyCgPTLZsXQ_CilDLz3y';
+  /* Google Places (New) browser key, restricted to this site's domain in Google Cloud.
+     Empty = address suggestions stay off; everything else works as before. */
+  const GOOGLE_PLACES_KEY = 'AIzaSyDKr5MFMOTAEX5dXOvHHBLaPA9cCqBylc8';
   const SB_LIVE = (window.supabase && window.supabase.createClient)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } })
     : null;
@@ -11525,6 +11543,112 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       });
     }, 200);
   });
+
+  /* ---------- address suggestions while typing (Google Places, New) ----------
+     Only runs on real keystrokes in the Address box, so the paste filler above
+     never sets it off. One session token per lookup keeps it in the free tier. */
+  const ADDR_AC = { ordDAddr1: ADDR_FIELDS.ordDPaste, admLA1: ADDR_FIELDS.admLPaste };
+  let acT = null, acSeq = 0, acSess = null, acWarned = false;
+  function acToken(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2); }
+  function acBox(input){ return input && input.parentNode && input.parentNode.querySelector('.addr-ac'); }
+  function acClose(input){ const l = acBox(input); if (l) l.remove(); }
+  document.addEventListener('input', function(e){
+    const t = e.target;
+    if (!t || !ADDR_AC[t.id] || !e.isTrusted || !GOOGLE_PLACES_KEY) return;
+    clearTimeout(acT);
+    const q = t.value.trim();
+    if (q.length < 4){ acClose(t); return; }
+    acT = setTimeout(async function(){
+      const my = ++acSeq;
+      if (!acSess) acSess = acToken();
+      try {
+        const r = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'X-Goog-Api-Key':GOOGLE_PLACES_KEY },
+          body: JSON.stringify({ input:q, includedRegionCodes:['us'], includedPrimaryTypes:['street_address','premise','subpremise'], sessionToken:acSess })
+        });
+        const j = await r.json();
+        if (j.error){
+          if (!acWarned){ acWarned = true; toast('Address suggestions unavailable: ' + (j.error.status === 'PERMISSION_DENIED' ? 'Google blocked this site. Check the key\u2019s website list.' : (j.error.message || 'Google error')), 'warn', 8000); }
+          acClose(t); return;
+        }
+        if (my !== acSeq || document.activeElement !== t) return;
+        const sug = (j.suggestions || []).map(function(s){ return s.placePrediction; }).filter(Boolean);
+        if (!sug.length){ acClose(t); return; }
+        let l = acBox(t);
+        if (!l){ t.parentNode.style.position = 'relative'; l = document.createElement('div'); l.className = 'addr-ac'; l.setAttribute('role', 'listbox'); t.parentNode.appendChild(l); }
+        l.innerHTML = sug.slice(0, 5).map(function(p){
+          const sf = p.structuredFormat || {};
+          const main = (sf.mainText && sf.mainText.text) || (p.text && p.text.text) || '';
+          const sec = (sf.secondaryText && sf.secondaryText.text) || '';
+          return '<button type="button" class="addr-ac-i" role="option" tabindex="-1" data-pid="' + esc(p.placeId) + '"><b>' + esc(main) + '</b><span>' + esc(sec) + '</span></button>';
+        }).join('') + '<div class="addr-ac-g">Powered by Google</div>';
+      } catch(err){ acClose(t); }
+    }, 250);
+  });
+  async function acPick(input, pid){
+    const map = ADDR_AC[input.id], scope = input.closest('.mg-modal') || document;
+    acClose(input); acSeq++;
+    try {
+      const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(pid) + '?sessionToken=' + encodeURIComponent(acSess || ''), {
+        headers:{ 'X-Goog-Api-Key':GOOGLE_PLACES_KEY, 'X-Goog-FieldMask':'addressComponents' }
+      });
+      const j = await r.json();
+      acSess = null;
+      if (j.error) throw new Error(j.error.message || 'lookup failed');
+      const c = {};
+      (j.addressComponents || []).forEach(function(x){ (x.types || []).forEach(function(ty){ if (!c[ty]) c[ty] = x; }); });
+      const g = function(k, short){ return c[k] ? ((short ? c[k].shortText : c[k].longText) || '') : ''; };
+      const vals = {
+        address1: [g('street_number'), g('route', true)].filter(Boolean).join(' '),
+        address2: g('subpremise') ? '#' + g('subpremise') : '',
+        city: g('locality') || g('postal_town') || g('sublocality') || g('administrative_area_level_3'),
+        state: g('administrative_area_level_1', true),
+        zip: g('postal_code') + (g('postal_code') && g('postal_code_suffix') ? '-' + g('postal_code_suffix') : '')
+      };
+      Object.keys(vals).forEach(function(k){
+        const el = scope.querySelector('#' + map[k]);
+        if (el && vals[k]) el.value = vals[k];
+      });
+      const next = scope.querySelector('#' + map.address2);
+      if (next) next.focus();
+    } catch(err){
+      acSess = null;
+      toast('Address lookup failed: ' + (err.message || 'error'), 'warn');
+    }
+  }
+  /* mousedown, so the pick lands before the field's blur closes the list */
+  document.addEventListener('mousedown', function(e){
+    const it = e.target.closest && e.target.closest('.addr-ac-i');
+    if (!it) return;
+    e.preventDefault();
+    acPick(it.closest('.field').querySelector('input'), it.getAttribute('data-pid'));
+  });
+  document.addEventListener('focusout', function(e){
+    const t = e.target;
+    if (t && ADDR_AC[t.id]) setTimeout(function(){ if (document.activeElement !== t) acClose(t); }, 150);
+  });
+  /* capture phase, so Enter and Escape drive the list instead of the modal */
+  document.addEventListener('keydown', function(e){
+    const t = e.target;
+    if (!t || !ADDR_AC[t.id]) return;
+    const l = acBox(t);
+    if (!l) return;
+    const items = Array.from(l.querySelectorAll('.addr-ac-i'));
+    let i = items.findIndex(function(x){ return x.classList.contains('hi'); });
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      e.preventDefault(); e.stopPropagation();
+      if (i >= 0) items[i].classList.remove('hi');
+      i = e.key === 'ArrowDown' ? (i + 1) % items.length : (i <= 0 ? items.length - 1 : i - 1);
+      items[i].classList.add('hi');
+    } else if (e.key === 'Enter' && i >= 0){
+      e.preventDefault(); e.stopPropagation();
+      acPick(t, items[i].getAttribute('data-pid'));
+    } else if (e.key === 'Escape'){
+      e.preventDefault(); e.stopPropagation();
+      acClose(t);
+    }
+  }, true);
 
   async function ordSaveNewDest(bg, customerId){
     const store = bg.querySelector('#ordDStore').value.trim();
