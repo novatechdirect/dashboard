@@ -2160,6 +2160,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .ord-printed svg{ width:14px; height:14px; color:var(--ok); flex:0 0 auto; }
   .ord-pool-bar .ord-pool-actions button.ord-printed-btn{ border-color:var(--ok); }
+  #ordPrint46, #ordPrintDymo, #ordMarkPrinted, #ordUnbuild, #ordAddBatch{ display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  #ordPrint46 .nt-ico, #ordPrintDymo .nt-ico, #ordMarkPrinted .nt-ico, #ordUnbuild .nt-ico, #ordAddBatch .nt-ico{ width:16px; height:16px; flex:0 0 auto; pointer-events:none; }
+  #ordMarkPrinted .nt-ico{ color:var(--ok); }
+  #ordAddBatch .nt-ico{ color:inherit; }
+  #ordMarkPrinted span{ pointer-events:none; }
   .ord-pool-bar .ord-pool-actions button.ord-printed-btn:hover:not(:disabled){ border-color:var(--ok); background:var(--ok-bg); }
   .ord-mono{ font-family:var(--font-num); font-variant-numeric:tabular-nums; }
   .ord-pool-bar{
@@ -2183,7 +2188,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .ord-pool-bar .ord-pool-actions .ghost:not(.danger){ background:var(--paper); }
     .ord-sel-count{ font-size:16px; font-weight:700; color:var(--ink); }
     /* .btn-sm pins size with !important, so these have to match it */
-    .ord-pool-bar .ord-pool-actions .btn-sm{ min-height:52px !important; padding:0 26px !important; font-size:15px !important; font-weight:600; }
+    .ord-pool-bar .ord-pool-actions .btn-sm, .ord-pool-bar #ordUnbuild.btn-sm{ min-height:52px !important; padding:0 26px !important; font-size:15px !important; font-weight:600; }
     .ord-with{ font-size:13.5px; }
   }
   .ord-sel-count{ font-family:var(--font-num); font-weight:600; font-size:13px; font-variant-numeric:tabular-nums; }
@@ -6051,6 +6056,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      16px. Phosphor's regular weight matches Solar's 1.5 stroke; it uses a 256 box. */
   window.NT_VB256 = { truck:1, tower:1, gpu:1, ram:1, cpu:1, widget:1, ssd:1, wifi:1, archive:1, tag:1, temperature:1, monitor:1 };
   window.NT_ICO.printcheck = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V5.5C7 4.12 8.12 3 9.5 3h5C15.88 3 17 4.12 17 5.5V8"/><path d="M7 17H5.5C4.12 17 3 15.88 3 14.5v-4C3 9.12 4.12 8 5.5 8h13C19.88 8 21 9.12 21 10.5v4c0 1.38-1.12 2.5-2.5 2.5H17"/><path d="M7 13h10v6.5c0 .83-.67 1.5-1.5 1.5h-7C7.67 21 7 20.33 7 19.5V13z"/><path d="M9.75 17l1.5 1.5 3-3"/></g>';
+  window.NT_ICO.label46 = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 6.5h3.5M9 9h6"/><path d="M6 11.75h12"/><path d="M9 14.75v3.25M11 14.75v3.25M13.25 14.75v3.25M15 14.75v3.25"/></g>';
+  window.NT_ICO.labelsn = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.75" y="7.75" width="18.5" height="8.5" rx="2"/><path d="M6.5 10.5v3M8.5 10.5v3M11 10.5v3M13 10.5v3M15.5 10.5v3M17.5 10.5v3"/></g>';
+  window.NT_ICO.trashup = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16"/><path d="M9.5 6.5V5A1.5 1.5 0 0 1 11 3.5h2A1.5 1.5 0 0 1 14.5 5v1.5"/><path d="M6 6.5l.9 12.6A2 2 0 0 0 8.9 21h6.2a2 2 0 0 0 2-1.9L18 6.5"/><path d="M12 17.5v-7M9.5 13l2.5-2.5 2.5 2.5"/></g>';
+  window.NT_ICO.grid4 = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></g>';
   window.ntIco = function(key, cls){
     var b = window.NT_ICO[key]; if (!b) return '';
     var vb = window.NT_VB256[key] ? '0 0 256 256' : '0 0 24 24';
@@ -9630,13 +9639,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div id="ordPoolBody"></div>' +
         '<div class="ord-pool-bar" id="ordPoolBar" style="display:none;">' +
           '<span class="ord-sel-count" id="ordSelCount"></span>' +
+          (ordPerm.manage ? '<button class="ghost danger btn-sm" id="ordUnbuild" type="button" title="Delete these units and put them back to needs building">' + ntIco('trashup', 'nt-ico nt-ico-sm') + 'Remove</button>' : '') +
           '<span class="ord-sel-note" id="ordSelNote"></span>' +
           '<span class="ord-pool-actions">' +
-            '<button class="ghost btn-sm" id="ordPrint46" type="button">4\u00d76 box PDF</button>' +
-            '<button class="ghost btn-sm" id="ordPrintDymo" type="button">Dymo PDF</button>' +
-            '<button class="ghost btn-sm ord-printed-btn" id="ordMarkPrinted" type="button">Mark as printed</button>' +
-            (ordPerm.manage ? '<button class="ghost danger btn-sm" id="ordUnbuild" type="button" title="Delete these units and put them back to needs building">Remove from pool</button>' : '') +
-            (ordPerm.manage ? '<button class="primary btn-sm" id="ordAddBatch" type="button">Add to batch</button>' : '') +
+            '<button class="ghost btn-sm" id="ordPrint46" type="button">' + ntIco('label46', 'nt-ico nt-ico-sm') + '4\u00d76 box PDF</button>' +
+            '<button class="ghost btn-sm" id="ordPrintDymo" type="button">' + ntIco('labelsn', 'nt-ico nt-ico-sm') + 'Dymo PDF</button>' +
+            '<button class="ghost btn-sm ord-printed-btn" id="ordMarkPrinted" type="button">' + ntIco('printcheck', 'nt-ico nt-ico-sm') + '<span>Mark as printed</span></button>' +
+            (ordPerm.manage ? '<button class="primary btn-sm" id="ordAddBatch" type="button">' + ntIco('grid4', 'nt-ico nt-ico-sm') + 'Add to batch</button>' : '') +
           '</span>' +
         '</div>' +
       '</section>' +
@@ -10437,7 +10446,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const mp = document.getElementById('ordMarkPrinted');
     if (mp && !mp.dataset.busy){
       const sel = ordSelectedUnits();
-      mp.textContent = (sel.length && sel.every(function(u){ return u.printed_at; })) ? 'Unmark printed' : 'Mark as printed';
+      mp.lastChild.textContent = (sel.length && sel.every(function(u){ return u.printed_at; })) ? 'Unmark printed' : 'Mark as printed';
     }
   }
   function ordHasPrintedCol(){ return ordUnits.length > 0 && ('printed_at' in ordUnits[0]); }
@@ -10448,7 +10457,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const undo = sel.every(function(u){ return u.printed_at; });
     const stamp = undo ? null : new Date().toISOString();
     const btn = document.getElementById('ordMarkPrinted');
-    if (btn){ btn.disabled = true; btn.dataset.busy = '1'; btn.textContent = undo ? 'Unmarking\u2026' : 'Marking\u2026'; }
+    if (btn){ btn.disabled = true; btn.dataset.busy = '1'; btn.lastChild.textContent = undo ? 'Unmarking\u2026' : 'Marking\u2026'; }
     try {
       const ids = sel.map(function(u){ return u.id; });
       for (let i = 0; i < ids.length; i += 100){
