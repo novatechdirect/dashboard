@@ -1373,6 +1373,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .mg-chip.cur{ background:var(--accent-soft); color:var(--info-ink); border-color:var(--accent-line); --dot:var(--accent); }
   .mg-chip.oneoff{ background:transparent; border-style:dashed; }
+  button.mg-chip{ font-family:inherit; line-height:inherit; height:auto; min-height:0; box-shadow:none; cursor:pointer; transition:border-color .15s, color .15s; }
+  button.mg-chip:hover{ border-color:var(--accent); color:var(--ink); }
   .mg-badge{
     display:inline-flex; align-items:center; gap:4px; width:106px; justify-content:center;
     font-size:11px; font-weight:600; padding:4px 10px; border-radius:var(--r-pill);
@@ -7186,7 +7188,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     var open = (mgViewBuild === b.id) || (mgOpenBuild === b.id);
     return '<div class="mg-build' + (open ? ' open' : '') + '"><div class="mg-row">'
       + (mgCompare ? '<input type="checkbox" class="mg-cmp-chk" aria-label="Select ' + esc(b.quarter) + ' for comparison" data-mgsel="' + b.id + '"' + (mgSel.indexOf(b.id) >= 0 ? ' checked' : '') + '>' : '')
-      + '<span class="mg-chip' + (isCur ? ' cur' : '') + '">' + esc(b.quarter) + (isCur ? ' &middot; Current' : '') + '</span>'
+      + '<button type="button" class="mg-chip' + (isCur ? ' cur' : '') + '" data-mgq="' + b.id + '" title="Change quarter and year">' + esc(b.quarter) + (isCur ? ' &middot; Current' : '') + '</button>'
       + '<span class="mg-stats">'
       + mgStat('Price', mgMoney(c.price))
       + mgStat('Cost', mgMoney(c.cost))
@@ -7550,6 +7552,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       mgComps.push({ id: tmp, build_id: bid, name: '', cost: 0, position: pos });
       mgRenderAll();
       var ni = toolMargins.querySelector('input[data-mgitem="' + tmp + '"][data-f="name"]'); if (ni) ni.focus();
+      return;
+    }
+    if (t = e.target.closest('[data-mgq]')){
+      var qb = mgFindBuild(t.getAttribute('data-mgq')); if (!qb) return;
+      var qm = /Q([1-4])\s*(\d{4})/i.exec(qb.quarter || '');
+      var qNow = new Date(), qCur = qm ? +qm[1] : Math.floor(qNow.getMonth() / 3) + 1, yCur = qm ? +qm[2] : qNow.getFullYear();
+      var qOpts = [1,2,3,4].map(function(n){ return '<option value="' + n + '"' + (n === qCur ? ' selected' : '') + '>Q' + n + '</option>'; }).join('');
+      var qbg = mgModal(mgModalHead('Change quarter', esc(mgLineOf(qb).name))
+        + '<div class="mg-form-row"><div class="field"><label for="mgQq">Quarter</label><select id="mgQq" class="spec-select">' + qOpts + '</select></div>'
+        + '<div class="field"><label for="mgQy">Year</label><input id="mgQy" type="number" min="2000" max="2100" step="1" value="' + yCur + '"></div></div>'
+        + '<div class="mg-modal-foot"><button class="ghost btn-sm" id="mgQCancel">Cancel</button><button class="btn-sm" id="mgQGo" data-primary>Save</button></div>');
+      qbg.querySelector('#mgQCancel').addEventListener('click', mgCloseModal);
+      qbg.querySelector('#mgQGo').addEventListener('click', async function(){
+        var y = parseInt(qbg.querySelector('#mgQy').value, 10);
+        if (isNaN(y) || y < 2000 || y > 2100){ toast('Enter a valid year.', 'err'); return; }
+        var nq = 'Q' + qbg.querySelector('#mgQq').value + ' ' + y;
+        if (nq === qb.quarter){ mgCloseModal(); return; }
+        var ru = await SB.from('builds').update({ quarter: nq }).eq('id', qb.id);
+        if (ru.error){ toast('Could not save: ' + ru.error.message, 'err'); return; }
+        mgCloseModal(); qb.quarter = nq; mgRenderAll();
+        toast('Changed to ' + nq + '.', 'ok');
+      });
       return;
     }
     if (t = e.target.closest('[data-mgdel]')){
