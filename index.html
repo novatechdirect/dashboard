@@ -2070,7 +2070,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .ord-line-main{ min-width:0; }
   .ord-line:last-child{ border-bottom:0; }
-  .ord-line-n{ font-weight:600; font-size:13.5px; }
+  .ord-line-n{ font-weight:600; font-size:13.5px; display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
+  .ord-line-pr{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; min-height:0; padding:0; border-radius:6px; flex:none; }
+  .ord-line-pr svg{ width:14px; height:14px; }
+  @media (max-width:700px){ .ord-line-pr{ width:34px; height:34px; } .ord-line-pr svg{ width:16px; height:16px; } }
   /* desktop: the full build under the name; phones keep the tap-for-specs popover */
   .ord-line-spec{ display:none; }
   @media (min-width:701px){
@@ -9567,7 +9570,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const made = madeBy[l.config_id] || 0;
       const left = Math.max(0, (+l.qty_ordered || 0) - made);
       return '<div class="ord-line">' +
-        '<div class="ord-line-main"><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') + '</div>' +
+        '<div class="ord-line-main"><div class="ord-line-n">' + ordCfgLabel(l.config_id, cfgName[l.config_id] || 'Unknown config') +
+          (left && !gated
+            ? '<button class="ghost ord-line-pr" data-buildlbl="' + esc(l.id) + '" type="button" title="Print a 4\u00d76 build label: ' + ordNum(left) + ' to build" aria-label="Print build label">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg></button>'
+            : '') + '</div>' +
           (function(){
             const c = l.config_id ? ordCfgById(l.config_id) : null;
             if (!c) return '';
@@ -9672,7 +9679,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '</select>' +
           '<span class="ord-seln"><label for="ordSelN">Select</label>' +
             '<input id="ordSelN" type="number" min="1" max="' + ordPoolUnits().length + '" placeholder="30" aria-label="How many units to select">' +
-            '<button class="soft btn-sm" id="ordSelNGo" type="button">Take</button></span>' +
+            '<button class="soft btn-sm" id="ordSelNGo" type="button">Take</button>' +
+            '<button class="ghost btn-sm" id="ordSelNUnp" type="button" title="Select only units that have not been printed">Take unprinted</button></span>' +
           '<button class="ghost btn-sm" id="ordSelAll" type="button">Select all ' + ordNum(ordPoolUnits().length) + '</button>' +
           '<button class="ghost btn-sm" id="ordSelNone" type="button">Clear</button>' +
         '</div>' +
@@ -10150,6 +10158,82 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }).join('');
   }
   function ordCfgById(id){ return ordConfigs.find(function(c){ return c.id === id; }); }
+  /* 4x6 bench label: how many of one build are still needed, and the full spec */
+  function ordBuildLabel(lineId){
+    const l = ordLines.find(function(x){ return String(x.id) === String(lineId); });
+    const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+    if (!l || !o){ toast('That line item could not be found.', 'warn'); return; }
+    const cfg = ordCfgById(l.config_id);
+    const made = ordUnits.filter(function(u){ return u.config_id === l.config_id; }).length;
+    const left = Math.max(0, (+l.qty_ordered || 0) - made);
+    const cust = ordCustomers.find(function(c){ return c.id === o.customer_id; });
+    const spec = ordCfgSpecObj(cfg);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'in', format:[4,6], orientation:'portrait' });
+    const M = 0.28, W = 4 - M * 2;
+    const fit = function(text, size, min, maxW){
+      doc.setFontSize(size);
+      while (doc.getTextWidth(text) > maxW && size > min){ size -= 0.5; doc.setFontSize(size); }
+      return size;
+    };
+    doc.setTextColor(0,0,0); doc.setDrawColor(0,0,0);
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text('BUILDS NEEDED', M, 0.42);
+    doc.setFont('helvetica','normal');
+    doc.text(new Date().toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' }), 4 - M, 0.42, { align:'right' });
+    doc.setLineWidth(0.02); doc.line(M, 0.54, 4 - M, 0.54);
+
+    const nStr = String(left);
+    doc.setFont('helvetica','bold');
+    const nFs = fit(nStr, 104, 60, W);
+    const nTop = 0.62, nH = nFs / 72 * 0.72;
+    doc.text(nStr, 2, nTop + nH, { align:'center' });
+    doc.setFont('helvetica','normal'); doc.setFontSize(14);
+    let y = nTop + nH + 0.32;
+    doc.text(left === 1 ? 'unit to build' : 'units to build', 2, y, { align:'center' });
+
+    y += 0.3;
+    doc.setLineWidth(0.02); doc.line(M, y, 4 - M, y);
+    y += 0.42;
+    doc.setFont('helvetica','bold');
+    const name = (cfg && cfg.name) || 'Unknown config';
+    doc.setFontSize(20);
+    const nameLines = doc.splitTextToSize(name, W).slice(0, 2);
+    nameLines.forEach(function(t){ doc.text(t, M, y); y += 0.32; });
+
+    y += 0.08;
+    const rows = [['CASE','case'],['CPU','cpu'],['GPU','gpu'],['RAM','ram'],['STORAGE','storage']]
+      .filter(function(r){ return spec[r[1]]; });
+    const labW = 0.92;
+    rows.forEach(function(r){
+      doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      doc.text(r[0], M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(13);
+      const lines = doc.splitTextToSize(String(spec[r[1]]), W - labW).slice(0, 2);
+      lines.forEach(function(t, i){ doc.text(t, M + labW, y + i * 0.22); });
+      y += 0.22 * lines.length + 0.12;
+    });
+    if (!rows.length){ doc.setFont('helvetica','normal'); doc.setFontSize(12); doc.text('No specs on this config.', M, y); }
+
+    const fy = 6 - 0.62;
+    doc.setLineWidth(0.02); doc.line(M, fy, 4 - M, fy);
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    const inv = 'Invoice ' + (o.invoice_no || '\u2014');
+    doc.text(inv, M, fy + 0.24);
+    doc.setFont('helvetica','normal');
+    doc.text(ordNum(made) + ' / ' + ordNum(l.qty_ordered) + ' built', 4 - M, fy + 0.24, { align:'right' });
+    const sub = [cust ? cust.name : '', o.due_date ? 'Due ' + new Date(o.due_date + 'T12:00:00').toLocaleDateString(undefined, { month:'short', day:'numeric' }) : '']
+      .filter(Boolean).join('  \u00b7  ');
+    if (sub){ fit(sub, 10, 7, W); doc.text(sub, M, fy + 0.44); }
+
+    const file = 'build-' + String(name).replace(/[^\w-]+/g, '-').toLowerCase() + '.pdf';
+    try {
+      doc.autoPrint();
+      const w = window.open(doc.output('bloburl'), '_blank');
+      if (!w) doc.save(file);
+    } catch(e){ doc.save(file); }
+  }
   function ordCfgSpecObj(cfg){
     if (!cfg) return { case:'', cpu:'', gpu:'', ram:'', storage:'' };
     const sticks = cfg.ram_sticks || 1;
@@ -10556,6 +10640,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const all = e.target.closest('[data-genall]');
     if (all){ ordGenerateUnits(all.getAttribute('data-genall'), all.getAttribute('data-left')); return; }
+    const blbl = e.target.closest('[data-buildlbl]');
+    if (blbl){ ordBuildLabel(blbl.getAttribute('data-buildlbl')); return; }
 
     /* the whole row is the target on a phone, not just the checkbox */
     const prow = e.target.closest('.ord-pool-table tbody tr');
@@ -10593,13 +10679,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordPoolUnits().forEach(function(u){ ordSel.add(u.id); });
       ordRenderPool(); return;
     }
-    if (e.target.id === 'ordSelNGo'){
+    if (e.target.id === 'ordSelNGo' || e.target.id === 'ordSelNUnp'){
+      const unp = e.target.id === 'ordSelNUnp';
       const box = document.getElementById('ordSelN');
-      const pool = ordPoolUnits();
+      const pool = unp ? ordPoolUnits().filter(function(u){ return !u.printed_at; }) : ordPoolUnits();
       let n = parseInt(box && box.value, 10);
       if (!n || n < 1){ toast('Enter how many units to select.', 'warn'); return; }
+      if (!pool.length){ toast('No unprinted units in the pool.', 'warn'); return; }
       if (n > pool.length){
-        toast('Only ' + ordNum(pool.length) + ' in the pool \u2014 selecting all of them.', 'warn', 5000);
+        toast('Only ' + ordNum(pool.length) + (unp ? ' unprinted' : '') + ' in the pool \u2014 selecting all of them.', 'warn', 5000);
         n = pool.length;
       }
       ordSel.clear();
@@ -11963,18 +12051,55 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   /* ---- mark shipped / edit / return to pool ---- */
+  /* runs in the background: the card flips to Shipped at once and the page is
+     not reloaded, so several batches can be marked in a row */
+  function ordPatchBatchCard(bid, shipped, busy){
+    const card = document.querySelector('.ord-batch[data-bid="' + bid + '"]');
+    if (!card) return;
+    const chip = card.querySelector('.ord-batch-id .ord-chip');
+    if (chip){ chip.className = 'ord-chip ' + (shipped ? 'ok' : 'warn'); chip.textContent = shipped ? 'Shipped' : 'Open'; }
+    const btn = card.querySelector('[data-bship]');
+    if (btn){
+      if (shipped && !busy) btn.remove();
+      else { btn.disabled = !!busy; btn.textContent = busy ? 'Saving\u2026' : 'Mark shipped'; }
+    }
+  }
+  const ordShipping = new Set();
   async function ordMarkShipped(b){
+    if (ordShipping.has(b.id) || b.status === 'shipped') return;
+    ordShipping.add(b.id);
+    const orderId = ordCurrentId;
     const units = ordBatchUnits(b.id);
     const when = b.ship_date || fmtYMD(new Date());
-    const ub = await SB.from('batches').update({ status: 'shipped', ship_date: when }).eq('id', b.id);
-    if (ub.error){ toast('Could not mark it shipped: ' + ub.error.message, 'bad'); return; }
-    if (units.length){
-      const uu = await SB.from('pc_log').update({ unit_status: 'shipped', status: 'shipped' })
-        .in('id', units.map(function(u){ return u.id; }));
-      if (uu.error){ toast('Batch marked shipped, but the units did not update.', 'warn', 7000); }
+    ordPatchBatchCard(b.id, true, true);
+    try {
+      const ub = await SB.from('batches').update({ status: 'shipped', ship_date: when }).eq('id', b.id);
+      if (ub.error){
+        ordPatchBatchCard(b.id, false, false);
+        toast('Could not mark batch ' + b.batch_no + ' shipped: ' + ub.error.message, 'bad');
+        return;
+      }
+      b.status = 'shipped'; b.ship_date = when;
+      if (units.length){
+        const uu = await SB.from('pc_log').update({ unit_status: 'shipped', status: 'shipped' })
+          .in('id', units.map(function(u){ return u.id; }));
+        if (uu.error) toast('Batch ' + b.batch_no + ' marked shipped, but the units did not update.', 'warn', 7000);
+        else {
+          const c = ordCounts[orderId];
+          units.forEach(function(u){
+            if (c && u.unit_status !== 'shipped'){
+              if (u.unit_status === 'assigned') c.assigned--; else c.built--;
+              c.shipped++;
+            }
+            u.unit_status = 'shipped'; u.status = 'shipped';
+          });
+        }
+      }
+      ordPatchBatchCard(b.id, true, false);
+      toast('Batch ' + b.batch_no + ' marked shipped', 'ok');
+    } finally {
+      ordShipping.delete(b.id);
     }
-    toast('Batch ' + b.batch_no + ' marked shipped', 'ok');
-    await ordOpenOrder(ordCurrentId);
   }
 
   function ordEditBatchModal(b){
@@ -15077,6 +15202,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      selection only counts in the window being used. */
   function liveBusyWhy(root, p){
     var focused = document.hasFocus();
+    if (p === 'orders' && typeof ordShipping !== 'undefined' && ordShipping.size) return 'marking shipped';
     if (focused && Date.now() - liveInputAt < 2500) return 'recent input';
     if ((p === 'orders' || p === 'home') && ordLoading) return 'orders loading';
     if (p === 'rma' && (rmaLoading || rmaEditPart)) return 'rma editing';
