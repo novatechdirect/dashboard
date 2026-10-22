@@ -5367,6 +5367,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         if (b){ b.ss_request_id = 1; b.ss_sent_at = new Date().toISOString(); b.ss_order_id = b.ss_order_id || String(100000000 + Math.floor(Math.random() * 1e6)); }
         return ok(1);
       }
+      case 'ss_fetch_tracking': return ok(1);
+      case 'ss_tracking_result': {
+        const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
+        if (!b) return ok([{ state: 'none', added: 0 }]);
+        db.batch_tracking = db.batch_tracking || [];
+        const trk = '1Z999AA1' + String(b.ss_order_id || '0').slice(-8).padStart(8, '0');
+        const had = db.batch_tracking.some(function(t){ return String(t.batch_id) === String(b.id) && t.tracking_no === trk; });
+        if (!had) db.batch_tracking.push({ id: demoId('trk'), batch_id: b.id, tracking_no: trk, unit_id: null });
+        if (!b.carrier) b.carrier = 'UPS';
+        return ok([{ state: 'ok', added: had ? 0 : 1, tracking: trk, carrier: b.carrier, message: null }]);
+      }
       case 'ss_batch_result': {
         const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
         return ok([{ state: 'ok', order_id: b ? b.ss_order_id : '1', message: null }]);
@@ -10821,6 +10832,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (btk){ window.open(btk.getAttribute('data-btrack'), '_blank', 'noopener'); return; }
     const bs = bfind('data-bship');  if (bs){ ordMarkShipped(bs); return; }
     const bss = bfind('data-bss');   if (bss){ ordSendShipStation(bss); return; }
+    const bst = bfind('data-bsstrk'); if (bst){ ordSsTrack(bst); return; }
     const be = bfind('data-bedit');  if (be){ ordEditBatchModal(be); return; }
     const bd = bfind('data-bdel');   if (bd){ ordReturnBatch(bd); return; }
     const b46 = bfind('data-bprint46');
@@ -11498,6 +11510,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
             '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
             (ordPerm.manage && !shipped && loc ? ordSsBtnHtml(b) : '') +
+            (ordPerm.manage && b.ss_order_id ? '<button class="ghost btn-sm" data-bsstrk="' + esc(b.id) + '" type="button" title="Copy the tracking numbers of this order\u2019s labels from ShipStation">Get tracking</button>' : '') +
             (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
             (ordPerm.manage ? '<button class="ghost btn-sm" data-bedit="' + esc(b.id) + '" type="button">Edit</button>' : '') +
           '</div>' +
@@ -12207,6 +12220,48 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordSsBusy.delete(b.id);
     }
   }
+  /* tracking back from ShipStation: every label on the order that was not
+     voided, added to the batch once. quiet = called from Mark shipped */
+  async function ordSsTrack(b, quiet){
+    if (ordSsBusy.has('t' + b.id)) return false;
+    ordSsBusy.add('t' + b.id);
+    const btn = document.querySelector('.ord-batch[data-bid="' + b.id + '"] [data-bsstrk]');
+    if (btn){ btn.disabled = true; btn.textContent = 'Checking\u2026'; }
+    const done = function(){ if (btn && btn.isConnected){ btn.disabled = false; btn.textContent = 'Get tracking'; } };
+    const label = 'Batch ' + b.batch_no;
+    try {
+      const s = await SB.rpc('ss_fetch_tracking', { p_batch: b.id });
+      if (s.error){ done(); toast(label + ': ' + (/ss_fetch_tracking/.test(s.error.message) ? 'run the updated shipstation.sql in Supabase first.' : s.error.message), 'bad', 8000); return false; }
+      for (let i = 0; i < 20; i++){
+        await new Promise(function(r){ setTimeout(r, i < 4 ? 700 : 1500); });
+        const r = await SB.rpc('ss_tracking_result', { p_batch: b.id });
+        if (r.error){ done(); toast(label + ': ' + r.error.message, 'bad', 8000); return false; }
+        const row = (r.data || [])[0] || {};
+        if (row.state === 'waiting') continue;
+        done();
+        if (row.state === 'none'){ if (!quiet) toast(label + ': no labels in ShipStation yet.', 'warn', 6000); return false; }
+        if (row.state !== 'ok'){ toast(label + ': ' + (row.message || 'ShipStation did not answer'), 'bad', 8000); return false; }
+        const have = new Set(ordTracking.filter(function(t){ return t.batch_id === b.id; }).map(function(t){ return t.tracking_no; }));
+        String(row.tracking || '').split(', ').filter(Boolean).forEach(function(t){
+          if (!have.has(t)) ordTracking.push({ batch_id: b.id, tracking_no: t, unit_id: null });
+        });
+        if (row.carrier && !b.carrier) b.carrier = row.carrier;
+        if (!quiet){
+          toast(row.added ? label + ': added ' + row.added + ' tracking number' + (row.added === 1 ? '' : 's')
+                          : label + ': tracking already up to date', 'ok');
+          ordSsRedraw(b);
+        }
+        return row.added > 0;
+      }
+      done(); if (!quiet) toast(label + ': ShipStation has not answered yet. Try again in a minute.', 'warn', 6000);
+      return false;
+    } finally { ordSsBusy.delete('t' + b.id); }
+  }
+  function ordSsRedraw(b){
+    if (ordCurrentId !== b.order_id || ordShipping.size) return;
+    const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+    if (o) ordRedraw(o);
+  }
   const ordShipping = new Set();
   async function ordMarkShipped(b){
     if (ordShipping.has(b.id) || b.status === 'shipped') return;
@@ -12215,6 +12270,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const units = ordBatchUnits(b.id);
     const when = b.ship_date || fmtYMD(new Date());
     ordPatchBatchCard(b.id, true, true);
+    /* in ShipStation but no tracking here yet: pull it first, so the
+       shipped email the customer gets already carries the number */
+    let gotTrk = false;
+    if (b.ss_order_id && !ordTracking.some(function(t){ return t.batch_id === b.id; })){
+      try { gotTrk = await ordSsTrack(b, true); } catch(e){}
+    }
     try {
       const ub = await SB.from('batches').update({ status: 'shipped', ship_date: when }).eq('id', b.id);
       if (ub.error){
@@ -12239,9 +12300,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         }
       }
       ordPatchBatchCard(b.id, true, false);
-      toast('Batch ' + b.batch_no + ' marked shipped', 'ok');
+      toast('Batch ' + b.batch_no + ' marked shipped' + (gotTrk ? ' \u00b7 tracking added from ShipStation' : ''), 'ok');
     } finally {
       ordShipping.delete(b.id);
+      if (gotTrk) ordSsRedraw(b);
     }
   }
 
