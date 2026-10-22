@@ -11735,6 +11735,25 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (ok){ b.textContent = 'Copied'; setTimeout(function(){ b.textContent = 'Copy address'; }, 1500); }
     else toast('Could not copy. Select the address and copy it by hand.', 'warn');
   });
+  /* store names already used, offered as you type in Store name. Most-used
+     first; picking one fills the name only, since a chain has many addresses */
+  document.addEventListener('focusin', function(e){
+    const t = e.target;
+    if (!t || (t.id !== 'ordDStore' && t.id !== 'admLStore')) return;
+    let dl = document.getElementById('ordStoreNamesDL');
+    if (!dl){ dl = document.createElement('datalist'); dl.id = 'ordStoreNamesDL'; document.body.appendChild(dl); }
+    const seen = {};
+    (typeof ordLocations !== 'undefined' ? ordLocations : []).forEach(function(l){
+      const n = String(l.store_name || '').trim(); if (!n) return;
+      const k = n.toLowerCase();
+      if (!seen[k]) seen[k] = { name: n, n: 0 };
+      seen[k].n++;
+    });
+    dl.innerHTML = Object.keys(seen).map(function(k){ return seen[k]; })
+      .sort(function(a, b){ return b.n - a.n || a.name.localeCompare(b.name); })
+      .map(function(s){ return '<option value="' + esc(s.name).replace(/"/g, '&quot;') + '"></option>'; }).join('');
+    t.setAttribute('list', 'ordStoreNamesDL');
+  });
   let ordAddrT = null;
   document.addEventListener('input', function(e){
     const map = e.target && ADDR_FIELDS[e.target.id];
