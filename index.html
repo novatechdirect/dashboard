@@ -5361,7 +5361,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         if (o) o.po_number = args.p_po || null;
         return ok(o ? [o] : []);
       }
-      case 'rma_secret_status': return ok([{ key: 'resend_api_key', is_set: true }]);
+      case 'rma_secret_status': return ok([{ key: 'resend_api_key', is_set: true, configured: true, updated_at: new Date().toISOString() }]);
+      case 'ss_send_batch': {
+        const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
+        if (b){ b.ss_request_id = 1; b.ss_sent_at = new Date().toISOString(); b.ss_order_id = b.ss_order_id || String(100000000 + Math.floor(Math.random() * 1e6)); }
+        return ok(1);
+      }
+      case 'ss_batch_result': {
+        const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
+        return ok([{ state: 'ok', order_id: b ? b.ss_order_id : '1', message: null }]);
+      }
       case 'is_margin_admin': return ok(true);
       case 'find_user_by_email': return ok([]);
       case 'portal_remittance_notice': return ok();
@@ -6398,7 +6407,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   });
 
   invSearch.addEventListener('input', function(){ invOpenAdjust = null; invAddCat = null; renderInventory(); });
-  document.getElementById('invRefresh').addEventListener('click', loadInventory);
+  document.getElementById('invRefresh').addEventListener('click', async function(){
+    const btn = this, keep = liveKeep(document.getElementById('toolInventory'));
+    btn.disabled = true;
+    try { await loadInventory(true); keep(); liveRebase('inventory'); } finally { btn.disabled = false; }
+  });
 
   /* ---- activity history ---- */
   const invHistCard = document.getElementById('invHistCard');
@@ -9407,7 +9420,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         const live = ordOrders.find(function(x){ return String(x.id) === String(o.id); });
         if (live){
           live.invoice_total = o.invoice_total;
-          if (String(ordCurrentId) === String(o.id)) ordRenderDetail(live);
+          if (String(ordCurrentId) === String(o.id)) ordRedraw(live);
         }
       } catch(ex){
         this.disabled = false; this.textContent = 'Save';
@@ -9553,6 +9566,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         toast('That batch is not on this order any more.', 'warn', 6000);
       }
     }
+  }
+
+  /* redraw the open order after a change made here: no loading skeleton, and
+     the scroll position, open batches and half-typed text stay where they were */
+  async function ordReload(id, focusBatch){
+    id = id || ordCurrentId;
+    const keep = liveKeep(ordDetailPane);
+    await ordOpenOrder(id, null, true);
+    keep();
+    liveRebase('detail:' + id);
+    if (focusBatch) requestAnimationFrame(function(){ ordFocusBatch(focusBatch); });
+  }
+  function ordRedraw(o){
+    const keep = liveKeep(ordDetailPane);
+    ordRenderDetail(o);
+    keep();
+  }
+  function ordRepaintUnits(){
+    const keep = liveKeep(ordDetailPane);
+    ordRenderPool(); ordRenderBatches();
+    keep();
   }
 
   function ordRenderDetail(o){
@@ -9887,8 +9921,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   document.getElementById('ordSearch').addEventListener('input', function(){
     ordQuery = this.value; ordRenderList();
   });
-  document.getElementById('ordRefresh').addEventListener('click', function(){
-    if (ordCurrentId) ordOpenOrder(ordCurrentId); else ordLoadAll();
+  document.getElementById('ordRefresh').addEventListener('click', async function(){
+    const btn = this;
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try {
+      if (ordCurrentId) await ordReload(ordCurrentId);
+      else { const keep = liveKeep(ordListPane); await ordLoadAll(true); keep(); liveRebase('orders'); }
+    } finally { btn.disabled = false; }
   });
 
   /* ---- serial lookup ---- */
@@ -10385,7 +10425,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             serials[0] + (serials.length > 1 ? ' \u2013 ' + serials[serials.length - 1] : '') +
             (deduct ? '' : ' \u00b7 inventory untouched'), 'ok', 5000);
       if (res && res.warn && res.warn.length) toast('Inventory: ' + res.warn.join('; '), 'warn', 8000);
-      await ordOpenOrder(o.id);
+      await ordReload(o.id);
     } catch(e){
       btns.forEach(function(b){ b.disabled = false; });
       toast('Could not mark units built: ' + (e.message || e), 'bad', 7000);
@@ -10465,7 +10505,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
               (restore ? ' \u00b7 parts back in inventory' : '') +
               ((reclaimed !== null && reclaimed < top) ? ' \u00b7 serial numbers reclaimed' : ''), 'ok', 6000);
         if (warn.length) toast('Inventory: ' + warn.join('; '), 'warn', 8000);
-        await ordOpenOrder(o.id);
+        await ordReload(o.id);
       } catch(e){
         this.disabled = false; this.textContent = 'Remove ' + ordNum(n);
         bg.querySelector('#ordUbErr').textContent = e.message || 'Could not remove the units.';
@@ -10474,15 +10514,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   /* ---------- unit pool ---------- */
-  let ordResizeT = null;
+  /* phones fire resize whenever the browser bar slides in or out while
+     scrolling, so only a real width change redraws, and open batches stay open */
+  let ordResizeT = null, ordResizeW = window.innerWidth;
   window.addEventListener('resize', function(){
     clearTimeout(ordResizeT);
     ordResizeT = setTimeout(function(){
+      if (window.innerWidth === ordResizeW) return;
+      ordResizeW = window.innerWidth;
       const pane = document.getElementById('ordDetailPane');
-      if (pane && pane.style.display !== 'none'){
-        if (typeof ordRenderPool === 'function') ordRenderPool();
-        if (typeof ordRenderBatches === 'function') ordRenderBatches();
-      }
+      if (pane && pane.style.display !== 'none' && ordCurrentId) ordRepaintUnits();
     }, 200);
   });
 
@@ -10719,7 +10760,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       o.hold_until_paid = false;
       await obLoad();
       toast('Released \u2014 the customer can see it now', 'ok');
-      obRender(); ordRenderDetail(o);
+      obRender(); ordRedraw(o);
       return;
     }
     if (e.target.id === 'ordBillEdit'){
@@ -10768,15 +10809,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const bfind = function(a){ const el = e.target.closest('[' + a + ']');
       return el ? ordBatches.find(function(b){ return b.id === el.getAttribute(a); }) : null; };
     const bpv = e.target.closest('[data-bprev]');
-    if (bpv){ const id = bpv.getAttribute('data-bprev'); ordBatchPage[id] = (ordBatchPage[id] || 0) - 1; ordRenderBatches();
+    if (bpv){ const id = bpv.getAttribute('data-bprev'); ordBatchPage[id] = (ordBatchPage[id] || 0) - 1;
+      const keep = liveKeep(ordDetailPane); ordRenderBatches(); keep();
       const bd = document.getElementById('ordBatchBody_' + id); if (bd) bd.style.display = ''; return; }
     const bnx = e.target.closest('[data-bnext]');
-    if (bnx){ const id = bnx.getAttribute('data-bnext'); ordBatchPage[id] = (ordBatchPage[id] || 0) + 1; ordRenderBatches();
+    if (bnx){ const id = bnx.getAttribute('data-bnext'); ordBatchPage[id] = (ordBatchPage[id] || 0) + 1;
+      const keep = liveKeep(ordDetailPane); ordRenderBatches(); keep();
       const bd = document.getElementById('ordBatchBody_' + id); if (bd) bd.style.display = ''; return; }
     if (e.target.closest('#ordMergeBtn')){ ordMergeBatchesModal(); return; }
     const btk = e.target.closest('[data-btrack]');
     if (btk){ window.open(btk.getAttribute('data-btrack'), '_blank', 'noopener'); return; }
     const bs = bfind('data-bship');  if (bs){ ordMarkShipped(bs); return; }
+    const bss = bfind('data-bss');   if (bss){ ordSendShipStation(bss); return; }
     const be = bfind('data-bedit');  if (be){ ordEditBatchModal(be); return; }
     const bd = bfind('data-bdel');   if (bd){ ordReturnBatch(bd); return; }
     const b46 = bfind('data-bprint46');
@@ -11115,8 +11159,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         }
         mgCloseModal();
         toast('Invoice ' + inv + ' updated', 'ok');
-        await ordLoadAll();
-        await ordOpenOrder(o.id);
+        await ordLoadAll(true);
+        liveRebase('orders');
+        await ordReload(o.id);
       } catch(e){
         this.disabled = false; this.textContent = 'Save changes';
         err.textContent = /duplicate|unique/i.test(e.message || '')
@@ -11205,7 +11250,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     Object.assign(o, patch);
     st.textContent = '';
     toast('Invoice PDF attached', 'ok');
-    ordRenderDetail(o);
+    ordRedraw(o);
   }
 
   function ordPdfRemove(o){
@@ -11230,7 +11275,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       Object.assign(o, patch);
       mgCloseModal();
       toast('Invoice PDF removed', 'ok');
-      ordRenderDetail(o);
+      ordRedraw(o);
     });
   }
 
@@ -11452,6 +11497,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             (trackLink ? '<button class="primary btn-sm" data-btrack="' + esc(trackLink) + '" type="button" title="' + esc(trackLink) + '">Track \u2197</button>' : '') +
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
             '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
+            (ordPerm.manage && !shipped && loc ? ordSsBtnHtml(b) : '') +
             (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
             (ordPerm.manage ? '<button class="ghost btn-sm" data-bedit="' + esc(b.id) + '" type="button">Edit</button>' : '') +
           '</div>' +
@@ -11562,7 +11608,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     'west virginia':'WV', wisconsin:'WI', wyoming:'WY', 'puerto rico':'PR' };
   const ADDR_CODES = new Set(Object.keys(ADDR_STATES).map(function(k){ return ADDR_STATES[k]; }));
   function ordAddrPasteHtml(id){
-    return '<div class="field" style="margin-bottom:var(--s3);"><label for="' + id + '">Paste full address</label>' +
+    return '<div class="field" style="margin-bottom:var(--s3);">' +
+      '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s2);">' +
+        '<label for="' + id + '">Paste full address</label>' +
+        '<button class="ghost btn-sm" type="button" data-addrcopy="' + id + '" style="margin-bottom:4px;">Copy address</button></div>' +
       '<textarea id="' + id + '" rows="3" autocomplete="off" style="resize:vertical;min-height:72px;"></textarea></div>';
   }
   function ordParseAddress(raw){
@@ -11625,6 +11674,54 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ordDPaste: { store_name:'ordDStore', store_number:'ordDNum', address1:'ordDAddr1', address2:'ordDAddr2', city:'ordDCity', state:'ordDState', zip:'ordDZip', phone:'ordDPhone' },
     admLPaste: { store_name:'admLStore', store_number:'admLNum', address1:'admLA1', address2:'admLA2', city:'admLCity', state:'admLState', zip:'admLZip', phone:'admLPhone' }
   };
+  /* the line-by-line fields write back into the paste box as one address,
+     so it can be copied straight into ShipStation */
+  function addrCompose(pasteId, scope){
+    const map = ADDR_FIELDS[pasteId]; scope = scope || document;
+    const v = function(k){ const el = scope.querySelector('#' + map[k]); return el ? el.value.trim() : ''; };
+    const name = [v('store_name'), v('store_number') ? '#' + v('store_number').replace(/^#/, '') : ''].filter(Boolean).join(' ');
+    const csz = [v('city'), [v('state'), v('zip')].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    return [name, v('address1'), v('address2'), csz].filter(Boolean).join('\n');
+  }
+  function addrSync(pasteId, scope){
+    const box = (scope || document).querySelector('#' + pasteId);
+    if (!box || document.activeElement === box) return;
+    const txt = addrCompose(pasteId, scope);
+    if (txt) box.value = txt;
+  }
+  const ADDR_FIELD_OF = {};
+  Object.keys(ADDR_FIELDS).forEach(function(p){
+    Object.keys(ADDR_FIELDS[p]).forEach(function(k){ if (k !== 'phone') ADDR_FIELD_OF[ADDR_FIELDS[p][k]] = p; });
+  });
+  document.addEventListener('input', function(e){
+    const p = e.target && ADDR_FIELD_OF[e.target.id];
+    if (p) addrSync(p, e.target.closest('.mg-modal') || document);
+  });
+  document.addEventListener('change', function(e){
+    const p = e.target && ADDR_FIELD_OF[e.target.id];
+    if (p) addrSync(p, e.target.closest('.mg-modal') || document);
+  });
+  /* an existing location opened for editing shows its address straight away */
+  new MutationObserver(function(){
+    Object.keys(ADDR_FIELDS).forEach(function(p){
+      const box = document.getElementById(p);
+      if (box && !box.value && !box.dataset.addrInit){ box.dataset.addrInit = '1'; addrSync(p, box.closest('.mg-modal') || document); }
+    });
+  }).observe(document.body || document.documentElement, { childList:true, subtree:true });
+  document.addEventListener('click', async function(e){
+    const b = e.target.closest('[data-addrcopy]'); if (!b) return;
+    const id = b.getAttribute('data-addrcopy'), scope = b.closest('.mg-modal') || document;
+    const box = scope.querySelector('#' + id);
+    const txt = (box && box.value.trim()) || addrCompose(id, scope);
+    if (!txt){ toast('Nothing to copy yet.', 'warn'); return; }
+    let ok = false;
+    try { await navigator.clipboard.writeText(txt); ok = true; } catch(err){
+      try { const t = document.createElement('textarea'); t.value = txt; t.style.position = 'fixed'; t.style.opacity = '0';
+        document.body.appendChild(t); t.select(); ok = document.execCommand('copy'); t.remove(); } catch(err2){}
+    }
+    if (ok){ b.textContent = 'Copied'; setTimeout(function(){ b.textContent = 'Copy address'; }, 1500); }
+    else toast('Could not copy. Select the address and copy it by hand.', 'warn');
+  });
   let ordAddrT = null;
   document.addEventListener('input', function(e){
     const map = e.target && ADDR_FIELDS[e.target.id];
@@ -11941,8 +12038,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           (moved < sel.length ? ' — ' + (sel.length - moved) + ' were already in another batch and were left there' : ''),
           moved < sel.length ? 'warn' : 'ok', 6000);
         ordSel.clear();
-        await ordOpenOrder(o.id);
-        requestAnimationFrame(function(){ ordFocusBatch(batch.id); });
+        await ordReload(o.id, batch.id);
       } catch(e){
         this.disabled = false; this.textContent = 'Create batch of ' + ordNum(sel.length);
         err.textContent = e.message || 'Could not create the batch.';
@@ -12040,12 +12136,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         }
         mgCloseModal();
         toast('Merged ' + ordNum(moved) + ' unit' + (moved === 1 ? '' : 's') + ' into batch ' + kb.batch_no, 'ok', 5000);
-        await ordOpenOrder(ordCurrentId);
-        requestAnimationFrame(function(){ ordFocusBatch(kb.id); });
+        await ordReload(ordCurrentId, kb.id);
       } catch(e){
         err.textContent = (e.message || 'Could not merge.') + ' Reopening the order shows what was merged so far.';
         this.textContent = 'Merge';
-        await ordOpenOrder(ordCurrentId);
+        await ordReload(ordCurrentId);
       }
     });
   }
@@ -12062,6 +12157,54 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (btn){
       if (shipped && !busy) btn.remove();
       else { btn.disabled = !!busy; btn.textContent = busy ? 'Saving\u2026' : 'Mark shipped'; }
+    }
+  }
+  /* ---- ShipStation: creates (or updates) an Awaiting Shipment order there.
+     Runs in the background like Mark shipped; nothing on the page reloads. */
+  function ordSsBtnHtml(b){
+    const sent = !!b.ss_order_id;
+    return '<button class="ghost btn-sm" data-bss="' + esc(b.id) + '" type="button" title="' +
+      (sent ? 'In ShipStation since ' + esc(new Date(b.ss_sent_at || Date.now()).toLocaleString()) + '. Click to send the address again.'
+            : 'Create an order in ShipStation with this ship-to address') + '">' +
+      (sent ? 'In ShipStation \u2713' : 'Send to ShipStation') + '</button>';
+  }
+  function ordSsBtn(bid, text, busy){
+    const btn = document.querySelector('.ord-batch[data-bid="' + bid + '"] [data-bss]');
+    if (btn){ btn.textContent = text; btn.disabled = !!busy; }
+  }
+  const ordSsBusy = new Set();
+  async function ordSendShipStation(b){
+    if (ordSsBusy.has(b.id)) return;
+    ordSsBusy.add(b.id);
+    ordSsBtn(b.id, 'Sending\u2026', true);
+    const label = 'Batch ' + b.batch_no;
+    const fail = function(msg){
+      ordSsBtn(b.id, b.ss_order_id ? 'In ShipStation \u2713' : 'Send to ShipStation', false);
+      toast(label + ' did not reach ShipStation: ' + msg, 'bad', 9000);
+    };
+    try {
+      const s = await SB.rpc('ss_send_batch', { p_batch: b.id });
+      if (s.error){
+        fail(/ss_send_batch/.test(s.error.message) ? 'run shipstation.sql in Supabase first.' : s.error.message);
+        return;
+      }
+      for (let i = 0; i < 20; i++){
+        await new Promise(function(r){ setTimeout(r, i < 4 ? 700 : 1500); });
+        const r = await SB.rpc('ss_batch_result', { p_batch: b.id });
+        if (r.error){ fail(r.error.message); return; }
+        const row = (r.data || [])[0] || {};
+        if (row.state === 'waiting') continue;
+        if (row.state === 'ok'){
+          b.ss_order_id = row.order_id; b.ss_sent_at = new Date().toISOString();
+          ordSsBtn(b.id, 'In ShipStation \u2713', false);
+          toast(label + ' is in ShipStation under Awaiting Shipment', 'ok');
+          return;
+        }
+        fail(row.message || 'unknown error'); return;
+      }
+      fail('no answer yet. Check ShipStation in a minute before sending again.');
+    } finally {
+      ordSsBusy.delete(b.id);
     }
   }
   const ordShipping = new Set();
@@ -12221,7 +12364,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
         mgCloseModal();
         toast('Batch ' + b.batch_no + ' updated', 'ok');
-        await ordOpenOrder(ordCurrentId);
+        await ordReload(ordCurrentId);
       } catch(e){
         this.disabled = false; this.textContent = 'Save changes';
         err.textContent = e.message || 'Could not save.';
@@ -12279,7 +12422,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         mgCloseModal();
         ordSel.clear();
         toast('Batch ' + b.batch_no + ' deleted \u00b7 ' + back + ' unit' + (back === 1 ? '' : 's') + ' back in the pool', 'ok', 5000);
-        await ordOpenOrder(ordCurrentId);
+        await ordReload(ordCurrentId);
       } catch(e){
         this.disabled = false; this.textContent = 'Delete batch';
         bg.querySelector('#ordRErr').textContent = e.message || 'Could not delete the batch.';
@@ -13366,7 +13509,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const host = document.getElementById('admBody');
     const tabs = ordPerm.admin
       ? [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],
-         ['email','Email'],['people','People'],['logins','Customer logins'],['demo','Demo mode']]
+         ['email','Email'],['shipstation','ShipStation'],['people','People'],['logins','Customer logins'],['demo','Demo mode']]
       : [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],['email','Email']];
     if (!tabs.some(function(t){ return t[0] === admTab; })) admTab = 'customers';
     host.innerHTML =
@@ -13400,6 +13543,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       people:    'Employee logins are created in Supabase. This is where you set what each person can reach.',
       logins:    'Read-only portal access for a customer. Create the login in Supabase first, then map it here.',
       rma:       'The technician we talk to at each customer, where their parts ship, and the Discord channel inbound activity posts to.',
+      shipstation: 'Send to ShipStation on a batch creates an Awaiting Shipment order there with the store\u2019s address, the invoice and the units. Labels are still bought in ShipStation.',
       email:     'One Resend connection, two kinds of mail. Order notifications and RMA notifications keep their own recipients, their own From address and their own history.',
       demo:      'A fictional company to click through on a screenshare, so you never have to demonstrate the app on somebody\u2019s real order.'
     }[admTab] || '';
@@ -13413,12 +13557,54 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (admTab === 'people'  && ordPerm.admin) return admPanePeople(p);
     if (admTab === 'logins'  && ordPerm.admin) return admPaneLogins(p);
     if (admTab === 'demo'    && ordPerm.admin) return admPaneDemo(p);
+    if (admTab === 'shipstation' && ordPerm.admin) return admPaneShipStation(p);
   }
 
   /* ---- demo mode ----
      For showing the app to a customer without touching their account. The
      switch is per-browser and the data is fictional, so there is nothing to
      undo afterwards. */
+  function admPaneShipStation(p){
+    p.innerHTML =
+      '<section class="card adm-sec"><h2 class="card-title">Connection</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">In ShipStation: Settings \u2192 Account \u2192 API Settings, then generate V1 API keys. Paste both below. They are stored on the server and never shown again.</p>' +
+        '<p class="muted-sm" id="admSsState">Checking\u2026</p>' +
+        '<div class="field" style="margin-top:4px;"><label for="admSsKey">API key</label>' +
+          '<input id="admSsKey" type="password" autocomplete="off"></div>' +
+        '<div class="field"><label for="admSsSecret">API secret</label>' +
+          '<div class="adm-inline"><input id="admSsSecret" type="password" autocomplete="off">' +
+          '<button class="ghost btn-sm" id="admSsSave" type="button">Save</button></div></div>' +
+        '<p class="card-note">Sending the same batch twice updates its order in ShipStation instead of adding a second one. Orders go to ShipStation\u2019s Manual Orders store.</p>' +
+      '</section>';
+    admSsState();
+  }
+  async function admSsState(){
+    const el = document.getElementById('admSsState'); if (!el) return;
+    const [a, b] = await Promise.all([
+      SB.rpc('rma_secret_status', { k: 'shipstation_key' }),
+      SB.rpc('rma_secret_status', { k: 'shipstation_secret' })
+    ]);
+    if (a.error || b.error){ el.innerHTML = 'Run <b>shipstation.sql</b> in Supabase first.'; return; }
+    const ka = (a.data || [])[0], kb = (b.data || [])[0];
+    const on = DEMO.on || (ka && ka.configured && kb && kb.configured);
+    el.innerHTML = on
+      ? '<span class="ord-chip ok">Connected</span> key and secret saved. Paste new ones to replace them.'
+      : '<span class="ord-chip neutral">Not set up</span> paste the API key and secret below.';
+  }
+  document.addEventListener('click', async function(e){
+    if (!e.target.closest('#admSsSave')) return;
+    const k = document.getElementById('admSsKey').value.trim(), s = document.getElementById('admSsSecret').value.trim();
+    if (!k || !s){ toast('Paste both the API key and the API secret.', 'warn'); return; }
+    const btn = e.target.closest('#admSsSave'); btn.disabled = true;
+    try {
+      const r1 = await SB.rpc('rma_set_secret', { k: 'shipstation_key', v: k });
+      const r2 = r1.error ? r1 : await SB.rpc('rma_set_secret', { k: 'shipstation_secret', v: s });
+      if (r2.error){ toast(/Unknown secret/.test(r2.error.message) ? 'Run shipstation.sql in Supabase first.' : r2.error.message, 'bad'); return; }
+      document.getElementById('admSsKey').value = ''; document.getElementById('admSsSecret').value = '';
+      toast('ShipStation connected', 'ok'); admSsState();
+    } finally { btn.disabled = false; }
+  });
+
   function admPaneDemo(p){
     p.innerHTML =
       '<section class="card">' +
@@ -15203,6 +15389,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function liveBusyWhy(root, p){
     var focused = document.hasFocus();
     if (p === 'orders' && typeof ordShipping !== 'undefined' && ordShipping.size) return 'marking shipped';
+    if (p === 'orders' && typeof ordSsBusy !== 'undefined' && ordSsBusy.size) return 'sending to ShipStation';
     if (focused && Date.now() - liveInputAt < 2500) return 'recent input';
     if ((p === 'orders' || p === 'home') && ordLoading) return 'orders loading';
     if (p === 'rma' && (rmaLoading || rmaEditPart)) return 'rma editing';
