@@ -2095,6 +2095,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     letter-spacing:0.08em; text-transform:uppercase; color:var(--warn);
   }
   .ord-line-q.done .ord-line-qs{ color:var(--ok); }
+  .shl-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:4px var(--s4); padding:var(--s3) 0; border-bottom:1px solid var(--line); }
+  .shl-row:last-child{ border-bottom:0; padding-bottom:0; }
+  .shl-n{ font-weight:600; font-size:14px; min-width:0; overflow-wrap:anywhere; }
+  .shl-n small{ font-size:12px; font-weight:500; color:var(--muted); margin-left:6px; }
+  .shl-v{ font-family:var(--font-num); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ok); white-space:nowrap; }
+  .shl-v small{ font-family:var(--font-ui); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-left:4px; }
+  .shl-b{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12.5px; color:var(--muted); }
+  .shl-b b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
 
   .ord-prog{
     grid-column:1 / -1; width:100%; height:9px; overflow:hidden;
@@ -9420,6 +9428,41 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return !r || r.gated !== false;
   }
 
+  /* where the shipped units went, by store name, with the builds in each */
+  function ordShipLocHtml(o){
+    const cfgName = {}; ordConfigs.forEach(function(c){ cfgName[c.id] = c.name; });
+    const mine = ordUnits.filter(function(u){ return u.order_id === o.id; });
+    const shipped = mine.filter(function(u){ return u.unit_status === 'shipped'; });
+    if (!shipped.length) return '';
+    const groups = [], byKey = {};
+    shipped.forEach(function(u){
+      const b = u.batch_id ? ordBatches.find(function(x){ return x.id === u.batch_id; }) : null;
+      const l = b && b.location_id ? ordLocations.find(function(x){ return x.id === b.location_id; }) : null;
+      const name = l && l.store_name ? String(l.store_name).trim() : 'No destination';
+      const key = name.toLowerCase();
+      let g = byKey[key];
+      if (!g){ g = byKey[key] = { name:name, stores:{}, total:0, builds:{} }; groups.push(g); }
+      if (l) g.stores[l.id] = l.store_number || '';
+      g.total++;
+      g.builds[u.config_id] = (g.builds[u.config_id] || 0) + 1;
+    });
+    groups.sort(function(a, b){ return b.total - a.total; });
+    const rowsHtml = groups.map(function(g){
+      const ids = Object.keys(g.stores);
+      const sub = ids.length > 1 ? ordNum(ids.length) + ' stores'
+        : (ids.length === 1 && g.stores[ids[0]] ? '#' + esc(g.stores[ids[0]]) : '');
+      const builds = Object.keys(g.builds).sort(function(a, b){ return g.builds[b] - g.builds[a]; });
+      return '<div class="shl-row">' +
+        '<div class="shl-n">' + esc(g.name) + (sub ? '<small>' + sub + '</small>' : '') + '</div>' +
+        '<div class="shl-v">' + ordNum(g.total) + '<small>shipped</small></div>' +
+        '<div class="shl-b">' + builds.map(function(c){
+          return '<span><b>' + ordNum(g.builds[c]) + '</b> ' + esc(cfgName[c] || 'Unknown build') + '</span>';
+        }).join('') + '</div></div>';
+    }).join('');
+    const subTxt = ordNum(shipped.length) + ' shipped to ' + ordNum(groups.length) + (groups.length === 1 ? ' dealer' : ' dealers');
+    return '<section class="card shl"><h2 class="card-title">Shipped by Dealers <span class="card-sub">' + subTxt + '</span></h2>' + rowsHtml + '</section>';
+  }
+
   function obDetailCard(o){
     if (!ordPerm.admin) return '';
     const r = obFor(o.id);
@@ -9949,6 +9992,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<h2 class="card-title">' + (gated ? '' : '<span class="ord-step s1">1</span>') + 'Line items' + (gated ? '' : ' \u00b7 What needs to be built') + (gated ? ' <span class="card-sub">what this invoice covers</span>' : '') + '</h2>' +
         lineHtml +
       '</section>' +
+      (gated ? '' : ordShipLocHtml(o)) +
 
       (gated ? '' :
       '<section class="card">' +

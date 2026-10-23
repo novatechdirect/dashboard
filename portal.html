@@ -313,6 +313,36 @@
     margin-top:var(--s2); font-size:12px; color:var(--muted);
   }
   .oprog-l b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+  .obill > summary{ display:flex; align-items:center; gap:var(--s3); list-style:none; cursor:pointer; min-height:28px; border-radius:var(--r-sm, 6px); }
+  .obill > summary::-webkit-details-marker{ display:none; }
+  .obill > summary:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .obill-t{ font-weight:600; font-size:15px; margin-right:auto; }
+  .obill-chev{ width:18px; height:18px; color:var(--muted); flex:0 0 auto; transition:transform var(--t); }
+  .obill[open] .obill-chev{ transform:rotate(180deg); }
+  .obill-in{ margin-top:var(--s5); padding-top:var(--s4); border-top:1px solid var(--line); animation:rise var(--t-slow) both; }
+  .obill-acts{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s4); }
+  .cfgp-row{ padding:var(--s4) 0; border-bottom:1px solid var(--line); min-width:0; }
+  .cfgp h2 + .cfgp-row{ padding-top:var(--s2); }
+  .cfgp-row:last-child{ border-bottom:0; padding-bottom:0; }
+  .cfgp-n{ font-weight:600; font-size:14px; min-width:0; overflow-wrap:anywhere; }
+  .cfgp-spec{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:6px; font-size:12.5px; color:var(--muted); line-height:1.45; }
+  .cfgp-si{ display:inline-flex; align-items:center; gap:6px; min-width:0; }
+  .cfgp-si svg{ width:15px; height:15px; flex:0 0 auto; color:var(--faint); }
+  .cfgp-q{ display:flex; align-items:baseline; justify-content:space-between; gap:var(--s2) var(--s3); flex-wrap:wrap; margin-top:var(--s3); font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .cfgp-q b{ font-size:16px; font-weight:600; color:var(--accent-fg, var(--accent)); }
+  .cfgp-q.done b{ color:var(--ok); }
+  .cfgp-qs{ font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--warn-ink, var(--warn)); }
+  .cfgp-q.done .cfgp-qs{ color:var(--ok); }
+  .oprog-bar.cfgp-bar{ height:9px; margin-top:6px; border:0; background:color-mix(in srgb, var(--ink) 13%, transparent); box-shadow:inset 0 1px 2px color-mix(in srgb, #000 22%, transparent); }
+  @media (max-width:640px){ .cfgp-spec{ display:grid; grid-template-columns:minmax(0,1fr); gap:4px; } }
+  .shl-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:4px var(--s4); padding:var(--s3) 0; border-bottom:1px solid var(--line); }
+  .shl-row:last-child{ border-bottom:0; padding-bottom:0; }
+  .shl-n{ font-weight:600; font-size:14px; min-width:0; overflow-wrap:anywhere; }
+  .shl-n small{ font-size:12px; font-weight:500; color:var(--muted); margin-left:6px; }
+  .shl-v{ font-family:var(--font-num); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ok); white-space:nowrap; }
+  .shl-v small{ font-family:var(--font-ui); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-left:4px; }
+  .shl-b{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12.5px; color:var(--muted); }
+  .shl-b b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
 
   /* ---------- pipeline summary ---------- */
   .pipev{ font-size:28px; font-weight:600; line-height:1.25; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
@@ -1958,7 +1988,8 @@
       ],
       order_lines: [
         { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 25, unit_price: 719, position: 1, category: 1 },
-        { id: 'demo-line-2', order_id: o2, config_id: cfgB, qty_ordered: 60, unit_price: 1368, position: 1, category: 1 }
+        { id: 'demo-line-2', order_id: o2, config_id: cfgB, qty_ordered: 60, unit_price: 1368, position: 1, category: 1 },
+        { id: 'demo-line-3', order_id: o2, config_id: cfgA, qty_ordered: 20, unit_price: 719, position: 2, category: 1 }
       ],
       order_payments: [
         { id: 'demo-pay-1', order_id: o1, amount: 9000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
@@ -4039,6 +4070,164 @@
     }
   });
 
+  /* per-build progress, only when an invoice mixes builds */
+  function cfgProgHtml(o, cfgName){
+    const rows = [], by = {};
+    lines.filter(function(l){ return l.order_id === o.id && l.config_id; }).forEach(function(l){
+      if (!by[l.config_id]){ by[l.config_id] = { id:l.config_id, ordered:0, built:0, assigned:0, shipped:0 }; rows.push(by[l.config_id]); }
+      by[l.config_id].ordered += (+l.qty_ordered || 0);
+    });
+    if (!rows.length) return '';
+    units.forEach(function(u){
+      const r = u.order_id === o.id && by[u.config_id];
+      if (!r) return;
+      if (u.unit_status === 'shipped') r.shipped++; else if (u.unit_status === 'assigned') r.assigned++; else r.built++;
+    });
+    const ICO = {
+      Case:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M9 6.5h6M9 9.5h6"/><circle cx="12" cy="16.5" r="1.5"/></g>',
+      CPU:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></g>',
+      GPU:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5h18a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6"/><path d="M2 4.5v15"/><circle cx="10" cy="12" r="3"/><path d="M16.5 10v4M19 10v4M7 17.5v2.5h6v-2.5"/></g>',
+      RAM:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h18a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"/><path d="M6 10.5v2M10 10.5v2M14 10.5v2M18 10.5v2M5 15.5v2M19 15.5v2M11 15.5v2M13 15.5v2"/></g>',
+      Storage:'<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="2"/><path d="M6 12h6M16.5 12h.01M19 12h.01"/></g>'
+    };
+    return '<div class="card cfgp"><h2>Built</h2>' + rows.map(function(r){
+      const made = r.built + r.assigned + r.shipped, tot = Math.max(r.ordered, made) || 1;
+      const rem = Math.max(0, r.ordered - made);
+      const segs = [
+        ['Shipped', r.shipped, 'var(--ok)'],
+        ['Preparing to ship', r.assigned, 'var(--accent)'],
+        ['Ready to assign', r.built, '#e6b800']
+      ];
+      const spec = specLines(cfgById(r.id));
+      return '<div class="cfgp-row">' +
+        '<div class="cfgp-n"><span class="cfg" data-cfg="' + esc(r.id) + '" tabindex="0">' + esc(cfgName[r.id] || 'Unknown build') + '</span></div>' +
+        (spec.length ? '<div class="cfgp-spec">' + spec.map(function(p){
+          return '<span class="cfgp-si" title="' + p[0] + '"><svg viewBox="0 0 24 24" role="img" aria-label="' + p[0] + '">' + (ICO[p[0]] || '') + '</svg>' + esc(p[1]) + '</span>';
+        }).join('') + '</div>' : '') +
+        '<div class="cfgp-q' + (rem ? '' : ' done') + '">' +
+          '<span><b>' + num(made) + '</b> / ' + num(r.ordered) + ' built' +
+            (r.shipped ? ' \u00b7 ' + num(r.shipped) + ' shipped' : '') + '</span>' +
+          '<span class="cfgp-qs">' + (rem ? num(rem) + ' to go' : 'complete') + '</span></div>' +
+        '<div class="oprog-bar cfgp-bar" role="progressbar" aria-label="' + esc(cfgName[r.id] || 'Build') + '" aria-valuemin="0" aria-valuemax="' + r.ordered + '" aria-valuenow="' + made + '">' +
+          segs.map(function(s){
+            return s[1] ? '<i style="width:' + (s[1]/tot*100) + '%;background:' + s[2] + '" title="' + s[0] + ': ' + num(s[1]) + '"></i>' : '';
+          }).join('') +
+        '</div></div>';
+    }).join('') + '</div>';
+  }
+
+  /* where the shipped units went, by store name, with the builds in each */
+  function shipLocHtml(o, cfgName){
+    const mine = units.filter(function(u){ return u.order_id === o.id; });
+    const shipped = mine.filter(function(u){ return u.unit_status === 'shipped'; });
+    if (!shipped.length) return '';
+    const groups = [], byKey = {};
+    shipped.forEach(function(u){
+      const b = u.batch_id ? batches.find(function(x){ return x.id === u.batch_id; }) : null;
+      const l = b && b.location_id ? locOf(b) : null;
+      const name = l && l.store_name ? String(l.store_name).trim() : 'No destination';
+      const key = name.toLowerCase();
+      let g = byKey[key];
+      if (!g){ g = byKey[key] = { name:name, stores:{}, total:0, builds:{} }; groups.push(g); }
+      if (l) g.stores[l.id] = l.store_number || '';
+      g.total++;
+      g.builds[u.config_id] = (g.builds[u.config_id] || 0) + 1;
+    });
+    groups.sort(function(a, b){ return b.total - a.total; });
+    const rowsHtml = groups.map(function(g){
+      const ids = Object.keys(g.stores);
+      const sub = ids.length > 1 ? num(ids.length) + ' stores'
+        : (ids.length === 1 && g.stores[ids[0]] ? '#' + esc(g.stores[ids[0]]) : '');
+      const builds = Object.keys(g.builds).sort(function(a, b){ return g.builds[b] - g.builds[a]; });
+      return '<div class="shl-row">' +
+        '<div class="shl-n">' + esc(g.name) + (sub ? '<small>' + sub + '</small>' : '') + '</div>' +
+        '<div class="shl-v">' + num(g.total) + '<small>shipped</small></div>' +
+        '<div class="shl-b">' + builds.map(function(c){
+          return '<span><b>' + num(g.builds[c]) + '</b> ' + esc(cfgName[c] || 'Unknown build') + '</span>';
+        }).join('') + '</div></div>';
+    }).join('');
+    const subTxt = num(shipped.length) + ' shipped to ' + num(groups.length) + (groups.length === 1 ? ' dealer' : ' dealers');
+    return '<div class="card shl"><h2>Shipped by Dealers <span class="subtle">' + subTxt + '</span></h2>' + rowsHtml + '</div>';
+  }
+
+  /* billing for this invoice, folded away: the order view gets shown around,
+     so no figures until it is opened. Billing logins and staff only. */
+  let obillOpen = false;
+  function obillHtml(o){
+    if (!canBill && !isStaff) return '';
+    if (billState === 'error') return '';
+    if (billState === 'idle'){
+      const oid = o.id;
+      setTimeout(function(){ loadBilling().then(function(){ obillRefresh(oid); }); }, 0);
+    }
+    const r = billInv.find(function(x){ return String(x.order_id) === String(o.id); });
+    const ready = billState === 'ready';
+    if (ready && !r) return '';
+    const st = r ? r.state : '';
+    const lbl = ({ paid:'Paid', 'part paid':'Part paid', open:'Not paid', overdue:'Overdue', unpriced:'Not priced' })[st] || st;
+    const tot = r && r.invoice_total != null ? Number(r.invoice_total) : null;
+    const pd = r ? Number(r.paid || 0) : 0;
+    const pays = r ? billPays[r.order_id] : undefined;
+    return '<details class="card obill" id="obill"' + (obillOpen ? ' open' : '') + '>' +
+      '<summary><span class="obill-t">Billing</span>' +
+        (r ? '<span class="bst ' + (BILL_CHIP[st] || '') + '">' + esc(lbl) + '</span>' : '<span class="muted" style="font-size:12px;">Loading\u2026</span>') +
+        '<svg viewBox="0 0 24 24" class="obill-chev" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
+      '</summary>' +
+      (r ? '<div class="obill-in">' +
+        (tot != null && tot > 0
+          ? '<div class="bill-rail" style="margin-top:0;"><i style="width:' + Math.min(100, pd / tot * 100).toFixed(1) + '%"></i></div>' +
+            '<div class="bill-cap"><span><b>' + bmoney(pd) + '</b> of ' + bmoney(tot) + ' paid</span>' +
+              '<span>' + (Number(r.balance || 0) > 0.005 ? '<b>' + bmoney(r.balance) + '</b> outstanding' : 'paid in full') + '</span></div>'
+          : '<p class="muted" style="margin:0;font-size:13px;">No total set on this invoice yet.</p>') +
+        '<div class="bill-det">' +
+          '<div><div class="bill-det-v">' + bmoney(r.invoice_total) + '</div><div class="bill-det-l">Invoice total</div></div>' +
+          '<div><div class="bill-det-v" style="color:var(--ok);">' + (pd ? bmoney(pd) : '\u2014') + '</div><div class="bill-det-l">Paid to date</div></div>' +
+          '<div><div class="bill-det-v' + (r.days_late > 0 ? ' hot' : '') + '">' + (tot == null ? '\u2014' : bmoney(r.balance)) + '</div><div class="bill-det-l">Balance</div>' +
+            '<div class="bill-det-s">' + (r.due_date ? 'due ' + esc(fmtDate(r.due_date)) : 'no due date') +
+              (r.days_late > 0 ? ' \u00b7 ' + num(r.days_late) + ' days late' : '') + '</div></div>' +
+        '</div>' +
+        '<div class="binv-sec">Payments</div>' +
+        (pays === undefined
+          ? '<p class="muted" style="margin:0;font-size:13px;">Loading\u2026</p>'
+          : pays.length
+            ? pays.map(function(p){
+                return '<div class="bpay"><span class="bpay-a">' + bmoney(p.amount) + '</span>' +
+                  '<span class="bpay-d">' + esc(fmtDate(p.paid_on)) + '</span>' +
+                  '<span class="bpay-d">' + esc([p.method, p.note].filter(Boolean).join(' \u00b7 ')) + '</span></div>';
+              }).join('')
+            : '<p class="muted" style="margin:0;font-size:13px;">Nothing recorded against this invoice yet.</p>') +
+        '<div class="obill-acts">' +
+          (r.has_pdf ? '<button class="btn sm primary" data-obillpdf="' + esc(r.order_id) + '" type="button">Invoice PDF</button>' : '') +
+          '<button class="btn sm" data-obillgo="' + esc(r.order_id) + '" type="button">Open in Billing</button></div>' +
+      '</div>' : '') +
+    '</details>';
+  }
+  function obillRefresh(id){
+    const el = $('obill'); if (!el || String(currentId) !== String(id)) return;
+    const o = orders.find(function(x){ return x.id === id; }); if (!o) return;
+    el.outerHTML = obillHtml(o) || '<span id="obill" hidden></span>';
+  }
+  async function obillPays(id){
+    if (billPays[id] !== undefined) return;
+    const r = await SB.rpc('portal_billing_payments', { p_order: id, p_customer: isStaff && me ? me.customer_id : null });
+    billPays[id] = r.error ? [] : (r.data || []);
+    obillRefresh(id);
+  }
+  document.addEventListener('toggle', function(e){
+    if (!e.target || e.target.id !== 'obill') return;
+    obillOpen = e.target.open;
+    if (obillOpen && currentId) obillPays(currentId);
+  }, true);
+  document.addEventListener('click', function(e){
+    const p = e.target.closest && e.target.closest('[data-obillpdf]');
+    if (p){ billSignedOpen('order-invoices', p.getAttribute('data-obillpdf') + '/invoice.pdf'); return; }
+    const b = e.target.closest && e.target.closest('[data-obillgo]'); if (!b) return;
+    const id = b.getAttribute('data-obillgo');
+    pview = 'billing'; rmaCurrent = null; currentId = null; pipeShown = null; billOpen = null;
+    renderList();
+    billOpenRow(id);
+  });
+
   /* ---------- detail ---------- */
   function openOrder(id){
     currentId = id; pview = 'orders'; syncMenu();
@@ -4077,8 +4266,9 @@
         '<div class="sumc prep" title="Packed into a batch, waiting to leave"><div class="sumv">' + num(st.assigned) + '</div><div class="suml">Preparing to ship</div></div>' +
         '<div class="sumc ok" title="Dispatched to a store"><div class="sumv">' + num(st.shipped) + '</div><div class="suml">Shipped</div></div>' +
       '</div>' +
-      '<div class="card" id="notesCard"><h2>Notes <span class="subtle">from NovaTech, and anything you want on the record</span></h2>' +
-        '<div id="notesBody"><p class="nempty">Loading\u2026</p></div></div>' +
+      obillHtml(o) +
+      cfgProgHtml(o, cfgName) +
+      shipLocHtml(o, cfgName) +
       '<div class="card"><h2>Shipments <span class="subtle">each shipment goes to one store</span></h2>' +
       (mine.length ? mine.map(function(b){
         const bu = units.filter(function(u){ return u.batch_id === b.id; });
@@ -4149,7 +4339,9 @@
       : '<div class="empty">' +
         '<div class="empty-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.56541 8.73049C9.0804 6.97492 8.8379 6.09714 9.24954 5.40562C9.66119 4.71409 10.5662 4.47889 12.3763 4.00849L14.2962 3.50955C16.1062 3.03915 17.0113 2.80394 17.7242 3.20319C18.4372 3.60244 18.6797 4.48023 19.1647 6.2358L19.6792 8.09786C20.1642 9.85343 20.4067 10.7312 19.995 11.4227C19.5834 12.1143 18.6784 12.3495 16.8683 12.8199L14.9484 13.3188C13.1384 13.7892 12.2333 14.0244 11.5203 13.6252C10.8073 13.2259 10.5648 12.3481 10.0798 10.5926L9.56541 8.73049Z"/><path stroke-linecap="round" d="M8.23 15.0602L6.08 7.27014C5.89453 6.61732 5.38563 6.12036 4.7 5.92L3 5.4502"/><circle cx="8.05" cy="18.1" r="2.9"/><path stroke-linecap="round" d="M10.9199 17.36L19.9999 15"/></g></svg></div>' +
         '<p>Nothing has shipped yet.</p><p class="muted">Shipments appear here as they leave the building.</p></div>') +
-      '</div>';
+      '</div>' +
+      '<div class="card" id="notesCard"><h2>Notes <span class="subtle">from NovaTech, and anything you want on the record</span></h2>' +
+        '<div id="notesBody"><p class="nempty">Loading\u2026</p></div></div>';
 
     $('back').addEventListener('click', renderList);
     notesLoad(o.id);
