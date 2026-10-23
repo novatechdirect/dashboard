@@ -4138,6 +4138,243 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   @keyframes plotDraw{ from{ clip-path:inset(0 100% 0 0); } }
   #rmaTrendPlot > svg{ animation:plotDraw 900ms cubic-bezier(.2,.7,.2,1) backwards; }
   @media (prefers-reduced-motion: reduce){ #rmaTrendPlot > svg{ animation:none; } }
+
+  /* =====================================================================
+     v3.10 · Orders on phones
+     One pass over the order list, the order page and its sheets for
+     375–440px screens (iPhone 17 Pro Max is 440 wide). Appended last and
+     scoped to the Orders panes, so it settles what the older mobile layers
+     left fighting without touching desktop or the other tools.
+     ===================================================================== */
+  .ord-more-btn, .ord-sum-ls{ display:none; }
+  .ord-po, .ord-due{ white-space:nowrap; }
+  /* a customer name wraps as one piece, so "Demo Gaming" never ends a line with "Co" on the next */
+  .ord-cust{ display:inline-block; max-width:100%; }
+  .ord-sheet{ display:flex; flex-direction:column; gap:8px; }
+  .ord-sheet > button{
+    width:100%; min-height:48px; justify-content:flex-start;
+    padding:0 16px; font-size:15px; font-weight:500;
+  }
+  .ord-sheet > button.danger{ margin-top:8px; }
+
+  @media (max-width:700px){
+    /* ---------- order list ---------- */
+    #toolOrders .app-header{ margin-bottom:var(--s4); }
+    /* the invoice rows are the cards; the panel around them steps back */
+    #toolOrders .ord-list-card{ background:none; border:0; box-shadow:none; padding:0; }
+    #toolOrders .ord-list-card .ord-bar{ margin-bottom:var(--s3); }
+    #toolOrders .ord-list-card .ord-chips{ margin-bottom:var(--s4); gap:6px; }
+    /* five filters in two tidy rows from 375 up */
+    #toolOrders .ord-chips .mg-pill{ min-height:32px; padding:0 12px; }
+    #toolOrders .ord-chips .mg-pill[data-ordfilter]::before{ margin-right:6px; }
+    #toolOrders .ord-row{
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:6px 12px; padding:12px 14px; margin-bottom:8px;
+    }
+    #toolOrders .ord-row > div:first-child{ display:contents; }
+    #toolOrders .ord-inv{ grid-column:1; grid-row:1; min-width:0; flex-wrap:wrap; align-items:baseline; gap:2px 8px; }
+    #toolOrders .ord-inv-lbl{ white-space:nowrap; }
+    #toolOrders .ord-inv .ord-no{ font-size:16px; overflow-wrap:anywhere; }
+    /* the customer line runs under the status chip too */
+    #toolOrders .ord-row .ord-sub{ grid-column:1 / -1; margin-top:0; line-height:1.45; overflow-wrap:anywhere; }
+    #toolOrders .ord-row .ord-sub .sep{ margin:0 6px; }
+    #toolOrders .ord-row > .ord-stat{ grid-column:2; grid-row:1; align-self:start; }
+    /* the bar runs across; built and shipped sit left, what's left to build right */
+    #toolOrders .ord-row .ord-prog-wrap{ display:contents; }
+    #toolOrders .ord-row .ord-prog{ grid-column:1 / -1; margin-top:4px; }
+    #toolOrders .ord-row .ord-prog-wrap > .ord-prog-lbl{ grid-column:1; margin-top:0; }
+    #toolOrders .ord-row > .ord-prog-lbl{ grid-column:2; text-align:right; padding:0; white-space:nowrap; }
+
+    /* ---------- order page: head ---------- */
+    #ordDetailPane .ord-back-row{ margin-bottom:var(--s3); }
+    #ordDetailPane #ordBackBtn{ flex:0 0 auto; padding:0 14px 0 10px !important; }
+    #ordDetailPane .ord-head{ gap:var(--s3); margin-bottom:var(--s4); }
+    #ordDetailPane .ord-head > div:first-child{ min-width:0; padding-right:0; }
+    /* only the title line has to clear the status chip pinned top right */
+    #ordDetailPane .ord-head h1{ font-size:22px; line-height:1.25; overflow-wrap:anywhere; padding-right:140px; }
+    #ordDetailPane .ord-head-meta{ margin-top:6px; line-height:1.45; overflow-wrap:anywhere; }
+    #ordDetailPane .ord-head-r{ display:flex; flex-wrap:nowrap; gap:8px; width:100%; }
+    #ordDetailPane .ord-head-r > button{
+      flex:1 1 0; min-width:0; margin:0; white-space:nowrap;
+      min-height:40px !important; padding:0 10px !important; font-size:13px !important;
+    }
+    #ordDetailPane .ord-head-r:has(> .ord-more-btn) > [data-more]{ display:none; }
+    #ordDetailPane .ord-head-r > .ord-more-btn{ display:inline-flex; }
+
+    /* ---------- order page: one progress strip instead of five tiles ---------- */
+    #ordDetailPane .ord-prog-rail{
+      margin:0; padding:12px 12px 0; background:var(--paper);
+      border:1px solid var(--line); border-bottom:0; border-radius:var(--r-md) var(--r-md) 0 0;
+    }
+    #ordDetailPane .ord-prog-track{ height:6px; }
+    #ordDetailPane .ord-sum{
+      grid-template-columns:repeat(5, minmax(0,1fr)); gap:0; overflow:hidden;
+      background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
+      margin-bottom:var(--s5);
+    }
+    #ordDetailPane .ord-prog-rail + .ord-sum{ border-top:0; border-radius:0 0 var(--r-md) var(--r-md); }
+    #ordDetailPane .ord-sum-c{
+      grid-column:auto; min-width:0; padding:10px 4px 12px; text-align:center;
+      background:none; border:0; border-left:1px solid var(--line); border-radius:0;
+    }
+    #ordDetailPane .ord-sum-c:first-child{ border-left:0; }
+    #ordDetailPane .ord-sum-v{ font-size:18px; line-height:1.2; }
+    #ordDetailPane .ord-sum-l{ justify-content:center; margin-top:3px; font-size:9.5px; letter-spacing:.05em; }
+    #ordDetailPane .ord-sum-l > span{ white-space:nowrap; }
+    #ordDetailPane .ord-sum-l .nt-ico, #ordDetailPane .ord-sum-lf{ display:none; }
+    #ordDetailPane .ord-sum-ls{ display:inline; }
+
+    /* ---------- cards ---------- */
+    #ordDetailPane .card{ padding:16px 14px; }
+    #ordDetailPane .card.ord-pdf{ padding:0; }
+    #ordDetailPane .card.ord-pdf > summary{ flex-wrap:nowrap; padding:14px; }
+    #ordDetailPane .card.ord-pdf > summary > span:first-child{ flex:0 0 auto; white-space:nowrap; }
+
+    /* ---------- line items: where it stands, then what to do ---------- */
+    #ordDetailPane .ord-line{ gap:0; padding:14px 0; }
+    #ordDetailPane .ord-line-q{ order:1; justify-content:space-between; margin-top:10px; }
+    #ordDetailPane .ord-line .ord-prog{ order:2; margin:6px 0 0; height:8px; }
+    #ordDetailPane .ord-line .ord-gen{ order:3; margin-top:12px; }
+    #ordDetailPane .ord-gen input{ height:40px; }
+    #ordDetailPane .ord-gen .btn-sm{ min-height:40px !important; }
+
+    /* ---------- unit pool: tools ---------- */
+    #ordDetailPane .ord-pool-tools{
+      display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px;
+      margin:var(--s3) 0 var(--s4);
+    }
+    #ordDetailPane .ord-pool-tools > #ordPoolCfg,
+    #ordDetailPane .ord-pool-tools > .ord-seln{ grid-column:1 / -1; }
+    #ordDetailPane .ord-pool-tools .sel-sm{ width:100%; height:40px; min-height:40px; }
+    #ordDetailPane .ord-pool-tools .ord-seln{ display:flex; align-items:center; gap:8px; min-width:0; }
+    #ordDetailPane .ord-pool-tools .ord-seln label{ flex:0 0 auto; font-size:13px; }
+    #ordDetailPane .ord-pool-tools .ord-seln input{
+      flex:0 0 64px; width:64px; min-width:0; height:40px; min-height:40px; padding:0 6px; text-align:center;
+    }
+    #ordDetailPane .ord-pool-tools .ord-seln .btn-sm{
+      flex:1 1 auto; min-width:0; white-space:nowrap;
+      min-height:40px !important; padding:0 10px !important;
+    }
+    #ordDetailPane .ord-pool-tools > .btn-sm{ width:100%; min-height:38px !important; }
+
+    /* ---------- unit pool: two short lines a unit ---------- */
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody tr{
+      display:grid; grid-template-columns:auto minmax(0,1fr) auto;
+      grid-template-areas:"chk ser when" "chk cfg prn";
+      align-items:center; gap:2px 12px; padding:10px 12px; margin-bottom:6px;
+    }
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody td{ display:block; min-width:0; padding:0; text-align:left; }
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody td::before{ content:none; }
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody td:empty{ display:none; }
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody td.chk-col{ grid-area:chk; display:flex; align-items:center; }
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody td[data-l="Serial"]{ grid-area:ser; font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody td[data-l="Config"]{ grid-area:cfg; font-size:12.5px; color:var(--muted); }
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody td[data-l="Built"]{ grid-area:when; font-size:12px; color:var(--faint); text-align:right; white-space:nowrap; }
+    #ordDetailPane .hist-table.stack.ord-pool-table tbody td.ord-printed-c{ grid-area:prn; justify-self:end; }
+    #ordDetailPane .ord-pool-table .ord-cfg{ text-align:left; }
+
+    /* ---------- unit pool: the selection bar, half its old height ---------- */
+    #ordDetailPane .ord-pool-bar{
+      display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
+      gap:8px; padding:10px; bottom:calc(76px + env(safe-area-inset-bottom));
+    }
+    #ordDetailPane .ord-pool-bar .ord-sel-count{ grid-column:1; grid-row:1; padding-left:4px; font-size:14px; font-weight:700; }
+    #ordDetailPane .ord-pool-bar #ordUnbuild{ grid-column:2; grid-row:1; min-height:34px !important; padding:0 12px !important; }
+    #ordDetailPane .ord-pool-bar .ord-sel-note{ grid-column:1 / -1; margin:0; }
+    #ordDetailPane .ord-pool-bar .ord-sel-note:empty{ display:none; }
+    #ordDetailPane .ord-pool-actions{
+      grid-column:1 / -1; display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:8px; width:100%; margin:0;
+    }
+    #ordDetailPane .ord-pool-actions > button{
+      width:100%; min-width:0; grid-column:auto; white-space:nowrap;
+      min-height:42px !important; padding:0 8px !important; font-size:13px !important;
+    }
+    /* an odd one out (no batch rights) takes the whole row */
+    #ordDetailPane .ord-pool-actions > button:last-child:nth-child(odd){ grid-column:1 / -1; }
+
+    /* ---------- batches ---------- */
+    #ordDetailPane .ord-batch{ margin-bottom:10px; }
+    #ordDetailPane .ord-batch-head{
+      grid-template-columns:max-content minmax(0,1fr) 16px;
+      grid-template-areas:"id meta chev" "dest dest chev" "age age chev" "btns btns btns";
+      align-items:center; gap:4px 10px; padding:12px;
+    }
+    /* the header opens the serials and tracking; the chevron says so */
+    #ordDetailPane .ord-batch-head::after{
+      content:""; grid-area:chev; align-self:center; justify-self:end;
+      width:16px; height:16px; background:var(--faint);
+      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 6-7-6'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+              mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 6-7-6'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+      transition:transform var(--t);
+    }
+    #ordDetailPane .ord-batch:has(> .ord-batch-body:not([style*="none"])) > .ord-batch-head::after{ transform:rotate(180deg); }
+    #ordDetailPane .ord-batch-id{ grid-area:id; }
+    #ordDetailPane .ord-batch-no{ white-space:nowrap; }
+    #ordDetailPane .ord-batch-dest{ grid-area:dest; }
+    #ordDetailPane .ord-batch-age{ grid-area:age; text-align:left; font-size:11.5px; }
+    /* units and ship date (or carrier) share one line, so the store gets the full width below */
+    #ordDetailPane .ord-batch-meta{
+      grid-area:meta; display:flex; align-items:center; justify-content:flex-end;
+      flex-wrap:wrap; gap:2px 8px; text-align:right; white-space:nowrap;
+    }
+    #ordDetailPane .ord-batch-meta .ord-batch-ship{ margin-top:0; }
+    /* "not shipped" repeats the Open chip */
+    #ordDetailPane .ord-batch-meta .ord-mono > .ord-sub{ display:none; }
+    /* workflow actions on the first row, the rest below; Details is the header itself */
+    #ordDetailPane .ord-batch-btns{
+      grid-area:btns; display:flex; flex-wrap:wrap; gap:0 8px; width:100%; margin:4px 0 0;
+    }
+    #ordDetailPane .ord-batch-btns::before{ content:""; order:2; flex:0 0 100%; height:0; }
+    #ordDetailPane .ord-batch-btns > button{
+      order:3; flex:1 1 auto; min-width:0; margin-top:8px; white-space:nowrap;
+      min-height:36px !important; padding:0 10px !important; font-size:12.5px !important;
+    }
+    #ordDetailPane .ord-batch-btns > [data-bexpand]{ display:none; }
+    #ordDetailPane .ord-batch-btns > [data-bss],
+    #ordDetailPane .ord-batch-btns > [data-bship]{
+      order:1; flex:1 1 40%; font-weight:600;
+      min-height:42px !important; font-size:13.5px !important;
+    }
+    /* until a batch ships, Track is one of the extras rather than the lead */
+    #ordDetailPane .ord-batch-btns:has(> [data-bship]) > [data-btrack]{
+      background:var(--paper); border-color:var(--line-strong); color:var(--ink);
+    }
+    #ordDetailPane .ord-batch-body{ padding:12px; }
+    #ordDetailPane .ord-batch-bar{ margin-bottom:10px; }
+    #ordDetailPane .ord-batch-bar .btn-sm{ white-space:nowrap; }
+    #ordDetailPane .ord-batch-trk{ min-width:0; overflow-wrap:anywhere; }
+    #ordDetailPane .ord-batch-wrap .hist-table.stack tr{ grid-template-columns:minmax(0,1fr) minmax(0,auto); }
+    #ordDetailPane .ord-batch-wrap .hist-table.stack td[data-l="Tracking"]{ min-width:0; overflow-wrap:anywhere; }
+    #ordDetailPane .ord-batch-foot{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
+    #ordDetailPane .ord-batch-foot button{
+      height:auto; min-height:38px !important; padding:0 8px !important; font-size:12.5px !important;
+    }
+    #ordDetailPane .ord-batch-foot > [data-bdel]{ grid-column:1 / -1; }
+
+    /* ---------- notes: author on top, the note, then when and Remove ---------- */
+    #ordNotesCard .rma-msg{ display:grid; grid-template-columns:minmax(0,1fr); }
+    #ordNotesCard .rma-msg .rma-msg-h{ display:contents; }
+    #ordNotesCard .rma-msg .onote-tags:first-child{ order:0; flex-wrap:wrap; row-gap:4px; margin-bottom:6px; }
+    #ordNotesCard .rma-msg .onote-tags:first-child b{ min-width:0; }
+    #ordNotesCard .rma-msg > p{ order:1; }
+    #ordNotesCard .rma-msg .onote-tags:last-child{ order:2; justify-content:space-between; margin-top:8px; }
+    #ordNotesCard .onote-x{ padding:6px 8px; margin:-6px -8px; font-size:12.5px; }
+    #ordNotesCard .rma-compose-bar{ display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; }
+    #ordNotesCard .onote-seg{ grid-column:1 / -1; }
+    #ordNotesCard .onote-seg button{ flex:1 1 0; min-height:36px; }
+    #ordNotesCard .rma-compose-bar .spacer{ display:none; }
+    #ordNotesCard #ordNotePost{ min-height:40px !important; padding:0 18px !important; }
+
+    /* ---------- new destination: city / state / ZIP and name / number pair up ---------- */
+    #ordNewDest .ord-cfg-grid{ grid-template-columns:repeat(6, minmax(0,1fr)); gap:10px; }
+    #ordNewDest .ord-cfg-grid > .field{ grid-column:1 / -1; margin-bottom:0; }
+    #ordNewDest .ord-cfg-grid > .field:has(#ordDStore){ grid-column:span 4; }
+    #ordNewDest .ord-cfg-grid > .field:has(#ordDNum){ grid-column:span 2; }
+    #ordNewDest .ord-cfg-grid > .field:has(#ordDState){ grid-column:span 2; }
+    #ordNewDest .ord-cfg-grid > .field:has(#ordDZip){ grid-column:span 4; }
+    .mg-modal [data-addrcopy], #ordNAddLine, #ordEAddLine{ white-space:nowrap; flex:0 0 auto; }
+  }
 </style>
 </head>
 <body>
@@ -4170,7 +4407,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <span class="rt-lbl">Dark mode</span>
         <span class="rt-track"><span class="rt-knob"></span></span>
       </button>
-      <span class="version" id="version">v3.9.11</span>
+      <span class="version" id="version">v3.10.0</span>
     </div>
   </aside>
 
@@ -9484,8 +9721,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<div class="ord-inv">' +
             '<span class="ord-inv-lbl">Invoice #</span>' +
             '<span class="ord-no">' + esc(o.invoice_no) + '</span></div>' +
-          '<div class="ord-sub">' + esc(cust[o.customer_id] || 'Unknown customer') +
-            (o.po_number ? '<span class="sep">\u00b7</span>PO ' + esc(o.po_number) : '') +
+          '<div class="ord-sub"><span class="ord-cust">' + esc(cust[o.customer_id] || 'Unknown customer') + '</span>' +
+            (o.po_number ? '<span class="sep">\u00b7</span><span class="ord-po">PO ' + esc(o.po_number) + '</span>' : '') +
             (o.due_date ? '<span class="sep">\u00b7</span><span class="ord-due' + (late ? ' late' : '') + '">due ' + esc(fmtDate(o.due_date)) + '</span>' : '') +
             (hit ? '<span class="sep">\u00b7</span><span class="ord-mono ord-serial-hit">' + esc(hit.serial) + '</span> ' + (hitBatch ? 'in Batch ' + hitBatch.batch_no : (hit.unit_status === 'shipped' ? 'shipped' : 'in the pool')) : '') +
           '</div>' +
@@ -9662,10 +9899,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="ord-head-r">' +
           '<span class="ord-chip ' + (gated ? 'warn' : sc.cls) + '">' + (gated ? 'Awaiting payment' : sc.label) + '</span>' +
           '<button class="ghost btn-sm" id="ordCopyLink" type="button" title="Link to this order for the team">Copy link</button>' +
-          '<button class="ghost btn-sm" id="ordCsvBtn" type="button" title="Every unit on this invoice with batch, tracking and RMA">Export CSV</button>' +
-          (ordPerm.manage ? '<button class="ghost btn-sm" id="ordOpenCust" type="button" title="Open this invoice in the customer portal">Customer view</button>' : '') +
+          '<button class="ghost btn-sm" id="ordCsvBtn" data-more type="button" title="Every unit on this invoice with batch, tracking and RMA">Export CSV</button>' +
+          (ordPerm.manage ? '<button class="ghost btn-sm" id="ordOpenCust" data-more type="button" title="Open this invoice in the customer portal">Customer view</button>' : '') +
           (ordPerm.manage ? '<button class="ghost btn-sm" id="ordEditOrder" type="button">Edit</button>' : '') +
-          (ordPerm.admin ? '<button class="ghost danger btn-sm" id="ordDelOrder" type="button">Delete order</button>' : '') +
+          (ordPerm.admin ? '<button class="ghost danger btn-sm" id="ordDelOrder" data-more type="button">Delete order</button>' : '') +
+          /* phones: the rarer actions fold into one sheet */
+          (ordPerm.manage ? '<button class="ghost btn-sm ord-more-btn" id="ordMoreBtn" type="button" aria-haspopup="dialog">More</button>' : '') +
         '</div>' +
       '</div>' +
 
@@ -9699,7 +9938,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<div class="ord-sum">' +
         '<div class="ord-sum-c" title="Total quantity across every line item on this invoice"><div class="ord-sum-v">' + ordNum(st.ordered) + '</div><div class="ord-sum-l">' + ntIco('clipboard', 'nt-ico nt-ico-sm') + '<span>Ordered</span></div></div>' +
         '<div class="ord-sum-c is-rem" title="Ordered units with no serial number yet"><div class="ord-sum-v">' + ordNum(st.remaining) + '</div><div class="ord-sum-l">' + ntIco('checklist', 'nt-ico nt-ico-sm') + '<span>To build</span></div></div>' +
-        '<div class="ord-sum-c is-built" title="Serial numbers generated, not yet in a batch"><div class="ord-sum-v">' + ordNum(st.built) + '</div><div class="ord-sum-l">' + ntIco('checkcircle', 'nt-ico nt-ico-sm') + '<span>Built (in pool)</span></div></div>' +
+        '<div class="ord-sum-c is-built" title="Serial numbers generated, not yet in a batch"><div class="ord-sum-v">' + ordNum(st.built) + '</div><div class="ord-sum-l">' + ntIco('checkcircle', 'nt-ico nt-ico-sm') + '<span><span class="ord-sum-lf">Built (in pool)</span><span class="ord-sum-ls">In pool</span></span></div></div>' +
         '<div class="ord-sum-c is-assigned" title="In a batch with a destination, but not shipped yet"><div class="ord-sum-v">' + ordNum(st.assigned) + '</div><div class="ord-sum-l">' + ntIco('box', 'nt-ico nt-ico-sm') + '<span>Assigned</span></div></div>' +
         '<div class="ord-sum-c is-ok" title="In a batch that has been marked shipped"><div class="ord-sum-v">' + ordNum(st.shipped) + '</div><div class="ord-sum-l">' + ntIco('truck', 'nt-ico nt-ico-sm') + '<span>Shipped</span></div></div>' +
       '</div>' +
@@ -10756,6 +10995,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (e.target.id === 'ordUnbuild'){   ordUnbuildModal(); return; }
     if (e.target.id === 'ordMarkPrinted'){ ordMarkPrinted(); return; }
     if (e.target.id === 'ordCopyLink'){ ordCopy(ordLinkFor(ordCurrentId), 'Order link'); return; }
+    if (e.target.id === 'ordMoreBtn'){ ordMoreSheet(); return; }
     if (e.target.id === 'ordOpenCust'){
       window.open(ordCustomerLinkFor(ordCurrentId), '_blank', 'noopener');
       return;
@@ -11340,6 +11580,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (!o || !/^[0-9a-fA-F-]{36}$/.test(o)) return null;
     const b = p.get('batch');
     return { order: o, batch: (b && /^[0-9a-fA-F-]{36}$/.test(b)) ? b : null };
+  }
+
+  /* Phones show Copy link and Edit in the order header; everything marked
+     data-more opens from this sheet. Each row clicks the real (hidden)
+     button, so the existing handlers stay the only code path. */
+  function ordMoreSheet(){
+    const src = Array.prototype.slice.call(document.querySelectorAll('#ordDetailBody .ord-head-r [data-more]'));
+    if (!src.length) return;
+    const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+    const bg = mgModal(
+      mgModalHead('Invoice ' + esc(o ? o.invoice_no : ''), '') +
+      '<div class="mg-modal-body ord-sheet">' + src.map(function(b){
+        return '<button type="button" class="ghost' + (b.classList.contains('danger') ? ' danger' : '') + '" data-proxy="' + esc(b.id) + '">' + esc(b.textContent) + '</button>';
+      }).join('') + '</div>');
+    bg.addEventListener('click', function(e){
+      const p = e.target.closest('[data-proxy]');
+      if (!p) return;
+      const real = document.getElementById(p.getAttribute('data-proxy'));
+      mgCloseModal();
+      if (real) real.click();
+    });
   }
 
   async function ordCopy(text, what){
@@ -14952,7 +15213,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* ---- charts fold away on phones; the choice sticks per section ---- */
   (function(){
     const SECTIONS = [
-      ['homeChartsMain', 'Build charts'],
+      /* the Orders runway folds with the charts above it, so the list leads */
+      ['homeChartsMain', 'Build charts', ['ordRunway']],
       ['homeRmaGrid',    'RMA charts'],
       ['invTrends',      'Stock trend']
     ];
@@ -14969,11 +15231,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       btn.setAttribute('aria-controls', s[0]);
       btn.innerHTML = '<span>' + s[1] + '</span>' + CHEV;
       el.parentNode.insertBefore(btn, el);
+      const extra = (s[2] || []).map(function(id){ return document.getElementById(id); }).filter(Boolean);
 
       function paint(){
         const isOpen = !!open[s[0]];
         btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         el.classList.toggle('chart-collapsed', !isOpen);
+        extra.forEach(function(x){ x.classList.toggle('chart-collapsed', !isOpen); });
+        if (extra.length){
+          btn.firstChild.textContent = extra.some(function(x){ return x.style.display !== 'none'; }) ? 'Charts and runway' : s[1];
+        }
         /* the toggle only exists while the app is showing that section at all */
         btn.style.display = el.style.display === 'none' ? 'none' : '';
       }
@@ -14983,6 +15250,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         paint();
       });
       new MutationObserver(paint).observe(el, { attributes: true, attributeFilter: ['style'] });
+      extra.forEach(function(x){ new MutationObserver(paint).observe(x, { attributes: true, attributeFilter: ['style'] }); });
       paint();
     });
   })();
