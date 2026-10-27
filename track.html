@@ -2200,7 +2200,11 @@
   }
 
   function render(){
-    const bs = D.batches.slice().sort(function(a, b){ return (b.batch_no || 0) - (a.batch_no || 0); });
+    /* the dealer only sees its own batches, so they count from 1 (oldest first) */
+    const seq = {};
+    D.batches.slice().sort(function(a, b){ return (a.batch_no || 0) - (b.batch_no || 0); })
+      .forEach(function(b, i){ seq[b.id] = i + 1; });
+    const bs = D.batches.slice().sort(function(a, b){ return seq[b.id] - seq[a.id]; });
     const stores = {}; D.locations.forEach(function(l){ stores[l.id] = 1; });
     let units = 0, delivered = 0, transit = 0, prep = 0;
     const view = bs.map(function(b){
@@ -2211,7 +2215,7 @@
       const isDel = shipped && !!(ups ? ups.deliveredAt : b.delivered_at);
       units += bu.length;
       if (!shipped) prep += bu.length; else if (isDel) delivered += bu.length; else transit += bu.length;
-      return { b:b, bu:bu, tk:tk, ups:ups, shipped:shipped };
+      return { b:b, bu:bu, tk:tk, ups:ups, shipped:shipped, n:seq[b.id] };
     });
     const pct = function(n){ return units ? (n / units * 100) : 0; };
     document.title = D.dealer + ' \u00b7 Shipment tracking';
@@ -2245,7 +2249,7 @@
   }
 
   function batchHtml(v){
-    const b = v.b, bu = v.bu, tk = v.tk, ups = v.ups, shipped = v.shipped;
+    const b = v.b, bu = v.bu, tk = v.tk, ups = v.ups, shipped = v.shipped, n = v.n;
     const l = locOf(b);
     const per = {}; tk.forEach(function(t){ if (t.unit_id) per[t.unit_id] = t.tracking_no; });
     const wideAll = tk.filter(function(t){ return !t.unit_id; }).map(function(t){ return t.tracking_no; });
@@ -2257,7 +2261,7 @@
     const addr = l ? [l.address1, l.address2, [l.city, l.state].filter(Boolean).join(', '), l.zip].filter(Boolean).join(' \u00b7 ') : '';
     return '<div class="batch">' +
       '<div class="bhead" data-head="' + esc(b.id) + '" role="button" tabindex="0" title="Click for serials and tracking">' +
-        '<div class="bno"><b>Batch ' + esc(b.batch_no) + '</b>' + upsChip(b, ups) + '</div>' +
+        '<div class="bno"><b>Batch ' + n + '</b>' + upsChip(b, ups) + '</div>' +
         '<div><b>' + esc(l ? l.store_name : 'Store to be confirmed') + '</b>' +
           (l && l.store_number ? '<span class="storenum">' + esc(l.store_number) + '</span>' : '') +
           '<div class="sub">' + esc(addr) + '</div></div>' +

@@ -2370,6 +2370,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-ups > .ord-ups-foot{ padding:12px var(--px); }
   .ord-ups > .ord-ups-trk{ padding-top:14px; padding-bottom:14px; }
   @container upsc (max-width:520px){ .ord-ups > *{ --px:16px; } }
+  /* shipment status summary, top of the Shipments / Batches card */
+  .shs{ margin:0 0 var(--s4); }
+  .shs-bar{ display:flex; height:10px; overflow:hidden; border-radius:999px; background:var(--soft); border:1px solid var(--line); }
+  .shs-bar i{ display:block; height:100%; }
+  .shs-leg{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin-top:10px; font-size:12.5px; color:var(--muted); }
+  .shs-leg > span{ display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .shs-leg i{ width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
+  .shs-leg b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+  .shs-leg em{ font-style:normal; color:var(--faint); font-variant-numeric:tabular-nums; }
+  .shs-tot{ margin-left:auto; color:var(--faint); }
+  @media (max-width:640px){ .shs-tot{ margin-left:0; flex:1 1 100%; } }
   .ord-batch-upsd{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ord-ups-mini.bad{ --dot:var(--bad); color:var(--bad-ink); }
   .ord-batch-ship{
@@ -12068,6 +12079,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     setTimeout(function(){ el.classList.remove('is-new'); }, 3200);
   }
 
+  function ordShipSumHtml(list){
+    let del = 0, way = 0, prep = 0;
+    list.forEach(function(b){
+      const n = ordShipSumUnits(b.id);
+      if (b.status !== 'shipped'){ prep += n; return; }
+      const s = ordUpsSum(b.tk);
+      if (s ? s.deliveredAt : b.delivered_at) del += n; else way += n;
+    });
+    const tot = del + way + prep;
+    if (!tot) return '';
+    const pc = function(n){ return n / tot * 100; };
+    const seg = [['delivered', del, 'var(--ok)'], ['on the way', way, 'var(--accent)'], ['preparing', prep, '#e6b800']];
+    return '<div class="shs">' +
+      '<div class="shs-bar" role="img" aria-label="' + ordNum(del) + ' of ' + ordNum(tot) + ' units delivered">' +
+        seg.map(function(s){ return s[1] ? '<i style="width:' + pc(s[1]) + '%;background:' + s[2] + '" title="' + ordNum(s[1]) + ' ' + s[0] + '"></i>' : ''; }).join('') +
+      '</div><div class="shs-leg">' +
+        seg.map(function(s){ return '<span><i style="background:' + s[2] + '"></i><b>' + ordNum(s[1]) + '</b> ' + s[0] + ' <em>' + Math.round(pc(s[1])) + '%</em></span>'; }).join('') +
+        '<span class="shs-tot">' + ordNum(tot) + ' units in ' + ordNum(list.length) + (list.length === 1 ? ' batch' : ' batches') + '</span>' +
+      '</div></div>';
+  }
+  function ordShipSumUnits(id){ return ordBatchUnits(id).length; }
   function ordRenderBatches(){
     const host = document.getElementById('ordBatchBody');
     if (!host) return;
@@ -12078,7 +12110,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const cfgs = {}; ordConfigs.forEach(function(c){ cfgs[c.id] = c.name; });
     const openCount = ordBatches.filter(function(b){ return b.status !== 'shipped'; }).length;
-    host.innerHTML = (ordPerm.manage && openCount >= 2
+    host.innerHTML = ordShipSumHtml(ordBatches.map(function(b){ return { id:b.id, status:b.status, delivered_at:b.delivered_at, tk:ordTracking.filter(function(t){ return t.batch_id === b.id; }) }; })) +
+      (ordPerm.manage && openCount >= 2
       ? '<div style="display:flex;justify-content:flex-end;margin:0 0 var(--s3);"><button class="ghost btn-sm" id="ordMergeBtn" type="button" title="Combine open batches into one">Merge batches</button></div>'
       : '') + ordBatches.map(function(b){
       const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
