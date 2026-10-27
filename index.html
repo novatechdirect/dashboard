@@ -2164,6 +2164,31 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .ord-pool-tools #ordSelAll{ margin-left:auto; }
   }
   .ord-pool-table tbody tr.sel{ background:var(--accent-soft); }
+  /* one soft hue per config, so mixed pools read at a glance */
+  [data-ctone="0"]{ --ct:#4a7fd4; } [data-ctone="1"]{ --ct:#3a9d6a; } [data-ctone="2"]{ --ct:#d08a2c; }
+  [data-ctone="3"]{ --ct:#8b66c9; } [data-ctone="4"]{ --ct:#2a9aa6; } [data-ctone="5"]{ --ct:#c75b7f; }
+  .ord-pool-table tbody tr[data-ctone]:not(.sel){ background:color-mix(in srgb, var(--ct) 6%, var(--paper)); }
+  :root[data-theme="dark"] .ord-pool-table tbody tr[data-ctone]:not(.sel){ background:color-mix(in srgb, var(--ct) 10%, var(--paper)); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme]) .ord-pool-table tbody tr[data-ctone]:not(.sel){ background:color-mix(in srgb, var(--ct) 10%, var(--paper)); } }
+  .ord-tone-dot{ display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--ct); margin-right:7px; vertical-align:1px; }
+  .ord-cfgf-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:var(--s3); }
+  .ord-cfgf-row:empty{ display:none; }
+  .ord-cfgf{
+    display:inline-flex; align-items:center; gap:7px; height:32px; padding:0 12px;
+    border:1px solid var(--line); border-radius:999px; background:var(--paper); color:var(--ink);
+    font:inherit; font-size:13px; cursor:pointer; white-space:nowrap;
+    transition:background var(--t), border-color var(--t);
+  }
+  .ord-cfgf .ord-tone-dot{ margin-right:0; }
+  .ord-cfgf:hover{ border-color:var(--line-strong); }
+  .ord-cfgf:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .ord-cfgf[aria-pressed="true"]{
+    background:color-mix(in srgb, var(--ct, var(--ink)) 12%, var(--paper));
+    border-color:color-mix(in srgb, var(--ct, var(--ink)) 50%, var(--paper)); font-weight:600;
+  }
+  .ord-cfgf.is-zero:not([aria-pressed="true"]){ color:var(--muted); }
+  .ord-cfgf-n{ font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:12px; color:var(--muted); font-weight:500; }
+  @media (max-width:700px){ .ord-cfgf{ height:36px; } }
   .ord-printed{
     display:inline-flex; align-items:center; gap:4px; white-space:nowrap;
     font-size:11.5px; font-weight:500; line-height:1; padding:4px 9px 4px 7px; border-radius:var(--r-pill);
@@ -10134,14 +10159,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       (gated ? '' :
       '<section class="card">' +
         '<h2 class="card-title"><span class="ord-step s2">2</span>Unit pool \u00b7 Already built</h2>' +
+        '<div class="ord-cfgf-row" id="ordPoolChips" role="group" aria-label="Filter by config"></div>' +
         '<div class="ord-pool-tools">' +
-          '<select id="ordPoolCfg" class="sel-sm">' +
-            '<option value="">All configs</option>' +
-            lines.map(function(l){
-              return '<option value="' + esc(l.config_id) + '"' + (ordPoolCfg === l.config_id ? ' selected' : '') + '>' +
-                     esc(cfgName[l.config_id] || 'Config') + '</option>';
-            }).join('') +
-          '</select>' +
           '<span class="ord-seln"><label for="ordSelN">Select</label>' +
             '<input id="ordSelN" type="number" min="1" max="' + ordPoolUnits().length + '" placeholder="30" aria-label="How many units to select">' +
             '<button class="soft btn-sm" id="ordSelNGo" type="button">Take</button>' +
@@ -10965,11 +10984,52 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return true;
     });
   }
+  /* a stable hue slot per config, in line-item order */
+  function ordCfgTones(){
+    const m = {}; let i = 0;
+    ordLines.forEach(function(l){ if (l.order_id === ordCurrentId && l.config_id && !(l.config_id in m)) m[l.config_id] = i++ % 6; });
+    ordUnits.forEach(function(u){ if (u.config_id && !(u.config_id in m)) m[u.config_id] = i++ % 6; });
+    return m;
+  }
+  function ordRenderPoolChips(tones, cfgs){
+    const el = document.getElementById('ordPoolChips');
+    if (!el) return;
+    const cnt = {}; let all = 0;
+    ordUnits.forEach(function(u){ if (!u.batch_id){ cnt[u.config_id] = (cnt[u.config_id] || 0) + 1; all++; } });
+    /* only configs that have units waiting; one type alone needs no filter */
+    const ids = Object.keys(tones).filter(function(id){ return cnt[id] > 0; });
+    if (ids.length < 2){ el.innerHTML = ''; return; }
+    const chip = function(id, label, n, tone){
+      return '<button type="button" class="ord-cfgf' + (n ? '' : ' is-zero') + '" data-poolcfg="' + esc(id) + '"' +
+        (tone != null ? ' data-ctone="' + tone + '"' : '') + ' aria-pressed="' + (ordPoolCfg === id) + '">' +
+        (tone != null ? '<i class="ord-tone-dot" aria-hidden="true"></i>' : '') +
+        esc(label) + '<span class="ord-cfgf-n">' + ordNum(n) + '</span></button>';
+    };
+    el.innerHTML = chip('', 'All', all, null) +
+      ids.map(function(id){ return chip(id, cfgs[id] || 'Config', cnt[id] || 0, tones[id]); }).join('');
+  }
+  function ordSetPoolCfg(v){
+    ordPoolCfg = v || ''; ordPoolPage = 0;
+    /* a filter must not leave invisible units selected */
+    const keep = new Set(ordPoolUnits().map(function(u){ return u.id; }));
+    Array.from(ordSel).forEach(function(id){ if (!keep.has(id)) ordSel.delete(id); });
+    const n = ordPoolUnits().length;
+    const sa = document.getElementById('ordSelAll'); if (sa) sa.textContent = 'Select all ' + ordNum(n);
+    const sn = document.getElementById('ordSelN'); if (sn) sn.max = n;
+    ordRenderPool();
+  }
   function ordRenderPool(){
     const host = document.getElementById('ordPoolBody');
     if (!host) return;
+    const waiting = {};
+    ordUnits.forEach(function(u){ if (!u.batch_id && u.config_id) waiting[u.config_id] = true; });
+    /* a filter whose last unit just left the pool falls back to All */
+    if (ordPoolCfg && !waiting[ordPoolCfg]){ ordSetPoolCfg(''); return; }
     const pool = ordPoolUnits();
     const cfgs = {}; ordConfigs.forEach(function(c){ cfgs[c.id] = c.name; });
+    const tones = ordCfgTones();
+    const toned = Object.keys(waiting).length > 1;
+    ordRenderPoolChips(tones, cfgs);
     const pages = Math.max(1, Math.ceil(pool.length / ordPageSize()));
     if (ordPoolPage > pages - 1) ordPoolPage = pages - 1;
     if (ordPoolPage < 0) ordPoolPage = 0;
@@ -10990,10 +11050,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</tr></thead><tbody>' +
       shown.map(function(u){
         const cls = (ordSel.has(u.id) ? 'sel' : '') + (u.printed_at ? (ordSel.has(u.id) ? ' ' : '') + 'printed' : '');
-        return '<tr data-uid="' + esc(u.id) + '"' + (cls ? ' class="' + cls + '"' : '') + '>' +
+        return '<tr data-uid="' + esc(u.id) + '"' + (cls ? ' class="' + cls + '"' : '') + (toned && tones[u.config_id] != null ? ' data-ctone="' + tones[u.config_id] + '"' : '') + '>' +
           '<td class="chk-col" data-l=""><input type="checkbox" data-upick="' + esc(u.id) + '"' + (ordSel.has(u.id) ? ' checked' : '') + '></td>' +
           '<td class="ord-mono" data-l="Serial">' + esc(u.serial) + rmaUnitFlag(u) + '</td>' +
-          '<td data-l="Config">' + ordCfgCell(u.config_id, cfgs[u.config_id]) + '</td>' +
+          '<td data-l="Config">' + (toned ? '<i class="ord-tone-dot" aria-hidden="true"></i>' : '') + ordCfgCell(u.config_id, cfgs[u.config_id]) + '</td>' +
           '<td class="ord-printed-c" data-l="Printed">' + (u.printed_at ? '<span class="ord-printed" data-age="' + esc(u.printed_at) + '" title="' + esc(new Date(u.printed_at).toLocaleString()) + '">' + ntIco('printcheck') + '<span class="ord-printed-t">' + ordAgoRel(u.printed_at) + '</span></span>' : '') + '</td>' +
           '<td data-l="Built">' + esc(fmtDate(u.generated_at || u.created_at)) + '</td>' +
         '</tr>';
@@ -11145,6 +11205,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordRenderPool();
       return;
     }
+    const pcf = e.target.closest('[data-poolcfg]');
+    if (pcf){ ordSetPoolCfg(pcf.getAttribute('data-poolcfg')); return; }
     if (e.target.id === 'ordPoolPrev'){ ordPoolPage--; ordRenderPool(); return; }
     if (e.target.id === 'ordPoolNext'){ ordPoolPage++; ordRenderPool(); return; }
     if (e.target.id === 'ordSelAll'){
@@ -11301,13 +11363,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
   });
   ordDetailBody.addEventListener('change', function(e){
-    if (e.target.id === 'ordPoolCfg'){
-      ordPoolCfg = e.target.value; ordPoolPage = 0;
-      /* a filter must not leave invisible units selected */
-      const keep = new Set(ordPoolUnits().map(function(u){ return u.id; }));
-      Array.from(ordSel).forEach(function(id){ if (!keep.has(id)) ordSel.delete(id); });
-      ordRenderPool(); return;
-    }
     if (e.target.id === 'ordPdfInput'){
       const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
       if (o && e.target.files && e.target.files[0]) ordPdfUpload(o, e.target.files[0]);
