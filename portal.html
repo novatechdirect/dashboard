@@ -343,6 +343,9 @@
   .shl-v small{ font-family:var(--font-ui); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-left:4px; }
   .shl-b{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12.5px; color:var(--muted); }
   .shl-b b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+  .shl-b{ align-items:center; }
+  .shl-share{ margin-left:auto; }
+  @media (max-width:640px){ .shl-share{ margin-left:0; flex:1 1 100%; margin-top:6px; } }
 
   /* ---------- pipeline summary ---------- */
   .pipev{ font-size:28px; font-weight:600; line-height:1.25; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
@@ -836,6 +839,94 @@
   .bship a{ font-family:var(--font-num); font-size:12px; font-weight:600; }
   .trk-dd{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .bdot{ color:var(--faint); }
+  /* UPS: the carrier's latest word on a shipment, at the top of its details */
+  /* UPS: a tracking card in the carrier's shape, our colours */
+  .ups-line{ container:upsc / inline-size; --uc:var(--accent); display:flex; flex-direction:column; gap:14px; margin:0 0 var(--s3); padding:16px 18px 14px; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md, 8px); }
+  .ups-line.done{ --uc:var(--ok); }
+  .ups-line.bad{ --uc:var(--bad); border-color:var(--bad-line); }
+  .ups-line-k{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  .ups-line-big{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; margin-top:4px; font-size:22px; font-weight:600; letter-spacing:-.01em; line-height:1.25; color:var(--ink); overflow-wrap:anywhere; }
+  .ups-line-big.txt{ font-size:17px; }
+  .ups-line.bad .ups-line-big{ color:var(--bad-ink); }
+  .ups-line-win{ font-size:15px; font-weight:500; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .ups-line-loc{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; font-size:12.5px; color:var(--ink); }
+  .ups-line-steps{ list-style:none; margin:2px 0 0; padding:0; display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); position:relative; }
+  .ups-line-steps::before, .ups-line-steps::after{ content:""; position:absolute; top:6px; left:10%; height:3px; border-radius:2px; }
+  .ups-line-steps::before{ right:10%; background:var(--line-strong); }
+  .ups-line-steps::after{ width:calc(80% * var(--p, 0)); background:var(--uc); }
+  .ups-line-steps li{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:8px; min-width:0; text-align:center; }
+  .ups-line-steps i{ box-sizing:border-box; width:12px; height:12px; margin-top:1px; border-radius:50%; background:var(--paper); border:2px solid var(--line-strong); }
+  .ups-line-steps li.did i{ background:var(--uc); border-color:var(--uc); }
+  .ups-line-steps li.now i{ width:16px; height:16px; margin-top:-1px; border:3px solid var(--uc); box-shadow:0 0 0 4px color-mix(in srgb, var(--uc) 18%, transparent); }
+  .ups-line.done .ups-line-steps li.now i{ background:var(--uc); }
+  .ups-line-steps span{ font-size:11.5px; line-height:1.3; color:var(--muted); overflow-wrap:normal; word-break:normal; hyphens:none; }
+  .ups-line-loc > .ups-line-k{ flex:0 0 auto; white-space:nowrap; }
+  .ups-line-steps li.now span{ color:var(--ink); font-weight:600; }
+  .ups-line.bad .ups-line-steps li.now span{ color:var(--bad-ink); }
+  .ups-line-foot{ display:flex; flex-wrap:wrap; gap:2px 14px; padding-top:10px; border-top:1px solid var(--line); font-size:11.5px; color:var(--faint); }
+  .ups-line-foot b{ color:var(--muted); font-weight:600; }
+  .ups-line-hist{ border-top:1px solid var(--line); padding-top:10px; }
+  .ups-line-hist > summary{ display:flex; align-items:center; gap:8px; width:max-content; max-width:100%; list-style:none; cursor:pointer; border-radius:4px; font-size:12.5px; font-weight:600; color:var(--accent-fg, var(--accent)); }
+  .ups-line-hist > summary::-webkit-details-marker{ display:none; }
+  .ups-line-hist > summary:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .ups-line-hc{ font-weight:500; color:var(--faint); overflow-wrap:anywhere; }
+  .ups-line-hist > summary svg{ width:14px; height:14px; flex:0 0 auto; transition:transform var(--t); }
+  .ups-line-hist[open] > summary svg{ transform:rotate(180deg); }
+  .ups-line-hist ol{ list-style:none; margin:14px 0 0; padding:0 4px 0 0; max-height:440px; overflow:auto; }
+  .ups-line-hist li{ display:grid; grid-template-columns:104px minmax(0,1fr); gap:14px; }
+  .ups-line-hist time{ display:flex; flex-direction:column; padding-bottom:14px; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .ups-line-hist time b{ font-weight:600; color:var(--ink); }
+  .ups-line-hist li > div{ position:relative; min-width:0; padding:0 0 14px 18px; border-left:2px solid var(--line); font-size:12.5px; color:var(--ink); }
+  .ups-line-hist li:last-child > div{ border-left-color:transparent; }
+  .ups-line-hist li > div::before{ content:""; position:absolute; left:-6px; top:3px; box-sizing:border-box; width:10px; height:10px; border-radius:50%; background:var(--paper); border:2px solid var(--line-strong); }
+  .ups-line-hist li.now > div::before{ background:var(--uc); border-color:var(--uc); box-shadow:0 0 0 3px color-mix(in srgb, var(--uc) 18%, transparent); }
+  .ups-line-hh{ margin-bottom:2px; font-weight:600; }
+  .ups-line-hh.bad{ color:var(--bad-ink); }
+  .ups-line-hw{ margin-top:1px; font-size:11.5px; color:var(--muted); }
+  @container upsc (max-width:520px){ .ups-line-hist li{ grid-template-columns:76px minmax(0,1fr); gap:10px; } }
+  @container upsc (max-width:520px){
+    .ups-line-big{ font-size:19px; }
+    .ups-line-steps li:not(.now) span{ visibility:hidden; }
+  }
+  .ups-mini{ display:inline-flex; align-items:center; gap:4px; margin-left:8px; font-family:var(--font-ui); font-size:11px; font-weight:600; color:var(--muted); white-space:nowrap; vertical-align:1px; }
+  .ups-mini::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--dot, var(--faint)); }
+  .ups-mini.k{ --dot:var(--ok); }
+  .ups-mini.i{ --dot:var(--accent); }
+  /* Track button wears the carrier's colours, kept to a soft tint */
+  .bacts a.trk-btn{ --tb:#787671; --tf:var(--ink); --tp:12%; --tbd:#9aa5b4; --tfd:var(--ink);
+    background:color-mix(in srgb, var(--tb) var(--tp), var(--paper)) !important;
+    border:1px solid color-mix(in srgb, var(--tb) 38%, var(--paper)) !important;
+    color:var(--tf) !important; box-shadow:none !important; font-weight:600; }
+  .bacts a.trk-btn:hover{ background:color-mix(in srgb, var(--tb) calc(var(--tp) + 8%), var(--paper)) !important; }
+  .bacts a.trk-btn.c-ups{   --tb:#351C15; --tf:#351C15; --tbd:#A0705A; --tfd:#F2D9C9; }
+  .bacts a.trk-btn.c-uber{  --tb:#000000; --tf:#000000; --tp:7%; --tbd:#FFFFFF; --tfd:#FFFFFF; }
+  .bacts a.trk-btn.c-fedex{ --tb:#FF6200; --tf:#A84100; --tbd:#FF6200; --tfd:#FFA366; }
+  .bacts a.trk-btn.c-usps{  --tb:#333366; --tf:#333366; --tbd:#7A7AC2; --tfd:#CFCFF2; }
+  .bacts a.trk-btn.c-dhl{   --tb:#FFCC00; --tf:#B5040E; --tp:26%; --tbd:#FFCC00; --tfd:#FFCC00; }
+  :root[data-theme="dark"] .bacts a.trk-btn{ --tb:var(--tbd); --tf:var(--tfd); --tp:16%; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme]) .bacts a.trk-btn{ --tb:var(--tbd); --tf:var(--tfd); --tp:16%; } }
+  /* the open batch stands out from the stack */
+  .batch:has(> .bbody.open){ border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent), 0 8px 20px -10px color-mix(in srgb, var(--ink) 35%, transparent); }
+  .batch:has(> .bbody.open) > .bhead{ background:color-mix(in srgb, var(--accent) 7%, var(--paper)); }
+  /* tidy: even inner padding, each part in its own band divided by hairlines */
+  .ups-line{ --px:22px; gap:0; padding:0; overflow:hidden; box-shadow:var(--e1, 0 1px 2px rgba(0,0,0,.04)); }
+  .ups-line > *{ padding:16px var(--px); }
+  .ups-line > * + *{ border-top:1px solid var(--line); }
+  .ups-line > :first-child{ padding-top:20px; padding-bottom:6px; }
+  .ups-line > .ups-line-loc{ border-top:0; padding-top:6px; padding-bottom:18px; }
+  .ups-line > .ups-line-steps{ margin:0; padding-top:18px; padding-bottom:18px; }
+  .ups-line-steps::before, .ups-line-steps::after{ top:24px; left:calc(var(--px) + (100% - var(--px) * 2) * .1); }
+  .ups-line-steps::before{ right:calc(var(--px) + (100% - var(--px) * 2) * .1); }
+  .ups-line-steps::after{ width:calc((100% - var(--px) * 2) * .8 * var(--p, 0)); }
+  .ups-line > .ups-line-hist{ padding:0; border-top:1px solid var(--line); }
+  .ups-line-hist > summary{ width:auto; padding:14px var(--px); border-radius:0; }
+  .ups-line-ck{ margin-left:auto; padding-left:var(--s3); font-size:11.5px; font-weight:500; color:var(--faint); white-space:nowrap; }
+  .ups-line-hist > summary:hover span:first-child{ text-decoration:underline; text-underline-offset:3px; }
+  .ups-line-hist ol{ margin:0; padding:4px var(--px) 8px; }
+  .ups-line > .ups-line-foot{ padding:12px var(--px); }
+  @container upsc (max-width:520px){ .ups-line > *{ --px:16px; } }
+  .ups-d{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ups-mini.b{ --dot:var(--bad); color:var(--bad-ink); }
   /* the logo identifies the number, so the two never wrap apart */
   .trk-grp{ display:inline-flex; align-items:center; gap:8px; min-width:0; }
   .carrier{
@@ -2045,23 +2136,45 @@
                customer: 'Demo Gaming Co', order_no: order === o1 ? 'DG001' : 'DG002',
                generated_at: demoStamp(-40), pc_case: null, cpu: null, gpu: null, ram: null, storage: null };
     };
-    const batch = function(order, no, loc, status, day, trk){
+    /* a plausible UPS scan trail, oldest first, stored newest first like the server does */
+    const demoHist = function(st, d){
+      const f = function(n){ return demoDay(n).replace(/-/g, ''); };
+      const ev = [{ d:f(d - 4), t:'160400', y:'M', s:'Shipper created a label, UPS has not received the package yet.', w:'' }];
+      if (st !== 'label'){
+        ev.push({ d:f(d - 4), t:'202100', y:'I', s:'Arrived at Facility', w:'Newark, DE' },
+                { d:f(d - 3), t:'220500', y:'I', s:'Departed from Facility', w:'Newark, DE' },
+                { d:f(d - 2), t:'071100', y:'I', s:'Arrived at Facility', w:'Hodgkins, IL' },
+                { d:f(d - 1), t:'034700', y:'I', s:'Departed from Facility', w:'Hodgkins, IL' },
+                { d:f(d), t:'061200', y:'I', s:'Arrived at Facility', w:'Louisville, KY' });
+      }
+      if (st === 'out' || st === 'delivered') ev.push({ d:f(d), t:'081500', y:'O', s:'Out For Delivery Today', w:'Louisville, KY' });
+      if (st === 'delivered') ev.push({ d:f(d), t:'141400', y:'D', s:'Delivered', w:'Louisville, KY' });
+      return ev.reverse();
+    };
+    const demoUps = function(st, d, where){
+      const at = demoStamp(d);
+      return { ups_status: st, ups_text: { delivered: 'Delivered', out: 'Out For Delivery Today', label: 'Label Created' }[st],
+               ups_where: where || null, ups_event_at: at, ups_eta: st === 'out' ? demoDay(0) : null, ups_eta_from: st === 'out' ? '100000' : null, ups_eta_to: st === 'out' ? '120000' : null, ups_pickup_on: st === 'label' ? null : demoDay(d - 2),
+               ups_delivered_at: st === 'delivered' ? at : null, ups_activity: demoHist(st, d),
+               ups_checked_at: new Date(Date.now() - 12 * 60000).toISOString(), ups_first_checked_at: at };
+    };
+    const batch = function(order, no, loc, status, day, trk, ups){
       const id = demoId('b');
       db.batches.push({ id: id, order_id: order, batch_no: no, location_id: loc, carrier: 'UPS',
                         status: status, ship_date: day, created_at: demoStamp(-30),
                         opened_notified_at: demoStamp(-30) });
-      if (trk) db.batch_tracking.push({ id: demoId('t'), batch_id: id, tracking_no: trk, unit_id: null });
+      if (trk) db.batch_tracking.push(Object.assign({ id: demoId('t'), batch_id: id, tracking_no: trk, unit_id: null }, ups || {}));
       return id;
     };
 
-    const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784');
+    const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784', demoUps('delivered', -85, 'Austin, TX'));
     for (let i = 0; i < 25; i++) db.pc_log.push(unit(o1, cfgA, b1, 'shipped'));
 
-    const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785');
+    const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785', demoUps('delivered', -11, 'Austin, TX'));
     for (let i = 0; i < 16; i++) db.pc_log.push(unit(o2, cfgB, b2, 'shipped'));
-    const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786');
+    const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786', demoUps('out', 0, 'Round Rock, TX'));
     for (let i = 0; i < 14; i++) db.pc_log.push(unit(o2, cfgB, b3, 'shipped'));
-    const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787');
+    const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787', demoUps('label', -1));
     for (let i = 0; i < 12; i++) db.pc_log.push(unit(o2, cfgB, b4, 'assigned'));
     batch(o2, 4, 'demo-loc-4', 'open', null, null);
     for (let i = 0; i < 11; i++) db.pc_log.push(unit(o2, cfgB, null, 'built'));
@@ -4144,11 +4257,31 @@
         '<div class="shl-v">' + num(g.total) + '<small>shipped</small></div>' +
         '<div class="shl-b">' + builds.map(function(c){
           return '<span><b>' + num(g.builds[c]) + '</b> ' + esc(cfgName[c] || 'Unknown build') + '</span>';
-        }).join('') + '</div></div>';
+        }).join('') +
+        (ids.length ? '<button class="btn sm shl-share" data-share-dealer="' + esc(g.name) + '" type="button" title="Copy a link ' + esc(g.name) + ' can open without logging in">Share tracking</button>' : '') +
+        '</div></div>';
     }).join('');
     const subTxt = num(shipped.length) + ' shipped to ' + num(groups.length) + (groups.length === 1 ? ' dealer' : ' dealers');
     return '<div class="card shl"><h2>Shipped by Dealers <span class="subtle">' + subTxt + '</span></h2>' + rowsHtml + '</div>';
   }
+
+  /* Share tracking: one public link per order + dealer (dealer-share.sql).
+     The page it opens, track.html, sits beside this file. */
+  document.addEventListener('click', async function(e){
+    const b = e.target.closest && e.target.closest('[data-share-dealer]'); if (!b || b.disabled) return;
+    const name = b.getAttribute('data-share-dealer');
+    if (DEMO.on){ copyText(new URL('track.html?demo=1', location.href).href, 'Sample tracking link for ' + name); return; }
+    if (!currentId) return;
+    b.disabled = true; const was = b.textContent; b.textContent = 'Making link\u2026';
+    try {
+      const r = await SB.rpc('dealer_share_link', { p_order: currentId, p_dealer: name });
+      if (r.error){
+        toast(/function|does not exist/i.test(r.error.message) ? 'Sharing is not switched on yet. Ask NovaTech to run dealer-share.sql.' : r.error.message, 'bad', 7000);
+        return;
+      }
+      copyText(new URL('track.html?t=' + encodeURIComponent(r.data), location.href).href, 'Tracking link for ' + name);
+    } finally { b.disabled = false; b.textContent = was; }
+  });
 
   /* billing for this invoice, folded away: the order view gets shown around,
      so no figures until it is opened. Billing logins and staff only. */
@@ -4228,6 +4361,194 @@
     billOpenRow(id);
   });
 
+  /* ---------- UPS carrier status (filled in by ups-tracking.sql) ----------
+     r is how far along a box is; the slowest box sets the shipment, a problem beats all */
+  const UPS_ST = {
+    label:     { r:1, t:'Label created',    c:'n' },
+    unknown:   { r:1, t:'Label created',    c:'n' },
+    transit:   { r:2, t:'With carrier',     c:'i' },
+    out:       { r:3, t:'Out for delivery', c:'i' },
+    delivered: { r:4, t:'Delivered',        c:'k' },
+    exception: { r:0, t:'Exception',        c:'b' },
+    returned:  { r:0, t:'Returned',         c:'b' }
+  };
+  function carrierKey(c){
+    const s = String(c || '').toLowerCase();
+    if (/\bups\b/.test(s)) return ['ups', 'UPS'];
+    if (/uber/.test(s)) return ['uber', 'Uber Freight'];
+    if (/fed\s*ex/.test(s)) return ['fedex', 'FedEx'];
+    if (/usps|postal/.test(s)) return ['usps', 'USPS'];
+    if (/\bdhl\b/.test(s)) return ['dhl', 'DHL'];
+    return ['', String(c || '').trim() || 'Track'];
+  }
+  function upsWords(s){
+    s = String(s || '').replace(/\s+/g, ' ').trim();
+    if (s && s === s.toUpperCase() && /[A-Z]{3}/.test(s))
+      s = s.toLowerCase().replace(/(^|[.!?]\s+)([a-z])/g, function(m, a, c){ return a + c.toUpperCase(); }).replace(/\bups\b/g, 'UPS');
+    return s;
+  }
+  function upsDay(v){
+    if (!v) return '';
+    const d = new Date(String(v).length <= 10 ? v + 'T12:00:00' : v);
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+  }
+  function upsWhen(v){
+    const d = new Date(v || '');
+    return isNaN(d.getTime()) ? '' : d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+  }
+  function upsAgo(v){
+    const m = Math.floor((Date.now() - new Date(v).getTime()) / 60000);
+    if (!isFinite(m)) return '';
+    if (m < 1) return 'just now';
+    if (m < 60) return m + ' min ago';
+    const hr = Math.floor(m / 60); if (hr < 24) return hr + ' hour' + (hr === 1 ? '' : 's') + ' ago';
+    const d = Math.floor(hr / 24); return d + ' day' + (d === 1 ? '' : 's') + ' ago';
+  }
+  function upsSum(tk){
+    const seen = {}, pk = [];
+    (tk || []).forEach(function(t){
+      const k = String(t.tracking_no || '').trim().toUpperCase();
+      if (!k || !t.ups_checked_at || !t.ups_status || seen[k]) return;
+      seen[k] = 1; pk.push(t);
+    });
+    const known = pk.filter(function(t){ return t.ups_status !== 'unknown'; });
+    if (!known.length) return null;
+    const R = function(t){ return (UPS_ST[t.ups_status] || UPS_ST.unknown).r; };
+    const lead = known.slice().sort(function(a, b){ return R(a) - R(b); })[0];
+    const s = UPS_ST[lead.ups_status] || UPS_ST.unknown;
+    const del = pk.filter(function(t){ return t.ups_status === 'delivered'; }).length;
+    const partial = s.r > 0 && del > 0 && del < pk.length;
+    const latest = function(f){ return pk.reduce(function(m, t){ return t[f] && (!m || new Date(t[f]) > new Date(m)) ? t[f] : m; }, null); };
+    return {
+      st: lead.ups_status, n: pk.length, del: del,
+      cls: partial ? 'i' : s.c,
+      label: partial ? num(del) + ' of ' + num(pk.length) + ' delivered' : s.t,
+      text: upsWords(lead.ups_text) || s.t,
+      where: lead.ups_where || '', at: lead.ups_event_at,
+      eta: s.r > 0 && s.r < 4 ? lead.ups_eta : null,
+      etaFrom: s.r > 0 && s.r < 4 ? lead.ups_eta_from || null : null,
+      etaTo: s.r > 0 && s.r < 4 ? lead.ups_eta_to || null : null,
+      pick: lead.ups_pickup_on || null,
+      hist: lead.ups_activity || null, no: lead.tracking_no || '',
+      deliveredAt: s.r === 4 && !partial ? latest('ups_delivered_at') : null,
+      checked: latest('ups_checked_at')
+    };
+  }
+  function upsChip(b, sum){
+    if (!sum){
+      if (b.status === 'shipped' && b.delivered_at) return '<span class="chip k">Delivered</span>';
+      const shipped = b.status === 'shipped';
+      return '<span class="chip ' + (shipped ? 'i' : 'w') + '">' + (shipped ? 'Shipped' : 'Preparing') + '</span>';
+    }
+    return '<span class="chip ' + sum.cls + '" title="' + esc('UPS: ' + sum.text) + '">' + esc(sum.label) + '</span>';
+  }
+  function upsBit(sum){
+    if (!sum) return '';
+    if (sum.deliveredAt) return 'Delivered ' + upsDay(sum.deliveredAt);
+    if (sum.eta) return 'Arrives ' + upsDay(sum.eta);
+    return '';
+  }
+  function upsMini(t){
+    if (!t || !t.ups_checked_at || !t.ups_status || t.ups_status === 'unknown') return '';
+    const s = UPS_ST[t.ups_status] || UPS_ST.unknown;
+    return '<span class="ups-mini ' + s.c + '" title="' + esc('UPS: ' + (upsWords(t.ups_text) || s.t)) + '">' + esc(s.t) + '</span>';
+  }
+  /* UPS scan history, newest first, folded away until asked for; stays open across re-renders */
+  const UPS_HOPEN = new Set();
+  document.addEventListener('toggle', function(e){
+    const d = e.target; if (!d || !d.matches || !d.matches('details.ups-line-hist')) return;
+    const k = d.getAttribute('data-no'); if (d.open) UPS_HOPEN.add(k); else UPS_HOPEN.delete(k);
+  }, true);
+  function upsHist(sum){
+    const ev = Array.isArray(sum.hist) ? sum.hist : [];
+    if (!ev.length) return '';
+    let scanned = false;
+    const ms = ev.slice().reverse().map(function(e){
+      const y = String(e.y || '').toUpperCase();
+      if (y === 'M' || y === 'MV') return 'Label created';
+      if (y === 'X') return 'Exception';
+      if (y === 'RS') return 'Returned';
+      if (y === 'O') return 'Out for delivery';
+      if (y === 'D' || y === 'DD' || y === 'DO') return 'Delivered';
+      if (!scanned){ scanned = true; return 'UPS has the package'; }
+      return 'On the way';
+    }).reverse();
+    const when = function(e){
+      const d = String(e.d || ''), t = String(e.t || '').replace(/\D/g, '');
+      if (!/^\d{8}$/.test(d)) return ['', ''];
+      const x = new Date(+d.slice(0, 4), +d.slice(4, 6) - 1, +d.slice(6, 8), +(t.slice(0, 2) || 0), +(t.slice(2, 4) || 0));
+      return [x.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }),
+              t.length >= 4 ? x.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' }) : ''];
+    };
+    const rows = ev.map(function(e, i){
+      const w = when(e), head = i === 0 || ms[i] !== ms[i - 1];
+      return '<li' + (i === 0 ? ' class="now"' : '') + '><time><b>' + esc(w[0]) + '</b>' + esc(w[1]) + '</time><div>' +
+        (head ? '<div class="ups-line-hh' + (/Exception|Returned/.test(ms[i]) ? ' bad' : '') + '">' + ms[i] + '</div>' : '') +
+        '<div>' + esc(upsWords(e.s) || '\u2014') + '</div>' +
+        (e.w ? '<div class="ups-line-hw">' + esc(e.w) + '</div>' : '') + '</div></li>';
+    }).join('');
+    const no = String(sum.no || '');
+    return '<details class="ups-line-hist" data-no="' + esc(no) + '"' + (UPS_HOPEN.has(no) ? ' open' : '') + '>' +
+      '<summary><span>Package history</span><span class="ups-line-hc">' + ev.length + (ev.length === 1 ? ' scan' : ' scans') +
+        (sum.n > 1 && no ? ' \u00b7 ' + esc(no) : '') + '</span>' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
+        (sum.checked ? '<span class="ups-line-ck">UPS checked ' + esc(upsAgo(sum.checked)) + '</span>' : '') +
+      '</summary><ol>' + rows + '</ol></details>';
+  }
+  function upsStrip(sum, extra){
+    if (!sum) return '';
+    const STEPS = ['Label created', 'UPS has the package', 'On the way', 'Out for delivery', 'Delivered'];
+    const bad = sum.st === 'exception' || sum.st === 'returned';
+    let at = { label:0, unknown:0, out:3, delivered:4,
+      transit: (sum.hist && sum.hist.length
+        ? sum.hist.filter(function(e){ return !/^MV?$/i.test(e.y || ''); }).length <= 1
+        : /we have your package|picked up|pickup scan|origin scan|drop.?off/i.test(sum.text)) ? 1 : 2 }[sum.st];
+    if (at == null) at = sum.pick ? 2 : 0;
+    const day = function(v){
+      const d = new Date(String(v).length <= 10 ? v + 'T12:00:00' : v); if (isNaN(d.getTime())) return '';
+      const t0 = new Date(); t0.setHours(12, 0, 0, 0);
+      const diff = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12) - t0) / 864e5);
+      const md = d.toLocaleDateString(undefined, { month:'long', day:'numeric' });
+      return (diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday:'long' })) + ', ' + md;
+    };
+    const hm = function(t){
+      t = String(t || '').replace(/\D/g, ''); if (t.length < 4) return '';
+      let h = +t.slice(0, 2); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+      return h + ':' + t.slice(2, 4) + ' ' + ap;
+    };
+    let k, main, win = '', txt = false;
+    if (sum.deliveredAt){
+      k = 'Delivered'; main = day(sum.deliveredAt);
+      const tm = new Date(sum.deliveredAt);
+      if (!isNaN(tm.getTime())) win = 'at ' + tm.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+    } else if (bad){
+      k = sum.st === 'returned' ? 'Returned to sender' : 'Delivery exception'; main = sum.text; txt = true;
+    } else if (sum.eta){
+      k = 'Estimated delivery'; main = day(sum.eta);
+      const a = hm(sum.etaFrom), b = hm(sum.etaTo);
+      win = a && b ? a + ' \u2013 ' + b : b ? 'by ' + b : '';
+    } else { k = 'Status'; main = sum.text; txt = true; }
+    const where = [sum.where, upsWhen(sum.at)].filter(Boolean).join(' \u00b7 ');
+    const foot = [
+      sum.n > 1 ? '<span><b>' + num(sum.del) + ' of ' + num(sum.n) + '</b> boxes delivered</span>' : '',
+      sum.checked && !(Array.isArray(sum.hist) && sum.hist.length) ? '<span>UPS checked ' + esc(upsAgo(sum.checked)) + '</span>' : ''
+    ].filter(Boolean).join('');
+    return '<div class="ups-line' + (bad ? ' bad' : sum.st === 'delivered' ? ' done' : '') + '">' +
+      '<div><div class="ups-line-k">' + k + '</div>' +
+        '<div class="ups-line-big' + (txt ? ' txt' : '') + '">' + esc(main) + (win ? '<span class="ups-line-win">' + esc(win) + '</span>' : '') + '</div></div>' +
+      (where ? '<div class="ups-line-loc"><span class="ups-line-k">' + (sum.deliveredAt ? 'Delivered in' : 'Last location') + '</span><span>' + esc(where) + '</span></div>' : '') +
+      '<ol class="ups-line-steps" style="--p:' + (at / 4) + '" aria-label="Shipment progress">' +
+        STEPS.map(function(s, i){
+          return '<li class="' + (i < at ? 'did' : i === at ? 'now' : '') + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><span>' + s + '</span></li>';
+        }).join('') +
+      '</ol>' +
+      upsHist(sum) +
+      (extra || '') +
+      (foot ? '<div class="ups-line-foot">' + foot + '</div>' : '') +
+    '</div>';
+  }
+
+
   /* ---------- detail ---------- */
   function openOrder(id){
     currentId = id; pview = 'orders'; syncMenu();
@@ -4280,10 +4601,12 @@
         const firstNo = wide[0] || (tk.find(function(t){ return t.unit_id && t.tracking_no; }) || {}).tracking_no || '';
         const trackLink = wideAll.find(isTrackLink) || (firstNo ? trackUrl(b.carrier, firstNo) : '');
         const shipped = b.status === 'shipped';
+        const ups = upsSum(tk), bit = upsBit(ups) || (shipped && b.delivered_at ? 'Delivered ' + upsDay(b.delivered_at) : '');
+        const upsBy = {}; tk.forEach(function(t){ upsBy[t.tracking_no] = t; });
         return '<div class="batch">' +
           '<div class="bhead" data-head="' + esc(b.id) + '" role="button" tabindex="0" title="Click for serials and tracking">' +
             '<div class="bno"><b>Batch ' + b.batch_no + '</b>' +
-              '<span class="chip ' + (shipped?'k':'w') + '">' + (shipped?'Shipped':'Preparing') + '</span></div>' +
+              upsChip(b, ups) + '</div>' +
             '<div><b>' + esc(locName(b)) + '</b>' +
               (locNum(b) ? '<span class="storenum">' + esc(locNum(b)) + '</span>' : '') +
               '<div class="sub">' + esc(locLine(b) || '') + '</div></div>' +
@@ -4296,12 +4619,15 @@
                   (wide.length > 1 ? '<span class="muted">+' + num(wide.length - 1) + '</span>' : '') +
                   '</span>' + (b.ship_date ? '<span class="bdot">&middot;</span>' : '')
                 : carrierBadge(b.carrier)) +
-              (b.ship_date ? '<span>' + esc(fmtDate(b.ship_date)) + '</span>' : '') + '</div></div>' +
+              (b.ship_date ? '<span>' + esc(fmtDate(b.ship_date)) + '</span>' : '') +
+              '</div>' +
+              (bit ? '<div class="sub ups-d">' + esc(bit) + '</div>' : '') + '</div>' +
             '<div class="bacts">' +
-              (trackLink ? '<a class="btn primary" style="padding:8px 12px;min-height:34px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;" href="' + esc(trackLink) + '" target="_blank" rel="noopener noreferrer">Track shipment \u2197</a>' : '') +
+              (trackLink ? '<a class="btn trk-btn c-' + carrierKey(b.carrier)[0] + '" style="padding:8px 12px;min-height:34px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;" href="' + esc(trackLink) + '" target="_blank" rel="noopener noreferrer" title="Track shipment">' + esc(carrierKey(b.carrier)[1]) + ' \u2197</a>' : '') +
               '<button class="btn" data-x="' + esc(b.id) + '" type="button">Details</button></div>' +
           '</div>' +
           '<div class="bbody" id="bb_' + esc(b.id) + '"><div class="bbody-in"><div class="bbody-pad">' +
+            upsStrip(ups) +
             '<div class="bbar"><button class="btn sm" data-copy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy Serial Numbers</button></div>' +
             (function(){
               const pages = Math.max(1, Math.ceil(bu.length / pageSize()));
@@ -4315,7 +4641,7 @@
                   return '<tr><td class="mono">' + esc(u.serial) + '</td>' +
                     '<td><span class="cfg" data-cfg="' + esc(u.config_id) + '" tabindex="0">' + esc(cfgName[u.config_id] || '\u2014') + '</span></td>' +
                     '<td class="mono">' + trackHtml(b.carrier, per[u.id] ? [per[u.id]] : wide) +
-                      (per[u.id] ? '' : (wide.length ? trkTag(true) : '')) + '</td></tr>';
+                      (per[u.id] ? upsMini(upsBy[per[u.id]]) : (wide.length ? trkTag(true) : '')) + '</td></tr>';
                 }).join('') + '</tbody></table></div>' +
                 '<div class="pager">' +
                   (pages > 1

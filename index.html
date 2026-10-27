@@ -2277,6 +2277,101 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-batch-meta{ text-align:right; font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:13px; }
   .ord-batch-meta .ord-sub{ font-family:var(--font-ui); }
   .ord-batch-trk{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .ord-chip.bad{ color:var(--bad-ink); background:var(--bad-bg); border-color:var(--bad-line); --dot:var(--bad); }
+  /* UPS: the carrier's latest word on a batch, at the top of its details */
+  /* UPS: a tracking card in the carrier's shape, our colours */
+  .ord-ups{ container:upsc / inline-size; --uc:var(--accent); display:flex; flex-direction:column; gap:14px; margin:0 0 var(--s3); padding:16px 18px 14px; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md, 8px); }
+  .ord-ups.done{ --uc:var(--ok); }
+  .ord-ups.bad{ --uc:var(--bad); border-color:var(--bad-line); }
+  .ord-ups-k{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  .ord-ups-big{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; margin-top:4px; font-size:22px; font-weight:600; letter-spacing:-.01em; line-height:1.25; color:var(--ink); overflow-wrap:anywhere; }
+  .ord-ups-big.txt{ font-size:17px; }
+  .ord-ups.bad .ord-ups-big{ color:var(--bad-ink); }
+  .ord-ups-win{ font-size:15px; font-weight:500; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .ord-ups-loc{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; font-size:12.5px; color:var(--ink); }
+  .ord-ups-steps{ list-style:none; margin:2px 0 0; padding:0; display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); position:relative; }
+  .ord-ups-steps::before, .ord-ups-steps::after{ content:""; position:absolute; top:6px; left:10%; height:3px; border-radius:2px; }
+  .ord-ups-steps::before{ right:10%; background:var(--line-strong); }
+  .ord-ups-steps::after{ width:calc(80% * var(--p, 0)); background:var(--uc); }
+  .ord-ups-steps li{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:8px; min-width:0; text-align:center; }
+  .ord-ups-steps i{ box-sizing:border-box; width:12px; height:12px; margin-top:1px; border-radius:50%; background:var(--paper); border:2px solid var(--line-strong); }
+  .ord-ups-steps li.did i{ background:var(--uc); border-color:var(--uc); }
+  .ord-ups-steps li.now i{ width:16px; height:16px; margin-top:-1px; border:3px solid var(--uc); box-shadow:0 0 0 4px color-mix(in srgb, var(--uc) 18%, transparent); }
+  .ord-ups.done .ord-ups-steps li.now i{ background:var(--uc); }
+  .ord-ups-steps span{ font-size:11.5px; line-height:1.3; color:var(--muted); overflow-wrap:normal; word-break:normal; hyphens:none; }
+  .ord-ups-loc > .ord-ups-k{ flex:0 0 auto; white-space:nowrap; }
+  .ord-ups-steps li.now span{ color:var(--ink); font-weight:600; }
+  .ord-ups.bad .ord-ups-steps li.now span{ color:var(--bad-ink); }
+  .ord-ups-foot{ display:flex; flex-wrap:wrap; gap:2px 14px; padding-top:10px; border-top:1px solid var(--line); font-size:11.5px; color:var(--faint); }
+  .ord-ups-foot b{ color:var(--muted); font-weight:600; }
+  .ord-ups-hist{ border-top:1px solid var(--line); padding-top:10px; }
+  .ord-ups-hist > summary{ display:flex; align-items:center; gap:8px; width:max-content; max-width:100%; list-style:none; cursor:pointer; border-radius:4px; font-size:12.5px; font-weight:600; color:var(--accent-fg, var(--accent)); }
+  .ord-ups-hist > summary::-webkit-details-marker{ display:none; }
+  .ord-ups-hist > summary:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .ord-ups-hc{ font-weight:500; color:var(--faint); overflow-wrap:anywhere; }
+  .ord-ups-hist > summary svg{ width:14px; height:14px; flex:0 0 auto; transition:transform var(--t); }
+  .ord-ups-hist[open] > summary svg{ transform:rotate(180deg); }
+  .ord-ups-hist ol{ list-style:none; margin:14px 0 0; padding:0 4px 0 0; max-height:440px; overflow:auto; }
+  .ord-ups-hist li{ display:grid; grid-template-columns:104px minmax(0,1fr); gap:14px; }
+  .ord-ups-hist time{ display:flex; flex-direction:column; padding-bottom:14px; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .ord-ups-hist time b{ font-weight:600; color:var(--ink); }
+  .ord-ups-hist li > div{ position:relative; min-width:0; padding:0 0 14px 18px; border-left:2px solid var(--line); font-size:12.5px; color:var(--ink); }
+  .ord-ups-hist li:last-child > div{ border-left-color:transparent; }
+  .ord-ups-hist li > div::before{ content:""; position:absolute; left:-6px; top:3px; box-sizing:border-box; width:10px; height:10px; border-radius:50%; background:var(--paper); border:2px solid var(--line-strong); }
+  .ord-ups-hist li.now > div::before{ background:var(--uc); border-color:var(--uc); box-shadow:0 0 0 3px color-mix(in srgb, var(--uc) 18%, transparent); }
+  .ord-ups-hh{ margin-bottom:2px; font-weight:600; }
+  .ord-ups-hh.bad{ color:var(--bad-ink); }
+  .ord-ups-hw{ margin-top:1px; font-size:11.5px; color:var(--muted); }
+  @container upsc (max-width:520px){ .ord-ups-hist li{ grid-template-columns:76px minmax(0,1fr); gap:10px; } }
+  @container upsc (max-width:520px){
+    .ord-ups-big{ font-size:19px; }
+    .ord-ups-steps li:not(.now) span{ visibility:hidden; }
+  }
+  .ord-ups-t{ font-size:13px; font-weight:600; color:var(--ink); }
+  .ord-ups-mini{ display:inline-flex; align-items:center; gap:4px; margin-left:8px; font-family:var(--font-ui); font-size:11px; font-weight:600; color:var(--muted); white-space:nowrap; vertical-align:1px; }
+  .ord-ups-mini::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--dot, var(--faint)); }
+  .ord-ups-mini.ok{ --dot:var(--ok); }
+  .ord-ups-mini.info{ --dot:var(--accent); }
+  /* Track button wears the carrier's colours, kept to a soft tint */
+  .ord-batch-btns button.trk-btn{ --tb:#787671; --tf:var(--ink); --tp:12%; --tbd:#9aa5b4; --tfd:var(--ink);
+    background:color-mix(in srgb, var(--tb) var(--tp), var(--paper)) !important;
+    border:1px solid color-mix(in srgb, var(--tb) 38%, var(--paper)) !important;
+    color:var(--tf) !important; box-shadow:none !important; font-weight:600; }
+  .ord-batch-btns button.trk-btn:hover{ background:color-mix(in srgb, var(--tb) calc(var(--tp) + 8%), var(--paper)) !important; }
+  .ord-batch-btns button.trk-btn.c-ups{   --tb:#351C15; --tf:#351C15; --tbd:#A0705A; --tfd:#F2D9C9; }
+  .ord-batch-btns button.trk-btn.c-uber{  --tb:#000000; --tf:#000000; --tp:7%; --tbd:#FFFFFF; --tfd:#FFFFFF; }
+  .ord-batch-btns button.trk-btn.c-fedex{ --tb:#FF6200; --tf:#A84100; --tbd:#FF6200; --tfd:#FFA366; }
+  .ord-batch-btns button.trk-btn.c-usps{  --tb:#333366; --tf:#333366; --tbd:#7A7AC2; --tfd:#CFCFF2; }
+  .ord-batch-btns button.trk-btn.c-dhl{   --tb:#FFCC00; --tf:#B5040E; --tp:26%; --tbd:#FFCC00; --tfd:#FFCC00; }
+  :root[data-theme="dark"] .ord-batch-btns button.trk-btn{ --tb:var(--tbd); --tf:var(--tfd); --tp:16%; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme]) .ord-batch-btns button.trk-btn{ --tb:var(--tbd); --tf:var(--tfd); --tp:16%; } }
+  .ord-ups-trk{ border-top:1px solid var(--line); min-width:0; }
+  .ord-ups-nos{ display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; margin-top:4px; font-size:12.5px; min-width:0; }
+  .ord-ups-nos .ord-mono{ overflow-wrap:anywhere; }
+  .ord-ups-trk .ord-ups-w{ margin-top:2px; font-size:11.5px; color:var(--faint); }
+  /* the open batch stands out from the stack */
+  .ord-batch:has(> .ord-batch-body:not([style*="none"])){ border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent), 0 8px 20px -10px color-mix(in srgb, var(--ink) 35%, transparent); }
+  .ord-batch:has(> .ord-batch-body:not([style*="none"])) > .ord-batch-head{ background:color-mix(in srgb, var(--accent) 7%, var(--paper)); }
+  /* tidy: even inner padding, each part in its own band divided by hairlines */
+  .ord-ups{ --px:22px; gap:0; padding:0; overflow:hidden; box-shadow:var(--e1, 0 1px 2px rgba(0,0,0,.04)); }
+  .ord-ups > *{ padding:16px var(--px); }
+  .ord-ups > * + *{ border-top:1px solid var(--line); }
+  .ord-ups > :first-child{ padding-top:20px; padding-bottom:6px; }
+  .ord-ups > .ord-ups-loc{ border-top:0; padding-top:6px; padding-bottom:18px; }
+  .ord-ups > .ord-ups-steps{ margin:0; padding-top:18px; padding-bottom:18px; }
+  .ord-ups-steps::before, .ord-ups-steps::after{ top:24px; left:calc(var(--px) + (100% - var(--px) * 2) * .1); }
+  .ord-ups-steps::before{ right:calc(var(--px) + (100% - var(--px) * 2) * .1); }
+  .ord-ups-steps::after{ width:calc((100% - var(--px) * 2) * .8 * var(--p, 0)); }
+  .ord-ups > .ord-ups-hist{ padding:0; border-top:1px solid var(--line); }
+  .ord-ups-hist > summary{ width:auto; padding:14px var(--px); border-radius:0; }
+  .ord-ups-ck{ margin-left:auto; padding-left:var(--s3); font-size:11.5px; font-weight:500; color:var(--faint); white-space:nowrap; }
+  .ord-ups-hist > summary:hover span:first-child{ text-decoration:underline; text-underline-offset:3px; }
+  .ord-ups-hist ol{ margin:0; padding:4px var(--px) 8px; }
+  .ord-ups > .ord-ups-foot{ padding:12px var(--px); }
+  .ord-ups > .ord-ups-trk{ padding-top:14px; padding-bottom:14px; }
+  @container upsc (max-width:520px){ .ord-ups > *{ --px:16px; } }
+  .ord-batch-upsd{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ord-ups-mini.bad{ --dot:var(--bad); color:var(--bad-ink); }
   .ord-batch-ship{
     display:flex; align-items:center; gap:8px; flex-wrap:wrap;
     justify-content:flex-end; margin-top:4px;
@@ -5305,23 +5400,45 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                customer: 'Demo Gaming Co', order_no: order === o1 ? 'DG001' : 'DG002',
                generated_at: demoStamp(-40), pc_case: null, cpu: null, gpu: null, ram: null, storage: null };
     };
-    const batch = function(order, no, loc, status, day, trk){
+    /* a plausible UPS scan trail, oldest first, stored newest first like the server does */
+    const demoHist = function(st, d){
+      const f = function(n){ return demoDay(n).replace(/-/g, ''); };
+      const ev = [{ d:f(d - 4), t:'160400', y:'M', s:'Shipper created a label, UPS has not received the package yet.', w:'' }];
+      if (st !== 'label'){
+        ev.push({ d:f(d - 4), t:'202100', y:'I', s:'Arrived at Facility', w:'Newark, DE' },
+                { d:f(d - 3), t:'220500', y:'I', s:'Departed from Facility', w:'Newark, DE' },
+                { d:f(d - 2), t:'071100', y:'I', s:'Arrived at Facility', w:'Hodgkins, IL' },
+                { d:f(d - 1), t:'034700', y:'I', s:'Departed from Facility', w:'Hodgkins, IL' },
+                { d:f(d), t:'061200', y:'I', s:'Arrived at Facility', w:'Louisville, KY' });
+      }
+      if (st === 'out' || st === 'delivered') ev.push({ d:f(d), t:'081500', y:'O', s:'Out For Delivery Today', w:'Louisville, KY' });
+      if (st === 'delivered') ev.push({ d:f(d), t:'141400', y:'D', s:'Delivered', w:'Louisville, KY' });
+      return ev.reverse();
+    };
+    const demoUps = function(st, d, where){
+      const at = demoStamp(d);
+      return { ups_status: st, ups_text: { delivered: 'Delivered', out: 'Out For Delivery Today', label: 'Label Created' }[st],
+               ups_where: where || null, ups_event_at: at, ups_eta: st === 'out' ? demoDay(0) : null, ups_eta_from: st === 'out' ? '100000' : null, ups_eta_to: st === 'out' ? '120000' : null, ups_pickup_on: st === 'label' ? null : demoDay(d - 2),
+               ups_delivered_at: st === 'delivered' ? at : null, ups_activity: demoHist(st, d),
+               ups_checked_at: new Date(Date.now() - 12 * 60000).toISOString(), ups_first_checked_at: at };
+    };
+    const batch = function(order, no, loc, status, day, trk, ups){
       const id = demoId('b');
       db.batches.push({ id: id, order_id: order, batch_no: no, location_id: loc, carrier: 'UPS',
                         status: status, ship_date: day, created_at: demoStamp(-30),
                         opened_notified_at: demoStamp(-30) });
-      if (trk) db.batch_tracking.push({ id: demoId('t'), batch_id: id, tracking_no: trk, unit_id: null });
+      if (trk) db.batch_tracking.push(Object.assign({ id: demoId('t'), batch_id: id, tracking_no: trk, unit_id: null }, ups || {}));
       return id;
     };
 
-    const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784');
+    const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784', demoUps('delivered', -85, 'Austin, TX'));
     for (let i = 0; i < 25; i++) db.pc_log.push(unit(o1, cfgA, b1, 'shipped'));
 
-    const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785');
+    const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785', demoUps('delivered', -11, 'Austin, TX'));
     for (let i = 0; i < 16; i++) db.pc_log.push(unit(o2, cfgB, b2, 'shipped'));
-    const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786');
+    const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786', demoUps('out', 0, 'Round Rock, TX'));
     for (let i = 0; i < 14; i++) db.pc_log.push(unit(o2, cfgB, b3, 'shipped'));
-    const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787');
+    const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787', demoUps('label', -1));
     for (let i = 0; i < 12; i++) db.pc_log.push(unit(o2, cfgB, b4, 'assigned'));
     batch(o2, 4, 'demo-loc-4', 'open', null, null);
     for (let i = 0; i < 11; i++) db.pc_log.push(unit(o2, cfgB, null, 'built'));
@@ -5606,6 +5723,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         if (o) o.po_number = args.p_po || null;
         return ok(o ? [o] : []);
       }
+      case 'ups_admin_status': return ok([{ connected: true, token_ok: true, last_fire: new Date(Date.now() - 12 * 60000).toISOString(),
+        last_error: null, waiting: 0, problems: 0, cron_on: true,
+        tracked: (db.batch_tracking || []).filter(function(t){ return t.ups_checked_at && t.ups_status !== 'unknown'; }).length,
+        delivered: (db.batch_tracking || []).filter(function(t){ return t.ups_status === 'delivered'; }).length }]);
+      case 'ups_connect':   return ok([{ ok: true, message: null }]);
+      case 'ups_check_now': return ok([{ fired: 0, message: null }]);
+      case 'ups_collect':   return ok([{ updated: 0, shipped: 0, waiting: 0 }]);
+      case 'ups_recheck_all': return ok(0);
       case 'rma_secret_status': return ok([{ key: 'resend_api_key', is_set: true, configured: true, updated_at: new Date().toISOString() }]);
       case 'ss_send_batch': {
         const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
@@ -11115,6 +11240,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const btk = e.target.closest('[data-btrack]');
     if (btk){ window.open(btk.getAttribute('data-btrack'), '_blank', 'noopener'); return; }
     const bs = bfind('data-bship');  if (bs){ ordMarkShipped(bs); return; }
+    const bdv = bfind('data-bdeliv'); if (bdv){ ordMarkDelivered(bdv, true); return; }
+    const bud = bfind('data-bundeliv'); if (bud){ ordMarkDelivered(bud, false); return; }
     const bss = bfind('data-bss');   if (bss){ ordSendShipStation(bss); return; }
     const bst = bfind('data-bsstrk'); if (bst){ ordSsTrack(bst); return; }
     const be = bfind('data-bedit');  if (be){ ordEditBatchModal(be); return; }
@@ -11733,6 +11860,186 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }).join(', ');
   }
 
+  /* ---- UPS carrier status (ups-tracking.sql fills these on batch_tracking) ----
+     r is how far along a box is; the slowest box sets the batch, a problem beats all */
+  const ORD_UPS = {
+    label:     { r:1, t:'Label created',    c:'neutral' },
+    unknown:   { r:1, t:'Label created',    c:'neutral' },
+    transit:   { r:2, t:'With carrier',     c:'info' },
+    out:       { r:3, t:'Out for delivery', c:'info' },
+    delivered: { r:4, t:'Delivered',        c:'ok' },
+    exception: { r:0, t:'Exception',        c:'bad' },
+    returned:  { r:0, t:'Returned',         c:'bad' }
+  };
+  function ordCarrierKey(c){
+    const s = String(c || '').toLowerCase();
+    if (/\bups\b/.test(s)) return ['ups', 'UPS'];
+    if (/uber/.test(s)) return ['uber', 'Uber Freight'];
+    if (/fed\s*ex/.test(s)) return ['fedex', 'FedEx'];
+    if (/usps|postal/.test(s)) return ['usps', 'USPS'];
+    if (/\bdhl\b/.test(s)) return ['dhl', 'DHL'];
+    return ['', String(c || '').trim() || 'Track'];
+  }
+  function ordUpsWords(s){
+    s = String(s || '').replace(/\s+/g, ' ').trim();
+    if (s && s === s.toUpperCase() && /[A-Z]{3}/.test(s))
+      s = s.toLowerCase().replace(/(^|[.!?]\s+)([a-z])/g, function(m, a, c){ return a + c.toUpperCase(); }).replace(/\bups\b/g, 'UPS');
+    return s;
+  }
+  function ordUpsDay(v){
+    if (!v) return '';
+    const d = new Date(String(v).length <= 10 ? v + 'T12:00:00' : v);
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+  }
+  function ordUpsWhen(v){
+    const d = new Date(v || '');
+    return isNaN(d.getTime()) ? '' : d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+  }
+  function ordUpsSum(tk){
+    const seen = {}, pk = [];
+    (tk || []).forEach(function(t){
+      const k = String(t.tracking_no || '').trim().toUpperCase();
+      if (!k || !t.ups_checked_at || !t.ups_status || seen[k]) return;
+      seen[k] = 1; pk.push(t);
+    });
+    const known = pk.filter(function(t){ return t.ups_status !== 'unknown'; });
+    if (!known.length) return null;
+    const R = function(t){ return (ORD_UPS[t.ups_status] || ORD_UPS.unknown).r; };
+    const lead = known.slice().sort(function(a, b){ return R(a) - R(b); })[0];
+    const s = ORD_UPS[lead.ups_status] || ORD_UPS.unknown;
+    const del = pk.filter(function(t){ return t.ups_status === 'delivered'; }).length;
+    const partial = s.r > 0 && del > 0 && del < pk.length;
+    const latest = function(f){ return pk.reduce(function(m, t){ return t[f] && (!m || new Date(t[f]) > new Date(m)) ? t[f] : m; }, null); };
+    return {
+      st: lead.ups_status, n: pk.length, del: del,
+      cls: partial ? 'info' : s.c,
+      label: partial ? ordNum(del) + ' of ' + ordNum(pk.length) + ' delivered' : s.t,
+      text: ordUpsWords(lead.ups_text) || s.t,
+      where: lead.ups_where || '', at: lead.ups_event_at,
+      eta: s.r > 0 && s.r < 4 ? lead.ups_eta : null,
+      etaFrom: s.r > 0 && s.r < 4 ? lead.ups_eta_from || null : null,
+      etaTo: s.r > 0 && s.r < 4 ? lead.ups_eta_to || null : null,
+      pick: lead.ups_pickup_on || null,
+      hist: lead.ups_activity || null, no: lead.tracking_no || '',
+      deliveredAt: s.r === 4 && !partial ? latest('ups_delivered_at') : null,
+      checked: latest('ups_checked_at')
+    };
+  }
+  function ordUpsChip(b, sum){
+    if (!sum){
+      if (b.status === 'shipped' && b.delivered_at) return '<span class="ord-chip ok">Delivered</span>';
+      const shipped = b.status === 'shipped';
+      return '<span class="ord-chip ' + (shipped ? 'info' : 'warn') + '">' + (shipped ? 'Shipped' : 'Open') + '</span>';
+    }
+    return '<span class="ord-chip ' + sum.cls + '" title="' + esc('UPS: ' + sum.text) + '">' + esc(sum.label) + '</span>';
+  }
+  function ordUpsBit(sum){
+    if (!sum) return '';
+    if (sum.deliveredAt) return 'Delivered ' + ordUpsDay(sum.deliveredAt);
+    if (sum.eta) return 'Arrives ' + ordUpsDay(sum.eta);
+    return '';
+  }
+  function ordUpsMini(t){
+    if (!t || !t.ups_checked_at || !t.ups_status || t.ups_status === 'unknown') return '';
+    const s = ORD_UPS[t.ups_status] || ORD_UPS.unknown;
+    return '<span class="ord-ups-mini ' + s.c + '" title="' + esc('UPS: ' + (ordUpsWords(t.ups_text) || s.t)) + '">' + esc(s.t) + '</span>';
+  }
+  /* UPS scan history, newest first, folded away until asked for; stays open across re-renders */
+  const ORD_UPS_HOPEN = new Set();
+  document.addEventListener('toggle', function(e){
+    const d = e.target; if (!d || !d.matches || !d.matches('details.ord-ups-hist')) return;
+    const k = d.getAttribute('data-no'); if (d.open) ORD_UPS_HOPEN.add(k); else ORD_UPS_HOPEN.delete(k);
+  }, true);
+  function ordUpsHist(sum){
+    const ev = Array.isArray(sum.hist) ? sum.hist : [];
+    if (!ev.length) return '';
+    let scanned = false;
+    const ms = ev.slice().reverse().map(function(e){
+      const y = String(e.y || '').toUpperCase();
+      if (y === 'M' || y === 'MV') return 'Label created';
+      if (y === 'X') return 'Exception';
+      if (y === 'RS') return 'Returned';
+      if (y === 'O') return 'Out for delivery';
+      if (y === 'D' || y === 'DD' || y === 'DO') return 'Delivered';
+      if (!scanned){ scanned = true; return 'UPS has the package'; }
+      return 'On the way';
+    }).reverse();
+    const when = function(e){
+      const d = String(e.d || ''), t = String(e.t || '').replace(/\D/g, '');
+      if (!/^\d{8}$/.test(d)) return ['', ''];
+      const x = new Date(+d.slice(0, 4), +d.slice(4, 6) - 1, +d.slice(6, 8), +(t.slice(0, 2) || 0), +(t.slice(2, 4) || 0));
+      return [x.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }),
+              t.length >= 4 ? x.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' }) : ''];
+    };
+    const rows = ev.map(function(e, i){
+      const w = when(e), head = i === 0 || ms[i] !== ms[i - 1];
+      return '<li' + (i === 0 ? ' class="now"' : '') + '><time><b>' + esc(w[0]) + '</b>' + esc(w[1]) + '</time><div>' +
+        (head ? '<div class="ord-ups-hh' + (/Exception|Returned/.test(ms[i]) ? ' bad' : '') + '">' + ms[i] + '</div>' : '') +
+        '<div>' + esc(ordUpsWords(e.s) || '\u2014') + '</div>' +
+        (e.w ? '<div class="ord-ups-hw">' + esc(e.w) + '</div>' : '') + '</div></li>';
+    }).join('');
+    const no = String(sum.no || '');
+    return '<details class="ord-ups-hist" data-no="' + esc(no) + '"' + (ORD_UPS_HOPEN.has(no) ? ' open' : '') + '>' +
+      '<summary><span>Package history</span><span class="ord-ups-hc">' + ev.length + (ev.length === 1 ? ' scan' : ' scans') +
+        (sum.n > 1 && no ? ' \u00b7 ' + esc(no) : '') + '</span>' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
+        (sum.checked ? '<span class="ord-ups-ck">UPS checked ' + esc(ordAgoRel(sum.checked)) + '</span>' : '') +
+      '</summary><ol>' + rows + '</ol></details>';
+  }
+  function ordUpsStrip(sum, extra){
+    if (!sum) return '';
+    const STEPS = ['Label created', 'UPS has the package', 'On the way', 'Out for delivery', 'Delivered'];
+    const bad = sum.st === 'exception' || sum.st === 'returned';
+    let at = { label:0, unknown:0, out:3, delivered:4,
+      transit: (sum.hist && sum.hist.length
+        ? sum.hist.filter(function(e){ return !/^MV?$/i.test(e.y || ''); }).length <= 1
+        : /we have your package|picked up|pickup scan|origin scan|drop.?off/i.test(sum.text)) ? 1 : 2 }[sum.st];
+    if (at == null) at = sum.pick ? 2 : 0;
+    const day = function(v){
+      const d = new Date(String(v).length <= 10 ? v + 'T12:00:00' : v); if (isNaN(d.getTime())) return '';
+      const t0 = new Date(); t0.setHours(12, 0, 0, 0);
+      const diff = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12) - t0) / 864e5);
+      const md = d.toLocaleDateString(undefined, { month:'long', day:'numeric' });
+      return (diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(undefined, { weekday:'long' })) + ', ' + md;
+    };
+    const hm = function(t){
+      t = String(t || '').replace(/\D/g, ''); if (t.length < 4) return '';
+      let h = +t.slice(0, 2); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+      return h + ':' + t.slice(2, 4) + ' ' + ap;
+    };
+    let k, main, win = '', txt = false;
+    if (sum.deliveredAt){
+      k = 'Delivered'; main = day(sum.deliveredAt);
+      const tm = new Date(sum.deliveredAt);
+      if (!isNaN(tm.getTime())) win = 'at ' + tm.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+    } else if (bad){
+      k = sum.st === 'returned' ? 'Returned to sender' : 'Delivery exception'; main = sum.text; txt = true;
+    } else if (sum.eta){
+      k = 'Estimated delivery'; main = day(sum.eta);
+      const a = hm(sum.etaFrom), b = hm(sum.etaTo);
+      win = a && b ? a + ' \u2013 ' + b : b ? 'by ' + b : '';
+    } else { k = 'Status'; main = sum.text; txt = true; }
+    const where = [sum.where, ordUpsWhen(sum.at)].filter(Boolean).join(' \u00b7 ');
+    const foot = [
+      sum.n > 1 ? '<span><b>' + ordNum(sum.del) + ' of ' + ordNum(sum.n) + '</b> boxes delivered</span>' : '',
+      sum.checked && !(Array.isArray(sum.hist) && sum.hist.length) ? '<span>UPS checked ' + esc(ordAgoRel(sum.checked)) + '</span>' : ''
+    ].filter(Boolean).join('');
+    return '<div class="ord-ups' + (bad ? ' bad' : sum.st === 'delivered' ? ' done' : '') + '">' +
+      '<div><div class="ord-ups-k">' + k + '</div>' +
+        '<div class="ord-ups-big' + (txt ? ' txt' : '') + '">' + esc(main) + (win ? '<span class="ord-ups-win">' + esc(win) + '</span>' : '') + '</div></div>' +
+      (where ? '<div class="ord-ups-loc"><span class="ord-ups-k">' + (sum.deliveredAt ? 'Delivered in' : 'Last location') + '</span><span>' + esc(where) + '</span></div>' : '') +
+      '<ol class="ord-ups-steps" style="--p:' + (at / 4) + '" aria-label="Shipment progress">' +
+        STEPS.map(function(s, i){
+          return '<li class="' + (i < at ? 'did' : i === at ? 'now' : '') + '"' + (i === at ? ' aria-current="step"' : '') + '><i></i><span>' + s + '</span></li>';
+        }).join('') +
+      '</ol>' +
+      ordUpsHist(sum) +
+      (extra || '') +
+      (foot ? '<div class="ord-ups-foot">' + foot + '</div>' : '') +
+    '</div>';
+  }
+
+
   function ordBatchUnits(bid){
     return ordUnits.filter(function(u){ return u.batch_id === bid; });
   }
@@ -11783,11 +12090,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const firstNo = batchWide[0] || (tk.find(function(t){ return t.unit_id && t.tracking_no; }) || {}).tracking_no || '';
       const trackLink = batchWideAll.find(ordIsTrackLink) || (firstNo ? ordTrackUrl(b.carrier, firstNo) : '');
       const shipped = b.status === 'shipped';
+      const ups = ordUpsSum(tk);
+      const delivered = !!(ups ? ups.deliveredAt : shipped && b.delivered_at);
+      const upsBit = ordUpsBit(ups) || (shipped && b.delivered_at ? 'Delivered ' + ordUpsDay(b.delivered_at) : '');
+      const upsBy = {}; tk.forEach(function(t){ upsBy[t.tracking_no] = t; });
       return '<div class="ord-batch" data-bid="' + esc(b.id) + '">' +
         '<div class="ord-batch-head" title="Click for serials and tracking">' +
           '<div class="ord-batch-id">' +
             '<span class="ord-batch-no">Batch ' + b.batch_no + '</span>' +
-            '<span class="ord-chip ' + (shipped ? 'ok' : 'warn') + '">' + (shipped ? 'Shipped' : 'Open') + '</span>' +
+            ordUpsChip(b, ups) +
           '</div>' +
           '<div class="ord-batch-dest">' +
             '<div class="ord-batch-store">' + esc(ordLocName(loc)) +
@@ -11806,24 +12117,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                   (batchWide.length > 1
                     ? '<span class="ord-trk-hint">+' + ordNum(batchWide.length - 1) + '</span>'
                     : '') +
-                  '</span>' + (b.ship_date ? '<span class="ord-batch-dot">\u00b7</span>' : '')
+                  '</span>'
                 : ordCarrierBadge(b.carrier)) +
-              (b.ship_date ? '<span>' + esc(fmtDate(b.ship_date)) + '</span>' : '') + '</div>' +
+              '</div>' +
+              (upsBit ? '<div class="ord-sub ord-batch-upsd">' + esc(upsBit) + '</div>' : '') +
           '</div>' +
           '<div class="ord-batch-btns">' +
-            (trackLink ? '<button class="primary btn-sm" data-btrack="' + esc(trackLink) + '" type="button" title="' + esc(trackLink) + '">Track \u2197</button>' : '') +
+            (trackLink ? '<button class="btn-sm trk-btn c-' + ordCarrierKey(b.carrier)[0] + '" data-btrack="' + esc(trackLink) + '" type="button" title="' + esc(trackLink) + '">' + esc(ordCarrierKey(b.carrier)[1]) + ' \u2197</button>' : '') +
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
             '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
             (ordPerm.manage && !shipped && loc ? ordSsBtnHtml(b) : '') +
-            (ordPerm.manage && b.ss_order_id ? '<button class="ghost btn-sm" data-bsstrk="' + esc(b.id) + '" type="button" title="Copy the tracking numbers of this order\u2019s labels from ShipStation">Get tracking</button>' : '') +
+            (ordPerm.manage && b.ss_order_id && !tk.length ? '<button class="ghost btn-sm" data-bsstrk="' + esc(b.id) + '" type="button" title="Copy the tracking numbers of this order\u2019s labels from ShipStation">Get tracking</button>' : '') +
             (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
+            (ordPerm.manage && shipped && !delivered && !ups && ordCarrierKey(b.carrier)[0] !== 'ups' ? '<button class="ghost btn-sm" data-bdeliv="' + esc(b.id) + '" type="button" title="For carriers we can\u2019t track: the batch has arrived">Mark delivered</button>' : '') +
             (ordPerm.manage ? '<button class="ghost btn-sm" data-bedit="' + esc(b.id) + '" type="button">Edit</button>' : '') +
           '</div>' +
         '</div>' +
         '<div class="ord-batch-body" id="ordBatchBody_' + esc(b.id) + '" style="display:none;">' +
+          ordUpsStrip(ups) +
           '<div class="ord-batch-bar"><button class="ghost btn-sm" data-bcopy="' + esc(b.id) + '" type="button" title="Copy every serial in this batch, comma separated">Copy Serial Numbers</button></div>' +
-          (batchWide.length
-            ? '<p class="muted-sm ord-batch-trk">Master tracking: ' + ordCarrierBadge(b.carrier) + '<span class="ord-mono">' + ordTrackHtml(b.carrier, batchWide) + '</span>' +
+          (batchWide.length && !ups
+            ? '<p class="muted-sm ord-batch-trk">Master tracking: ' + ordCarrierBadge(b.carrier) + '<span class="ord-mono">' + batchWide.map(function(n){ return ordTrackHtml(b.carrier, [n]) + ordUpsMini(upsBy[n]); }).join(', ') + '</span>' +
               '<span class="ord-trk-hint"> \u00b7 covers every unit below</span>' +
               (ordTrackUrl(b.carrier, batchWide[0]) ? '' : ' <span class="ord-trk-hint">\u00b7 add a carrier to link it</span>') + '</p>'
             : '') +
@@ -11840,7 +12154,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             return '<tr><td class="ord-mono" data-l="Serial">' + esc(u.serial) + rmaUnitFlag(u) + '</td>' +
               '<td data-l="Config">' + ordCfgCell(u.config_id, cfgs[u.config_id]) + '</td>' +
               '<td class="ord-mono" data-l="Tracking">' + ordTrackHtml(b.carrier, perUnit[u.id] ? [perUnit[u.id]] : batchWide) +
-                (perUnit[u.id] ? '' : (batchWide.length ? ordTrkTag(true) : '')) + '</td></tr>';
+                (perUnit[u.id] ? ordUpsMini(upsBy[perUnit[u.id]]) : (batchWide.length ? ordTrkTag(true) : '')) + '</td></tr>';
           }).join('') +
           '</tbody></table></div>' +
           '<div class="ord-pager">' +
@@ -11856,9 +12170,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '</div>';
           })() +
           '<div class="ord-batch-foot">' +
+            (ordPerm.manage && shipped && b.delivered_at && !(ups && ups.deliveredAt) ? '<button class="ghost btn-sm" data-bundeliv="' + esc(b.id) + '" type="button">Undo delivered</button>' : '') +
             '<button class="ghost btn-sm" data-bprint46="' + esc(b.id) + '" type="button">4\u00d76 box PDF</button>' +
             '<button class="ghost btn-sm" data-bprintdymo="' + esc(b.id) + '" type="button">Dymo PDF</button>' +
-            (ordPerm.admin ? '<button class="ghost danger btn-sm" data-bdel="' + esc(b.id) + '" type="button">Return units to pool</button>' : '') +
+            (ordPerm.admin && !delivered ? '<button class="ghost danger btn-sm" data-bdel="' + esc(b.id) + '" type="button">Return units to pool</button>' : '') +
           '</div>' +
         '</div>' +
       '</div>';
@@ -12489,7 +12804,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const card = document.querySelector('.ord-batch[data-bid="' + bid + '"]');
     if (!card) return;
     const chip = card.querySelector('.ord-batch-id .ord-chip');
-    if (chip){ chip.className = 'ord-chip ' + (shipped ? 'ok' : 'warn'); chip.textContent = shipped ? 'Shipped' : 'Open'; }
+    if (chip){ chip.className = 'ord-chip ' + (shipped ? 'info' : 'warn'); chip.textContent = shipped ? 'Shipped' : 'Open'; }
     const btn = card.querySelector('[data-bship]');
     if (btn){
       if (shipped && !busy) btn.remove();
@@ -12629,6 +12944,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordShipping.delete(b.id);
       if (gotTrk) ordSsRedraw(b);
     }
+  }
+
+  /* the last step for carriers we can't track: set or clear the batch's delivered date */
+  const ordDelivering = new Set();
+  async function ordMarkDelivered(b, on){
+    if (ordDelivering.has(b.id)) return;
+    ordDelivering.add(b.id);
+    const body = document.getElementById('ordBatchBody_' + b.id);
+    const wasOpen = !!(body && body.style.display !== 'none');
+    const btn = document.querySelector('[data-bdeliv="' + b.id + '"],[data-bundeliv="' + b.id + '"]');
+    if (btn){ btn.disabled = true; btn.textContent = 'Saving\u2026'; }
+    try {
+      const at = on ? new Date().toISOString() : null;
+      const r = await SB.from('batches').update({ delivered_at: at }).eq('id', b.id);
+      if (r.error){
+        toast(/delivered_at/.test(r.error.message) ? 'Run ups-tracking.sql in Supabase first.' : 'Could not update batch ' + b.batch_no + ': ' + r.error.message, 'bad', 7000);
+        if (btn){ btn.disabled = false; btn.textContent = on ? 'Mark delivered' : 'Undo delivered'; }
+        return;
+      }
+      b.delivered_at = at;
+      const keep = liveKeep(ordDetailPane); ordRenderBatches(); keep();
+      if (wasOpen){ const bd = document.getElementById('ordBatchBody_' + b.id); if (bd) bd.style.display = ''; }
+      toast('Batch ' + b.batch_no + (on ? ' marked delivered' : ' back to shipped'), 'ok');
+    } finally { ordDelivering.delete(b.id); }
   }
 
   function ordEditBatchModal(b){
@@ -13895,7 +14234,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const host = document.getElementById('admBody');
     const tabs = ordPerm.admin
       ? [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],
-         ['email','Email'],['shipstation','ShipStation'],['people','People'],['logins','Customer logins'],['demo','Demo mode']]
+         ['email','Email'],['shipstation','ShipStation'],['ups','UPS'],['people','People'],['logins','Customer logins'],['demo','Demo mode']]
       : [['customers','Customers'],['configs','Configs'],['dests','Destinations'],['rma','RMA'],['email','Email']];
     if (!tabs.some(function(t){ return t[0] === admTab; })) admTab = 'customers';
     host.innerHTML =
@@ -13930,6 +14269,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       logins:    'Read-only portal access for a customer. Create the login in Supabase first, then map it here.',
       rma:       'The technician we talk to at each customer, where their parts ship, and the Discord channel inbound activity posts to.',
       shipstation: 'Send to ShipStation on a batch creates an Awaiting Shipment order there with the store\u2019s address, the invoice and the units. Labels are still bought in ShipStation.',
+      ups:       'Carrier status on every UPS batch, checked every 30 minutes. A batch is marked shipped at its first UPS scan.',
       email:     'One Resend connection, two kinds of mail. Order notifications and RMA notifications keep their own recipients, their own From address and their own history.',
       demo:      'A fictional company to click through on a screenshare, so you never have to demonstrate the app on somebody\u2019s real order.'
     }[admTab] || '';
@@ -13944,6 +14284,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (admTab === 'logins'  && ordPerm.admin) return admPaneLogins(p);
     if (admTab === 'demo'    && ordPerm.admin) return admPaneDemo(p);
     if (admTab === 'shipstation' && ordPerm.admin) return admPaneShipStation(p);
+    if (admTab === 'ups' && ordPerm.admin) return admPaneUps(p);
   }
 
   /* ---- demo mode ----
@@ -13989,6 +14330,133 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       document.getElementById('admSsKey').value = ''; document.getElementById('admSsSecret').value = '';
       toast('ShipStation connected', 'ok'); admSsState();
     } finally { btn.disabled = false; }
+  });
+
+  function admPaneUps(p){
+    p.innerHTML =
+      '<section class="card adm-sec"><h2 class="card-title">Connection</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">On developer.ups.com: Apps \u2192 Add Apps, with the Tracking product. Paste the Client ID and Client Secret below. They are stored on the server and never shown again.</p>' +
+        '<p class="muted-sm" id="admUpsState">Checking\u2026</p>' +
+        '<div class="field" style="margin-top:4px;"><label for="admUpsId">Client ID</label>' +
+          '<input id="admUpsId" type="password" autocomplete="off"></div>' +
+        '<div class="field"><label for="admUpsSecret">Client secret</label>' +
+          '<input id="admUpsSecret" type="password" autocomplete="off"></div>' +
+        '<div class="field"><label for="admUpsAcct">UPS account number <span class="muted-sm">optional</span></label>' +
+          '<div class="adm-inline"><input id="admUpsAcct" type="text" autocomplete="off" maxlength="10">' +
+          '<button class="ghost btn-sm" id="admUpsSave" type="button">Save</button></div></div>' +
+      '</section>' +
+      '<section class="card adm-sec"><h2 class="card-title">Tracking</h2>' +
+        '<p class="muted-sm" id="admUpsRun" style="margin-top:0;"></p>' +
+        '<div class="adm-bar" style="margin:var(--s3) 0 0;"><button class="ghost btn-sm" id="admUpsNow" type="button">Check now</button>' +
+          '<button class="ghost btn-sm" id="admUpsAll" type="button" title="Ask UPS about every package again, delivered ones included">Recheck all</button></div>' +
+        '<p class="muted-sm" id="admUpsProg" style="margin:var(--s2) 0 0;" aria-live="polite"></p>' +
+        '<p class="card-note">Checks run every 30 minutes. At the first UPS scan the batch is marked shipped, the same as pressing Mark shipped, so the customer gets the usual Batch shipped email. Delivered packages stop being checked. Batches with other carriers stay manual.</p>' +
+      '</section>';
+    admUpsState();
+  }
+  async function admUpsState(){
+    const el = document.getElementById('admUpsState'), run = document.getElementById('admUpsRun'); if (!el) return;
+    const r = await SB.rpc('ups_admin_status');
+    if (r.error){ el.innerHTML = 'Run <b>ups-tracking.sql</b> in Supabase first.'; if (run) run.textContent = ''; return; }
+    const s = (r.data || [])[0] || {};
+    el.innerHTML = !s.connected
+      ? '<span class="ord-chip neutral">Not set up</span> paste the Client ID and secret below.'
+      : (!s.token_ok && s.last_error)
+        ? '<span class="ord-chip bad">Not connected</span> ' + esc(s.last_error)
+        : '<span class="ord-chip ok">Connected</span> keys saved. Paste new ones to replace them.';
+    if (run) run.innerHTML = [
+      s.cron_on ? '' : '<b>Scheduled checks are off.</b> Turn on pg_cron in Supabase, then run ups-tracking.sql again.',
+      s.last_fire ? 'Last check ' + esc(ordAgoRel(s.last_fire)) : 'No checks yet',
+      ordNum(s.tracked || 0) + ' package' + (s.tracked === 1 ? '' : 's') + ' tracked',
+      s.delivered ? ordNum(s.delivered) + ' delivered' : '',
+      s.problems ? '<span style="color:var(--bad-ink);">' + ordNum(s.problems) + ' with a problem</span>' : '',
+      s.waiting ? ordNum(s.waiting) + ' waiting on UPS' : ''
+    ].filter(Boolean).join(' \u00b7 ');
+  }
+  document.addEventListener('click', async function(e){
+    const btn = e.target.closest('#admUpsSave'); if (!btn) return;
+    const id = document.getElementById('admUpsId').value.trim(), sec = document.getElementById('admUpsSecret').value.trim();
+    const acct = document.getElementById('admUpsAcct').value.trim();
+    if (!id || !sec){ toast('Paste both the Client ID and the Client secret.', 'warn'); return; }
+    btn.disabled = true;
+    try {
+      let r = await SB.rpc('rma_set_secret', { k: 'ups_client_id', v: id });
+      if (!r.error) r = await SB.rpc('rma_set_secret', { k: 'ups_client_secret', v: sec });
+      if (!r.error && acct) r = await SB.rpc('rma_set_secret', { k: 'ups_account', v: acct });
+      if (r.error){ toast(/Unknown secret/.test(r.error.message) ? 'Run ups-tracking.sql in Supabase first.' : r.error.message, 'bad'); return; }
+      ['admUpsId', 'admUpsSecret', 'admUpsAcct'].forEach(function(x){ document.getElementById(x).value = ''; });
+      const c = await SB.rpc('ups_connect');
+      const row = (c.data || [])[0];
+      if (c.error) toast(c.error.message, 'bad');
+      else if (row && row.ok) toast('UPS connected. Every open package is checked within 5 minutes.', 'ok', 6000);
+      else toast((row && row.message) || 'UPS did not accept the keys.', 'bad', 8000);
+      admUpsState();
+    } finally { btn.disabled = false; }
+  });
+  document.addEventListener('click', async function(e){
+    const btn = e.target.closest('#admUpsNow'); if (!btn || btn.disabled) return;
+    btn.disabled = true; btn.textContent = 'Checking\u2026';
+    try {
+      const r = await SB.rpc('ups_check_now');
+      if (r.error){ toast(r.error.message, 'bad'); return; }
+      const row = (r.data || [])[0] || {};
+      if (row.message){ toast(row.message, 'bad', 8000); return; }
+      if (!row.fired){ toast('Nothing to check. Every UPS package is delivered or has no tracking number yet.', 'ok'); return; }
+      let left = row.fired, upd = 0, shipped = 0;
+      for (let i = 0; i < 6 && left > 0; i++){
+        await new Promise(function(res){ setTimeout(res, 2500); });
+        const c = await SB.rpc('ups_collect');
+        if (c.error) break;
+        const x = (c.data || [])[0] || {};
+        upd += x.updated || 0; shipped += x.shipped || 0; left = x.waiting || 0;
+      }
+      toast('Checked ' + ordNum(upd) + ' package' + (upd === 1 ? '' : 's') +
+        (shipped ? ' \u00b7 ' + ordNum(shipped) + ' batch' + (shipped === 1 ? '' : 'es') + ' marked shipped' : '') +
+        (left ? ' \u00b7 ' + ordNum(left) + ' still waiting on UPS' : ''), 'ok', 6000);
+    } finally { btn.disabled = false; btn.textContent = 'Check now'; admUpsState(); }
+  });
+
+  /* Recheck all: queue every package, then send 20 at a time with a pause
+     between groups, saving answers as they land. Stops early if UPS pushes back;
+     the scheduled check finishes whatever is left. */
+  document.addEventListener('click', async function(e){
+    const btn = e.target.closest('#admUpsAll'); if (!btn || btn.disabled) return;
+    const now = document.getElementById('admUpsNow'), prog = document.getElementById('admUpsProg');
+    const say = function(t){ if (prog) prog.textContent = t; };
+    btn.disabled = true; if (now) now.disabled = true;
+    let upd = 0, shipped = 0, total = 0, left = 0;
+    try {
+      const q = await SB.rpc('ups_recheck_all');
+      if (q.error){ toast(/function/i.test(q.error.message) ? 'Run ups-tracking.sql in Supabase first.' : q.error.message, 'bad'); return; }
+      total = left = +q.data || 0;
+      if (!total){ toast('No UPS packages to check.', 'ok'); return; }
+      for (let round = 0; round < 60 && left > 0; round++){
+        say('Checking ' + ordNum(Math.min(total, total - left + 20)) + ' of ' + ordNum(total) + '\u2026');
+        const f = await SB.rpc('ups_check_now');
+        if (f.error){ toast(f.error.message, 'bad'); break; }
+        const fr = (f.data || [])[0] || {};
+        if (fr.message){ toast(fr.message, 'bad', 8000); break; }
+        await new Promise(function(r){ setTimeout(r, 3000); });
+        const c = await SB.rpc('ups_collect'); if (c.error) break;
+        const x0 = (c.data || [])[0] || {};
+        upd += x0.updated || 0; shipped += x0.shipped || 0; left = x0.waiting || 0;
+        if (!fr.fired){
+          // nothing new went out: either only replies in flight remain, or UPS asked us to slow down
+          for (let w = 0; w < 3 && left > 0; w++){
+            await new Promise(function(r){ setTimeout(r, 2500); });
+            const c2 = await SB.rpc('ups_collect'); if (c2.error) break;
+            const y = (c2.data || [])[0] || {};
+            upd += y.updated || 0; shipped += y.shipped || 0; left = y.waiting || 0;
+          }
+          break;
+        }
+      }
+      toast('Rechecked ' + ordNum(upd) + ' of ' + ordNum(total) + ' package' + (total === 1 ? '' : 's') +
+        (shipped ? ' \u00b7 ' + ordNum(shipped) + ' batch' + (shipped === 1 ? '' : 'es') + ' marked shipped' : '') +
+        (left ? ' \u00b7 ' + ordNum(left) + ' left for the next scheduled check' : ''), 'ok', 7000);
+    } finally {
+      btn.disabled = false; if (now) now.disabled = false; say(''); admUpsState();
+    }
   });
 
   function admPaneDemo(p){
