@@ -12160,7 +12160,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             (trackLink ? '<button class="btn-sm trk-btn c-' + ordCarrierKey(b.carrier)[0] + '" data-btrack="' + esc(trackLink) + '" type="button" title="' + esc(trackLink) + '">' + esc(ordCarrierKey(b.carrier)[1]) + ' \u2197</button>' : '') +
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
             '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
-            (ordPerm.manage && !shipped && loc ? ordSsBtnHtml(b) : '') +
+            (ordPerm.manage && !shipped && loc && !/uber|freight|ltl/i.test(String(b.carrier || '')) ? ordSsBtnHtml(b) : '') +
             (ordPerm.manage && b.ss_order_id && !tk.length ? '<button class="ghost btn-sm" data-bsstrk="' + esc(b.id) + '" type="button" title="Copy the tracking numbers of this order\u2019s labels from ShipStation">Get tracking</button>' : '') +
             (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
             (ordPerm.manage && shipped && !delivered && !ups && ordCarrierKey(b.carrier)[0] !== 'ups' ? '<button class="ghost btn-sm" data-bdeliv="' + esc(b.id) + '" type="button" title="For carriers we can\u2019t track: the batch has arrived">Mark delivered</button>' : '') +
