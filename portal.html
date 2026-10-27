@@ -926,10 +926,11 @@
   .ups-line > .ups-line-foot{ padding:12px var(--px); }
   @container upsc (max-width:520px){ .ups-line > *{ --px:16px; } }
   /* shipment status summary, top of the Shipments / Batches card */
-  .shs{ margin:0 0 var(--s4); }
+  .shs{ margin:0 0 var(--s4); padding:18px 22px 16px; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md, 8px); box-shadow:var(--e1, 0 1px 2px rgba(0,0,0,.04)); }
+  @media (max-width:640px){ .shs{ padding:14px 16px; } }
   .shs-bar{ display:flex; height:10px; overflow:hidden; border-radius:999px; background:var(--soft); border:1px solid var(--line); }
   .shs-bar i{ display:block; height:100%; }
-  .shs-leg{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin-top:10px; font-size:12.5px; color:var(--muted); }
+  .shs-leg{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin-top:12px; font-size:12.5px; color:var(--muted); }
   .shs-leg > span{ display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
   .shs-leg i{ width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
   .shs-leg b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
