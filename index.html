@@ -8148,8 +8148,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     return '<section class="card"><div class="mg-line-head">'
       + '<span class="mg-line-name">' + esc(line.name) + '</span>'
       + (line.category === 3 ? '<span class="mg-chip oneoff">One-off' + (ordered[0] ? ' \u00b7 ' + esc(mgCtx(ordered[0]).name) : '') + '</span>' : '')
-      + (bs.length > 1 ? '<button class="mini' + (open ? ' on' : '') + '" style="margin-left:auto;" data-mghist="' + line.id + '" aria-expanded="' + open + '">' + (open ? 'Hide history' : 'History \u00b7 ' + (bs.length - 1)) + '</button>' : '')
-      + '</div>'
+      + '<span style="margin-left:auto;display:flex;gap:var(--s2);flex-wrap:wrap;">'
+      + '<button class="mini" data-mgrename="' + line.id + '" title="Rename this build">Rename</button>'
+      + '<button class="mini" data-mgdup="' + line.id + '" title="Copy this build under a new name">Duplicate</button>'
+      + (bs.length > 1 ? '<button class="mini' + (open ? ' on' : '') + '" data-mghist="' + line.id + '" aria-expanded="' + open + '">' + (open ? 'Hide history' : 'History \u00b7 ' + (bs.length - 1)) + '</button>' : '')
+      + '</span></div>'
       + shown.map(function(b){ return mgRowHtml(b, line.category !== 3 && b.id === ordered[0].id); }).join('')
       + '</section>';
   }
@@ -8467,6 +8470,65 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     mgCloseModal(); mgOpenBuild = rb.data.id; mgViewBuild = null; mgRenderAll();
   }
 
+  function mgShowRename(lid){
+    var l = mgLines.find(function(x){ return x.id === lid; }); if (!l) return;
+    var bg = mgModal(mgModalHead('Rename build', 'Applies to every quarter in its history.')
+      + '<div class="field"><label for="mgRnName">Name</label><input id="mgRnName" type="text" value="' + esc(l.name) + '"></div>'
+      + '<div class="mg-modal-foot"><button class="ghost btn-sm" id="mgRnCancel">Cancel</button><button class="primary btn-sm" id="mgRnGo" data-primary>Save name</button></div>');
+    var inp = bg.querySelector('#mgRnName');
+    setTimeout(function(){ inp.focus(); inp.select(); }, 30);
+    bg.querySelector('#mgRnCancel').addEventListener('click', mgCloseModal);
+    async function go(){
+      var nm = inp.value.trim();
+      if (!nm){ toast('Enter a name.', 'err'); return; }
+      if (nm === l.name){ mgCloseModal(); return; }
+      var r = await SB.from('product_lines').update({ name: nm }).eq('id', l.id);
+      if (r.error){ toast('Could not save: ' + r.error.message, 'err'); return; }
+      var old = l.name; l.name = nm; mgCloseModal(); mgRenderAll();
+      toast(old + ' renamed to ' + nm + '.', 'ok');
+    }
+    bg.querySelector('#mgRnGo').addEventListener('click', go);
+    inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') go(); });
+  }
+  function mgShowDup(lid){
+    var l = mgLines.find(function(x){ return x.id === lid; }); if (!l) return;
+    var bs = mgLineBuilds(lid).slice().reverse(); if (!bs.length) return;
+    var src = bs.map(function(b, i){ return '<option value="' + b.id + '">' + esc(b.quarter) + (i === 0 ? ' \u00b7 latest' : '') + '</option>'; }).join('');
+    var cats = MG_CATS.map(function(n, i){ return '<option value="' + i + '"' + (i === l.category ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('')
+      + '<option value="3"' + (l.category === 3 ? ' selected' : '') + '>Custom one-off</option>';
+    var bg = mgModal(mgModalHead('Duplicate build', 'Copies the components and price of ' + esc(l.name) + ' into a new build.')
+      + '<div class="field"><label for="mgDpName">New name</label><input id="mgDpName" type="text" value="' + esc(l.name + ' (copy)') + '"></div>'
+      + '<div class="mg-form-row"><div class="field"><label for="mgDpSrc">Copy from</label><select id="mgDpSrc" class="spec-select">' + src + '</select></div>'
+      + '<div class="field"><label for="mgDpCat">Category</label><select id="mgDpCat" class="spec-select">' + cats + '</select></div></div>'
+      + '<div class="mg-modal-foot"><button class="ghost btn-sm" id="mgDpCancel">Cancel</button><button class="primary btn-sm" id="mgDpGo" data-primary>Create copy</button></div>');
+    var inp = bg.querySelector('#mgDpName');
+    setTimeout(function(){ inp.focus(); inp.select(); }, 30);
+    bg.querySelector('#mgDpCancel').addEventListener('click', mgCloseModal);
+    var busy = false;
+    bg.querySelector('#mgDpGo').addEventListener('click', async function(){
+      if (busy) return;
+      var nm = inp.value.trim();
+      if (!nm){ toast('Enter a name for the copy.', 'err'); return; }
+      var sb = mgFindBuild(bg.querySelector('#mgDpSrc').value); if (!sb) return;
+      var cat = parseInt(bg.querySelector('#mgDpCat').value, 10) || 0;
+      busy = true;
+      var rl = await SB.from('product_lines').insert({ name: nm, category: cat }).select().single();
+      if (rl.error){ busy = false; toast('Could not save: ' + rl.error.message, 'err'); return; }
+      mgLines.push(rl.data);
+      var nb = { line_id: rl.data.id, quarter: sb.quarter, sale_price: +sb.sale_price || 0 };
+      if (mgHasChCol && cat === 3 && sb.channel_id) nb.channel_id = sb.channel_id;
+      var rb = await SB.from('builds').insert(nb).select().single();
+      if (rb.error){ busy = false; toast('Could not save: ' + rb.error.message, 'err'); return; }
+      mgBuilds.push(rb.data);
+      var items = mgItems(sb.id).map(function(it, i){ return { build_id: rb.data.id, name: it.name, cost: +it.cost || 0, position: i }; });
+      var rc = items.length ? await SB.from('build_components').insert(items).select() : { data: [] };
+      if (rc.data) mgComps = mgComps.concat(rc.data);
+      mgBaseAdd('b', [rb.data]); mgBaseAdd('c', rc.data);
+      mgCloseModal(); mgOpenBuild = rb.data.id; mgViewBuild = null; mgRenderAll();
+      toast(nm + ' created from ' + l.name + ' \u00b7 ' + sb.quarter + '.', 'ok');
+    });
+  }
+
   toolMargins.addEventListener('click', async function(e){
     var t;
     if (t = e.target.closest('[data-mgch]')){ mgChannelId = t.getAttribute('data-mgch'); localStorage.setItem('mgChannel', mgChannelId); mgRenderAll(); return; }
@@ -8474,6 +8536,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (t = e.target.closest('[data-mgaddch]')){ mgShowAddChannel(); return; }
     if (e.target.id === 'mgEmptyAdd'){ mgShowAdd(); return; }
     if (e.target.id === 'mgEmptyCustom'){ mgShowAddCustom(); return; }
+    if (t = e.target.closest('[data-mgrename]')){ mgShowRename(t.getAttribute('data-mgrename')); return; }
+    if (t = e.target.closest('[data-mgdup]')){ mgShowDup(t.getAttribute('data-mgdup')); return; }
     if (t = e.target.closest('[data-mghist]')){ var lid = t.getAttribute('data-mghist'); mgOpenHist[lid] = !mgOpenHist[lid]; mgRenderAll(); return; }
     if (t = e.target.closest('[data-mgview]')){ var v = t.getAttribute('data-mgview'); mgViewBuild = (mgViewBuild === v ? null : v); mgOpenBuild = null; mgRenderAll(); return; }
     if (t = e.target.closest('[data-mgedit]')){ var ed = t.getAttribute('data-mgedit'); mgOpenBuild = (mgOpenBuild === ed ? null : ed); mgViewBuild = null; mgRenderAll(); return; }
