@@ -405,7 +405,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme')==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',t);var dark=t==='dark';var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++){metas[i].setAttribute('content',dark?'#0e1116':'#ffffff');}document.documentElement.style.colorScheme=dark?'dark':'light';var bar=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');if(bar)bar.setAttribute('content',dark?'black-translucent':'default');}catch(e){}})();</script>
+<script>/* Retro rides on dark mode; set it before first paint too */(function(){try{if(localStorage.getItem('ntRetro')==='1'){var r=document.documentElement;r.setAttribute('data-retro','on');r.setAttribute('data-theme','dark');r.style.colorScheme='dark';var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].setAttribute('content','#120f26');}}}catch(e){}})();</script>
 <script>/* the session resolves asynchronously; until it does, show neither screen
   rather than flashing the sign-in card at someone who is already signed in */
 (function(){try{document.documentElement.classList.add('nt-boot');
@@ -4516,10 +4518,429 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     .mg-modal [data-addrcopy], #ordNAddLine, #ordEAddLine{ white-space:nowrap; flex:0 0 auto; }
   }
 </style>
+<style id="retroTheme">
+  /* ============================================================
+     RETRO — a retro-future skin: neon on deep navy, a synthwave
+     horizon behind the work and CRT scanlines over it. Opt-in per
+     browser, always on top of dark mode, screen only, so labels,
+     slips and every printed page stay plain.
+     ============================================================ */
+  .rx-stage, .rx-crt{ display:none; }
+  .rail-retro .i-retro, .retro-btn .i-retro{ display:block; }
+  /* the Retro switch has its own state; the shared track follows dark mode */
+  :root[data-theme="dark"] .rr-track{ background:var(--line-strong); }
+  :root[data-theme="dark"] .rr-knob{ transform:none; }
+  :root[data-retro] .rr-track{ background:linear-gradient(90deg, #ff2a8a, #7b3ff2); box-shadow:0 0 10px rgba(255,42,138,.55); }
+  :root[data-retro] .rr-knob{ transform:translateX(16px); }
+  :root[data-retro] #themeSwitch, :root[data-retro] #themeBtn{ opacity:.42; cursor:not-allowed; }
+
+  @media screen{
+    :root[data-retro]{
+      color-scheme:dark;
+      --rx-display:'Orbitron','Space Mono',ui-monospace,monospace;
+      --rx-pink:#ff2a8a; --rx-magenta:#ff10f0; --rx-cyan:#00e5ff; --rx-blue:#1a8cff;
+      --rx-purple:#5d34d0; --rx-violet:#9b7bff; --rx-gold:#ffd23f; --rx-mint:#2bffa8; --rx-silver:#c0c0c0;
+      --rx-edge:rgba(93,52,208,.55);
+      --rx-head:#7fe9ff;
+
+      --font-ui:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      --font-num:var(--font-ui);
+
+      --ink:#ece8ff; --charcoal:#ece8ff; --muted:#b3acd9; --faint:#8f88bf;
+      --stone:#9c95c9; --disabled:#5c5590;
+      --bg:#1a1a2e; --paper:#1f1c3a; --soft:#28244b;
+      --line:#352f66; --line-strong:#4f4596;
+      --ink-deep:#ff2a8a; --on-ink:#16001f;
+
+      --accent:#1a8cff; --accent-fg:#33e1ff; --accent-hover:#4aa8ff;
+      --accent-soft:color-mix(in srgb, #1a8cff 18%, #1f1c3a);
+      --accent-line:color-mix(in srgb, #1a8cff 50%, #1f1c3a);
+      --accent-ink:#0b0920;
+      --link:#33e1ff; --link-hover:#ff6bd6;
+
+      --ok:#2bffa8;   --ok-ink:#b9ffe3;
+      --ok-bg:color-mix(in srgb, #2bffa8 13%, #1f1c3a);   --ok-line:color-mix(in srgb, #2bffa8 42%, #1f1c3a);
+      --warn:#ffd23f; --warn-ink:#fff0b8;
+      --warn-bg:color-mix(in srgb, #ffd23f 13%, #1f1c3a); --warn-line:color-mix(in srgb, #ffd23f 42%, #1f1c3a);
+      --bad:#ff3c7d;  --bad-ink:#ffc4d8;
+      --bad-bg:color-mix(in srgb, #ff3c7d 15%, #1f1c3a);  --bad-line:color-mix(in srgb, #ff3c7d 48%, #1f1c3a);
+      --info:#00e5ff; --info-ink:#c4f8ff;
+      --info-bg:color-mix(in srgb, #00e5ff 12%, #1f1c3a); --info-line:color-mix(in srgb, #00e5ff 40%, #1f1c3a);
+      --go:#2bffa8;   --go-hover:#86ffd0;
+
+      --e1:0 1px 0 rgba(0,0,0,.35);
+      --e2:0 0 0 1px rgba(255,16,240,.10), 0 10px 26px -6px rgba(4,0,18,.75);
+      --e3:0 0 0 1px rgba(0,229,255,.22), 0 0 28px rgba(255,16,240,.16), 0 26px 60px -10px rgba(2,0,12,.85);
+      --e4:0 0 0 1px rgba(0,229,255,.18), 0 18px 48px -8px rgba(2,0,12,.8);
+      --shadow:var(--e2);
+      --ring:0 0 0 1px #0b0920, 0 0 0 3px #00e5ff, 0 0 14px rgba(0,229,255,.55);
+
+      --r-xs:2px; --r-tag:3px; --r-sm:4px; --r-md:6px; --r-lg:10px; --r-xl:12px;
+      --scrim:rgba(9,4,26,.74);
+      --glass:rgba(24,20,50,.74); --glass-solid:#1a1636;
+      --tab-chip:rgba(255,42,138,.24); --tab-chip-ink:#fff2fb;
+
+      --hue-orders:#00e5ff; --hue-inventory:#ffd23f; --hue-timeclock:#ff10f0; --hue-margins:#ff8a3d;
+      --hue-billing:#2bffa8; --hue-admin:#c0c0c0; --hue-rma:#1a8cff;
+
+      --dk-rim-top:rgba(0,229,255,.42); --dk-rim-bot:rgba(255,16,240,.3); --dk-bg:rgba(20,16,44,.9);
+      --dk-solid:#16122e; --dk-line:rgba(0,229,255,.14); --dk-pill:rgba(255,42,138,.28); --dk-pill-drag:rgba(255,42,138,.4);
+      --dk-ink:#fff2fb; --dk-ink2:#c9c2ee; --dk-shadow:8,0,30;
+      --rail-ind:linear-gradient(90deg, rgba(255,42,138,.95), rgba(123,63,242,.9));
+
+      background:#07061a;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(155,123,255,.55) transparent;
+    }
+
+    /* ---------- base ---------- */
+    :where([data-retro]) body{ background:transparent; font-size:13px; line-height:1.6; letter-spacing:0; }
+    :root[data-retro] ::selection{ background:rgba(255,42,138,.85); color:#16001f; }
+    :root[data-retro] ::-webkit-scrollbar{ width:8px; height:8px; }
+    :root[data-retro] ::-webkit-scrollbar-track{ background:transparent; }
+    :root[data-retro] ::-webkit-scrollbar-thumb{ background:linear-gradient(180deg, rgba(255,42,138,.7), rgba(106,63,214,.7)); border-radius:8px; border:2px solid transparent; background-clip:padding-box; }
+    :root[data-retro] body.authed .siderail{ scrollbar-width:none; }
+    :root[data-retro] body.authed .siderail::-webkit-scrollbar{ display:none; }
+    :where([data-retro]) :is(h1,h2,h3,h4){ font-family:var(--rx-display); font-weight:700; letter-spacing:.05em; }
+    :where([data-retro]) :is(h1,h2){ text-shadow:0 0 14px rgba(255,16,240,.28); }
+    :where([data-retro]) :is(b,strong){ font-weight:700; }
+    :where([data-retro]) a:hover{ text-shadow:0 0 8px rgba(255,107,214,.55); }
+    :where([data-retro]) :is(input, textarea){ caret-color:var(--rx-pink); }
+    :where([data-retro]) .field label{ font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#c7c0ee; }
+    :where([data-retro]) .card-title{
+      font-family:var(--rx-display); font-weight:700; font-size:10.5px; letter-spacing:.22em;
+      color:var(--rx-cyan); text-shadow:0 0 8px rgba(0,229,255,.45);
+    }
+    :where([data-retro]) .card-title::before{
+      content:""; display:inline-block; flex:0 0 auto; width:6px; height:6px; margin-right:10px; vertical-align:1px;
+      background:var(--rx-pink); transform:rotate(45deg); box-shadow:0 0 8px var(--rx-pink);
+    }
+    :where([data-retro]) :is(.stat-val, .chart-val, .ord-sum-v, .ts-val){ text-shadow:0 0 14px rgba(0,229,255,.3); }
+    :where([data-retro]) .version{ letter-spacing:0; }
+    :where([data-retro]) body.authed.rail-mini .version{ font-size:10px; padding:3px 5px; }
+    @media (max-width:1000px){ :where([data-retro]) body.authed .version{ font-size:10px; padding:3px 5px; } }
+
+    /* select arrows in cyan */
+    :root[data-retro] select, :root[data-retro] select.spec-select,
+    :root[data-retro] select.sel-sm, :root[data-retro] select.status-select{
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'><path d='M19 9L12 15L5 9' fill='none' stroke='%2333e1ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat:no-repeat; background-position:right 13px center;
+    }
+    :root[data-retro] select.sel-sm, :root[data-retro] select.status-select{ background-position:right 11px center; }
+
+    /* ---------- surfaces: HUD brackets on every card ---------- */
+    :where([data-retro]) .card{
+      background:
+        linear-gradient(var(--rx-cyan), var(--rx-cyan)) left top / 14px 1px no-repeat,
+        linear-gradient(var(--rx-cyan), var(--rx-cyan)) left top / 1px 14px no-repeat,
+        linear-gradient(var(--rx-pink), var(--rx-pink)) right bottom / 14px 1px no-repeat,
+        linear-gradient(var(--rx-pink), var(--rx-pink)) right bottom / 1px 14px no-repeat,
+        linear-gradient(180deg, rgba(123,63,242,.10), rgba(123,63,242,0) 140px),
+        var(--paper);
+      border-color:var(--rx-edge);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 18px 40px -22px rgba(0,0,0,.9);
+    }
+    :where([data-retro]) :is(.skel-card, .skel-kpi, .ord-sum-c, .mg-kpi, .spark, .ord-row, .table-wrap){ border-color:var(--rx-edge); }
+    :where([data-retro]) .ord-inv-lbl{ white-space:nowrap; }
+    /* the wider face needs the list's fixed columns to give a little */
+    @media (min-width:701px){
+      :where([data-retro]) .ord-row{ grid-template-columns:minmax(0,1fr) auto minmax(150px,220px) minmax(0,128px) 28px; gap:var(--s4); }
+    }
+    :where([data-retro]) .ord-row:hover{ border-color:rgba(0,229,255,.6); box-shadow:0 0 18px -4px rgba(0,229,255,.35); }
+    :where([data-retro]) .table-wrap{ background:var(--paper); }
+
+    /* ---------- tables ---------- */
+    :where([data-retro]) .hist-table th{
+      background:#191633; color:var(--rx-head); letter-spacing:.14em;
+      border-bottom:1px solid rgba(255,42,138,.55); box-shadow:inset 0 -1px 0 rgba(255,42,138,.2);
+    }
+    :where([data-retro]) .hist-table td{ border-bottom-color:rgba(53,47,102,.85); }
+    :where([data-retro]) .hist-table tbody tr:hover{ background:rgba(0,229,255,.055); }
+    :where([data-retro]) .hist-table tbody tr:hover > td:first-child{ box-shadow:inset 2px 0 0 var(--rx-cyan); }
+
+    /* ---------- buttons ---------- */
+    :where([data-retro]) :is(.primary, .ghost, .green, .soft, .danger, .mini, .btn-sm, .saved){ text-transform:uppercase; letter-spacing:.04em; }
+    :where([data-retro]) :is(.primary, .green){ font-weight:700; }
+    :where([data-retro]) .primary{
+      background:linear-gradient(180deg, #3aa2ff, #1a7cff); color:#07061a; border-color:rgba(255,255,255,.18);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 1px rgba(26,140,255,.35);
+    }
+    :where([data-retro]) .primary:not(:disabled):hover,
+    :where([data-retro]) .primary:not(:disabled):active{
+      background:linear-gradient(180deg, #5cb4ff, #2a8cff);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 0 18px rgba(26,140,255,.6);
+    }
+    :where([data-retro]) .ghost{ background:rgba(10,8,28,.35); border-color:#5a4fa8; color:var(--ink); }
+    :where([data-retro]) .ghost:not(:disabled):hover{
+      background:rgba(0,229,255,.08); border-color:var(--rx-cyan); color:var(--rx-cyan);
+      box-shadow:0 0 12px rgba(0,229,255,.3), inset 0 0 10px rgba(0,229,255,.08);
+    }
+    :where([data-retro]) .ghost:not(:disabled):active{ background:rgba(0,229,255,.15); }
+    :where([data-retro]) .danger{ color:var(--bad-ink); border-color:var(--bad-line); }
+    :where([data-retro]) .danger:not(:disabled):hover{ background:var(--bad-bg); border-color:var(--bad); color:#ffe0ea; box-shadow:0 0 14px rgba(255,60,125,.45); }
+    :where([data-retro]) .mini:not(:disabled):hover{ border-color:var(--rx-cyan); color:var(--rx-cyan); box-shadow:0 0 10px rgba(0,229,255,.28); }
+    :root[data-retro] .green{ background:linear-gradient(180deg, #5affbd, #21e996); color:#04140d; border-color:rgba(255,255,255,.2); box-shadow:inset 0 1px 0 rgba(255,255,255,.45); }
+    :root[data-retro] .green:not(:disabled):hover{ background:linear-gradient(180deg, #86ffd0, #3bf5a8); box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 18px rgba(43,255,168,.5); }
+    :where([data-retro]) .soft{ background:rgba(26,140,255,.12); border-color:rgba(26,140,255,.5); color:#8fd0ff; }
+    :where([data-retro]) .soft:not(:disabled):hover{ border-color:var(--rx-cyan); color:var(--rx-cyan); box-shadow:0 0 12px rgba(0,229,255,.3); }
+    :where([data-retro]) .saved{ box-shadow:0 0 12px rgba(43,255,168,.3); }
+
+    /* ---------- pills, tabs, chips ---------- */
+    :where([data-retro]) .seg{ background:rgba(10,8,28,.5); border-color:#463d8c; }
+    :where([data-retro]) .seg-btn.on{ background:rgba(255,42,138,.18); color:#ff9ad8; box-shadow:inset 0 0 0 1px rgba(255,42,138,.65), 0 0 12px rgba(255,42,138,.35); }
+    :where([data-retro]) .chart-tab.on{ box-shadow:0 0 12px rgba(255,42,138,.5); }
+    :where([data-retro]) .mg-pill.on{ box-shadow:0 0 12px rgba(26,140,255,.35); }
+    :where([data-retro]) :is(.badge, .ord-chip, .sev, .mg-badge)::before{ box-shadow:0 0 6px var(--dot, currentColor); }
+    :where([data-retro]) .chart-tip{ box-shadow:0 0 14px rgba(255,42,138,.55); }
+    :root[data-retro] .nav-badge, :root[data-retro] .tab-badge{ color:#1a1000; box-shadow:0 0 10px rgba(255,210,63,.6); }
+    :root[data-retro] [data-ctone="0"]{ --ct:#00e5ff; } :root[data-retro] [data-ctone="1"]{ --ct:#2bffa8; }
+    :root[data-retro] [data-ctone="2"]{ --ct:#ffd23f; } :root[data-retro] [data-ctone="3"]{ --ct:#9b7bff; }
+    :root[data-retro] [data-ctone="4"]{ --ct:#1a8cff; } :root[data-retro] [data-ctone="5"]{ --ct:#ff2a8a; }
+    :where([data-retro]) .ord-prog i.built{ background:var(--rx-gold); }
+
+    /* ---------- charts glow ---------- */
+    :where([data-retro]) :is(.chart-plot svg, .spark svg, .bars, .dn){ filter:drop-shadow(0 0 5px rgba(26,140,255,.45)); }
+    :where([data-retro]) :is(.ord-prog, .pipe-bar, .rw-track){ box-shadow:inset 0 0 0 1px rgba(255,255,255,.04); }
+
+    /* ---------- home tiles ---------- */
+    :where([data-retro]) .tile{
+      background:linear-gradient(180deg, color-mix(in srgb, var(--tile-hue, var(--rx-violet)) 8%, var(--paper)), var(--paper) 72%);
+      border-color:color-mix(in srgb, var(--tile-hue, var(--rx-violet)) 32%, var(--line)); box-shadow:none;
+    }
+    :where([data-retro]) .tile:hover{
+      border-color:var(--tile-hue, var(--rx-cyan));
+      box-shadow:0 0 0 1px color-mix(in srgb, var(--tile-hue, var(--rx-cyan)) 40%, transparent),
+                 0 0 26px -4px color-mix(in srgb, var(--tile-hue, var(--rx-cyan)) 50%, transparent);
+    }
+    :where([data-retro]) .tile-title{ font-family:var(--rx-display); font-size:13.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
+    :where([data-retro]) .tile-icon{ box-shadow:0 0 14px -3px color-mix(in srgb, var(--tile-hue, var(--muted)) 65%, transparent); }
+    :where([data-retro]) .tile-icon svg{ filter:drop-shadow(0 0 4px currentColor); }
+    :root[data-retro] .stat{
+      background:linear-gradient(135deg, color-mix(in srgb, var(--stat-hue, var(--rx-cyan)) 16%, var(--paper)), var(--paper) 68%);
+      border-color:color-mix(in srgb, var(--stat-hue, var(--rx-cyan)) 45%, var(--paper));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 0 22px -12px var(--stat-hue, var(--rx-cyan));
+    }
+    :root[data-retro] .stat .stat-val{
+      color:color-mix(in srgb, var(--stat-hue, var(--rx-cyan)) 30%, #fff);
+      text-shadow:0 0 16px color-mix(in srgb, var(--stat-hue, var(--rx-cyan)) 60%, transparent);
+    }
+    @media (hover: hover) and (pointer: fine){
+      :root[data-retro] a.stat:hover{ border-color:var(--stat-hue, var(--rx-cyan)); box-shadow:0 0 26px -6px var(--stat-hue, var(--rx-cyan)); }
+    }
+
+    /* ---------- shell ---------- */
+    :where([data-retro]) .topnav{ background:rgba(14,11,34,.74); border-bottom-color:transparent; }
+    :where([data-retro]) .topnav::after{
+      height:2px; bottom:-2px;
+      background:linear-gradient(90deg, var(--rx-pink), var(--rx-violet) 45%, var(--rx-cyan));
+      box-shadow:0 0 12px rgba(255,16,240,.55), 0 0 26px rgba(0,229,255,.22);
+    }
+    :where([data-retro]) .top-title{
+      font-family:var(--rx-display); font-weight:700; font-size:15px; letter-spacing:.16em; text-transform:uppercase;
+      color:#ff6bd6; text-shadow:0 0 8px rgba(255,16,240,.65), 0 0 22px rgba(255,16,240,.3);
+    }
+    :where([data-retro]) .nav-wordmark{ font-family:var(--rx-display); letter-spacing:.14em; color:#ff6bd6; text-shadow:0 0 10px rgba(255,16,240,.6); }
+    :where([data-retro]) body.authed .siderail{
+      background:linear-gradient(180deg, rgba(20,15,46,.95), rgba(11,8,28,.97));
+      border-right:1px solid rgba(255,16,240,.38);
+      box-shadow:1px 0 0 rgba(0,229,255,.08), 10px 0 32px -14px rgba(255,16,240,.4);
+    }
+    :where([data-retro]) .siderail .nav-item{ letter-spacing:.02em; }
+    :where([data-retro]) .siderail .nav-item:hover{ color:var(--rx-cyan); background:rgba(0,229,255,.06); }
+    :where([data-retro]) .siderail .nav-item > svg{ transition:filter var(--t); }
+    :where([data-retro]) .siderail .nav-item:hover > svg{ filter:drop-shadow(0 0 4px rgba(0,229,255,.8)); }
+    :root[data-retro] .nav-ind{
+      background:linear-gradient(90deg, rgba(255,42,138,.92), rgba(123,63,242,.85));
+      box-shadow:0 0 16px rgba(255,16,240,.45), inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+    :root[data-retro] body.authed .siderail .nav-item.active{ color:#fff4fc; text-shadow:0 0 8px rgba(255,255,255,.45); }
+    :root[data-retro] body.authed .siderail .nav-item.active > svg{ filter:drop-shadow(0 0 4px rgba(255,255,255,.7)); }
+    :where([data-retro]) .rail-foot{ border-top-color:rgba(255,16,240,.3); }
+    :root[data-retro] .rail-retro .rt-ico{ color:#ff4fd8; filter:drop-shadow(0 0 4px rgba(255,42,138,.8)); }
+    :root[data-retro] .rail-retro .rt-lbl{ color:var(--ink); }
+    :root[data-retro] .rt-knob{ background:#fff2fb; box-shadow:0 0 8px rgba(255,42,138,.7); }
+    :root[data-retro] #themeSwitch .rt-track{ background:#4f4596; box-shadow:none; }
+    :root[data-retro] .retro-btn{
+      color:#ff6bd6; border-color:rgba(255,42,138,.7); background:rgba(255,42,138,.12);
+      box-shadow:0 0 12px rgba(255,42,138,.45), inset 0 0 8px rgba(255,42,138,.25);
+    }
+    :root[data-retro] .nav-logo.is-dark, :root[data-retro] .nav-logo.is-mark, :root[data-retro] .rail-logo.is-dark{
+      filter:drop-shadow(0 0 5px rgba(0,229,255,.55)) drop-shadow(0 0 14px rgba(255,16,240,.3));
+    }
+    :root[data-retro] .nav-brand:hover{ opacity:1; }
+    :root[data-retro] .nav-brand:hover .nav-logo{ animation:rxJolt 420ms steps(1, end) 1; }
+    :where([data-retro]) .gs-field{ background:rgba(10,8,28,.6); border-color:#463d8c; }
+    :where([data-retro]) .gs-field:focus-within{ border-color:var(--rx-cyan); box-shadow:0 0 0 1px var(--rx-cyan), 0 0 16px rgba(0,229,255,.35); }
+    :where([data-retro]) .gs-panel{ border-color:rgba(0,229,255,.35); }
+    :where([data-retro]) .auth-chip{ border-color:var(--rx-edge); }
+    :root[data-retro] .tab-ind{ box-shadow:0 0 14px rgba(255,42,138,.45), inset 0 0 0 1px rgba(255,42,138,.55); }
+
+    /* ---------- overlays ---------- */
+    :where([data-retro]) .mg-modal{
+      background:linear-gradient(90deg, var(--rx-pink), var(--rx-violet), var(--rx-cyan)) top / 100% 2px no-repeat, var(--paper);
+      border-color:rgba(0,229,255,.45);
+      box-shadow:0 0 0 1px rgba(255,16,240,.18), 0 0 40px rgba(255,16,240,.18), 0 30px 80px -10px rgba(0,0,0,.85);
+    }
+    :where([data-retro]) .mg-modal-head h2{ color:#ff8fd9; letter-spacing:.06em; text-shadow:0 0 10px rgba(255,16,240,.45); }
+    :where([data-retro]) .mg-modal-bg{ -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+    :where([data-retro]) .mg-x:hover{ border-color:var(--rx-pink); color:var(--rx-pink); box-shadow:0 0 10px rgba(255,42,138,.45); }
+    :where([data-retro]) .toast{
+      background:rgba(22,18,48,.97); border-color:rgba(0,229,255,.3);
+      box-shadow:0 0 22px rgba(255,16,240,.18), 0 18px 40px -12px rgba(0,0,0,.85);
+    }
+    :where([data-retro]) .toast .t-ico{ filter:drop-shadow(0 0 4px currentColor); }
+    :where([data-retro]) .empty{
+      border-color:rgba(255,42,138,.45);
+      background:repeating-linear-gradient(-45deg, rgba(255,42,138,.04) 0 10px, transparent 10px 20px), var(--paper);
+    }
+    :where([data-retro]) .empty-ico{ color:var(--rx-cyan); filter:drop-shadow(0 0 6px rgba(0,229,255,.6)); }
+    :where([data-retro]) .skel{ background:#2a2552; }
+    :where([data-retro]) .skel::after{ background:linear-gradient(90deg, transparent, rgba(0,229,255,.16), rgba(255,42,138,.16), transparent); }
+    :where([data-retro]) .login-card{
+      background:linear-gradient(90deg, var(--rx-pink), var(--rx-violet), var(--rx-cyan)) top / 100% 2px no-repeat, var(--paper);
+      border-color:rgba(0,229,255,.45);
+      box-shadow:0 0 0 1px rgba(255,16,240,.2), 0 0 50px rgba(255,16,240,.2), 0 30px 70px -20px rgba(0,0,0,.9);
+    }
+    :where([data-retro]) .login-title{ font-family:var(--rx-display); letter-spacing:.12em; text-transform:uppercase; color:#ff8fd9; text-shadow:0 0 10px rgba(255,16,240,.6); }
+    :root[data-retro] #demoBar{
+      color:#1a1000; background:repeating-linear-gradient(-45deg, #ffd23f 0 14px, #ffc21a 14px 28px);
+      box-shadow:0 -2px 18px rgba(255,210,63,.45);
+    }
+    :root[data-retro] #demoBar .demo-dot{ background:#1a1000; }
+    :root[data-retro] #demoBar button{ color:#1a1000; background:rgba(26,16,0,.1); border-color:rgba(26,16,0,.55); }
+    :root[data-retro] #demoBar button:hover{ background:rgba(26,16,0,.2); }
+
+    /* ---------- the horizon behind everything ---------- */
+    :root[data-retro] .rx-stage{
+      display:block; position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none;
+      background:
+        radial-gradient(90% 55% at 50% 72%, rgba(255,16,240,.20), rgba(255,16,240,0) 70%),
+        linear-gradient(180deg, #08061a 0%, #110d2c 40%, #24104a 62%, #3d1157 71.6%, #0c0720 72%, #07051a 100%);
+    }
+    .rx-stars{
+      position:absolute; left:0; right:0; top:0; height:72%; opacity:.6;
+      background-image:
+        radial-gradient(1.2px 1.2px at 6% 12%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 14% 34%, #bfe9ff 50%, transparent 51%),
+        radial-gradient(1.4px 1.4px at 23% 8%, #ffd6f2 50%, transparent 51%),
+        radial-gradient(1px 1px at 31% 47%, #fff 50%, transparent 51%),
+        radial-gradient(1.2px 1.2px at 39% 22%, #bfe9ff 50%, transparent 51%),
+        radial-gradient(1px 1px at 47% 6%, #fff 50%, transparent 51%),
+        radial-gradient(1.4px 1.4px at 55% 38%, #ffd6f2 50%, transparent 51%),
+        radial-gradient(1px 1px at 63% 15%, #fff 50%, transparent 51%),
+        radial-gradient(1.2px 1.2px at 71% 29%, #bfe9ff 50%, transparent 51%),
+        radial-gradient(1px 1px at 79% 9%, #fff 50%, transparent 51%),
+        radial-gradient(1.4px 1.4px at 86% 42%, #ffd6f2 50%, transparent 51%),
+        radial-gradient(1px 1px at 93% 19%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 18% 58%, #bfe9ff 50%, transparent 51%),
+        radial-gradient(1.2px 1.2px at 68% 55%, #fff 50%, transparent 51%);
+      animation:rxTwinkle 5s ease-in-out infinite alternate;
+    }
+    .rx-sun{
+      position:absolute; right:6vw; bottom:28%; width:clamp(200px, 36vmin, 440px); aspect-ratio:1;
+      transform:translateY(40%);
+    }
+    .rx-sun::before{
+      content:""; position:absolute; inset:-45%; border-radius:50%;
+      background:radial-gradient(closest-side, rgba(255,60,150,.30), rgba(255,60,150,.10) 55%, transparent);
+    }
+    .rx-sun::after{
+      content:""; position:absolute; inset:0; border-radius:50%; opacity:.62;
+      background:linear-gradient(180deg, #ffe66b 0%, #ffb340 28%, #ff5e7a 52%, #ff1fa8 62%, #b0129e 100%);
+      -webkit-mask-image:linear-gradient(180deg, #000 0 34%, transparent 34% 36%, #000 36% 42%, transparent 42% 45%, #000 45% 49.5%, transparent 49.5% 53%, #000 53% 56%, transparent 56% 60.5%, #000 60.5%);
+              mask-image:linear-gradient(180deg, #000 0 34%, transparent 34% 36%, #000 36% 42%, transparent 42% 45%, #000 45% 49.5%, transparent 49.5% 53%, #000 53% 56%, transparent 56% 60.5%, #000 60.5%);
+    }
+    .rx-floor{
+      position:absolute; left:0; right:0; bottom:0; height:28%; overflow:hidden;
+      perspective:240px; perspective-origin:50% 0;
+      background:linear-gradient(180deg, #1c0b3a 0%, #0a0620 100%);
+    }
+    .rx-floor::before{
+      content:""; position:absolute; left:0; right:0; top:0; height:2px; z-index:2;
+      background:linear-gradient(90deg, transparent, #ff2a8a 18%, #ffb3e6 50%, #ff2a8a 82%, transparent);
+      box-shadow:0 0 18px 2px rgba(255,42,138,.6);
+    }
+    .rx-floor::after{
+      content:""; position:absolute; inset:0; z-index:1;
+      background:linear-gradient(180deg, rgba(14,7,36,.92), rgba(14,7,36,0) 50%, rgba(7,5,26,0) 80%, rgba(7,5,26,.6));
+    }
+    .rx-grid{
+      position:absolute; left:-60%; right:-60%; top:0; height:240%;
+      transform-origin:50% 0; transform:rotateX(74deg);
+      background-image:
+        linear-gradient(90deg, rgba(255,42,138,.62) 0 1.5px, transparent 1.5px),
+        linear-gradient(180deg, rgba(255,42,138,.62) 0 1.5px, transparent 1.5px);
+      background-size:64px 64px;
+      animation:rxFloor 4s linear infinite;
+    }
+    @keyframes rxFloor{ to{ transform:rotateX(74deg) translateY(64px); } }
+    @keyframes rxTwinkle{ to{ opacity:.35; } }
+
+    /* ---------- the tube in front of everything ---------- */
+    :root[data-retro] .rx-crt{
+      display:block; position:fixed; inset:0; z-index:2147483000; pointer-events:none; overflow:hidden;
+      background:
+        repeating-linear-gradient(180deg, rgba(4,0,16,.2) 0 1px, transparent 1px 3px),
+        radial-gradient(130% 100% at 50% 50%, transparent 62%, rgba(4,0,16,.5) 100%);
+    }
+    .rx-crt::before{
+      content:""; position:absolute; left:0; right:0; top:0; height:22vh;
+      background:linear-gradient(180deg, rgba(0,229,255,0), rgba(0,229,255,.045) 50%, rgba(0,229,255,0));
+      transform:translateY(-30vh); animation:rxRoll 10s linear infinite;
+    }
+    .rx-crt::after{
+      content:""; position:absolute; inset:0; opacity:0; transform-origin:50% 50%;
+      background:linear-gradient(180deg, rgba(230,252,255,.94), rgba(255,200,245,.94));
+    }
+    :root[data-retro].rx-boot .rx-crt::after{ animation:rxPowerOn 720ms cubic-bezier(.2,.7,.2,1) 1 both; }
+    :root[data-retro].rx-shutdown .rx-crt::after{ animation:rxPowerOff 430ms cubic-bezier(.5,0,.8,.4) 1 both; }
+    @keyframes rxRoll{ to{ transform:translateY(130vh); } }
+    @keyframes rxPowerOn{
+      0%{ opacity:1; transform:scale(0, .003); }
+      25%{ opacity:1; transform:scale(1, .003); }
+      55%{ opacity:.55; transform:scale(1, 1); }
+      100%{ opacity:0; transform:scale(1, 1); }
+    }
+    @keyframes rxPowerOff{
+      0%{ opacity:0; transform:scale(1, 1); }
+      35%{ opacity:.7; transform:scale(1, 1); }
+      75%{ opacity:1; transform:scale(1, .003); }
+      100%{ opacity:1; transform:scale(0, .003); }
+    }
+
+    /* ---------- glitch ---------- */
+    :root[data-retro] .top-title.rx-glitch{ animation:rxGlitch 640ms steps(1, end) 1; }
+    :root[data-retro] .tile:hover .tile-title{ animation:rxJolt 380ms steps(1, end) 1; }
+    @keyframes rxGlitch{
+      0%{ transform:none; }
+      10%{ transform:translateX(-3px) skewX(-12deg); text-shadow:3px 0 0 rgba(0,229,255,.9), -3px 0 0 rgba(255,16,240,.9); }
+      22%{ transform:translateX(3px) skewX(8deg); text-shadow:-4px 0 0 rgba(0,229,255,.9), 4px 0 0 rgba(255,16,240,.9); }
+      36%{ transform:translateX(-1px); text-shadow:2px 0 0 rgba(0,229,255,.8), -2px 0 0 rgba(255,16,240,.8); }
+      50%{ transform:translateX(2px) skewX(-4deg); text-shadow:-2px 0 0 rgba(0,229,255,.7), 2px 0 0 rgba(255,16,240,.7); }
+      66%{ transform:none; text-shadow:1px 0 0 rgba(0,229,255,.6), -1px 0 0 rgba(255,16,240,.6); }
+      100%{ transform:none; }
+    }
+    @keyframes rxJolt{
+      0%{ transform:none; }
+      20%{ transform:translateX(-2px) skewX(-8deg); }
+      40%{ transform:translateX(2px); }
+      60%{ transform:translateX(-1px) skewX(4deg); }
+      80%{ transform:none; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .rx-grid, .rx-stars, .rx-crt::before{ animation:none !important; }
+      :root[data-retro] .top-title.rx-glitch, :root[data-retro] .tile:hover .tile-title,
+      :root[data-retro] .nav-brand:hover .nav-logo{ animation:none; }
+    }
+  }
+</style>
 </head>
 <body>
 <script>/* last known state, so the shell paints instead of a blank frame */
 (function(){try{if(localStorage.getItem('ntWasAuthed')==='1')document.body.classList.add('authed');}catch(e){}})();</script>
+<div class="rx-stage" aria-hidden="true"><i class="rx-stars"></i><i class="rx-sun"></i><div class="rx-floor"><i class="rx-grid"></i></div></div>
+<div class="rx-crt" aria-hidden="true"></div>
 
 <aside class="siderail" id="siderail">
   <div class="rail-head">
@@ -4546,6 +4967,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <span class="rt-ico"><svg viewBox="0 0 24 24" class="i-sun"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4.5"/><path stroke-linecap="round" d="M12 2.5V4M12 20V21.5M21.5 12H20M4 12H2.5M18.7 5.3l-1.1 1.1M6.4 17.6l-1.1 1.1M18.7 18.7l-1.1-1.1M6.4 6.4L5.3 5.3"/></g></svg><svg viewBox="0 0 24 24" class="i-moon"><path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" d="M20.958 15.325c.204-.486-.379-.9-.88-.73a7 7 0 0 1-8.996-8.807c.18-.5-.22-1.096-.713-.895A8.5 8.5 0 1 0 20.958 15.325Z"/></svg></span>
         <span class="rt-lbl">Dark mode</span>
         <span class="rt-track"><span class="rt-knob"></span></span>
+      </button>
+      <button type="button" class="rail-theme rail-retro" id="retroSwitch" role="switch" aria-checked="false" aria-label="Retro theme" title="Retro theme">
+        <span class="rt-ico"><svg viewBox="0 0 24 24" class="i-retro"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.5 13a6.5 6.5 0 0 1 13 0"/><path d="M2.5 13h19"/><path d="M6 16.5h12"/><path d="M9 20h6"/></g></svg></span>
+        <span class="rt-lbl">Retro</span>
+        <span class="rt-track rr-track"><span class="rt-knob rr-knob"></span></span>
       </button>
       <span class="version" id="version">v3.10.0</span>
     </div>
@@ -4581,6 +5007,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <svg viewBox="0 0 24 24" class="i-moon"><path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" d="M12 22C17.5228 22 22 17.5228 22 12C22 11.5373 21.3065 11.4608 21.0672 11.8568C19.9289 13.7406 17.8615 15 15.5 15C11.9101 15 9 12.0899 9 8.5C9 6.13845 10.2594 4.07105 12.1432 2.93276C12.5392 2.69347 12.4627 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/></svg>
         <svg viewBox="0 0 24 24" class="i-sun"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 2V4"/><path stroke-linecap="round" d="M12 20V22"/><path stroke-linecap="round" d="M4 12L2 12"/><path stroke-linecap="round" d="M22 12L20 12"/><path stroke-linecap="round" d="M19.7778 4.22266L17.5558 6.25424"/><path stroke-linecap="round" d="M4.22217 4.22266L6.44418 6.25424"/><path stroke-linecap="round" d="M6.44434 17.5557L4.22211 19.7779"/><path stroke-linecap="round" d="M19.7778 19.7773L17.5558 17.5551"/></g></svg>
       </button>
+      <button type="button" class="theme-btn retro-btn" id="retroBtn" title="Retro theme" aria-label="Retro theme" aria-pressed="false"><svg viewBox="0 0 24 24" class="i-retro"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.5 13a6.5 6.5 0 0 1 13 0"/><path d="M2.5 13h19"/><path d="M6 16.5h12"/><path d="M9 20h6"/></g></svg></button>
     </div>
   </div>
 </nav>
@@ -5769,6 +6196,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       case 'ups_collect':   return ok([{ updated: 0, shipped: 0, waiting: 0 }]);
       case 'ups_recheck_all': return ok(0);
       case 'rma_secret_status': return ok([{ key: 'resend_api_key', is_set: true, configured: true, updated_at: new Date().toISOString() }]);
+      case 'rma_set_secret': {
+        const map = { shipstation_v2_key: 'v2_key', ss_v2_mode: 'mode', ss_v2_warehouse: 'warehouse', ss_v2_package: 'package', ss_v2_dims: 'dims', ss_v2_weight_lb: 'weight', ss_v2_store: 'store' };
+        if (map[args.k]){ db._ssv2 = db._ssv2 || {}; db._ssv2[map[args.k]] = args.k === 'shipstation_v2_key' ? true : (args.v || null); }
+        return ok(null);
+      }
       case 'ss_send_batch': {
         const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
         if (b){ b.ss_request_id = 1; b.ss_sent_at = new Date().toISOString(); b.ss_order_id = b.ss_order_id || String(100000000 + Math.floor(Math.random() * 1e6)); }
@@ -5787,8 +6219,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       }
       case 'ss_batch_result': {
         const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
-        return ok([{ state: 'ok', order_id: b ? b.ss_order_id : '1', message: null }]);
+        const v2 = (db._ssv2 || {}).mode === 'v2';
+        const nb = b ? (db.pc_log || []).filter(function(u){ return String(u.batch_id) === String(b.id); }).length : 0;
+        return ok([{ state: 'ok', order_id: b ? b.ss_order_id : '1', message: v2 ? nb + (nb === 1 ? ' box' : ' boxes') : null }]);
       }
+      case 'ss_v2_settings':
+        db._ssv2 = db._ssv2 || { v2_key: true, v1_key: true, mode: 'v1', warehouse: 'se-101', package: 'se-201', dims: '23x20x14', weight: '', store: null };
+        return ok(Object.assign({}, db._ssv2));
+      case 'ss_v2_connect':
+        return ok({ ok: true,
+          warehouses: [{ id: 'se-101', name: 'Main shop', is_default: true, city: 'Austin' }],
+          packages: [{ id: 'se-201', code: 'package', name: 'PC box 23x20x14', l: '23', w: '20', h: '14' }],
+          stores: [{ id: '501', name: 'Manual Orders', market: 'ShipStation' }] });
       case 'is_margin_admin': return ok(true);
       case 'find_user_by_email': return ok([]);
       case 'portal_remittance_notice': return ok();
@@ -8233,6 +8675,89 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var el = document.getElementById(id);
       if (el) el.addEventListener('click', flip);
     });
+  })();
+
+  /* ---- Retro: a retro-future skin over dark mode, remembered per browser ---- */
+  (function(){
+    var root = document.documentElement;
+    var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var title = document.getElementById('topTitle'), gt = 0;
+    function on(){ return root.hasAttribute('data-retro'); }
+    function chrome(dark, retro){
+      var c = retro ? '#120f26' : (dark ? '#0e1116' : '#ffffff');
+      document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){ m.setAttribute('content', c); });
+      root.style.colorScheme = dark ? 'dark' : 'light';
+      var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+      if (bar) bar.setAttribute('content', dark ? 'black-translucent' : 'default');
+    }
+    function sync(){
+      var r = on();
+      var sw = document.getElementById('retroSwitch'); if (sw) sw.setAttribute('aria-checked', r ? 'true' : 'false');
+      var bt = document.getElementById('retroBtn');
+      if (bt){ bt.setAttribute('aria-pressed', r ? 'true' : 'false'); bt.title = r ? 'Turn Retro off' : 'Retro theme'; }
+      var ds = document.getElementById('themeSwitch');
+      if (ds) ds.setAttribute('aria-checked', root.getAttribute('data-theme') === 'dark' ? 'true' : 'false');
+      ['themeSwitch', 'themeBtn'].forEach(function(id){
+        var el = document.getElementById(id); if (!el) return;
+        if (r){ el.setAttribute('aria-disabled', 'true'); el.title = 'Retro always runs dark. Turn Retro off to change this.'; }
+        else { el.removeAttribute('aria-disabled'); el.title = id === 'themeBtn' ? 'Toggle dark mode' : 'Dark mode'; }
+      });
+    }
+    function glitch(){
+      if (!on() || reduce || !title) return;
+      title.classList.remove('rx-glitch'); void title.offsetWidth; title.classList.add('rx-glitch');
+      clearTimeout(gt); gt = setTimeout(function(){ title.classList.remove('rx-glitch'); }, 700);
+    }
+    function set(want){
+      try { localStorage.setItem('ntRetro', want ? '1' : '0'); } catch(e){}
+      if (want){
+        root.classList.remove('rx-shutdown');
+        root.setAttribute('data-retro', 'on');
+        root.setAttribute('data-theme', 'dark');
+        chrome(true, true);
+        if (!reduce){
+          root.classList.remove('rx-boot'); void root.offsetWidth; root.classList.add('rx-boot');
+          setTimeout(function(){ root.classList.remove('rx-boot'); }, 800);
+          setTimeout(glitch, 380);
+        }
+        sync();
+        return;
+      }
+      var finish = function(){
+        root.classList.remove('rx-shutdown');
+        if (localStorage.getItem('ntRetro') === '1') return;
+        root.removeAttribute('data-retro');
+        var t = 'light'; try { t = localStorage.getItem('ntTheme') === 'dark' ? 'dark' : 'light'; } catch(e){}
+        root.setAttribute('data-theme', t);
+        chrome(t === 'dark', false);
+        sync();
+      };
+      if (reduce) finish(); else { root.classList.add('rx-shutdown'); setTimeout(finish, 430); }
+    }
+    ['retroSwitch', 'retroBtn'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', function(){ set(!on() || root.classList.contains('rx-shutdown')); });
+    });
+    /* dark mode is part of Retro: while it runs, the dark control explains instead of flipping */
+    document.addEventListener('click', function(e){
+      if (!on()) return;
+      var t = e.target && e.target.closest ? e.target.closest('#themeSwitch, #themeBtn') : null;
+      if (!t) return;
+      e.stopImmediatePropagation(); e.preventDefault();
+      if (typeof toast === 'function') toast('Retro always runs in dark mode. Turn Retro off to switch to light.', 'info');
+    }, true);
+    /* an account preference arriving after sign-in must not pull Retro into light mode */
+    new MutationObserver(function(){
+      if (on() && root.getAttribute('data-theme') !== 'dark') root.setAttribute('data-theme', 'dark');
+      sync();
+    }).observe(root, { attributes:true, attributeFilter:['data-theme', 'data-retro'] });
+    /* the page title glitches as you arrive somewhere new, and now and then on its own */
+    if (title) new MutationObserver(glitch).observe(title, { childList:true, characterData:true, subtree:true });
+    (function idle(){
+      setTimeout(function(){ if (document.visibilityState === 'visible') glitch(); idle(); }, 9000 + Math.random() * 9000);
+    })();
+    if (on()) chrome(true, true);
+    sync();
   })();
 
   /* ---- v30: toasts (replaces alert()) ---- */
@@ -12938,7 +13463,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         if (row.state === 'ok'){
           b.ss_order_id = row.order_id; b.ss_sent_at = new Date().toISOString();
           ordSsBtn(b.id, 'In ShipStation \u2713', false);
-          toast(label + ' is in ShipStation under Awaiting Shipment', 'ok');
+          toast(label + ' is in ShipStation under Awaiting Shipment' + (row.message ? ', ' + row.message : ''), 'ok');
           return;
         }
         fail(row.message || 'unknown error'); return;
@@ -14391,9 +14916,114 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<div class="adm-inline"><input id="admSsSecret" type="password" autocomplete="off">' +
           '<button class="ghost btn-sm" id="admSsSave" type="button">Save</button></div></div>' +
         '<p class="card-note">Sending the same batch twice updates its order in ShipStation instead of adding a second one. Orders go to ShipStation\u2019s Manual Orders store.</p>' +
+      '</section>' +
+      '<section class="card adm-sec"><h2 class="card-title">One box per unit (V2)</h2>' +
+        '<p class="muted-sm" style="margin-top:0;">The V1 key above can only send one package per order. With the V2 key, each unit in a batch arrives as its own box, with its serial on that box\u2019s label. In ShipStation: Settings \u2192 Account \u2192 API Settings \u2192 V2, copy the production key.</p>' +
+        '<p class="muted-sm" id="admSs2State">Checking\u2026</p>' +
+        '<div class="field" style="margin-top:4px;"><label for="admSs2Key">V2 API key</label>' +
+          '<div class="adm-inline"><input id="admSs2Key" type="password" autocomplete="off" placeholder="Paste to add or replace">' +
+          '<button class="ghost btn-sm" id="admSs2Connect" type="button">Connect</button></div></div>' +
+        '<div id="admSs2Opts"></div>' +
       '</section>';
     admSsState();
+    admSs2Load();
   }
+  let admSs2 = { s: null, lists: null };
+  async function admSs2Load(){
+    const el = document.getElementById('admSs2State'); if (!el) return;
+    const r = await SB.rpc('ss_v2_settings');
+    if (r.error){ el.innerHTML = 'Run <b>shipstation-v2.sql</b> in Supabase first.'; return; }
+    admSs2.s = r.data || {};
+    if (admSs2.s.v2_key && !admSs2.lists) await admSs2Fetch(true);
+    admSs2Draw();
+  }
+  async function admSs2Fetch(quiet){
+    const r = await SB.rpc('ss_v2_connect');
+    if (r.error){ if (!quiet) toast(r.error.message, 'bad', 8000); return false; }
+    const d = r.data || {};
+    if (!d.ok){ if (!quiet) toast(d.message || 'ShipStation did not answer', 'bad', 8000); admSs2.err = d.message; return false; }
+    admSs2.err = null;
+    admSs2.lists = d;
+    return true;
+  }
+  function admSs2Draw(){
+    const el = document.getElementById('admSs2State'), box = document.getElementById('admSs2Opts');
+    if (!el || !box) return;
+    const s = admSs2.s || {}, L = admSs2.lists;
+    const ready = s.v2_key && s.warehouse && Number(s.weight) > 0;
+    el.innerHTML = !s.v2_key ? '<span class="ord-chip neutral">Not set up</span> paste the V2 key, then Connect.'
+      : admSs2.err ? '<span class="ord-chip bad">Key refused</span> ' + esc(admSs2.err)
+      : s.mode === 'v2' && ready ? '<span class="ord-chip ok">On</span> batches go to ShipStation one box per unit.'
+      : '<span class="ord-chip neutral">Off</span> key saved. Batches still go as one package until you turn this on.';
+    if (!s.v2_key || !L){ box.innerHTML = ''; return; }
+    const opt = function(v, t, sel){ return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(t) + '</option>'; };
+    const wh = s.warehouse || ((L.warehouses || []).find(function(w){ return w.is_default; }) || (L.warehouses || [])[0] || {}).id || '';
+    const dims = String(s.dims || '23x20x14').split(/[^0-9.]+/).filter(Boolean);
+    box.innerHTML =
+      '<div class="field"><label for="admSs2Wh">Ship from</label><select id="admSs2Wh" class="sel-sm">' +
+        (L.warehouses || []).map(function(w){ return opt(w.id, w.name + (w.city ? ' \u00b7 ' + w.city : ''), w.id === wh); }).join('') +
+      '</select></div>' +
+      '<div class="field"><label for="admSs2Pkg">Box</label><select id="admSs2Pkg" class="sel-sm">' +
+        opt('', 'Custom size below', !s.package) +
+        (L.packages || []).map(function(p){ return opt(p.id, p.name + (p.l ? ' \u00b7 ' + p.l + '\u00d7' + p.w + '\u00d7' + p.h + ' in' : ''), p.id === s.package); }).join('') +
+      '</select></div>' +
+      '<div class="field"><label>Box size, inches</label><div class="adm-inline">' +
+        ['L', 'W', 'H'].map(function(k, i){ return '<input id="admSs2D' + k + '" type="number" min="1" step="0.5" inputmode="decimal" aria-label="' + k + '" value="' + esc(dims[i] || ['23', '20', '14'][i]) + '" style="max-width:88px;">'; }).join('') +
+      '</div></div>' +
+      '<div class="field"><label for="admSs2Wt">Packed weight per box, lb</label>' +
+        '<input id="admSs2Wt" type="number" min="0.1" step="0.1" inputmode="decimal" value="' + esc(s.weight || '') + '" style="max-width:140px;"></div>' +
+      ((L.stores || []).length > 1 ? '<div class="field"><label for="admSs2Store">Store</label><select id="admSs2Store" class="sel-sm">' +
+        opt('', 'ShipStation default', !s.store) +
+        L.stores.map(function(st){ return opt(st.id, st.name + (st.market ? ' \u00b7 ' + st.market : ''), st.id === s.store); }).join('') +
+      '</select></div>' : '') +
+      '<div class="field"><label for="admSs2Mode">Send batches as</label><div class="adm-inline"><select id="admSs2Mode" class="sel-sm">' +
+        opt('v1', 'One package per order (V1)', s.mode !== 'v2') + opt('v2', 'One box per unit (V2)', s.mode === 'v2') +
+      '</select><button class="ghost btn-sm" id="admSs2Save" type="button">Save</button></div></div>' +
+      '<p class="card-note">Batches already sent over V1 keep updating that same order, so switching never makes duplicates. Get tracking still uses the V1 key, so keep it saved.</p>';
+  }
+  document.addEventListener('change', function(e){
+    if (e.target.id !== 'admSs2Pkg' || !admSs2.lists) return;
+    const p = (admSs2.lists.packages || []).find(function(x){ return x.id === e.target.value; });
+    if (!p || !p.l) return;
+    [['L', p.l], ['W', p.w], ['H', p.h]].forEach(function(a){ const i = document.getElementById('admSs2D' + a[0]); if (i) i.value = a[1]; });
+  });
+  document.addEventListener('click', async function(e){
+    const c = e.target.closest('#admSs2Connect'), sv = e.target.closest('#admSs2Save');
+    if (!c && !sv) return;
+    const btn = c || sv; btn.disabled = true;
+    try {
+      if (c){
+        const k = document.getElementById('admSs2Key').value.trim();
+        if (k){
+          const r = await SB.rpc('rma_set_secret', { k: 'shipstation_v2_key', v: k });
+          if (r.error){ toast(/Unknown secret/.test(r.error.message) ? 'Run shipstation-v2.sql in Supabase first.' : r.error.message, 'bad'); return; }
+          document.getElementById('admSs2Key').value = '';
+          admSs2.s = Object.assign({}, admSs2.s, { v2_key: true });
+        } else if (!(admSs2.s || {}).v2_key){ toast('Paste the V2 API key first.', 'warn'); return; }
+        const okc = await admSs2Fetch(false);
+        admSs2Draw();
+        if (okc) toast('ShipStation V2 connected', 'ok');
+        return;
+      }
+      const val = function(id){ const i = document.getElementById(id); return i ? i.value.trim() : ''; };
+      const mode = val('admSs2Mode'), wt = Number(val('admSs2Wt'));
+      const dims = [val('admSs2DL'), val('admSs2DW'), val('admSs2DH')];
+      if (mode === 'v2' && !(wt > 0)){ toast('Enter the packed weight per box.', 'warn'); return; }
+      if (mode === 'v2' && !val('admSs2Wh')){ toast('Pick a ship-from warehouse.', 'warn'); return; }
+      if (dims.some(function(d){ return !(Number(d) > 0); })){ toast('Enter all three box dimensions.', 'warn'); return; }
+      const pairs = [['ss_v2_warehouse', val('admSs2Wh')], ['ss_v2_package', val('admSs2Pkg')], ['ss_v2_dims', dims.join('x')],
+                     ['ss_v2_weight_lb', wt > 0 ? String(wt) : ''], ['ss_v2_mode', mode]];
+      if (document.getElementById('admSs2Store')) pairs.push(['ss_v2_store', val('admSs2Store')]);
+      for (const p of pairs){
+        const r = await SB.rpc('rma_set_secret', { k: p[0], v: p[1] });
+        if (r.error){ toast(/Unknown secret/.test(r.error.message) ? 'Run shipstation-v2.sql in Supabase first.' : r.error.message, 'bad'); return; }
+      }
+      const r2 = await SB.rpc('ss_v2_settings');
+      if (!r2.error) admSs2.s = r2.data || admSs2.s;
+      admSs2Draw();
+      toast(mode === 'v2' ? 'Saved. Batches now go one box per unit.' : 'Saved. Batches go as one package (V1).', 'ok');
+    } finally { if (btn.isConnected) btn.disabled = false; }
+  });
   async function admSsState(){
     const el = document.getElementById('admSsState'); if (!el) return;
     const [a, b] = await Promise.all([
