@@ -10602,7 +10602,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         const btn = card.querySelector('[data-bexpand]');
         if (btn) btn.textContent = 'Hide';
         card.classList.add('ord-focus');
-        if (card.scrollIntoView) card.scrollIntoView({ block:'center', behavior:'smooth' });
+        (function(){
+          const r = card.getBoundingClientRect();
+          const from = window.scrollY;
+          const to = Math.max(0, from + r.top - (window.innerHeight - Math.min(r.height, window.innerHeight)) / 2);
+          if (Math.abs(to - from) < 2) return;
+          if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches){ window.scrollTo(0, to); return; }
+          const DUR = 260, t0 = performance.now();
+          (function step(now){
+            const t = Math.min(1, (now - t0) / DUR);
+            window.scrollTo(0, from + (to - from) * (1 - Math.pow(1 - t, 3)));
+            if (t < 1) requestAnimationFrame(step);
+          })(t0);
+        })();
         setTimeout(function(){ card.classList.remove('ord-focus'); }, 2600);
       } else {
         toast('That batch is not on this order any more.', 'warn', 6000);
@@ -12719,7 +12731,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const el = document.querySelector('.ord-batch[data-bid="' + (window.CSS && CSS.escape ? CSS.escape(String(bid)) : bid) + '"]');
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY - Math.max(96, (window.innerHeight - el.offsetHeight) / 3);
-    window.scrollTo({ top: Math.max(0, top), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    const to = Math.max(0, top), from = window.scrollY;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(to - from) < 2) window.scrollTo(0, to);
+    else {
+      const DUR = 260, t0 = performance.now();
+      (function step(now){
+        const t = Math.min(1, (now - t0) / DUR);
+        window.scrollTo(0, from + (to - from) * (1 - Math.pow(1 - t, 3)));
+        if (t < 1) requestAnimationFrame(step);
+      })(t0);
+    }
     el.classList.remove('is-new'); void el.offsetWidth; el.classList.add('is-new');
     setTimeout(function(){ el.classList.remove('is-new'); }, 3200);
   }
@@ -13256,15 +13277,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '</div>' +
         '<h3 class="ord-tools-h" style="margin-top:var(--s5);">Tracking <span class="card-sub">optional \u2014 you can add it later with Edit</span></h3>' +
         '<div class="ord-track-mode">' +
-          '<label><input type="radio" name="ordTrkMode" value="unit" checked> One per unit</label>' +
-          '<label><input type="radio" name="ordTrkMode" value="batch"> One for the whole batch</label>' +
+          '<label><input type="radio" name="ordTrkMode" value="unit"> One per unit</label>' +
+          '<label><input type="radio" name="ordTrkMode" value="batch" checked> One for the whole batch</label>' +
         '</div>' +
-        '<div id="ordTrkUnit">' +
+        '<div id="ordTrkUnit" style="display:none;">' +
           '<textarea id="ordTrkList" rows="6" spellcheck="false" placeholder="Paste ' + sel.length +
             ' tracking numbers from ShipStation, one per line"></textarea>' +
           '<div id="ordTrkPreview" class="ord-trk-preview"></div>' +
         '</div>' +
-        '<div id="ordTrkBatch" style="display:none;">' +
+        '<div id="ordTrkBatch">' +
           '<input id="ordTrkOne" type="text" placeholder="One tracking number, or paste a tracking link (e.g. Uber Freight)" autocomplete="off">' +
         '</div>' +
         '<div class="err" id="ordBErr" style="margin-top:var(--s3);"></div>' +
