@@ -17,7 +17,9 @@ notes in it.
 
 ## Working rules
 
-The owner is not a developer. Explain changes in plain language.
+The owner is not a developer. Explain changes in plain language. They are a visual person: for any
+change to a screen, show screenshots while working on it (before and after where it helps), not
+just a description.
 
 ### Code
 

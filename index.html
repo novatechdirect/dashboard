@@ -1620,6 +1620,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .seg-btn:hover{ color:var(--ink); }
   .seg-btn.on{ background:var(--paper); color:var(--ink); box-shadow:var(--e1); }
+  .seg-btn:disabled{ opacity:.45; cursor:not-allowed; color:var(--muted); }
 
   /* theme toggle */
   .theme-btn{
@@ -15005,6 +15006,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<section class="card adm-sec"><h2 class="card-title">One box per unit (V2)</h2>' +
         '<p class="muted-sm" style="margin-top:0;">The V1 key above can only send one package per order. With the V2 key, each unit in a batch arrives as its own box, with its serial on that box\u2019s label. In ShipStation: Settings \u2192 Account \u2192 API Settings \u2192 V2, copy the production key.</p>' +
         '<p class="muted-sm" id="admSs2State">Checking\u2026</p>' +
+        '<div id="admSs2Switch"></div>' +
         '<div class="field" style="margin-top:4px;"><label for="admSs2Key">V2 API key</label>' +
           '<div class="adm-inline"><input id="admSs2Key" type="password" autocomplete="off" placeholder="Paste to add or replace">' +
           '<button class="ghost btn-sm" id="admSs2Connect" type="button">Connect</button></div></div>' +
@@ -15033,13 +15035,31 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   function admSs2Draw(){
     const el = document.getElementById('admSs2State'), box = document.getElementById('admSs2Opts');
-    if (!el || !box) return;
+    const sw = document.getElementById('admSs2Switch');
+    if (!el || !box || !sw) return;
     const s = admSs2.s || {}, L = admSs2.lists;
+    const v2 = s.mode === 'v2';
     const ready = s.v2_key && s.warehouse && Number(s.weight) > 0;
-    el.innerHTML = !s.v2_key ? '<span class="ord-chip neutral">Not set up</span> paste the V2 key, then Connect.'
-      : admSs2.err ? '<span class="ord-chip bad">Key refused</span> ' + esc(admSs2.err)
-      : s.mode === 'v2' && ready ? '<span class="ord-chip ok">On</span> batches go to ShipStation one box per unit.'
-      : '<span class="ord-chip neutral">Off</span> key saved. Batches still go as one package until you turn this on.';
+    const err = admSs2.err ? esc(admSs2.err) + ' ' : '';
+    el.innerHTML = v2
+      ? (admSs2.err ? '<span class="ord-chip bad">V2 problem</span> ' + err + 'Switch to V1 to keep sending batches.'
+        : ready ? '<span class="ord-chip ok">V2</span> new batches go to ShipStation one box per unit.'
+        : '<span class="ord-chip bad">V2 incomplete</span> finish the settings below, or switch to V1.')
+      : !s.v2_key ? '<span class="ord-chip neutral">V1</span> new batches go as one package. For one box per unit, paste the V2 key below and Connect.'
+      : admSs2.err ? '<span class="ord-chip neutral">V1</span> new batches go as one package. The V2 key has a problem: ' + err
+      : ready ? '<span class="ord-chip neutral">V1</span> new batches go as one package. One box per unit is set up, so you can switch any time.'
+      : '<span class="ord-chip neutral">V1</span> new batches go as one package. Finish the settings below to allow one box per unit.';
+    /* the way back to V1 never depends on ShipStation answering */
+    const canV2 = v2 || (ready && !admSs2.err);
+    const seg = function(m, t, on, off){
+      return '<button type="button" class="seg-btn' + (on ? ' on' : '') + '" data-ss2mode="' + m + '" aria-pressed="' + on + '"' +
+        (off ? ' disabled title="Finish the V2 setup below first"' : '') + '>' + t + '</button>';
+    };
+    sw.innerHTML = '<div class="field"><label id="admSs2ModeLbl">Send new batches as</label>' +
+        '<div class="seg" role="group" aria-labelledby="admSs2ModeLbl">' +
+          seg('v1', 'One package (V1)', !v2, false) + seg('v2', 'One box per unit (V2)', v2, !canV2) +
+        '</div></div>' +
+      '<p class="muted-sm" style="margin:6px 0 var(--s4);">Switching takes effect straight away and only changes batches not yet in ShipStation. A batch already sent keeps updating the order it went in with, so switching never makes duplicates.</p>';
     if (!s.v2_key || !L){ box.innerHTML = ''; return; }
     const opt = function(v, t, sel){ return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(t) + '</option>'; };
     const wh = s.warehouse || ((L.warehouses || []).find(function(w){ return w.is_default; }) || (L.warehouses || [])[0] || {}).id || '';
@@ -15061,11 +15081,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         opt('', 'ShipStation default', !s.store) +
         L.stores.map(function(st){ return opt(st.id, st.name + (st.market ? ' \u00b7 ' + st.market : ''), st.id === s.store); }).join('') +
       '</select></div>' : '') +
-      '<div class="field"><label for="admSs2Mode">Send batches as</label><div class="adm-inline"><select id="admSs2Mode" class="sel-sm">' +
-        opt('v1', 'One package per order (V1)', s.mode !== 'v2') + opt('v2', 'One box per unit (V2)', s.mode === 'v2') +
-      '</select><button class="ghost btn-sm" id="admSs2Save" type="button">Save</button></div></div>' +
-      '<p class="card-note">Batches already sent over V1 keep updating that same order, so switching never makes duplicates. Get tracking still uses the V1 key, so keep it saved.</p>';
+      '<div class="adm-inline"><button class="ghost btn-sm" id="admSs2Save" type="button">Save settings</button></div>' +
+      '<p class="card-note">Get tracking uses the V1 key for both kinds of batch, so keep it saved.</p>';
   }
+  document.addEventListener('click', async function(e){
+    const b = e.target.closest('[data-ss2mode]');
+    if (!b || b.disabled || b.classList.contains('on')) return;
+    const mode = b.getAttribute('data-ss2mode');
+    b.disabled = true;
+    const r = await SB.rpc('rma_set_secret', { k: 'ss_v2_mode', v: mode });
+    if (r.error){ b.disabled = false; toast(r.error.message, 'bad'); return; }
+    const r2 = await SB.rpc('ss_v2_settings');
+    admSs2.s = r2.error ? Object.assign({}, admSs2.s, { mode: mode }) : (r2.data || admSs2.s);
+    admSs2Draw();
+    toast(mode === 'v2' ? 'New batches go one box per unit (V2).' : 'New batches go as one package (V1).', 'ok');
+  });
   document.addEventListener('change', function(e){
     if (e.target.id !== 'admSs2Pkg' || !admSs2.lists) return;
     const p = (admSs2.lists.packages || []).find(function(x){ return x.id === e.target.value; });
@@ -15091,13 +15121,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         return;
       }
       const val = function(id){ const i = document.getElementById(id); return i ? i.value.trim() : ''; };
-      const mode = val('admSs2Mode'), wt = Number(val('admSs2Wt'));
+      const wt = Number(val('admSs2Wt'));
       const dims = [val('admSs2DL'), val('admSs2DW'), val('admSs2DH')];
-      if (mode === 'v2' && !(wt > 0)){ toast('Enter the packed weight per box.', 'warn'); return; }
-      if (mode === 'v2' && !val('admSs2Wh')){ toast('Pick a ship-from warehouse.', 'warn'); return; }
+      if (!(wt > 0)){ toast('Enter the packed weight per box.', 'warn'); return; }
+      if (!val('admSs2Wh')){ toast('Pick a ship-from warehouse.', 'warn'); return; }
       if (dims.some(function(d){ return !(Number(d) > 0); })){ toast('Enter all three box dimensions.', 'warn'); return; }
       const pairs = [['ss_v2_warehouse', val('admSs2Wh')], ['ss_v2_package', val('admSs2Pkg')], ['ss_v2_dims', dims.join('x')],
-                     ['ss_v2_weight_lb', wt > 0 ? String(wt) : ''], ['ss_v2_mode', mode]];
+                     ['ss_v2_weight_lb', String(wt)]];
       if (document.getElementById('admSs2Store')) pairs.push(['ss_v2_store', val('admSs2Store')]);
       for (const p of pairs){
         const r = await SB.rpc('rma_set_secret', { k: p[0], v: p[1] });
@@ -15106,7 +15136,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const r2 = await SB.rpc('ss_v2_settings');
       if (!r2.error) admSs2.s = r2.data || admSs2.s;
       admSs2Draw();
-      toast(mode === 'v2' ? 'Saved. Batches now go one box per unit.' : 'Saved. Batches go as one package (V1).', 'ok');
+      toast((admSs2.s || {}).mode === 'v2' ? 'Saved. New batches use these settings.' : 'Saved. Switch to one box per unit above when you’re ready.', 'ok');
     } finally { if (btn.isConnected) btn.disabled = false; }
   });
   async function admSsState(){
