@@ -1620,7 +1620,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   .seg-btn:hover{ color:var(--ink); }
   .seg-btn.on{ background:var(--paper); color:var(--ink); box-shadow:var(--e1); }
-  .seg-btn:disabled{ opacity:.45; cursor:not-allowed; color:var(--muted); }
 
   /* theme toggle */
   .theme-btn{
@@ -6197,11 +6196,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       case 'ups_collect':   return ok([{ updated: 0, shipped: 0, waiting: 0 }]);
       case 'ups_recheck_all': return ok(0);
       case 'rma_secret_status': return ok([{ key: 'resend_api_key', is_set: true, configured: true, updated_at: new Date().toISOString() }]);
-      case 'rma_set_secret': {
-        const map = { shipstation_v2_key: 'v2_key', ss_v2_mode: 'mode', ss_v2_warehouse: 'warehouse', ss_v2_package: 'package', ss_v2_dims: 'dims', ss_v2_weight_lb: 'weight', ss_v2_store: 'store' };
-        if (map[args.k]){ db._ssv2 = db._ssv2 || {}; db._ssv2[map[args.k]] = args.k === 'shipstation_v2_key' ? true : (args.v || null); }
-        return ok(null);
-      }
+      case 'rma_set_secret': return ok(null);
       case 'ss_send_batch': {
         const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
         if (b){ b.ss_request_id = 1; b.ss_sent_at = new Date().toISOString(); b.ss_order_id = b.ss_order_id || String(100000000 + Math.floor(Math.random() * 1e6)); }
@@ -6220,18 +6215,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       }
       case 'ss_batch_result': {
         const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
-        const v2 = (db._ssv2 || {}).mode === 'v2';
-        const nb = b ? (db.pc_log || []).filter(function(u){ return String(u.batch_id) === String(b.id); }).length : 0;
-        return ok([{ state: 'ok', order_id: b ? b.ss_order_id : '1', message: v2 ? nb + (nb === 1 ? ' box' : ' boxes') : null }]);
+        return ok([{ state: 'ok', order_id: b ? b.ss_order_id : '1', message: null }]);
       }
-      case 'ss_v2_settings':
-        db._ssv2 = db._ssv2 || { v2_key: true, v1_key: true, mode: 'v1', warehouse: 'se-101', package: 'se-201', dims: '23x20x14', weight: '', store: null };
-        return ok(Object.assign({}, db._ssv2));
-      case 'ss_v2_connect':
-        return ok({ ok: true,
-          warehouses: [{ id: 'se-101', name: 'Main shop', is_default: true, city: 'Austin' }],
-          packages: [{ id: 'se-201', code: 'package', name: 'PC box 23x20x14', l: '23', w: '20', h: '14' }],
-          stores: [{ id: '501', name: 'Manual Orders', market: 'ShipStation' }] });
       case 'is_margin_admin': return ok(true);
       case 'find_user_by_email': return ok([]);
       case 'portal_remittance_notice': return ok();
@@ -15002,143 +14987,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '<div class="adm-inline"><input id="admSsSecret" type="password" autocomplete="off">' +
           '<button class="ghost btn-sm" id="admSsSave" type="button">Save</button></div></div>' +
         '<p class="card-note">Sending the same batch twice updates its order in ShipStation instead of adding a second one. Orders go to ShipStation\u2019s Manual Orders store.</p>' +
-      '</section>' +
-      '<section class="card adm-sec"><h2 class="card-title">One box per unit (V2)</h2>' +
-        '<p class="muted-sm" style="margin-top:0;">The V1 key above can only send one package per order. With the V2 key, each unit in a batch arrives as its own box, with its serial on that box\u2019s label. In ShipStation: Settings \u2192 Account \u2192 API Settings \u2192 V2, copy the production key.</p>' +
-        '<p class="muted-sm" id="admSs2State">Checking\u2026</p>' +
-        '<div id="admSs2Switch"></div>' +
-        '<div class="field" style="margin-top:4px;"><label for="admSs2Key">V2 API key</label>' +
-          '<div class="adm-inline"><input id="admSs2Key" type="password" autocomplete="off" placeholder="Paste to add or replace">' +
-          '<button class="ghost btn-sm" id="admSs2Connect" type="button">Connect</button></div></div>' +
-        '<div id="admSs2Opts"></div>' +
       '</section>';
     admSsState();
-    admSs2Load();
   }
-  let admSs2 = { s: null, lists: null };
-  async function admSs2Load(){
-    const el = document.getElementById('admSs2State'); if (!el) return;
-    const r = await SB.rpc('ss_v2_settings');
-    if (r.error){ el.innerHTML = 'Run <b>shipstation-v2.sql</b> in Supabase first.'; return; }
-    admSs2.s = r.data || {};
-    if (admSs2.s.v2_key && !admSs2.lists) await admSs2Fetch(true);
-    admSs2Draw();
-  }
-  async function admSs2Fetch(quiet){
-    const r = await SB.rpc('ss_v2_connect');
-    if (r.error){ if (!quiet) toast(r.error.message, 'bad', 8000); return false; }
-    const d = r.data || {};
-    if (!d.ok){ if (!quiet) toast(d.message || 'ShipStation did not answer', 'bad', 8000); admSs2.err = d.message; return false; }
-    admSs2.err = null;
-    admSs2.lists = d;
-    return true;
-  }
-  function admSs2Draw(){
-    const el = document.getElementById('admSs2State'), box = document.getElementById('admSs2Opts');
-    const sw = document.getElementById('admSs2Switch');
-    if (!el || !box || !sw) return;
-    const s = admSs2.s || {}, L = admSs2.lists;
-    const v2 = s.mode === 'v2';
-    const ready = s.v2_key && s.warehouse && Number(s.weight) > 0;
-    const err = admSs2.err ? esc(admSs2.err) + ' ' : '';
-    el.innerHTML = v2
-      ? (admSs2.err ? '<span class="ord-chip bad">V2 problem</span> ' + err + 'Switch to V1 to keep sending batches.'
-        : ready ? '<span class="ord-chip ok">V2</span> new batches go to ShipStation one box per unit.'
-        : '<span class="ord-chip bad">V2 incomplete</span> finish the settings below, or switch to V1.')
-      : !s.v2_key ? '<span class="ord-chip neutral">V1</span> new batches go as one package. For one box per unit, paste the V2 key below and Connect.'
-      : admSs2.err ? '<span class="ord-chip neutral">V1</span> new batches go as one package. The V2 key has a problem: ' + err
-      : ready ? '<span class="ord-chip neutral">V1</span> new batches go as one package. One box per unit is set up, so you can switch any time.'
-      : '<span class="ord-chip neutral">V1</span> new batches go as one package. Finish the settings below to allow one box per unit.';
-    /* the way back to V1 never depends on ShipStation answering */
-    const canV2 = v2 || (ready && !admSs2.err);
-    const seg = function(m, t, on, off){
-      return '<button type="button" class="seg-btn' + (on ? ' on' : '') + '" data-ss2mode="' + m + '" aria-pressed="' + on + '"' +
-        (off ? ' disabled title="Finish the V2 setup below first"' : '') + '>' + t + '</button>';
-    };
-    sw.innerHTML = '<div class="field"><label id="admSs2ModeLbl">Send new batches as</label>' +
-        '<div class="seg" role="group" aria-labelledby="admSs2ModeLbl">' +
-          seg('v1', 'One package (V1)', !v2, false) + seg('v2', 'One box per unit (V2)', v2, !canV2) +
-        '</div></div>' +
-      '<p class="muted-sm" style="margin:6px 0 var(--s4);">Switching takes effect straight away and only changes batches not yet in ShipStation. A batch already sent keeps updating the order it went in with, so switching never makes duplicates.</p>';
-    if (!s.v2_key || !L){ box.innerHTML = ''; return; }
-    const opt = function(v, t, sel){ return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(t) + '</option>'; };
-    const wh = s.warehouse || ((L.warehouses || []).find(function(w){ return w.is_default; }) || (L.warehouses || [])[0] || {}).id || '';
-    const dims = String(s.dims || '23x20x14').split(/[^0-9.]+/).filter(Boolean);
-    box.innerHTML =
-      '<div class="field"><label for="admSs2Wh">Ship from</label><select id="admSs2Wh" class="sel-sm">' +
-        (L.warehouses || []).map(function(w){ return opt(w.id, w.name + (w.city ? ' \u00b7 ' + w.city : ''), w.id === wh); }).join('') +
-      '</select></div>' +
-      '<div class="field"><label for="admSs2Pkg">Box</label><select id="admSs2Pkg" class="sel-sm">' +
-        opt('', 'Custom size below', !s.package) +
-        (L.packages || []).map(function(p){ return opt(p.id, p.name + (p.l ? ' \u00b7 ' + p.l + '\u00d7' + p.w + '\u00d7' + p.h + ' in' : ''), p.id === s.package); }).join('') +
-      '</select></div>' +
-      '<div class="field"><label>Box size, inches</label><div class="adm-inline">' +
-        ['L', 'W', 'H'].map(function(k, i){ return '<input id="admSs2D' + k + '" type="number" min="1" step="0.5" inputmode="decimal" aria-label="' + k + '" value="' + esc(dims[i] || ['23', '20', '14'][i]) + '" style="max-width:88px;">'; }).join('') +
-      '</div></div>' +
-      '<div class="field"><label for="admSs2Wt">Packed weight per box, lb</label>' +
-        '<input id="admSs2Wt" type="number" min="0.1" step="0.1" inputmode="decimal" value="' + esc(s.weight || '') + '" style="max-width:140px;"></div>' +
-      ((L.stores || []).length > 1 ? '<div class="field"><label for="admSs2Store">Store</label><select id="admSs2Store" class="sel-sm">' +
-        opt('', 'ShipStation default', !s.store) +
-        L.stores.map(function(st){ return opt(st.id, st.name + (st.market ? ' \u00b7 ' + st.market : ''), st.id === s.store); }).join('') +
-      '</select></div>' : '') +
-      '<div class="adm-inline"><button class="ghost btn-sm" id="admSs2Save" type="button">Save settings</button></div>' +
-      '<p class="card-note">Get tracking uses the V1 key for both kinds of batch, so keep it saved.</p>';
-  }
-  document.addEventListener('click', async function(e){
-    const b = e.target.closest('[data-ss2mode]');
-    if (!b || b.disabled || b.classList.contains('on')) return;
-    const mode = b.getAttribute('data-ss2mode');
-    b.disabled = true;
-    const r = await SB.rpc('rma_set_secret', { k: 'ss_v2_mode', v: mode });
-    if (r.error){ b.disabled = false; toast(r.error.message, 'bad'); return; }
-    const r2 = await SB.rpc('ss_v2_settings');
-    admSs2.s = r2.error ? Object.assign({}, admSs2.s, { mode: mode }) : (r2.data || admSs2.s);
-    admSs2Draw();
-    toast(mode === 'v2' ? 'New batches go one box per unit (V2).' : 'New batches go as one package (V1).', 'ok');
-  });
-  document.addEventListener('change', function(e){
-    if (e.target.id !== 'admSs2Pkg' || !admSs2.lists) return;
-    const p = (admSs2.lists.packages || []).find(function(x){ return x.id === e.target.value; });
-    if (!p || !p.l) return;
-    [['L', p.l], ['W', p.w], ['H', p.h]].forEach(function(a){ const i = document.getElementById('admSs2D' + a[0]); if (i) i.value = a[1]; });
-  });
-  document.addEventListener('click', async function(e){
-    const c = e.target.closest('#admSs2Connect'), sv = e.target.closest('#admSs2Save');
-    if (!c && !sv) return;
-    const btn = c || sv; btn.disabled = true;
-    try {
-      if (c){
-        const k = document.getElementById('admSs2Key').value.trim();
-        if (k){
-          const r = await SB.rpc('rma_set_secret', { k: 'shipstation_v2_key', v: k });
-          if (r.error){ toast(/Unknown secret/.test(r.error.message) ? 'Run shipstation-v2.sql in Supabase first.' : r.error.message, 'bad'); return; }
-          document.getElementById('admSs2Key').value = '';
-          admSs2.s = Object.assign({}, admSs2.s, { v2_key: true });
-        } else if (!(admSs2.s || {}).v2_key){ toast('Paste the V2 API key first.', 'warn'); return; }
-        const okc = await admSs2Fetch(false);
-        admSs2Draw();
-        if (okc) toast('ShipStation V2 connected', 'ok');
-        return;
-      }
-      const val = function(id){ const i = document.getElementById(id); return i ? i.value.trim() : ''; };
-      const wt = Number(val('admSs2Wt'));
-      const dims = [val('admSs2DL'), val('admSs2DW'), val('admSs2DH')];
-      if (!(wt > 0)){ toast('Enter the packed weight per box.', 'warn'); return; }
-      if (!val('admSs2Wh')){ toast('Pick a ship-from warehouse.', 'warn'); return; }
-      if (dims.some(function(d){ return !(Number(d) > 0); })){ toast('Enter all three box dimensions.', 'warn'); return; }
-      const pairs = [['ss_v2_warehouse', val('admSs2Wh')], ['ss_v2_package', val('admSs2Pkg')], ['ss_v2_dims', dims.join('x')],
-                     ['ss_v2_weight_lb', String(wt)]];
-      if (document.getElementById('admSs2Store')) pairs.push(['ss_v2_store', val('admSs2Store')]);
-      for (const p of pairs){
-        const r = await SB.rpc('rma_set_secret', { k: p[0], v: p[1] });
-        if (r.error){ toast(/Unknown secret/.test(r.error.message) ? 'Run shipstation-v2.sql in Supabase first.' : r.error.message, 'bad'); return; }
-      }
-      const r2 = await SB.rpc('ss_v2_settings');
-      if (!r2.error) admSs2.s = r2.data || admSs2.s;
-      admSs2Draw();
-      toast((admSs2.s || {}).mode === 'v2' ? 'Saved. New batches use these settings.' : 'Saved. Switch to one box per unit above when you’re ready.', 'ok');
-    } finally { if (btn.isConnected) btn.disabled = false; }
-  });
   async function admSsState(){
     const el = document.getElementById('admSsState'); if (!el) return;
     const [a, b] = await Promise.all([
