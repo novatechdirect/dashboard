@@ -162,7 +162,7 @@
   header.top{
     display:flex; align-items:center; justify-content:space-between; gap:var(--s5);
     /* brand and actions land on the same columns as the page content below */
-    padding:var(--s3) max(var(--s5), calc((100% - 2040px) / 2)); background:var(--paper);
+    padding:var(--s3) max(var(--s5), calc((100% - 1600px) / 2)); background:var(--paper);
     border-bottom:1px solid var(--line); position:sticky; top:0; z-index:30; flex-wrap:nowrap;
     box-shadow:var(--e1);
   }
@@ -242,7 +242,7 @@
   :root:not([data-theme="light"]) .i-moon{ display:none; }
 
   /* ---------- layout ---------- */
-  .wrap{ max-width:2040px; margin:0 auto; padding:var(--s6) var(--s6) var(--s8); }
+  .wrap{ max-width:1600px; margin:0 auto; padding:var(--s6) var(--s6) var(--s8); }
   .card{
     background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
     padding:var(--s5); margin-bottom:var(--s5); box-shadow:none;
@@ -1161,7 +1161,7 @@
      so it gets its own band under the header rather than crowding the brand. */
   #staffPick{
     display:flex; align-items:center; gap:var(--s2);
-    padding:5px max(var(--s5), calc((100% - 2040px) / 2));
+    padding:5px max(var(--s5), calc((100% - 1600px) / 2));
     background:var(--warn-bg); border-bottom:1px solid var(--warn-line);
   }
   #staffPick .staffbadge{ flex:0 0 auto; }
