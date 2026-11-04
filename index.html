@@ -2558,6 +2558,54 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .shs-leg em{ font-style:normal; color:var(--faint); font-variant-numeric:tabular-nums; }
   .shs-tot{ margin-left:auto; color:var(--faint); }
   @media (max-width:640px){ .shs-tot{ margin-left:0; flex:1 1 100%; } }
+  /* per-config counts under the shipping bar, on invoices that mix builds;
+     folded away until asked for, like Billing and Invoice PDF */
+  .ord-cs{ margin-top:14px; padding-top:8px; border-top:1px solid var(--line); }
+  .shs > .ord-cs:first-child{ margin-top:0; padding-top:0; border-top:none; }
+  .ord-cs > summary{
+    display:flex; align-items:center; gap:8px; width:max-content; max-width:100%; min-height:30px;
+    list-style:none; cursor:pointer; border-radius:4px; color:var(--faint);
+    font-size:var(--fs-cap, 11px); font-weight:600; text-transform:uppercase; letter-spacing:var(--cap-track, .06em);
+    transition:color var(--t);
+  }
+  .ord-cs > summary::-webkit-details-marker{ display:none; }
+  .ord-cs > summary:hover{ color:var(--muted); }
+  .ord-cs > summary:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .ord-cs > summary svg{ width:14px; height:14px; flex:0 0 auto; transition:transform var(--t); }
+  .ord-cs[open] > summary svg{ transform:rotate(180deg); }
+  @media (prefers-reduced-motion: reduce){ .ord-cs > summary svg{ transition:none; } }
+  @media (pointer:coarse){ .ord-cs > summary{ min-height:44px; } }
+  .ord-cs-hint{ font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; }
+  .ord-cs-body{ container:ordcs / inline-size; }
+  .ord-cs-t th{ position:static; padding:8px 14px; background:none; border-bottom-color:var(--line); }
+  .ord-cs-t td{ padding:10px 14px; font-size:13px; }
+  .ord-cs-t :is(th, td):first-child{ padding-left:0; }
+  .ord-cs-t .ord-cs-barc{ width:100%; min-width:120px; padding-left:20px; padding-right:0; }
+  .ord-cs-t tbody tr:hover{ background:none; }
+  .ord-cs-t tbody tr:nth-last-child(2) td{ border-bottom-color:var(--line-strong); }
+  .ord-cs-t tr.ord-cs-tot td{ font-weight:600; }
+  .ord-cs-t td.ord-cs-zero{ color:var(--faint); }
+  .ord-cs-t td.ord-cs-left{ color:var(--ink); font-weight:700; }
+  .ord-cs-bar{ display:flex; height:8px; overflow:hidden; border-radius:999px; background:var(--soft); border:1px solid var(--line); }
+  .ord-cs-bar i{ display:block; height:100%; }
+  .ord-cs-dot{ display:inline-block; width:8px; height:8px; margin-right:6px; border-radius:50%; }
+  .ord-cs-note{ margin:10px 0 0; font-size:12px; color:var(--faint); }
+  @container ordcs (max-width:980px){ .ord-cs-t .ord-cs-barc{ display:none; } }
+  /* too narrow for the columns: one small card per config */
+  @container ordcs (max-width:760px){
+    .ord-cs-t, .ord-cs-t tbody{ display:block; }
+    .ord-cs-t thead{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+    .ord-cs-t tr{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px 12px; margin-bottom:8px; padding:12px 14px; border:1px solid var(--line); border-radius:var(--r-md); }
+    .ord-cs-t tr.ord-cs-tot{ margin-bottom:0; background:var(--soft); }
+    .ord-cs-t td, .ord-cs-t :is(th, td):first-child{ display:flex; flex-direction:column; gap:2px; padding:0; border:none; font-size:14px; text-align:left; white-space:normal; }
+    .ord-cs-t td::before{ content:attr(data-l); color:var(--faint); font-family:var(--font-ui); font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:var(--cap-track, .06em); }
+    .ord-cs-t td.n{ align-items:flex-start; text-align:left; }
+    .ord-cs-t td[data-l=Config]{ grid-column:1 / 3; flex-direction:row; align-items:center; font-weight:600; }
+    .ord-cs-t td.ord-cs-left{ grid-column:3; grid-row:1; align-items:flex-end; text-align:right; }
+    .ord-cs-t td.ord-cs-barc{ display:block; grid-column:1 / -1; grid-row:2; min-width:0; }
+    .ord-cs-t :is(td[data-l=Config], td.ord-cs-barc)::before{ content:none; }
+    .ord-cs-t td:empty{ display:none; }
+  }
   .ord-batch-upsd{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ord-ups-mini.bad{ --dot:var(--bad); color:var(--bad-ink); }
   .ord-batch-ship{
@@ -6180,7 +6228,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   function demoSeed(){
     const CUST = 'demo-cust-1', ME = 'demo-user-1';
-    const cfgA = 'demo-cfg-1', cfgB = 'demo-cfg-2';
+    const cfgA = 'demo-cfg-1', cfgB = 'demo-cfg-2', cfgC = 'demo-cfg-3', cfgD = 'demo-cfg-4';
     const o1 = 'demo-ord-1', o2 = 'demo-ord-2';
     const db = {
       customers: [{ id: CUST, name: 'Demo Gaming Co', code: 'DG', next_serial: 561, active: true,
@@ -6189,7 +6237,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         { id: cfgA, customer_id: CUST, name: 'Spectre 15', status: 'active', active: true,
           pc_case: 'Spectre mid tower', cpu: 'Ryzen 5 7600', gpu: 'RTX 4060', ram: '16GB DDR5', storage: '1TB NVMe' },
         { id: cfgB, customer_id: CUST, name: 'Wraith Pro', status: 'active', active: true,
-          pc_case: 'Wraith compact', cpu: 'Ryzen 7 7700', gpu: 'RTX 4070', ram: '32GB DDR5', storage: '2TB NVMe' }
+          pc_case: 'Wraith compact', cpu: 'Ryzen 7 7700', gpu: 'RTX 4070', ram: '32GB DDR5', storage: '2TB NVMe' },
+        { id: cfgC, customer_id: CUST, name: 'Phantom X', status: 'active', active: true,
+          pc_case: 'Phantom full tower', cpu: 'Ryzen 9 7900X', gpu: 'RTX 4080 Super', ram: '64GB DDR5', storage: '2TB NVMe' },
+        { id: cfgD, customer_id: CUST, name: 'Nova Mini', status: 'active', active: true,
+          pc_case: 'Nova ITX', cpu: 'Ryzen 5 7600', gpu: 'RTX 4060 Ti', ram: '32GB DDR5', storage: '1TB NVMe' }
       ],
       ship_to_locations: [
         { id: 'demo-loc-1', customer_id: CUST, store_name: 'Riverside Gaming', store_number: '204', address: '1180 Riverside Dr', city: 'Austin', state: 'TX', zip: '78701', active: true },
@@ -6207,7 +6259,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ],
       order_lines: [
         { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 25, unit_price: 719, position: 1, category: 1 },
-        { id: 'demo-line-2', order_id: o2, config_id: cfgB, qty_ordered: 60, unit_price: 1368, position: 1, category: 1 }
+        /* DG002 mixes four builds, so the per-config views have something to show */
+        { id: 'demo-line-2', order_id: o2, config_id: cfgA, qty_ordered: 20, unit_price: 1199, position: 1, category: 1 },
+        { id: 'demo-line-3', order_id: o2, config_id: cfgB, qty_ordered: 20, unit_price: 1368, position: 2, category: 1 },
+        { id: 'demo-line-4', order_id: o2, config_id: cfgC, qty_ordered: 12, unit_price: 1745, position: 3, category: 1 },
+        { id: 'demo-line-5', order_id: o2, config_id: cfgD, qty_ordered: 8, unit_price: 1225, position: 4, category: 1 }
       ],
       order_payments: [
         { id: 'demo-pay-1', order_id: o1, amount: 9000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
@@ -6252,9 +6308,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     };
 
     /* ---- units, batches and tracking ----
-       DG001 is done and gone. DG002 is the interesting one: two batches out
-       the door, one packed and waiting, one still open, and eleven units
-       built but not yet assigned so the pool has something in it. */
+       DG001 is done and gone. DG002 is the interesting one: four builds, two
+       batches out the door, one packed and waiting, one still open, and eleven
+       units built but not yet assigned so the pool has something in it. */
     let serial = 500;
     const unit = function(order, cfg, batch, status){
       const s = 'DG-' + String(serial++).padStart(6, '0');
@@ -6297,14 +6353,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784', demoUps('delivered', -85, 'Austin, TX'));
     for (let i = 0; i < 25; i++) db.pc_log.push(unit(o1, cfgA, b1, 'shipped'));
 
+    /* [config, how many] per batch, so each build is at a different stage */
+    const addUnits = function(bid, status, mix){
+      mix.forEach(function(m){ for (let i = 0; i < m[1]; i++) db.pc_log.push(unit(o2, m[0], bid, status)); });
+    };
     const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785', demoUps('delivered', -11, 'Austin, TX'));
-    for (let i = 0; i < 16; i++) db.pc_log.push(unit(o2, cfgB, b2, 'shipped'));
+    addUnits(b2, 'shipped', [[cfgA, 8], [cfgB, 8]]);
     const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786', demoUps('out', 0, 'Round Rock, TX'));
-    for (let i = 0; i < 14; i++) db.pc_log.push(unit(o2, cfgB, b3, 'shipped'));
+    addUnits(b3, 'shipped', [[cfgA, 6], [cfgB, 4], [cfgC, 4]]);
     const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787', demoUps('label', -1));
-    for (let i = 0; i < 12; i++) db.pc_log.push(unit(o2, cfgB, b4, 'assigned'));
+    addUnits(b4, 'assigned', [[cfgB, 4], [cfgC, 4], [cfgD, 4]]);
     batch(o2, 4, 'demo-loc-4', 'open', null, null);
-    for (let i = 0; i < 11; i++) db.pc_log.push(unit(o2, cfgB, null, 'built'));
+    addUnits(null, 'built', [[cfgA, 4], [cfgB, 2], [cfgC, 2], [cfgD, 3]]);
 
     /* one RMA, mid-flight, so the section is not empty */
     const rma = 'demo-rma-1';
@@ -10236,7 +10296,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const v = parseInt(localStorage.getItem('ordRows') || '', 10);
     return ORD_ROW_OPTS.indexOf(v) >= 0 ? v : 30;
   })();
-  function ordPageSize(){ return ordRows === 0 ? Infinity : ordRows; }
+  /* All is one page as long as any list. Not Infinity: page 0 times Infinity is
+     NaN, which emptied the table and showed NaN in the page count */
+  function ordPageSize(){ return ordRows === 0 ? Number.MAX_SAFE_INTEGER : ordRows; }
   function ordRowsPicker(){
     return '<label class="ord-rows"><span>Show</span>' +
       '<select class="sel-sm" data-ordrows aria-label="Rows per page">' +
@@ -13436,7 +13498,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     setTimeout(function(){ el.classList.remove('is-new'); }, 3200);
   }
 
-  function ordShipSumHtml(list){
+  function ordShipSumHtml(list, extra){
     let del = 0, way = 0, prep = 0;
     list.forEach(function(b){
       const n = ordShipSumUnits(b.id);
@@ -13445,7 +13507,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (s ? s.deliveredAt : b.delivered_at) del += n; else way += n;
     });
     const tot = del + way + prep;
-    if (!tot) return '';
+    if (!tot) return extra ? '<div class="shs">' + extra + '</div>' : '';
     const pc = function(n){ return n / tot * 100; };
     const seg = [['delivered', del, 'var(--ok)'], ['on the way', way, 'color-mix(in srgb, var(--ok) 50%, var(--paper))'], ['preparing', prep, 'var(--series, var(--accent))']];
     return '<div class="shs">' +
@@ -13454,9 +13516,87 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</div><div class="shs-leg">' +
         seg.map(function(s){ return '<span><i style="background:' + s[2] + '"></i><b>' + ordNum(s[1]) + '</b> ' + s[0] + ' <em>' + Math.round(pc(s[1])) + '%</em></span>'; }).join('') +
         '<span class="shs-tot">' + ordNum(tot) + ' units in ' + ordNum(list.length) + (list.length === 1 ? ' batch' : ' batches') + '</span>' +
-      '</div></div>';
+      '</div>' + (extra || '') + '</div>';
   }
   function ordShipSumUnits(id){ return ordBatchUnits(id).length; }
+
+  /* By config stays folded unless asked for, and whether it was left open sticks */
+  let ordCsOpen = false;
+  try { ordCsOpen = localStorage.getItem('ordCfgSum') === '1'; } catch(e){}
+  document.addEventListener('toggle', function(e){
+    const d = e.target; if (!d || !d.matches || !d.matches('details.ord-cs')) return;
+    ordCsOpen = d.open;
+    try { localStorage.setItem('ordCfgSum', d.open ? '1' : '0'); } catch(err){}
+  }, true);
+
+  /* On an invoice that mixes builds: where each config stands, so "how many
+     Spectres have shipped and how many are left" is one row to read. A unit
+     counts as delivered by the same rule as the bar above (its whole batch),
+     so the Total row matches the bar. */
+  function ordCfgSumHtml(){
+    const ids = [], by = {};
+    const row = function(id){
+      id = id || '';
+      if (!by[id]){ by[id] = { ordered:0, made:0, built:0, prep:0, way:0, del:0 }; ids.push(id); }
+      return by[id];
+    };
+    ordLines.forEach(function(l){ if (l.order_id === ordCurrentId) row(l.config_id).ordered += (+l.qty_ordered || 0); });
+    const tk = {}, stage = {};
+    ordTracking.forEach(function(t){ (tk[t.batch_id] || (tk[t.batch_id] = [])).push(t); });
+    ordBatches.forEach(function(b){
+      const s = ordUpsSum(tk[b.id]);
+      stage[b.id] = b.status !== 'shipped' ? 'prep' : ((s ? s.deliveredAt : b.delivered_at) ? 'del' : 'way');
+    });
+    ordUnits.forEach(function(u){
+      const r = row(u.config_id);
+      r.made++;
+      r[u.batch_id ? (stage[u.batch_id] || 'prep') : 'built']++;
+    });
+    if (ids.length < 2) return '';
+    const C = { todo:'var(--line-strong)', built:'#e6b800', prep:'var(--series, var(--accent))',
+                way:'color-mix(in srgb, var(--ok) 50%, var(--paper))', del:'var(--ok)' };
+    const SEG = [['del', 'delivered'], ['way', 'on the way'], ['prep', 'preparing'], ['built', 'built'], ['todo', 'to build']];
+    const tones = ordCfgTones();
+    const tot = { ordered:0, todo:0, built:0, prep:0, shipped:0, del:0, left:0 };
+    const cell = function(n, l, cls){
+      return '<td class="n' + (n ? '' : ' ord-cs-zero') + (cls ? ' ' + cls : '') + '" data-l="' + l + '">' + ordNum(n) + '</td>';
+    };
+    const cells = function(r){
+      return cell(r.ordered, 'Ordered') + cell(r.todo, 'To build') + cell(r.built, 'Built') + cell(r.prep, 'Preparing') +
+        cell(r.shipped, 'Shipped') + cell(r.del, 'Delivered') + cell(r.left, 'Left to ship', 'ord-cs-left');
+    };
+    const dot = function(k){ return '<i class="ord-cs-dot" style="background:' + C[k] + '" aria-hidden="true"></i>'; };
+    const rows = ids.map(function(id){
+      const r = by[id];
+      r.todo = Math.max(0, r.ordered - r.made);
+      r.shipped = r.way + r.del;
+      r.left = r.todo + r.built + r.prep;
+      Object.keys(tot).forEach(function(k){ tot[k] += r[k]; });
+      const cfg = ordCfgById(id), all = Math.max(r.ordered, r.made) || 1;
+      const tone = tones[id] != null ? tones[id] : null;
+      return '<tr' + (tone != null ? ' data-ctone="' + tone + '"' : '') + '>' +
+        '<td data-l="Config">' + (tone != null ? '<i class="ord-tone-dot" aria-hidden="true"></i>' : '') + ordCfgLabel(id, 'No config') + '</td>' +
+        cells(r) +
+        '<td class="ord-cs-barc"><div class="ord-cs-bar" role="img" aria-label="' + esc((cfg ? cfg.name : 'No config') + ': ' + ordNum(r.shipped) + ' of ' + ordNum(r.ordered) + ' shipped') + '">' +
+          SEG.map(function(s){
+            return r[s[0]] ? '<i style="width:' + (r[s[0]] / all * 100) + '%;background:' + C[s[0]] + '" title="' + ordNum(r[s[0]]) + ' ' + s[1] + '"></i>' : '';
+          }).join('') +
+        '</div></td></tr>';
+    }).join('');
+    return '<details class="ord-cs"' + (ordCsOpen ? ' open' : '') + '>' +
+      '<summary><span>By config</span><span class="ord-cs-hint">' + ordNum(ids.length) + ' configs</span>' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg></summary>' +
+      '<div class="ord-cs-body"><table class="hist-table ord-cs-t"><thead><tr>' +
+        '<th>Config</th><th class="n">Ordered</th>' +
+        '<th class="n">' + dot('todo') + 'To build</th><th class="n">' + dot('built') + 'Built</th>' +
+        '<th class="n">' + dot('prep') + 'Preparing</th><th class="n">' + dot('way') + 'Shipped</th>' +
+        '<th class="n">' + dot('del') + 'Delivered</th><th class="n">Left to ship</th><th class="ord-cs-barc"></th>' +
+      '</tr></thead><tbody>' + rows +
+        '<tr class="ord-cs-tot"><td data-l="Config">Total</td>' + cells(tot) + '<td class="ord-cs-barc"></td></tr>' +
+      '</tbody></table>' +
+      '<p class="ord-cs-note">Built: waiting in the pool. Preparing: in a batch, not shipped yet. Shipped includes delivered.</p></div>' +
+    '</details>';
+  }
   function ordRenderBatches(){
     const host = document.getElementById('ordBatchBody');
     if (!host) return;
@@ -13467,7 +13607,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const cfgs = {}; ordConfigs.forEach(function(c){ cfgs[c.id] = c.name; });
     const openCount = ordBatches.filter(function(b){ return b.status !== 'shipped'; }).length;
-    host.innerHTML = ordShipSumHtml(ordBatches.map(function(b){ return { id:b.id, status:b.status, delivered_at:b.delivered_at, tk:ordTracking.filter(function(t){ return t.batch_id === b.id; }) }; })) +
+    host.innerHTML = ordShipSumHtml(ordBatches.map(function(b){ return { id:b.id, status:b.status, delivered_at:b.delivered_at, tk:ordTracking.filter(function(t){ return t.batch_id === b.id; }) }; }), ordCfgSumHtml()) +
       (ordPerm.manage && openCount >= 2
       ? '<div style="display:flex;justify-content:flex-end;margin:0 0 var(--s3);"><button class="ghost btn-sm" id="ordMergeBtn" type="button" title="Combine open batches into one">Merge batches</button></div>'
       : '') + ordBatches.map(function(b){

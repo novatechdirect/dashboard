@@ -2246,7 +2246,7 @@
 
   function demoSeed(){
     const CUST = 'demo-cust-1', ME = 'demo-user-1';
-    const cfgA = 'demo-cfg-1', cfgB = 'demo-cfg-2';
+    const cfgA = 'demo-cfg-1', cfgB = 'demo-cfg-2', cfgC = 'demo-cfg-3', cfgD = 'demo-cfg-4';
     const o1 = 'demo-ord-1', o2 = 'demo-ord-2';
     const db = {
       customers: [{ id: CUST, name: 'Demo Gaming Co', code: 'DG', next_serial: 561, active: true,
@@ -2255,7 +2255,11 @@
         { id: cfgA, customer_id: CUST, name: 'Spectre 15', status: 'active', active: true,
           pc_case: 'Spectre mid tower', cpu: 'Ryzen 5 7600', gpu: 'RTX 4060', ram: '16GB DDR5', storage: '1TB NVMe' },
         { id: cfgB, customer_id: CUST, name: 'Wraith Pro', status: 'active', active: true,
-          pc_case: 'Wraith compact', cpu: 'Ryzen 7 7700', gpu: 'RTX 4070', ram: '32GB DDR5', storage: '2TB NVMe' }
+          pc_case: 'Wraith compact', cpu: 'Ryzen 7 7700', gpu: 'RTX 4070', ram: '32GB DDR5', storage: '2TB NVMe' },
+        { id: cfgC, customer_id: CUST, name: 'Phantom X', status: 'active', active: true,
+          pc_case: 'Phantom full tower', cpu: 'Ryzen 9 7900X', gpu: 'RTX 4080 Super', ram: '64GB DDR5', storage: '2TB NVMe' },
+        { id: cfgD, customer_id: CUST, name: 'Nova Mini', status: 'active', active: true,
+          pc_case: 'Nova ITX', cpu: 'Ryzen 5 7600', gpu: 'RTX 4060 Ti', ram: '32GB DDR5', storage: '1TB NVMe' }
       ],
       ship_to_locations: [
         { id: 'demo-loc-1', customer_id: CUST, store_name: 'Riverside Gaming', store_number: '204', address: '1180 Riverside Dr', city: 'Austin', state: 'TX', zip: '78701', active: true },
@@ -2273,8 +2277,11 @@
       ],
       order_lines: [
         { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 25, unit_price: 719, position: 1, category: 1 },
-        { id: 'demo-line-2', order_id: o2, config_id: cfgB, qty_ordered: 60, unit_price: 1368, position: 1, category: 1 },
-        { id: 'demo-line-3', order_id: o2, config_id: cfgA, qty_ordered: 20, unit_price: 719, position: 2, category: 1 }
+        /* DG002 mixes four builds, so the per-config views have something to show */
+        { id: 'demo-line-2', order_id: o2, config_id: cfgA, qty_ordered: 20, unit_price: 1199, position: 1, category: 1 },
+        { id: 'demo-line-3', order_id: o2, config_id: cfgB, qty_ordered: 20, unit_price: 1368, position: 2, category: 1 },
+        { id: 'demo-line-4', order_id: o2, config_id: cfgC, qty_ordered: 12, unit_price: 1745, position: 3, category: 1 },
+        { id: 'demo-line-5', order_id: o2, config_id: cfgD, qty_ordered: 8, unit_price: 1225, position: 4, category: 1 }
       ],
       order_payments: [
         { id: 'demo-pay-1', order_id: o1, amount: 9000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
@@ -2319,9 +2326,9 @@
     };
 
     /* ---- units, batches and tracking ----
-       DG001 is done and gone. DG002 is the interesting one: two batches out
-       the door, one packed and waiting, one still open, and eleven units
-       built but not yet assigned so the pool has something in it. */
+       DG001 is done and gone. DG002 is the interesting one: four builds, two
+       batches out the door, one packed and waiting, one still open, and eleven
+       units built but not yet assigned so the pool has something in it. */
     let serial = 500;
     const unit = function(order, cfg, batch, status){
       const s = 'DG-' + String(serial++).padStart(6, '0');
@@ -2364,14 +2371,18 @@
     const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784', demoUps('delivered', -85, 'Austin, TX'));
     for (let i = 0; i < 25; i++) db.pc_log.push(unit(o1, cfgA, b1, 'shipped'));
 
+    /* [config, how many] per batch, so each build is at a different stage */
+    const addUnits = function(bid, status, mix){
+      mix.forEach(function(m){ for (let i = 0; i < m[1]; i++) db.pc_log.push(unit(o2, m[0], bid, status)); });
+    };
     const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785', demoUps('delivered', -11, 'Austin, TX'));
-    for (let i = 0; i < 16; i++) db.pc_log.push(unit(o2, cfgB, b2, 'shipped'));
+    addUnits(b2, 'shipped', [[cfgA, 8], [cfgB, 8]]);
     const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786', demoUps('out', 0, 'Round Rock, TX'));
-    for (let i = 0; i < 14; i++) db.pc_log.push(unit(o2, cfgB, b3, 'shipped'));
+    addUnits(b3, 'shipped', [[cfgA, 6], [cfgB, 4], [cfgC, 4]]);
     const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787', demoUps('label', -1));
-    for (let i = 0; i < 12; i++) db.pc_log.push(unit(o2, cfgB, b4, 'assigned'));
+    addUnits(b4, 'assigned', [[cfgB, 4], [cfgC, 4], [cfgD, 4]]);
     batch(o2, 4, 'demo-loc-4', 'open', null, null);
-    for (let i = 0; i < 11; i++) db.pc_log.push(unit(o2, cfgB, null, 'built'));
+    addUnits(null, 'built', [[cfgA, 4], [cfgB, 2], [cfgC, 2], [cfgD, 3]]);
 
     /* one RMA, mid-flight, so the section is not empty */
     const rma = 'demo-rma-1';
@@ -2904,7 +2915,9 @@
     const v = parseInt(localStorage.getItem('portalRows') || '', 10);
     return ROW_OPTS.indexOf(v) >= 0 ? v : 30;
   })();
-  function pageSize(){ return rowsPer === 0 ? Infinity : rowsPer; }
+  /* All is one page as long as any list. Not Infinity: page 0 times Infinity is
+     NaN, which emptied the table and showed NaN in the page count */
+  function pageSize(){ return rowsPer === 0 ? Number.MAX_SAFE_INTEGER : rowsPer; }
   let batchPage = {};
   let canBill = false, billState = 'idle', billErr = '', billSum = null, billInv = [], billSeries = [];
   let billPays = {}, billDocs = {}, billOpen = null, billTab = 'open', billChart = 'money';
