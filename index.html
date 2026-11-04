@@ -6400,7 +6400,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     histPage = 0;
     renderHomeStatus();
   }
-  function esc(v){ return (v==null?'':String(v)).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+  function esc(v){ return (v==null?'':String(v)).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
   /* ================= VIEW SWITCHING ================= */
   const navInventory = document.getElementById('navInventory');
@@ -16026,7 +16026,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const r = await SB.from('staff').update(patch).eq('id', row.id);
       if (r.error){ pb.checked = !val; toast(r.error.message || 'Could not save.', 'bad'); return; }
       row[field] = val;
-      toast(esc(row.name || row.email) + ' \u00b7 ' + field.replace(/_/g, ' ') + (val ? ' on' : ' off'), 'ok', 3000);
+      toast((row.name || row.email || '') + ' \u00b7 ' + field.replace(/_/g, ' ') + (val ? ' on' : ' off'), 'ok', 3000);
       return;
     }
   });
@@ -16143,7 +16143,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         bg.querySelector('#admAErr').textContent = r.error.message; return;
       }
       c.active = restoring;
-      mgCloseModal(); toast(esc(c.name) + (restoring ? ' restored' : ' archived'), 'ok');
+      mgCloseModal(); toast((c.name || '') + (restoring ? ' restored' : ' archived'), 'ok');
       admRenderPane();
     });
   }
