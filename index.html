@@ -2896,6 +2896,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* right pad clears the chevron the global select rule paints there */
   .ord-rows .sel-sm{ height:24px; padding:0 26px 0 8px; font-size:11.5px; }
   .ord-pager-info{ font-family:var(--font-num); font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  /* batch list: the pager on the left, Merge or Jump to Pool at the far right */
+  .ord-bl-bar{ display:flex; align-items:center; gap:var(--s2) var(--s3); flex-wrap:wrap; margin:0 0 var(--s3); container:ordbl / inline-size; scroll-margin-top:var(--s3); }
+  .ord-bl-bar > button{ margin-left:auto; }
+  .ord-bl-foot{ margin:0; }
+  .ord-bl-pager{ display:flex; align-items:center; gap:var(--s2); }
+  .ord-bl-pager .btn-sm{ white-space:nowrap; }
+  .ord-bl-pager .sel-sm{ width:auto; font-family:var(--font-num); font-variant-numeric:tabular-nums; }
+  /* phone width: arrows either side of the range, one row; the button below it */
+  @container ordbl (max-width:520px){
+    .ord-bl-pager{ flex:1 1 100%; }
+    .ord-bl-pager .ord-bl-w{ display:none; }
+    .ord-bl-pager .btn-sm{ min-width:44px; padding-left:0 !important; padding-right:0 !important; font-size:18px !important; }
+    .ord-bl-pager .sel-sm{ flex:1 1 0; min-width:0; }
+    .ord-bl-bar > button{ flex:1 1 100%; margin-left:0; }
+  }
+  #ordPoolCard{ scroll-margin-top:var(--s3); }
+  #ordPoolCard > .card-title:focus:not(:focus-visible){ outline:none; }
 
   .ord-due-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--s2); align-items:center; }
   .ord-due-row input{ width:100%; height:var(--h-lg, 40px); padding:0 16px; font:inherit; font-size:13px;
@@ -6231,7 +6248,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const cfgA = 'demo-cfg-1', cfgB = 'demo-cfg-2', cfgC = 'demo-cfg-3', cfgD = 'demo-cfg-4';
     const o1 = 'demo-ord-1', o2 = 'demo-ord-2';
     const db = {
-      customers: [{ id: CUST, name: 'Demo Gaming Co', code: 'DG', next_serial: 561, active: true,
+      customers: [{ id: CUST, name: 'Demo Gaming Co', code: 'DG', next_serial: 600, active: true,
                     created_at: demoStamp(-210) }],
       configs: [
         { id: cfgA, customer_id: CUST, name: 'Spectre 15', status: 'active', active: true,
@@ -6251,14 +6268,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ],
       orders: [
         { id: o1, customer_id: CUST, invoice_no: 'DG001', created_at: demoStamp(-96), archived: false,
-          due_date: demoDay(-66), invoice_total: 17975, po_number: '4500118820',
+          due_date: demoDay(-66), invoice_total: 32355, po_number: '4500118820',
           hold_until_paid: false, complete_notified_at: demoStamp(-70), notes: null },
         { id: o2, customer_id: CUST, invoice_no: 'DG002', created_at: demoStamp(-34), archived: false,
           due_date: demoDay(12), invoice_total: 82080, po_number: null,
           hold_until_paid: false, complete_notified_at: null, notes: null }
       ],
       order_lines: [
-        { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 25, unit_price: 719, position: 1, category: 1 },
+        { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 45, unit_price: 719, position: 1, category: 1 },
         /* DG002 mixes four builds, so the per-config views have something to show */
         { id: 'demo-line-2', order_id: o2, config_id: cfgA, qty_ordered: 20, unit_price: 1199, position: 1, category: 1 },
         { id: 'demo-line-3', order_id: o2, config_id: cfgB, qty_ordered: 20, unit_price: 1368, position: 2, category: 1 },
@@ -6266,8 +6283,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         { id: 'demo-line-5', order_id: o2, config_id: cfgD, qty_ordered: 8, unit_price: 1225, position: 4, category: 1 }
       ],
       order_payments: [
-        { id: 'demo-pay-1', order_id: o1, amount: 9000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
-        { id: 'demo-pay-2', order_id: o1, amount: 8975, paid_on: demoDay(-62), method: 'Wire', note: 'Balance' },
+        { id: 'demo-pay-1', order_id: o1, amount: 16000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
+        { id: 'demo-pay-2', order_id: o1, amount: 16355, paid_on: demoDay(-62), method: 'Wire', note: 'Balance' },
         { id: 'demo-pay-3', order_id: o2, amount: 40000, paid_on: demoDay(-18), method: 'ACH', note: 'Part payment against DG002' }
       ],
       batches: [], batch_tracking: [], pc_log: [],
@@ -6293,7 +6310,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         { key: 'rma_from_address', value: 'rma@novatechgaming.example' },
         { key: 'rma_return_address', value: 'Novatech Gaming\nAttn: RMA returns\n418 Foundry Rd\nColumbus, OH 43215' }
       ],
-      serial_sequences: [{ customer_id: CUST, next_serial: 561 }],
+      serial_sequences: [{ customer_id: CUST, next_serial: 600 }],
       /* whoever is signed in becomes the demo operator; the user_id filter is
          ignored for this table so the real session matches it */
       staff: [{ id: 'demo-staff-1', user_id: ME, name: 'You (demo)', email: 'you@novatechgaming.example',
@@ -6308,7 +6325,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     };
 
     /* ---- units, batches and tracking ----
-       DG001 is done and gone. DG002 is the interesting one: four builds, two
+       DG001 is done and gone, one PC to each of 45 stores, so its batch list is
+       long enough to page. DG002 is the interesting one: four builds, two
        batches out the door, one packed and waiting, one still open, and eleven
        units built but not yet assigned so the pool has something in it. */
     let serial = 500;
@@ -6350,8 +6368,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return id;
     };
 
-    const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784', demoUps('delivered', -85, 'Austin, TX'));
-    for (let i = 0; i < 25; i++) db.pc_log.push(unit(o1, cfgA, b1, 'shipped'));
+    const towns = [['Austin', 'TX'], ['Phoenix', 'AZ'], ['Tampa', 'FL'], ['Denver', 'CO'], ['Dallas', 'TX'],
+                   ['Tucson', 'AZ'], ['Orlando', 'FL'], ['Boulder', 'CO'], ['Houston', 'TX']];
+    const malls = ['Plaza', 'Commons', 'Crossing', 'Galleria', 'Market'];
+    for (let i = 0; i < 45; i++){
+      const t = towns[i % towns.length], loc = 'demo-loc-s' + (i + 1), day = -90 + Math.floor(i * 18 / 45);
+      db.ship_to_locations.push({ id: loc, customer_id: CUST, store_name: t[0] + ' ' + malls[Math.floor(i / towns.length)],
+                                  store_number: String(601 + i), address: (120 + i * 17) + ' Commerce St',
+                                  city: t[0], state: t[1], zip: '', active: true });
+      const b = batch(o1, i + 1, loc, 'shipped', demoDay(day), '1Z999AA1' + (1000000000 + i * 7919), demoUps('delivered', day + 3, t[0] + ', ' + t[1]));
+      db.batches[db.batches.length - 1].created_at = demoStamp(day - 1);
+      db.pc_log.push(unit(o1, cfgA, b, 'shipped'));
+    }
 
     /* [config, how many] per batch, so each build is at a different stage */
     const addUnits = function(bid, status, mix){
@@ -10307,6 +10335,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       }).join('') + '</select></label>';
   }
   let ordPoolPage = 0, ordBatchPage = {};
+  /* The batch list pages from the newest end, so a long invoice opens on its
+     latest batches. Page 0 is the newest ORD_BL_PER, page 1 the ones before. */
+  const ORD_BL_PER = 20;
+  let ordBlPage = 0;
 
   const ordListPane   = document.getElementById('ordListPane');
   const ordDetailPane = document.getElementById('ordDetailPane');
@@ -11292,7 +11324,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     /* leaving the list: remember its scroll; arriving from another tool: none */
     if (silent !== true && ordDetailPane.style.display === 'none')
       ordListY = toolOrders.style.display !== 'none' && ordListPane.style.display !== 'none' ? window.scrollY : 0;
-    if (ordCurrentId !== id){ ordSel.clear(); ordPoolCfg = ''; ordPoolPage = 0; ordBatchPage = {}; }
+    if (ordCurrentId !== id){ ordSel.clear(); ordPoolCfg = ''; ordPoolPage = 0; ordBatchPage = {}; ordBlPage = 0; }
     ordCurrentId = id;
     ordShowDetail();
     /* a freshly opened order starts at its title; a batch link scrolls itself */
@@ -11337,6 +11369,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       else ordCounts[id].built++;
     });
     if (ordPerm.admin && !obPays[id]) await obLoadPays(id);
+    if (focusBatch) ordBlShow(focusBatch);
     ordRenderDetail(o);
     if (silent !== true) liveRebase('detail:' + id);
     if (focusBatch){
@@ -11502,8 +11535,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '</section>' +
 
       (gated ? '' :
-      '<section class="card">' +
-        '<h2 class="card-title"><span class="ord-step s2">2</span>Unit pool <span class="card-sub">already built</span></h2>' +
+      '<section class="card" id="ordPoolCard">' +
+        '<h2 class="card-title" tabindex="-1"><span class="ord-step s2">2</span>Unit pool <span class="card-sub">already built</span></h2>' +
         '<div class="ord-cfgf-row" id="ordPoolChips" role="group" aria-label="Filter by config"></div>' +
         '<div class="ord-pool-tools">' +
           '<span class="ord-seln"><label for="ordSelN">Select</label>' +
@@ -12633,6 +12666,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (o) ordDeleteOrder(o);
       return;
     }
+    const blg = e.target.closest('[data-blgo]');
+    if (blg){ ordBlGo(ordBlPage + (blg.getAttribute('data-blgo') === 'older' ? 1 : -1), blg); return; }
+    if (e.target.closest('#ordJumpPool')){ ordJumpPool(); return; }
     const bx = e.target.closest('[data-bexpand]') ||
       /* the whole header row is a target; its own buttons keep their jobs */
       (e.target.closest('.ord-batch-head') && !e.target.closest('button, a, input, select, label, .ord-cfg-tag')
@@ -12685,6 +12721,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   });
   /* one preference, both tables; the open batch stays open across the change */
   ordDetailBody.addEventListener('change', function(e){
+    const blp = e.target.closest('[data-blpick]');
+    if (blp){ ordBlGo(parseInt(blp.value, 10) || 0, blp); return; }
     const sel = e.target.closest('[data-ordrows]');
     if (!sel) return;
     const open = [];
@@ -13481,6 +13519,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     document.querySelectorAll('.ord-printed[data-age] .ord-printed-t').forEach(function(el){ el.textContent = ordAgoRel(el.parentNode.getAttribute('data-age')); });
   }, 60000);
   function ordFocusBatch(bid){
+    if (ordBlShow(bid)){ const keep = liveKeep(ordDetailPane); ordRenderBatches(); keep(); }
     const el = document.querySelector('.ord-batch[data-bid="' + (window.CSS && CSS.escape ? CSS.escape(String(bid)) : bid) + '"]');
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY - Math.max(96, (window.innerHeight - el.offsetHeight) / 3);
@@ -13607,10 +13646,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     const cfgs = {}; ordConfigs.forEach(function(c){ cfgs[c.id] = c.name; });
     const openCount = ordBatches.filter(function(b){ return b.status !== 'shipped'; }).length;
+    const pages = Math.ceil(ordBatches.length / ORD_BL_PER);
+    ordBlPage = Math.max(0, Math.min(ordBlPage, pages - 1));
+    const end = ordBatches.length - ordBlPage * ORD_BL_PER;
+    const merge = ordPerm.manage && openCount >= 2
+      ? '<button class="ghost btn-sm" id="ordMergeBtn" type="button" title="Combine open batches into one">Merge batches</button>' : '';
+    /* the summary and By config count every batch; only the cards are paged */
     host.innerHTML = ordShipSumHtml(ordBatches.map(function(b){ return { id:b.id, status:b.status, delivered_at:b.delivered_at, tk:ordTracking.filter(function(t){ return t.batch_id === b.id; }) }; }), ordCfgSumHtml()) +
-      (ordPerm.manage && openCount >= 2
-      ? '<div style="display:flex;justify-content:flex-end;margin:0 0 var(--s3);"><button class="ghost btn-sm" id="ordMergeBtn" type="button" title="Combine open batches into one">Merge batches</button></div>'
-      : '') + ordBatches.map(function(b){
+      (pages > 1 || merge ? '<div class="ord-bl-bar">' + ordBlPagerHtml(pages, 'top') + merge + '</div>' : '') +
+      ordBatches.slice(Math.max(0, end - ORD_BL_PER), end).map(function(b){
       const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
       const units = ordBatchUnits(b.id);
       const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; });
@@ -13707,8 +13751,61 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           '</div>' +
         '</div>' +
       '</div>';
-    }).join('');
+    }).join('') +
+      '<div class="ord-bl-bar ord-bl-foot">' + ordBlPagerHtml(pages, 'foot') +
+        '<button class="ghost btn-sm" id="ordJumpPool" type="button" title="Scroll back up to the unit pool">\u2191 Jump to Pool</button>' +
+      '</div>';
     ordAlignBatches(host);
+  }
+  /* Older / which batches / Newer. Two copies, above and below the cards; data-blat
+     tells them apart so a redraw can put focus back on the one that was used. */
+  function ordBlPagerHtml(pages, at){
+    if (pages < 2) return '';
+    const n = ordBatches.length, opts = [];
+    for (let p = 0; p < pages; p++){
+      const end = n - p * ORD_BL_PER, start = Math.max(0, end - ORD_BL_PER);
+      opts.push('<option value="' + p + '"' + (p === ordBlPage ? ' selected' : '') + '>Batches ' +
+        ordBatches[start].batch_no + '\u2013' + ordBatches[end - 1].batch_no + (p ? '' : ' (latest)') + '</option>');
+    }
+    return '<div class="ord-bl-pager">' +
+      '<button class="ghost btn-sm" data-blgo="older" data-blat="' + at + '" type="button" aria-label="Older batches"' + (ordBlPage >= pages - 1 ? ' disabled' : '') + '>\u2039<span class="ord-bl-w"> Older</span></button>' +
+      '<select class="sel-sm" data-blpick data-blat="' + at + '" aria-label="Which batches to show">' + opts.join('') + '</select>' +
+      '<button class="ghost btn-sm" data-blgo="newer" data-blat="' + at + '" type="button" aria-label="Newer batches"' + (ordBlPage ? '' : ' disabled') + '><span class="ord-bl-w">Newer </span>\u203a</button>' +
+    '</div>';
+  }
+  function ordBlGo(p, ctl){
+    const had = document.activeElement === ctl;
+    const keep = liveKeep(ordDetailPane);
+    ordBlPage = p;
+    ordRenderBatches();
+    keep();
+    const bar = document.querySelector('#ordBatchBody .ord-bl-bar');
+    if (!bar) return;
+    /* paged from the bottom: a page is read from its top, so go there */
+    if (ctl.getAttribute('data-blat') === 'foot')
+      bar.scrollIntoView({ block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    if (!had) return;
+    /* the same control in the top bar, or the picker once that button is disabled */
+    const go = ctl.getAttribute('data-blgo');
+    let f = bar.querySelector(go ? '[data-blgo="' + go + '"]' : '[data-blpick]');
+    if (!f || f.disabled) f = bar.querySelector('[data-blpick]');
+    if (f && document.activeElement !== f) f.focus({ preventScroll:true });
+  }
+  /* which page holds a batch; moves the list there and says so if it was elsewhere */
+  function ordBlShow(bid){
+    const i = ordBatches.findIndex(function(b){ return b.id === bid; });
+    if (i < 0) return false;
+    const p = Math.floor((ordBatches.length - 1 - i) / ORD_BL_PER);
+    if (p === ordBlPage) return false;
+    ordBlPage = p;
+    return true;
+  }
+  function ordJumpPool(){
+    const card = document.getElementById('ordPoolCard');
+    if (!card) return;
+    card.scrollIntoView({ block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    const t = card.querySelector('.card-title');
+    if (t) t.focus({ preventScroll:true });
   }
   /* Each card is its own grid, so auto columns size per card and drift. Measure
      the widest Created and button groups once and pin every card to them. */

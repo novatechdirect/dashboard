@@ -1054,6 +1054,19 @@
   .pager-i{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .pager-rows{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
   .pager-rows select{ height:24px; padding:0 24px 0 6px; font-size:11.5px; width:auto; }
+  /* shipment list: Older / which batches / Newer */
+  .shp-bar{ margin:0 0 var(--s3); scroll-margin-top:var(--s4); container:shpbar / inline-size; }
+  .shp-bar.shp-foot{ margin:0; }
+  .shp-pager{ display:flex; align-items:center; gap:var(--s2); }
+  .shp-pager .btn{ white-space:nowrap; }
+  /* phone width: arrows either side of the range, one row */
+  @container shpbar (max-width:520px){
+    .shp-pager .shp-w{ display:none; }
+    .shp-pager .btn{ min-width:44px; padding-left:0; padding-right:0; font-size:18px; }
+    .shp-pager select{ flex:1 1 0; min-width:0; }
+  }
+  .shp-pager select{ width:auto; height:var(--h-sm, 32px); padding:0 8px; font:inherit; font-size:12.5px; font-variant-numeric:tabular-nums;
+    border:1px solid var(--line-strong); background:var(--paper); color:var(--ink); }
 
 
   /* password reveal: the eye sits inside the field, so the field keeps its width */
@@ -1407,7 +1420,7 @@
     .card, .batch, .sumc{ box-shadow:none; border-color:#ccc; break-inside:avoid; }
     .bbody{ grid-template-rows:1fr !important; opacity:1 !important; overflow:visible !important; visibility:visible !important; }
     .bbody-pad{ background:#fff; }
-    .pager{ display:none !important; }
+    .pager, .shp-bar{ display:none !important; }
     .orow{ animation:none; }
   }
 
@@ -2249,7 +2262,7 @@
     const cfgA = 'demo-cfg-1', cfgB = 'demo-cfg-2', cfgC = 'demo-cfg-3', cfgD = 'demo-cfg-4';
     const o1 = 'demo-ord-1', o2 = 'demo-ord-2';
     const db = {
-      customers: [{ id: CUST, name: 'Demo Gaming Co', code: 'DG', next_serial: 561, active: true,
+      customers: [{ id: CUST, name: 'Demo Gaming Co', code: 'DG', next_serial: 600, active: true,
                     created_at: demoStamp(-210) }],
       configs: [
         { id: cfgA, customer_id: CUST, name: 'Spectre 15', status: 'active', active: true,
@@ -2269,14 +2282,14 @@
       ],
       orders: [
         { id: o1, customer_id: CUST, invoice_no: 'DG001', created_at: demoStamp(-96), archived: false,
-          due_date: demoDay(-66), invoice_total: 17975, po_number: '4500118820',
+          due_date: demoDay(-66), invoice_total: 32355, po_number: '4500118820',
           hold_until_paid: false, complete_notified_at: demoStamp(-70), notes: null },
         { id: o2, customer_id: CUST, invoice_no: 'DG002', created_at: demoStamp(-34), archived: false,
           due_date: demoDay(12), invoice_total: 82080, po_number: null,
           hold_until_paid: false, complete_notified_at: null, notes: null }
       ],
       order_lines: [
-        { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 25, unit_price: 719, position: 1, category: 1 },
+        { id: 'demo-line-1', order_id: o1, config_id: cfgA, qty_ordered: 45, unit_price: 719, position: 1, category: 1 },
         /* DG002 mixes four builds, so the per-config views have something to show */
         { id: 'demo-line-2', order_id: o2, config_id: cfgA, qty_ordered: 20, unit_price: 1199, position: 1, category: 1 },
         { id: 'demo-line-3', order_id: o2, config_id: cfgB, qty_ordered: 20, unit_price: 1368, position: 2, category: 1 },
@@ -2284,8 +2297,8 @@
         { id: 'demo-line-5', order_id: o2, config_id: cfgD, qty_ordered: 8, unit_price: 1225, position: 4, category: 1 }
       ],
       order_payments: [
-        { id: 'demo-pay-1', order_id: o1, amount: 9000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
-        { id: 'demo-pay-2', order_id: o1, amount: 8975, paid_on: demoDay(-62), method: 'Wire', note: 'Balance' },
+        { id: 'demo-pay-1', order_id: o1, amount: 16000, paid_on: demoDay(-80), method: 'Wire', note: 'Deposit' },
+        { id: 'demo-pay-2', order_id: o1, amount: 16355, paid_on: demoDay(-62), method: 'Wire', note: 'Balance' },
         { id: 'demo-pay-3', order_id: o2, amount: 40000, paid_on: demoDay(-18), method: 'ACH', note: 'Part payment against DG002' }
       ],
       batches: [], batch_tracking: [], pc_log: [],
@@ -2311,7 +2324,7 @@
         { key: 'rma_from_address', value: 'rma@novatechgaming.example' },
         { key: 'rma_return_address', value: 'Novatech Gaming\nAttn: RMA returns\n418 Foundry Rd\nColumbus, OH 43215' }
       ],
-      serial_sequences: [{ customer_id: CUST, next_serial: 561 }],
+      serial_sequences: [{ customer_id: CUST, next_serial: 600 }],
       /* whoever is signed in becomes the demo operator; the user_id filter is
          ignored for this table so the real session matches it */
       staff: [{ id: 'demo-staff-1', user_id: ME, name: 'You (demo)', email: 'you@novatechgaming.example',
@@ -2326,7 +2339,8 @@
     };
 
     /* ---- units, batches and tracking ----
-       DG001 is done and gone. DG002 is the interesting one: four builds, two
+       DG001 is done and gone, one PC to each of 45 stores, so its batch list is
+       long enough to page. DG002 is the interesting one: four builds, two
        batches out the door, one packed and waiting, one still open, and eleven
        units built but not yet assigned so the pool has something in it. */
     let serial = 500;
@@ -2368,8 +2382,18 @@
       return id;
     };
 
-    const b1 = batch(o1, 1, 'demo-loc-1', 'shipped', demoDay(-88), '1Z999AA10123456784', demoUps('delivered', -85, 'Austin, TX'));
-    for (let i = 0; i < 25; i++) db.pc_log.push(unit(o1, cfgA, b1, 'shipped'));
+    const towns = [['Austin', 'TX'], ['Phoenix', 'AZ'], ['Tampa', 'FL'], ['Denver', 'CO'], ['Dallas', 'TX'],
+                   ['Tucson', 'AZ'], ['Orlando', 'FL'], ['Boulder', 'CO'], ['Houston', 'TX']];
+    const malls = ['Plaza', 'Commons', 'Crossing', 'Galleria', 'Market'];
+    for (let i = 0; i < 45; i++){
+      const t = towns[i % towns.length], loc = 'demo-loc-s' + (i + 1), day = -90 + Math.floor(i * 18 / 45);
+      db.ship_to_locations.push({ id: loc, customer_id: CUST, store_name: t[0] + ' ' + malls[Math.floor(i / towns.length)],
+                                  store_number: String(601 + i), address: (120 + i * 17) + ' Commerce St',
+                                  city: t[0], state: t[1], zip: '', active: true });
+      const b = batch(o1, i + 1, loc, 'shipped', demoDay(day), '1Z999AA1' + (1000000000 + i * 7919), demoUps('delivered', day + 3, t[0] + ', ' + t[1]));
+      db.batches[db.batches.length - 1].created_at = demoStamp(day - 1);
+      db.pc_log.push(unit(o1, cfgA, b, 'shipped'));
+    }
 
     /* [config, how many] per batch, so each build is at a different stage */
     const addUnits = function(bid, status, mix){
@@ -2919,6 +2943,10 @@
      NaN, which emptied the table and showed NaN in the page count */
   function pageSize(){ return rowsPer === 0 ? Number.MAX_SAFE_INTEGER : rowsPer; }
   let batchPage = {};
+  /* The shipment list pages from the newest end, so a long invoice opens on its
+     latest batches. Page 0 is the newest SHIP_PER; printing shows them all. */
+  const SHIP_PER = 20;
+  let shipPage = 0, shipAll = false;
   let canBill = false, billState = 'idle', billErr = '', billSum = null, billInv = [], billSeries = [];
   let billPays = {}, billDocs = {}, billOpen = null, billTab = 'open', billChart = 'money';
   /* set for the one render that follows a click, so the async payment and
@@ -3664,6 +3692,7 @@
   });
   function renderList(){
     setUrl(null);
+    shipPage = 0;
     $('detailView').style.display = 'none';
     $('listView').style.display = '';
     if (pview === 'home') return renderHome();
@@ -3755,6 +3784,46 @@
     const open = batchesOpen();
     if (currentId) openOrder(currentId);
     reopenBatches(open);
+  });
+  /* Older / which batches / Newer, above and below the shipments */
+  function shipPagerHtml(list, pages, at){
+    if (pages < 2) return '';
+    const n = list.length, opts = [];
+    for (let p = 0; p < pages; p++){
+      const end = n - p * SHIP_PER, start = Math.max(0, end - SHIP_PER);
+      opts.push('<option value="' + p + '"' + (p === shipPage ? ' selected' : '') + '>Batches ' +
+        list[start].batch_no + '\u2013' + list[end - 1].batch_no + (p ? '' : ' (latest)') + '</option>');
+    }
+    return '<div class="shp-bar' + (at === 'foot' ? ' shp-foot' : '') + '"><div class="shp-pager">' +
+      '<button class="btn sm" data-shgo="older" data-shat="' + at + '" type="button" aria-label="Older batches"' + (shipPage >= pages - 1 ? ' disabled' : '') + '>\u2039<span class="shp-w"> Older</span></button>' +
+      '<select data-shpick data-shat="' + at + '" aria-label="Which batches to show">' + opts.join('') + '</select>' +
+      '<button class="btn sm" data-shgo="newer" data-shat="' + at + '" type="button" aria-label="Newer batches"' + (shipPage ? '' : ' disabled') + '><span class="shp-w">Newer </span>\u203a</button>' +
+    '</div></div>';
+  }
+  function shipGo(p, ctl){
+    const had = document.activeElement === ctl, go = ctl.getAttribute('data-shgo');
+    const open = batchesOpen();
+    shipPage = p;
+    if (currentId) openOrder(currentId);
+    reopenBatches(open);
+    const bar = document.querySelector('#detailView .shp-bar');
+    if (!bar) return;
+    /* paged from the bottom: a page is read from its top, so go there */
+    if (ctl.getAttribute('data-shat') === 'foot')
+      bar.scrollIntoView({ block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    if (!had) return;
+    /* the same control in the top bar, or the picker once that button is disabled */
+    let f = bar.querySelector(go ? '[data-shgo="' + go + '"]' : '[data-shpick]');
+    if (!f || f.disabled) f = bar.querySelector('[data-shpick]');
+    if (f) f.focus({ preventScroll:true });
+  }
+  document.addEventListener('click', function(e){
+    const g = e.target.closest('[data-shgo]');
+    if (g) shipGo(shipPage + (g.getAttribute('data-shgo') === 'older' ? 1 : -1), g);
+  });
+  document.addEventListener('change', function(e){
+    const s = e.target.closest('[data-shpick]');
+    if (s) shipGo(parseInt(s.value, 10) || 0, s);
   });
 
 
@@ -4824,6 +4893,7 @@
 
   /* ---------- detail ---------- */
   function openOrder(id){
+    if (currentId !== id) shipPage = 0;
     currentId = id; pview = 'orders'; syncMenu();
     const o = orders.find(function(x){ return x.id === id; });
     if (!o) return;
@@ -4831,6 +4901,10 @@
     const st = stats(o), s = statusOf(st);
     const mine = batches.filter(function(b){ return b.order_id === id; });
     const cfgName = {}; configs.forEach(function(c){ cfgName[c.id] = c.name; });
+    const shipPages = shipAll ? 1 : Math.ceil(mine.length / SHIP_PER);
+    shipPage = Math.max(0, Math.min(shipPage, shipPages - 1));
+    const shipEnd = mine.length - shipPage * SHIP_PER;
+    const shown = shipAll ? mine : mine.slice(Math.max(0, shipEnd - SHIP_PER), shipEnd);
 
     $('listView').style.display = 'none';
     $('detailView').style.display = '';
@@ -4865,7 +4939,7 @@
       shipLocHtml(o, cfgName) +
       '<div class="card"><h2>Shipments <span class="subtle">each shipment goes to one store</span></h2>' +
       shipSumHtml(mine.map(function(b){ return { id:b.id, status:b.status, delivered_at:b.delivered_at, tk:tracking.filter(function(t){ return t.batch_id === b.id; }) }; })) +
-      (mine.length ? mine.map(function(b){
+      (mine.length ? shipPagerHtml(mine, shipPages, 'top') + shown.map(function(b){
         const bu = units.filter(function(u){ return u.batch_id === b.id; });
         const tk = tracking.filter(function(t){ return t.batch_id === b.id; });
         const per = {}; tk.forEach(function(t){ if (t.unit_id) per[t.unit_id] = t.tracking_no; });
@@ -4884,7 +4958,7 @@
             '<div><b>' + esc(locName(b)) + '</b>' +
               (locNum(b) ? '<span class="storenum">' + esc(locNum(b)) + '</span>' : '') +
               '<div class="sub">' + esc(locLine(b) || '') + '</div></div>' +
-            '<div class="mono">' + num(bu.length) + ' units' +
+            '<div class="mono">' + num(bu.length) + ' unit' + (bu.length === 1 ? '' : 's') +
               (b.ship_date ? '' : '<span class="muted" style="font-family:var(--font-ui);font-size:12px;"> \u00b7 not yet shipped</span>') +
               '<div class="sub bship">' +
               (wide.length
@@ -4935,7 +5009,7 @@
             })() +
           '</div></div></div>' +
         '</div>';
-      }).join('')
+      }).join('') + shipPagerHtml(mine, shipPages, 'foot')
       : '<div class="empty">' +
         '<div class="empty-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.56541 8.73049C9.0804 6.97492 8.8379 6.09714 9.24954 5.40562C9.66119 4.71409 10.5662 4.47889 12.3763 4.00849L14.2962 3.50955C16.1062 3.03915 17.0113 2.80394 17.7242 3.20319C18.4372 3.60244 18.6797 4.48023 19.1647 6.2358L19.6792 8.09786C20.1642 9.85343 20.4067 10.7312 19.995 11.4227C19.5834 12.1143 18.6784 12.3495 16.8683 12.8199L14.9484 13.3188C13.1384 13.7892 12.2333 14.0244 11.5203 13.6252C10.8073 13.2259 10.5648 12.3481 10.0798 10.5926L9.56541 8.73049Z"/><path stroke-linecap="round" d="M8.23 15.0602L6.08 7.27014C5.89453 6.61732 5.38563 6.12036 4.7 5.92L3 5.4502"/><circle cx="8.05" cy="18.1" r="2.9"/><path stroke-linecap="round" d="M10.9199 17.36L19.9999 15"/></g></svg></div>' +
         '<p>Nothing has shipped yet.</p><p class="muted">Shipments appear here as they leave the building.</p></div>') +
@@ -4952,13 +5026,13 @@
     $('csv').addEventListener('click', function(){ exportCsv(o); });
     $('prt').addEventListener('click', function(){
       const keep = rowsPer, open = batchesOpen(), id = o.id;
-      rowsPer = 0; openOrder(id);
+      rowsPer = 0; shipAll = true; openOrder(id);
       document.querySelectorAll('.bbody').forEach(function(x){ x.classList.add('open', 'instant'); });
       let done = false;
       const restore = function(){
         if (done) return; done = true;
         window.removeEventListener('afterprint', restore);
-        rowsPer = keep;
+        rowsPer = keep; shipAll = false;
         if (currentId === id){ openOrder(id); reopenBatches(open); }
       };
       window.addEventListener('afterprint', restore);
