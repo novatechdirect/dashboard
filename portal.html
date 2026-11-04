@@ -3,8 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#0e1116">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -24,6 +22,9 @@
     try{
       var t = localStorage.getItem('ntTheme') === 'dark' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', t);
+      /* the phone status bar follows the portal's theme, not the device's */
+      var tc = document.querySelector('meta[name="theme-color"]');
+      if (tc) tc.setAttribute('content', t === 'dark' ? '#0e1116' : '#ffffff');
       /* the session resolves asynchronously; until it does show neither
          screen, rather than flashing sign-in at someone already signed in */
       document.documentElement.classList.add('nt-boot');
@@ -41,13 +42,13 @@
        the spec defines no mono token, so figures ride the UI face with tnum. */
     --font-ui:'Inter',-apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;
     --font-num:var(--font-ui);
-    --ink:#1a1a1a; --charcoal:#37352f; --ink-deep:#000000; --on-ink:#ffffff; --muted:#5d5b54; --faint:#787671;
+    --ink:#1a1a1a; --charcoal:#37352f; --ink-deep:#000000; --on-ink:#ffffff; --muted:#5d5b54; --faint:#6f6d68;
     --stone:#a4a097; --disabled:#bbb8b1;
     --bg:#f6f5f4; --paper:#ffffff; --soft:#fafaf9;
     --line:#e5e3df; --line-strong:#c8c4be;
     --accent:#5645d4; --accent-fg:#5645d4; --accent-hover:#4534b3;
     --accent-soft:#e6e0f5; --accent-line:#d6b6f6; --accent-ink:#ffffff;
-    --link:#0075de; --link-hover:#005bab;
+    --link:#0068c9; --link-hover:#005bab;
     --hue-rma:#0075de;
     /* hue drives the dot and any fill; the pastel tint sits behind and the
        label uses the family's deep variant so it clears 4.5:1 */
@@ -55,6 +56,13 @@
     --warn:#dd5b00; --warn-ink:#793400; --warn-bg:#ffe8d4; --warn-line:#f7cba8;
     --bad:#e03131;  --bad-ink:#a02e6d;  --bad-bg:#fde0ec;  --bad-line:#f6c0d8;
     --info:#5645d4; --info-ink:#391c57; --info-bg:#e6e0f5; --info-line:#d6b6f6;
+    /* the bright hues stay on dots, bars and borders; text in a status colour
+       uses -fg; --bad-solid fills the destructive confirm button */
+    --ok-fg:#127a28; --warn-fg:#b04a00; --bad-fg:#c62828;
+    --bad-solid:#a02e6d;
+    --focus:#5645d4;
+    --series:var(--accent);
+    --raised:var(--paper); --raised-line:var(--line);
     --e1:rgba(15,15,15,.04) 0 1px 2px 0;
     --e2:rgba(15,15,15,.08) 0 4px 12px 0;
     --e3:rgba(15,15,15,.20) 0 24px 48px -8px;
@@ -71,23 +79,27 @@
     --s5:24px; --s6:32px; --s6b:40px; --s7:48px; --s8:64px;
     --r-xs:4px; --r-tag:6px; --r-sm:8px; --r-md:12px;
     --r-lg:16px; --r-xl:20px; --r-pill:9999px;
+    /* control heights, the same scale as the staff dashboard */
+    --h-sm:32px; --h-lg:40px;
     --t:170ms cubic-bezier(.2,.6,.2,1);
     --t-slow:220ms cubic-bezier(.2,.6,.2,1);
   }
+  /* touch screens (phones and iPads) get finger-sized targets */
+  @media (pointer:coarse){ :root{ --h-sm:40px; --h-lg:44px; } }
   :root[data-theme="dark"]{
     color-scheme:dark;
     /* derived from the spec's own navy band colours — no new hues introduced */
-    --ink:#e8ecf2; --charcoal:#e8ecf2; --muted:#9aa5b4; --faint:#6c7787;
+    --ink:#e8ecf2; --charcoal:#e8ecf2; --muted:#9aa5b4; --faint:#808b9b;
     --stone:#9aa5b4; --disabled:#5b6673;
     --bg:#0e1116; --paper:#161b22; --soft:#1c222b;
     --line:#252c36;
     --line-strong:#374250;
-    --ink-deep:#ffffff; --on-ink:#0e1116;
+    --ink-deep:#d7dbe2; --on-ink:#0e1116;
     --accent:#5645d4; --accent-fg:#d6b6f6; --accent-hover:#7b3ff2;
     --accent-soft:color-mix(in srgb, #5645d4 26%, #161b22);
     --accent-line:color-mix(in srgb, #7b3ff2 44%, #161b22);
     --accent-ink:#ffffff;
-    --link:#dcecfa; --link-hover:#ffffff;
+    --link:#8ab4f8; --link-hover:#aecbfa;
     --hue-rma:#dcecfa;
     --ok:#1aae39;   --ok-ink:#d9f3e1;
     --ok-bg:color-mix(in srgb, #1aae39 20%, #161b22);
@@ -101,6 +113,11 @@
     --info:#5645d4; --info-ink:#e6e0f5;
     --info-bg:color-mix(in srgb, #5645d4 26%, #161b22);
     --info-line:color-mix(in srgb, #7b3ff2 44%, #161b22);
+    --ok-fg:#2fbf4f; --warn-fg:#f0883e; --bad-fg:#f87171;
+    --bad-solid:#d32f2f;
+    --focus:#a78bfa;
+    --series:#8b7cf0;
+    --raised:#1e242d; --raised-line:var(--line-strong);
     --e1:0 1px 2px rgba(0,0,0,.4);
     --e2:0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.4);
     --e3:0 2px 6px rgba(0,0,0,.4), 0 20px 48px rgba(0,0,0,.55);
@@ -108,7 +125,7 @@
     --scrim:rgba(4,6,9,.66);
     --glass:rgba(24,28,36,.62); --glass-solid:#161a21;
     --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#eef1f6;
-    --ring:0 0 0 2px var(--accent-hover);
+    --ring:0 0 0 2px #a78bfa;
   }
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
@@ -125,8 +142,12 @@
   ::selection{ background:var(--accent-soft); color:var(--ink); }
   a{ color:var(--accent-fg); text-decoration:none; }
   a:hover{ color:var(--accent-hover); }
-  a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{
-    outline:none; box-shadow:var(--ring); border-radius:var(--r-sm);
+  /* one focus outline, visible in both themes; fields keep the accent ring */
+  a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--focus); outline-offset:2px;
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:none; border-color:var(--accent); box-shadow:var(--ring);
   }
   .mono{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
   h1,h2,h3,h4{ font-weight:600; letter-spacing:-0.5px; }
@@ -201,7 +222,13 @@
   .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
   .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); padding:10px 18px; min-height:40px; }
   .btn.primary:hover{ background:var(--accent-hover); border-color:var(--accent-hover); box-shadow:none; }
-  .btn.sm{ padding:4px 12px; min-height:28px; font-size:12.5px; }
+  .btn.sm{ padding:4px 12px; min-height:var(--h-sm, 32px); font-size:12.5px; }
+  /* destructive: an outline that reads as a warning, solid only as the
+     confirm button that actually does it */
+  .btn.danger{ background:var(--paper); color:var(--bad-ink); border-color:var(--bad-line); }
+  .btn.danger:hover{ background:var(--bad-bg); border-color:var(--bad); }
+  .modal-f .btn.danger:last-child{ background:var(--bad-solid); border-color:var(--bad-solid); color:#fff; }
+  .modal-f .btn.danger:last-child:hover{ filter:brightness(.92); }
   .back .btn, .toolbar .btn, .staffbadge{ white-space:nowrap; }
   .icon-btn{
     display:inline-flex; align-items:center; justify-content:center;
@@ -215,19 +242,23 @@
   :root:not([data-theme="light"]) .i-moon{ display:none; }
 
   /* ---------- layout ---------- */
-  .wrap{ max-width:2040px; margin:0 auto; padding:var(--s7) var(--s6) var(--s8); }
+  .wrap{ max-width:2040px; margin:0 auto; padding:var(--s6) var(--s6) var(--s8); }
   .card{
     background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
     padding:var(--s5); margin-bottom:var(--s5); box-shadow:none;
   }
   h1{ font-size:24px; letter-spacing:0; margin:0 0 var(--s2); line-height:1.2; }
-  h2{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s4b); }
+  h2{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s4b); }
   .page-head{ margin-bottom:var(--s5); }
   /* the status chip is a sibling of the number, not punctuation after it */
   .inv-h1{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; row-gap:var(--s2); }
 
   /* ---------- login ---------- */
   .login{ max-width:400px; margin:11vh auto; padding:0 var(--s4); animation:rise var(--t-slow) both; }
+  .login-logo{ display:block; height:28px; width:auto; margin:0 auto var(--s5); }
+  .login-logo.is-dark{ display:none; }
+  :root[data-theme="dark"] .login-logo.is-light{ display:none; }
+  :root[data-theme="dark"] .login-logo.is-dark{ display:block; }
   .field{ margin-bottom:var(--s3); }
   .field label{ display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:var(--s1); }
   .field input, .pickbox, .searchbox{
@@ -237,7 +268,8 @@
     transition:border-color var(--t), box-shadow var(--t);
   }
   .field input:focus, .pickbox:focus, .searchbox:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
-  .err{ color:var(--bad); font-size:12.5px; min-height:1.2em; margin-top:var(--s2); font-weight:600; }
+  .err{ color:var(--bad-fg); font-size:12.5px; min-height:1.2em; margin-top:var(--s2); font-weight:600; }
+  .err:empty{ min-height:0; margin:0; }
 
   /* ---------- order rows ---------- */
   .toolbar{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
@@ -262,8 +294,9 @@
   /* its own cell, so the row's align-items:center does the vertical centring */
   .ostat{ display:flex; align-items:center; justify-content:center; min-width:0; margin-right:var(--s4); }
   .ostat .chip{ flex:0 0 auto; }
-  .inv-lbl{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--faint);  white-space:nowrap; }
+  .inv-lbl{ font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--muted);  white-space:nowrap; }
   .sub{ color:var(--muted); font-size:12.5px; margin-top:4px; }
+  .orow .sub .nw{ white-space:nowrap; }
   .chev{ color:var(--faint); display:flex; justify-content:flex-end; transition:transform var(--t), color var(--t); }
   .chev svg{ width:18px; height:18px; }
 
@@ -272,7 +305,7 @@
     font-size:11.5px; font-weight:600; letter-spacing:.02em;
     padding:4px 10px; border-radius:var(--r-pill); border:1px solid transparent;
   }
-  .chip::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .chip::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--dot, currentColor); }
   .chip.n{ color:var(--muted);  background:var(--soft);      border-color:var(--line); }
   .chip.i{ color:var(--info-ink);   background:var(--info-bg);   border-color:var(--info-line); --dot:var(--info); }
   .chip.w{ color:var(--warn-ink);   background:var(--warn-bg);   border-color:var(--warn-line); --dot:var(--warn); }
@@ -281,7 +314,7 @@
 
   .bar{ height:7px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; display:flex; border:1px solid var(--line); }
   .bar i{ display:block; height:100%; transition:width var(--t-slow); }
-  .bar i.s{ background:var(--ok); } .bar i.a{ background:var(--accent); } .bar i.b{ background:#e6b800; }
+  .bar i.s{ background:var(--ok); } .bar i.a{ background:var(--series, var(--accent)); } .bar i.b{ background:#e6b800; }
   .barlbl{ font-family:var(--font-num); font-size:11.5px; color:var(--muted); margin-top:8px; font-variant-numeric:tabular-nums; }
 
   /* ---------- detail ---------- */
@@ -292,8 +325,8 @@
     padding:var(--s4); box-shadow:none; animation:rise var(--t-slow) both;
   }
   .sumv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:0; font-variant-numeric:tabular-nums; }
-  .suml{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); line-height:1.3; text-wrap:balance; }
-  .sumc.ok .sumv{ color:var(--ok); }
+  .suml{ font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--muted); margin-top:var(--s1); line-height:1.3; text-wrap:balance; }
+  .sumc.ok .sumv{ color:var(--ok-fg); }
   .sumc.rem .sumv{ color:var(--muted); }
   .sumc.prep .sumv{ color:var(--accent-fg, var(--accent)); }
   /* the built yellow, deepened on light grounds so the number stays legible */
@@ -330,17 +363,17 @@
   .cfgp-si svg{ width:15px; height:15px; flex:0 0 auto; color:var(--faint); }
   .cfgp-q{ display:flex; align-items:baseline; justify-content:space-between; gap:var(--s2) var(--s3); flex-wrap:wrap; margin-top:var(--s3); font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .cfgp-q b{ font-size:16px; font-weight:600; color:var(--accent-fg, var(--accent)); }
-  .cfgp-q.done b{ color:var(--ok); }
-  .cfgp-qs{ font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--warn-ink, var(--warn)); }
-  .cfgp-q.done .cfgp-qs{ color:var(--ok); }
+  .cfgp-q.done b{ color:var(--ok-fg); }
+  .cfgp-qs{ font-size:12px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--warn-ink, var(--warn)); }
+  .cfgp-q.done .cfgp-qs{ color:var(--ok-fg); }
   .oprog-bar.cfgp-bar{ height:9px; margin-top:6px; border:0; background:color-mix(in srgb, var(--ink) 13%, transparent); box-shadow:inset 0 1px 2px color-mix(in srgb, #000 22%, transparent); }
   @media (max-width:640px){ .cfgp-spec{ display:grid; grid-template-columns:minmax(0,1fr); gap:4px; } }
   .shl-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:4px var(--s4); padding:var(--s3) 0; border-bottom:1px solid var(--line); }
   .shl-row:last-child{ border-bottom:0; padding-bottom:0; }
   .shl-n{ font-weight:600; font-size:14px; min-width:0; overflow-wrap:anywhere; }
   .shl-n small{ font-size:12px; font-weight:500; color:var(--muted); margin-left:6px; }
-  .shl-v{ font-family:var(--font-num); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ok); white-space:nowrap; }
-  .shl-v small{ font-family:var(--font-ui); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-left:4px; }
+  .shl-v{ font-family:var(--font-num); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ok-fg); white-space:nowrap; }
+  .shl-v small{ font-family:var(--font-ui); font-size:12px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--muted); margin-left:4px; }
   .shl-b{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12.5px; color:var(--muted); }
   .shl-b b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
   .shl-b{ align-items:center; }
@@ -363,11 +396,12 @@
   @media (max-width:640px){ .pipeleg{ grid-template-columns:minmax(0,1fr); gap:var(--s2); } .pipev{ font-size:24px; } }
 
   /* ---------- demo mode ---------- */
+  /* above the tab bar, below sheets, scrims and messages, as on the staff dashboard */
   #demoBar{
-    position:fixed; left:0; right:0; bottom:0; z-index:9999;
+    position:fixed; left:0; right:0; bottom:0; z-index:45;
     display:flex; align-items:center; gap:8px; flex-wrap:wrap;
     padding:8px max(12px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));
-    background:var(--warn); color:#fff; font-size:12.5px; line-height:1.3;
+    background:color-mix(in srgb, var(--warn) 82%, #000); color:#fff; font-size:12.5px; line-height:1.3;
     box-shadow:0 -2px 12px rgba(0,0,0,.18);
   }
   #demoBar b{ font-weight:600; }
@@ -385,6 +419,7 @@
   }
   #demoBar button:hover{ background:rgba(255,255,255,.3); }
   :root[data-demo]{ --demo-bar:44px; }
+  @media (min-width:701px){ :root[data-demo] .toast-stack{ bottom:calc(var(--demo-bar) + var(--s5)); } }
 
   @media print{ #demoBar{ display:none !important; } }
 
@@ -410,7 +445,7 @@
     appearance:none; border:none; background:none; padding:0 2px; cursor:pointer;
     color:var(--faint); font-size:12px; line-height:1; font-family:inherit;
   }
-  .nmsg-x:hover{ color:var(--bad); }
+  .nmsg-x:hover{ color:var(--bad-fg); }
   .ncompose{ margin-top:var(--s4); display:grid; gap:var(--s2); }
   .ncompose textarea{
     width:100%; min-height:76px; resize:vertical; font:inherit; font-size:13.5px;
@@ -428,27 +463,31 @@
      the invoices themselves. */
 
   /* same card language as the admin billing view */
-  .card-title{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--faint); margin:0 0 var(--s2); }
+  .card-title{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--faint); margin:0 0 var(--s2); }
   .card-sub{ font-size:12px; font-weight:400; color:var(--muted); letter-spacing:0; text-transform:none; margin-left:var(--s2); }
   .chart-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; }
   .chart-kpi{ display:flex; flex-direction:column; gap:var(--s1); min-width:0; }
   .chart-kpi .card-title{ margin:0 0 var(--s2); }
   .chart-sub{ font-size:13px; color:var(--muted); display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
-  .chart-tabs{ display:inline-flex; flex-wrap:wrap; gap:var(--s1); flex:0 0 auto; }
+  /* the staff dashboard's segmented control: a recessed pill track, a raised knob */
+  .chart-tabs{
+    display:inline-flex; flex-wrap:nowrap; gap:2px; flex:0 0 auto; padding:2px;
+    background:var(--bg); border:1px solid var(--line-strong); border-radius:var(--r-pill);
+  }
   .chart-tab{
-    font:inherit; font-size:12px; font-weight:500; padding:4px 12px; min-height:28px; white-space:nowrap;
-    border-radius:var(--r-pill); border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer;
+    font:inherit; font-size:12px; font-weight:500; padding:4px 12px; min-height:calc(var(--h-sm, 32px) - 6px); white-space:nowrap;
+    border-radius:var(--r-pill); border:1px solid transparent; background:transparent; color:var(--muted); cursor:pointer;
     transition:color var(--t), border-color var(--t), background var(--t);
   }
-  .chart-tab:hover{ color:var(--ink); border-color:var(--line-strong); }
+  .chart-tab:hover{ color:var(--ink); }
   #bStmt, #bCsv{ white-space:nowrap; }
-  .chart-tab.on{ background:var(--ink-deep); color:var(--on-ink); border-color:var(--ink-deep); }
+  .chart-tab.on{ background:var(--raised, var(--paper)); color:var(--ink); border-color:transparent; box-shadow:var(--e1), 0 0 0 1px var(--line); }
   .bill-kpis{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s4); margin-top:var(--s4); }
   .bill-k{ min-width:0; }
   .bill-kv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:-0.4px; font-variant-numeric:tabular-nums; line-height:1.2; }
-  .bill-kl{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); }
+  .bill-kl{ font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--muted); margin-top:var(--s1); }
   .bill-ks{ font-size:12px; color:var(--muted); margin-top:2px; }
-  .bill-k.paid .bill-kv{ color:var(--ok); }
+  .bill-k.paid .bill-kv{ color:var(--ok-fg); }
   .bill-k.due .bill-kv{ color:var(--warn-ink, var(--warn)); }
   .bill-rail{ display:flex; height:8px; margin-top:var(--s4); overflow:hidden; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
   .bill-rail i{ display:block; height:100%; background:var(--ok); transition:width var(--t-slow); }
@@ -456,15 +495,21 @@
   .bill-cap b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
   .bill-det{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s3) var(--s4); margin-top:var(--s5); padding-top:var(--s4); border-top:1px solid var(--line); }
   .bill-det-v{ font-family:var(--font-num); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; }
-  .bill-det-v.hot{ color:var(--bad); }
-  .bill-det-l{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:2px; }
+  .bill-det-v.hot{ color:var(--bad-fg); }
+  .bill-det-l{ font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--muted); margin-top:2px; }
   .bill-det-s{ font-size:12px; color:var(--muted); margin-top:2px; }
   @media (max-width:700px){
     .bill-kpis, .bill-det{ grid-template-columns:1fr 1fr; }
     .bill-kv{ font-size:22px; }
     .card-sub{ display:block; margin-left:0; margin-top:4px; line-height:1.45; }
   }
-  @media (max-width:420px){ .bill-kpis, .bill-det{ grid-template-columns:1fr; } }
+  /* small phones: what is owed leads, full width, the other figures pair up */
+  @media (max-width:420px){
+    .bill-kpis{ grid-template-columns:1fr 1fr; }
+    .bill-k.due{ order:-1; grid-column:1 / -1; }
+    .bill-det{ grid-template-columns:1fr 1fr; }
+    .bill-kv{ font-size:20px; }
+  }
 
   /* aging: one bar, because five boxes of money say less than their shares */
   .bagebar{ display:flex; height:8px; border-radius:var(--r-pill); overflow:hidden; background:var(--soft); border:1px solid var(--line); margin-top:var(--s4); }
@@ -525,7 +570,7 @@
   }
   .bch-tot{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s5); margin-top:var(--s4); font-size:12.5px; color:var(--muted); }
   .bch-tot b{ color:var(--ink); font-variant-numeric:tabular-nums; }
-  .bchart-bar{ width:100%; max-width:34px; background:var(--accent); border-radius:var(--r-sm) var(--r-sm) 0 0; min-height:2px; }
+  .bchart-bar{ width:100%; max-width:34px; background:var(--series, var(--accent)); border-radius:var(--r-sm) var(--r-sm) 0 0; min-height:2px; }
   .btabs{ display:flex; gap:var(--s2); }
   .binv{ border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s2); overflow:hidden; background:var(--paper); container-type:inline-size; }
   /* one fixed track per figure, so every row lines up and the bar gets real width */
@@ -541,8 +586,10 @@
   }
   @container (max-width:460px){
     .binv-h{ grid-template-columns:minmax(0,1fr) auto; padding:var(--s3) var(--s4); }
-    .binv-h > .binv-n{ display:none; }
-    .binv-m-wrap{ grid-column:1 / -1; grid-row:2; }
+    /* the balance stays, beside the paid bar; only the invoiced figure goes */
+    .binv-h > .binv-n.hide-sm{ display:none; }
+    .binv-h > .binv-n:not(.hide-sm){ grid-column:2; grid-row:2; align-self:end; }
+    .binv-m-wrap{ grid-column:1; grid-row:2; }
   }
   /* payment state: green settled, yellow part paid, amber nothing in yet, red late */
   .bst{
@@ -568,10 +615,10 @@
   .binv-sub{ font-size:12px; color:var(--muted); }
   .binv-n{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .binv-n b{ display:block; }
-  .binv-n span{ font-size:11px; color:var(--muted); letter-spacing:.04em; text-transform:uppercase; }
+  .binv-n span{ font-size:11.5px; color:var(--muted); letter-spacing:0; text-transform:none; }
   .binv-b{ padding:0 var(--s4) var(--s4); border-top:1px solid var(--line); }
   .binv-b.fresh{ animation:rise var(--t-slow) both; }
-  .binv-sec{ margin:var(--s4) 0 var(--s2); font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+  .binv-sec{ margin:var(--s4) 0 var(--s2); font-size:13px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--ink); }
   .bpay{ display:grid; grid-template-columns:auto auto minmax(0,1fr); gap:var(--s3); padding:var(--s2) 0; border-bottom:1px solid var(--line); font-size:13px; }
   .bpay:last-child{ border-bottom:none; }
   .bpay-a{ font-weight:600; font-variant-numeric:tabular-nums; }
@@ -638,14 +685,16 @@
     .rtile{ background:var(--soft); border-color:var(--line); }
   }
   .rtile b{ display:block; font-size:24px; font-weight:600; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; line-height:1.2; }
-  .rtile span{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--faint); }
+  .rtile span{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  /* a tile with nothing to flag carries no hue at all */
+  .rtile:not([style]), :root[data-theme="dark"] .rtile:not([style]){ background:var(--paper); border-color:var(--line); }
   .rtile b{ color:var(--rtile-ink, var(--ink)); }
   .rtile.hot b{ color:var(--bad-ink); }
   /* ---- the two RMA charts, matching the ones Novatech sees ---- */
   .rcharts{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--s4); margin-bottom:var(--s4); }
   @media (max-width:900px){ .rcharts{ grid-template-columns:minmax(0,1fr); } }
   .rchart{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); min-width:0; }
-  .rchart h2{ font-size:13px; font-weight:600; margin:0; }
+  .rchart h2{ font-size:11px; font-weight:600; margin:0; }
   .rchart-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s3); flex-wrap:wrap; }
   .rchart-head h2{ flex:1 1 150px; min-width:0; }
   .rchart-val{ font-size:28px; font-weight:600; line-height:1.25; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; margin-top:var(--s2); }
@@ -658,12 +707,16 @@
     background:var(--ink-deep); color:var(--on-ink); font-size:11.5px; line-height:1.4; white-space:nowrap;
     padding:5px 9px; border-radius:var(--r-sm);
   }
-  .rchart-tabs{ display:inline-flex; gap:4px; flex:0 0 auto; }
-  .rchart-tabs button{
-    font:inherit; font-size:12px; font-weight:500; padding:3px 11px; min-height:26px; cursor:pointer;
-    border-radius:var(--r-pill); border:1px solid var(--line); background:transparent; color:var(--muted);
+  .rchart-tabs{
+    display:inline-flex; gap:2px; flex:0 0 auto; padding:2px;
+    background:var(--bg); border:1px solid var(--line-strong); border-radius:var(--r-pill);
   }
-  .rchart-tabs button.on{ background:var(--ink-deep); color:var(--on-ink); border-color:var(--ink-deep); }
+  .rchart-tabs button{
+    font:inherit; font-size:12px; font-weight:500; padding:3px 11px; min-height:calc(var(--h-sm, 32px) - 6px); cursor:pointer;
+    border-radius:var(--r-pill); border:1px solid transparent; background:transparent; color:var(--muted);
+  }
+  .rchart-tabs button:hover{ color:var(--ink); }
+  .rchart-tabs button.on{ background:var(--raised, var(--paper)); color:var(--ink); border-color:transparent; box-shadow:var(--e1), 0 0 0 1px var(--line); }
   .rfail{ display:grid; gap:var(--s2); margin-top:var(--s4); }
   .rfail-row{ display:grid; grid-template-columns:130px minmax(0,1fr) 40px; gap:var(--s3); align-items:center; font-size:13px; }
   .rfail-row .nt-catline{ color:var(--muted); min-width:0; }
@@ -674,7 +727,7 @@
     .rfail-bar{ grid-column:1 / -1; grid-row:2; }
   }
   .rfail-bar{ height:8px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; }
-  .rfail-bar i{ display:block; height:100%; background:var(--accent); }
+  .rfail-bar i{ display:block; height:100%; background:var(--series, var(--accent)); }
   .rfail-row b{ text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
   @media (max-width:700px){
     /* title → chart → number, the way every other chart on a phone reads */
@@ -717,7 +770,7 @@
   /* the return address, with the one-click copy the label maker needs */
   .rretaddr{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4);
     margin-top:var(--s3); padding-top:var(--s3); border-top:1px solid var(--warn-line); }
-  .rretaddr-k{ font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:600; }
+  .rretaddr-k{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; font-weight:600; }
   .rretaddr .raddr{ color:inherit; }
   .rretaddr button{ flex:0 0 auto; }
   .rnext{ font-size:13.5px; margin:0 0 var(--s4); padding:var(--s3) var(--s4); background:var(--soft); border-radius:var(--r-sm); border:1px solid var(--line); }
@@ -798,6 +851,7 @@
   /* batch number and its status share one line, status at the right edge */
   .bno{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); min-width:0; }
   .bno .chip{ flex:0 0 auto; }
+  .bno b{ white-space:nowrap; }
   .bhead{
     cursor:pointer;
     transition:background var(--t);
@@ -820,14 +874,15 @@
      Keyed to the card's own width, so a narrow window falls back to the flowing layout. */
   .batch{ container:pbatch / inline-size; }
   @container pbatch (min-width:900px){
-    .bhead{ grid-template-columns:160px minmax(0,1fr) 240px 240px; min-height:84px; }
-    .bhead > .bno{ justify-content:flex-start; }
+    .bhead{ grid-template-columns:160px minmax(0,1fr) 280px 210px; min-height:84px; }
+    /* the batch over its status, so a long status never wraps the number */
+    .bhead > .bno{ flex-direction:column; align-items:flex-start; justify-content:center; gap:6px; }
     .bhead > .mono{ text-align:left; white-space:nowrap; overflow:hidden; }
     .bhead > .mono .bship{ flex-wrap:nowrap; }
     .bhead .bacts{ flex-wrap:nowrap; white-space:nowrap; }
   }
   @container pbatch (min-width:1100px){
-    .bhead{ grid-template-columns:190px minmax(0,1fr) 300px 240px; }
+    .bhead{ grid-template-columns:190px minmax(0,1fr) 320px 210px; }
   }
   /* sits over the serial column, so it reads as "copy this list" */
   .bbar{ display:flex; margin-bottom:var(--s3); }
@@ -869,7 +924,7 @@
   .ups-line-hist > summary{ display:flex; align-items:center; gap:8px; width:max-content; max-width:100%; list-style:none; cursor:pointer; border-radius:4px; font-size:12.5px; font-weight:600; color:var(--accent-fg, var(--accent)); }
   .ups-line-hist > summary::-webkit-details-marker{ display:none; }
   .ups-line-hist > summary:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-  .ups-line-hc{ font-weight:500; color:var(--faint); overflow-wrap:anywhere; }
+  .ups-line-hc{ font-weight:500; color:var(--faint); white-space:nowrap; }
   .ups-line-hist > summary svg{ width:14px; height:14px; flex:0 0 auto; transition:transform var(--t); }
   .ups-line-hist[open] > summary svg{ transform:rotate(180deg); }
   .ups-line-hist ol{ list-style:none; margin:14px 0 0; padding:0 4px 0 0; max-height:440px; overflow:auto; }
@@ -886,7 +941,7 @@
   @container upsc (max-width:520px){ .ups-line-hist li{ grid-template-columns:76px minmax(0,1fr); gap:10px; } }
   @container upsc (max-width:520px){
     .ups-line-big{ font-size:19px; }
-    .ups-line-steps li:not(.now) span{ visibility:hidden; }
+    .ups-line-steps li:not(.now) span{ display:none; }
   }
   .ups-mini{ display:inline-flex; align-items:center; gap:4px; margin-left:8px; font-family:var(--font-ui); font-size:11px; font-weight:600; color:var(--muted); white-space:nowrap; vertical-align:1px; }
   .ups-mini::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--dot, var(--faint)); }
@@ -924,7 +979,12 @@
   .ups-line-hist > summary:hover span:first-child{ text-decoration:underline; text-underline-offset:3px; }
   .ups-line-hist ol{ margin:0; padding:4px var(--px) 8px; }
   .ups-line > .ups-line-foot{ padding:12px var(--px); }
-  @container upsc (max-width:520px){ .ups-line > *{ --px:16px; } }
+  @container upsc (max-width:520px){
+    .ups-line > *{ --px:16px; }
+    /* narrow card: the scan count stays whole and the check time drops below */
+    .ups-line-hist > summary{ flex-wrap:wrap; row-gap:2px; }
+    .ups-line-ck{ flex-basis:100%; margin-left:0; padding-left:0; }
+  }
   /* shipment status summary, top of the Shipments / Batches card */
   .shs{ margin:0 0 var(--s4); padding:18px 22px 16px; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md, 8px); box-shadow:var(--e1, 0 1px 2px rgba(0,0,0,.04)); }
   @media (max-width:640px){ .shs{ padding:14px 16px; } }
@@ -940,7 +1000,7 @@
   .ups-d{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ups-mini.b{ --dot:var(--bad); color:var(--bad-ink); }
   /* the logo identifies the number, so the two never wrap apart */
-  .trk-grp{ display:inline-flex; align-items:center; gap:8px; min-width:0; }
+  .trk-grp{ display:inline-flex; align-items:center; gap:8px; min-width:0; flex:0 0 auto; }
   .carrier{
     display:inline-flex; align-items:center; flex:0 0 auto;
     height:17px; padding:0 8px; border-radius:var(--r-pill);
@@ -952,8 +1012,8 @@
   .trk-btn{ display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:999px; font-size:12.5px; font-weight:600; color:var(--accent-ink); background:var(--accent); text-decoration:none; white-space:nowrap; font-family:inherit; }
   .trk-btn:hover{ background:var(--accent-hover); color:var(--accent-ink); }
   .trk-tag{
-    display:inline-block; margin-left:6px; font-size:9.5px; font-weight:600;
-    letter-spacing:.08em; text-transform:uppercase; color:var(--faint);
+    display:inline-block; margin-left:6px; font-size:12px; font-weight:500;
+    letter-spacing:0; text-transform:none; color:var(--faint);
     font-family:var(--font-ui); vertical-align:middle; white-space:nowrap;
   }
   .carrier img{ height:14px; width:auto; display:block; }
@@ -1017,7 +1077,7 @@
   table{ width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; }
   thead th{
     position:sticky; top:0; z-index:1; background:var(--paper);
-    text-align:left; padding:8px 12px; font-size:10.5px; font-weight:600;
+    text-align:left; padding:8px 12px; font-size:11px; font-weight:600;
     letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
     border-bottom:1px solid var(--line);
   }
@@ -1058,7 +1118,7 @@
   .toast-stack{ position:fixed; left:50%; bottom:var(--s5); transform:translateX(-50%);
     z-index:200; display:flex; flex-direction:column; gap:var(--s2); align-items:center; pointer-events:none; }
   .toast{
-    pointer-events:auto; background:var(--paper); color:var(--ink);
+    pointer-events:auto; background:var(--raised, var(--paper)); color:var(--ink);
     border:1px solid var(--line-strong); border-left:3px solid var(--accent);
     border-radius:var(--r-sm); box-shadow:var(--e3);
     padding:12px var(--s4); font-size:13px; font-weight:600; max-width:88vw;
@@ -1066,6 +1126,7 @@
   }
   .toast.ok{ border-left-color:var(--ok); }
   .toast.bad{ border-left-color:var(--bad); }
+  .toast.warn{ border-left-color:var(--warn); }
   .modal-bg{
     position:fixed; inset:0; z-index:150; background:var(--scrim);
     display:flex; align-items:center; justify-content:center; padding:var(--s4);
@@ -1079,7 +1140,8 @@
   .modal-bg.leaving{ animation:fadeOut 140ms cubic-bezier(.2,.6,.2,1) both; }
   .modal-bg.leaving .modal{ animation:popOut 140ms cubic-bezier(.2,.6,.2,1) both; }
   .modal-h{ padding:var(--s5) var(--s5) 0; }
-  .modal-h h3{ margin:0; font-size:17px; letter-spacing:0; }
+  .modal-h h2, .modal-h h3{ margin:0; font-size:17px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--ink); }
+  .modal:focus{ outline:none; }
   .modal-h p{ margin:var(--s1) 0 0; font-size:12.5px; color:var(--muted); }
   .modal-b{ padding:var(--s4) var(--s5); }
   .modal-f{ padding:0 var(--s5) var(--s5); display:flex; gap:var(--s2); justify-content:flex-end; }
@@ -1090,7 +1152,7 @@
 
   .staffbadge{
     font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
-    color:var(--warn); background:var(--warn-bg); border:1px solid var(--warn-line);
+    color:var(--warn-ink); background:var(--warn-bg); border:1px solid var(--warn-line);
     border-radius:var(--r-pill); padding:2px 8px;
   }
   .pickbox{ height:44px; font-size:14px; max-width:240px; width:auto; min-width:0; flex:0 1 auto; padding-right:var(--s5); }
@@ -1137,6 +1199,9 @@
 
   @media (max-width:820px){
     html, body{ overflow-x:hidden; max-width:100%; }
+    /* the page itself scrolls, so browser bars shrink and a status-bar tap goes
+       to the top: clip, unlike hidden, does not turn body into a scroll box */
+    @media screen{ body{ overflow-x:clip; height:auto; min-height:100%; } }
     /* phones: scroll, but without the chrome taking up a stripe of the screen */
     html{ scrollbar-width:none; -ms-overflow-style:none; }
     html::-webkit-scrollbar, body::-webkit-scrollbar{ width:0; height:0; }
@@ -1177,7 +1242,7 @@
     #signOut .so-ico{ display:block; }
     .brand > div{ padding-left:var(--s3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .brand b, .brand span{ display:inline; font-size:13px; }
-    .brand span::before{ content:" \00b7 "; color:var(--faint); }
+    .brand span::before{ content:" \00b7\00a0"; color:var(--faint); }
     .who{ width:auto; justify-content:flex-end; gap:var(--s2); flex-wrap:nowrap; flex:0 0 auto; }
     .who-em{ display:none; }
     .pmenu{ order:3; flex:1 1 100%; margin:var(--s1) 0 0; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
@@ -1230,7 +1295,7 @@
     .pager-rows select{ height:32px; }
     .back .btn{ min-height:36px; }
     .btn{ min-height:36px; }
-    .btn.sm{ min-height:36px; }
+    .btn.sm{ min-height:max(36px, var(--h-sm, 32px)); }
     .icon-btn{ width:32px; height:32px; min-height:32px; }
     h1{ font-size:21px; }
     /* top-biased, not dead-centre: the browser's own bottom bar makes a
@@ -1273,9 +1338,72 @@
   @media (max-width:420px){
     .sum{ grid-template-columns:1fr 1fr; }
   }
+  /* Screen only from here to the print block: a printed page is about 740px
+     wide and matches the max-width:820px rules above, so layout meant for a
+     phone or tablet screen must not reach the printout. */
+  /* Safari zooms into any field under 16px when it is tapped */
+  @media screen and (max-width:820px), screen and (pointer:coarse){
+    input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea{ font-size:16px !important; }
+    .pager-rows select{ height:32px; }
+  }
+  @media screen{
+    /* the whole Billing header row opens the card, not a strip in its middle */
+    .obill{ padding:0; }
+    .obill > summary{ padding:var(--s4) var(--s5); min-height:48px; border-radius:var(--r-md); }
+    .obill-in{ margin:0 var(--s5) var(--s5); }
+    /* no lone carrier logo before a tracking number exists */
+    .bship:has(> .carrier:only-child){ display:none; }
+  }
+  @media screen and (max-width:820px){
+    /* the way back sits alone; the order's three actions share one row */
+    .back{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .back:has(#rmaBack){ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .back > #back, .back > #rmaBack{ grid-column:1 / -1; justify-self:start; width:auto; padding:0 14px 0 10px; }
+    .back .btn{ font-size:13px; padding-inline:8px; }
+    .obill > summary{ padding:var(--s4) 14px; }
+    .obill-in{ margin:0 14px var(--s4); }
+    /* shipment cards: the carrier's button and Details side by side */
+    .bhead .bacts{ grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); }
+    .bhead .bacts .btn{ min-height:40px !important; }
+    .orow > .ostat{ margin-right:0; }
+    /* a serial stays on one line, its model beside it */
+    .bbody tbody tr{ grid-template-columns:max-content minmax(0,1fr); }
+    .bbody td:nth-child(1){ white-space:nowrap; overflow-wrap:normal; }
+    /* sheets: the grabber moves into a pinned title, the sheet scrolls as one
+       piece, and a hairline sets the buttons off from the form above them */
+    .modal{ max-height:88dvh; }
+    .modal-b.scroll{ max-height:none; overflow:visible; }
+    .modal:has(> .modal-h)::before{ display:none; }
+    .modal > .modal-h{ position:sticky; top:0; z-index:3; background:var(--paper); padding:var(--s2) var(--s5) var(--s3); }
+    .modal > .modal-h::before{
+      content:''; display:block; width:36px; height:4px; margin:0 auto var(--s4);
+      border-radius:var(--r-pill); background:var(--line-strong);
+    }
+    .modal-f{ border-top:1px solid var(--line); padding-top:var(--s4); }
+    .modal .err:not(:empty){ padding:8px 12px; border-radius:var(--r-sm); background:var(--bad-bg); border:1px solid var(--bad-line); color:var(--bad-ink); }
+    /* while a sheet is up, a message shows at the top instead of over its buttons */
+    body:has(.modal-bg:not(.leaving)) .toast-stack,
+    :root[data-demo] body:has(.modal-bg:not(.leaving)) .toast-stack{ top:calc(var(--s3) + env(safe-area-inset-top)); bottom:auto; }
+  }
+  @media screen and (max-width:700px){
+    /* order page: one strip under the progress bar instead of five tiles */
+    #detailView .oprog{ margin:0; padding:12px 12px 0; background:var(--paper); border:1px solid var(--line); border-bottom:0; border-radius:var(--r-md) var(--r-md) 0 0; }
+    #detailView .oprog-bar{ height:6px; }
+    #detailView .sum{ grid-template-columns:repeat(5,minmax(0,1fr)); gap:0; overflow:hidden; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); }
+    #detailView .oprog + .sum{ border-top:0; border-radius:0 0 var(--r-md) var(--r-md); }
+    #detailView .sumc, #detailView .sumc:last-child{ grid-column:auto; min-width:0; padding:10px 4px 12px; text-align:center; background:none; border:0; border-left:1px solid var(--line); border-radius:0; }
+    #detailView .sumc:first-child{ border-left:0; }
+    #detailView .sumv{ font-size:18px; line-height:1.2; }
+    #detailView .suml{ font-size:11px; margin-top:3px; }
+    .cfgp-spec{ display:flex; flex-wrap:wrap; gap:4px 14px; }
+  }
+  @media (min-width:821px){ .back > #back, .back > #rmaBack{ margin-right:auto; } }
   @media print{
     header.top, .toolbar, .back, .btn, .icon-btn, .toast-stack{ display:none !important; }
     body{ background:#fff; }
+    /* a printed page is narrow enough for the phone rules, which make body a
+       page-high scroll box: without this only the first page printed */
+    html, body{ height:auto !important; overflow:visible !important; }
     .card, .batch, .sumc{ box-shadow:none; border-color:#ccc; break-inside:avoid; }
     .bbody{ grid-template-rows:1fr !important; opacity:1 !important; overflow:visible !important; visibility:visible !important; }
     .bbody-pad{ background:#fff; }
@@ -1290,13 +1418,13 @@
   .btn, input:not([type="checkbox"]):not([type="radio"]), select, textarea, .rlook, .rnext{
     border-radius:var(--r-sm) !important;
   }
-  .chip, .carrier, .storenum, .bar, .pipebar, .staffbadge, .btn.sm{ border-radius:var(--r-pill) !important; }
+  .chip, .carrier, .storenum, .bar, .pipebar, .staffbadge{ border-radius:var(--r-pill) !important; }
   .icon-btn{ border-radius:50% !important; }
   /* ============================================================
      DASHBOARD SHELL — matches the staff dashboard: a fixed rail on
      desktop, a bottom tab bar on phones, the same card language.
      ============================================================ */
-  :root{ --rail:284px; --rail-mini:76px; }
+  :root{ --rail:240px; --rail-mini:76px; }
 
   .siderail{ display:none; }
   body.authed{ padding-left:var(--rail); transition:padding-left var(--t); }
@@ -1367,14 +1495,14 @@
                left var(--t), opacity 140ms linear;
   }
   @media (prefers-reduced-motion: reduce){ .nav-ind.ready{ transition:opacity 140ms linear; } }
-  /* dark mode: the rail indicator and the wordmark share one soft off-white,
-     so neither punches a hole in the dark chrome */
-  :root[data-theme="dark"] .nav-ind{ background:var(--rail-ind, #d7dbe2); }
+  /* dark mode: the rail indicator is a soft tint and the wordmark a soft
+     off-white, so neither punches a hole in the dark chrome */
+  :root[data-theme="dark"] .nav-ind{ background:var(--rail-ind, color-mix(in srgb, #fff 10%, transparent)); }
   :root[data-theme="dark"] .nav-logo.is-dark,
   :root[data-theme="dark"] .brand img.is-dark,
   :root[data-theme="dark"] .rail-logo.is-dark{ filter:brightness(.845); }
   @media (prefers-color-scheme: dark){
-    :root:not([data-theme]) .nav-ind{ background:var(--rail-ind, #d7dbe2); }
+    :root:not([data-theme]) .nav-ind{ background:var(--rail-ind, color-mix(in srgb, #fff 10%, transparent)); }
     :root:not([data-theme]) .nav-logo.is-dark,
     :root:not([data-theme]) .brand img.is-dark,
     :root:not([data-theme]) .rail-logo.is-dark{ filter:brightness(.845); }
@@ -1385,11 +1513,15 @@
   body.authed .siderail .pmenu a.on,
   body.authed .siderail .pmenu a.on:hover{ background:transparent; color:var(--ink); font-weight:600; }
   @media (min-width:701px){
-    :root[data-theme="dark"] body.authed .siderail .pmenu a.on{ color:var(--on-ink); }
-    @media (prefers-color-scheme: dark){ :root:not([data-theme]) body.authed .siderail .pmenu a.on{ color:var(--on-ink); } }
+    :root[data-theme="dark"] body.authed .siderail .pmenu a.on{ color:var(--ink); }
+    @media (prefers-color-scheme: dark){ :root:not([data-theme]) body.authed .siderail .pmenu a.on{ color:var(--ink); } }
   }
-  body.authed.rail-mini .pmenu a{ justify-content:center; padding-inline:0; }
-  body.authed.rail-mini .pmenu a .nav-lbl{ display:none; }
+  /* collapsed, each icon keeps a small label under it (the phone bar has its own rules) */
+  @media (min-width:701px){
+    body.authed.rail-mini .pmenu a{ flex-direction:column; justify-content:center; gap:3px; min-height:52px; padding:7px 0 6px; }
+    body.authed.rail-mini .pmenu a .nav-lbl{ display:block; font-size:10.5px; font-weight:500; line-height:1.2; max-width:64px; text-align:center; }
+    body.authed.rail-mini .siderail .pmenu a.on .nav-lbl{ font-weight:600; }
+  }
   body.authed.rail-mini .pmenu .pbadge{ position:absolute; top:2px; right:10px; margin:0; }
 
   .rail-foot{
@@ -1451,6 +1583,28 @@
     body.authed header.top .brand > div{ padding-left:0; }
     body.authed header.top .brand > div::before{ display:none; }
   }
+  /* tablets: the collapsed icon rail with small labels, so the content keeps
+     its width and the phone-header capsule rules never reach the rail */
+  @media (min-width:701px) and (max-width:1000px){
+    body.authed, body.authed.rail-mini{ padding-left:var(--rail-mini); }
+    body.authed .siderail{ width:var(--rail-mini); padding-inline:var(--s2); --rail-pad:var(--s2); }
+    body.authed .rail-head{ justify-content:center; padding-inline:0; }
+    body.authed .rail-brand{ justify-content:center; padding:0; }
+    /* .rail-brand outranks the dark theme's own wordmark rule */
+    body.authed .rail-brand .rail-logo.is-light, body.authed .rail-brand .rail-logo.is-dark{ display:none; }
+    body.authed .rail-logo.is-mark{ display:block; width:32px; height:32px; }
+    .rail-toggle{ display:none; }
+    body.authed .pmenu{ order:0; flex:0 0 auto; padding:0; background:none; border:0; border-radius:0; }
+    body.authed .pmenu a{ flex:0 0 auto; flex-direction:column; justify-content:center; gap:3px; min-height:52px; padding:7px 0 6px; }
+    body.authed .siderail .pmenu a.on{ box-shadow:none; }
+    body.authed .pmenu a .nav-lbl{ display:block; font-size:10.5px; font-weight:500; line-height:1.2; max-width:64px; text-align:center; }
+    body.authed .siderail .pmenu a.on .nav-lbl{ font-weight:600; }
+    body.authed .pmenu .pbadge{ position:absolute; top:2px; right:10px; margin:0; }
+    body.authed .rail-foot{ align-items:center; padding-inline:0; }
+    body.authed .rail-theme{ width:auto; justify-content:center; padding:6px; }
+    body.authed .rt-lbl, body.authed .rt-track{ display:none; }
+    body.authed .rt-ico svg{ width:19px; height:19px; }
+  }
 
   /* ---------- home ---------- */
   .stat-row{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s4); margin-bottom:var(--s5); }
@@ -1480,7 +1634,7 @@
   .stat-val{ font-size:32px; font-weight:600; line-height:1.05; color:var(--ink); font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
   .stat-sub{ font-size:12.5px; color:var(--faint); }
   .stat.tone-warn .stat-sub{ color:var(--warn-ink); font-weight:600; }
-  .stat.tone-ok .stat-sub{ color:var(--ok); font-weight:600; }
+  .stat.tone-ok .stat-sub{ color:var(--ok-fg); font-weight:600; }
 
   .dash-grid{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--s4); margin-bottom:var(--s4); }
   .dash-grid > .card{ margin-bottom:0; display:flex; flex-direction:column; }
@@ -1494,7 +1648,7 @@
   .hbars{ display:flex; align-items:flex-end; gap:5px; height:150px; margin-top:var(--s4); }
   .hbar-col{ flex:1 1 0; min-width:0; height:100%; display:flex; align-items:flex-end; }
   .hbar{
-    width:100%; border-radius:var(--r-xs) var(--r-xs) 0 0; background:var(--accent); opacity:.88;
+    width:100%; border-radius:var(--r-xs) var(--r-xs) 0 0; background:var(--series, var(--accent)); opacity:.88;
     transform-origin:bottom; animation:hbarGrow 420ms cubic-bezier(.2,.7,.2,1) backwards;
   }
   .hbar-col:hover .hbar{ opacity:1; }
@@ -1568,6 +1722,11 @@
     .hbar{ animation:none; }
     .dn-center{ animation:none; }
     .dn circle{ transition:none !important; }
+    .stat:hover, .qa:hover{ transform:none; }
+  }
+  /* touch: a row or tile darkens for a moment under the finger (no movement) */
+  @media (hover:none){
+    :is(.orow, .rrow, .rc-row, .stat):active{ box-shadow:inset 0 0 0 100vmax color-mix(in srgb, var(--ink) 6%, transparent); transition:none; }
   }
 
   @media (max-width:1180px){
@@ -1718,6 +1877,18 @@
       transition:transform var(--dk-dur) var(--dk-ease), width var(--dk-dur) var(--dk-ease), background .2s ease, opacity .2s ease;
     }
     body.authed .siderail:active .nav-ind{ background:var(--dk-pill-drag); }
+    /* messages float clear of the tab bar instead of over Orders and RMAs */
+    body.authed .toast-stack{ bottom:calc(76px + env(safe-area-inset-bottom)); }
+    :root[data-demo] body.authed .toast-stack{ bottom:calc(76px + var(--demo-bar) + env(safe-area-inset-bottom)); }
+    /* demo mode: the banner is one 40px line and the tab bar rides above it */
+    :root[data-demo]{ --demo-bar:40px; }
+    #demoBar{ flex-wrap:nowrap; font-size:12px; padding:6px 12px calc(6px + env(safe-area-inset-bottom)); }
+    #demoBar b, #demoBar .demo-sep{ flex:0 0 auto; white-space:nowrap; }
+    #demoBar .demo-txt{ flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #demoBar button{ flex:0 0 auto; min-height:28px; padding:4px 12px; }
+    :root[data-demo] body.authed .siderail,
+    :root[data-demo] body.authed.rail-mini .siderail{ bottom:calc(var(--demo-bar) + 8px + env(safe-area-inset-bottom)); }
+    :root[data-demo] body.authed{ padding-bottom:calc(112px + var(--demo-bar) + env(safe-area-inset-bottom)); }
   }
   @media (max-width:700px) and (prefers-color-scheme:dark){
     :root:not([data-theme]) body.authed .siderail .nav-ind{ background:var(--dk-pill); }
@@ -1814,6 +1985,13 @@
     /* one spacing value across search → account → theme toggle */
     body.authed header.top .who{ gap:8px; }
     .gs-btn svg{ width:15px; height:15px; display:block; }
+    /* search, theme and sign out: three equal circles a finger can hit */
+    body.authed .gs-btn, body.authed .who #themeBtn, #signOut{
+      width:40px; height:40px; min-height:40px; background:var(--soft); border:1px solid var(--line);
+    }
+    body.authed .gs-btn svg, body.authed .who #themeBtn svg, #signOut .so-ico{ width:18px; height:18px; }
+    /* edges nearer the page's own 10px gutter, so 'Portal · name' still fits a 390px phone */
+    body.authed header.top{ padding-left:12px; padding-right:12px; }
 
     body.gs-open .gs-scrim{
       display:block; position:fixed; inset:0; z-index:58;
@@ -1884,6 +2062,8 @@
   @media (max-width:430px){
     .stat-row{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--s3); }
     .stat{ padding:var(--s3) var(--s4); }
+    /* a long label wraps instead of losing its end */
+    .stat-lbl{ white-space:normal; text-wrap:balance; line-height:1.25; }
   }
   @media (max-width:700px){
     /* switching a page reads as a step forward, not a flash */
@@ -2005,15 +2185,17 @@
 <div class="boot-splash"><span class="boot-dot"></span></div>
 
 <div id="loginView" class="login">
+  <img class="login-logo is-light" src="logo.png" alt="Novatech" onerror="this.style.display='none'">
+  <img class="login-logo is-dark" src="logo-dark.png" alt="Novatech" onerror="this.style.display='none'">
   <div class="card">
     <h1>Order Portal</h1>
     <p class="muted" style="margin-top:0;">Sign in to see your orders, shipments and serial numbers.</p>
-    <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="username"></div>
+    <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="username" enterkeyhint="next"></div>
     <div class="field"><label for="pw">Password</label>
       <span class="pw-wrap"><input id="pw" type="password" autocomplete="current-password" enterkeyhint="go">
         <button type="button" class="pw-see" id="pwSee" aria-label="Show password" title="Show password"></button></span></div>
     <button class="btn primary" id="go" type="button" style="width:100%; height:40px;">Sign in</button>
-    <div class="err" id="loginErr"></div>
+    <div class="err" id="loginErr" role="alert"></div>
   </div>
   <p class="muted" style="text-align:center;">
     <button type="button" class="icon-btn" id="themeBtn2" title="Toggle dark mode" aria-label="Toggle dark mode">
@@ -2029,7 +2211,7 @@
 </div>
 
 <div class="pop" id="pop"></div>
-<div class="toast-stack" id="toastStack"></div>
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -2572,18 +2754,28 @@
     const stack = $('toastStack'); if (!stack) return;
     const el = document.createElement('div');
     el.className = 'toast' + (kind ? ' ' + kind : '');
+    /* a failure interrupts a screen reader; everything else waits its turn */
+    el.setAttribute('role', kind === 'bad' ? 'alert' : 'status');
     el.textContent = msg;
     stack.appendChild(el);
-    setTimeout(function(){
+    function close(){
       el.style.transition = 'opacity 200ms, transform 200ms';
       el.style.opacity = '0'; el.style.transform = 'translateY(6px)';
       setTimeout(function(){ el.remove(); }, 220);
-    }, ms || 4000);
+    }
+    /* long and serious messages stay up longer, and hovering one holds it */
+    let timer = setTimeout(close, ms || Math.max(kind === 'bad' ? 8000 : kind === 'warn' ? 6000 : 4000, String(msg).length * 60));
+    function hold(){ clearTimeout(timer); }
+    function resume(){ clearTimeout(timer); timer = setTimeout(close, 2500); }
+    el.addEventListener('mouseenter', hold); el.addEventListener('mouseleave', resume);
+    el.addEventListener('focusin', hold); el.addEventListener('focusout', resume);
   }
 
   /* ---------- modal ---------- */
   let modalBg = null;
   let confirmResolve = null;
+  /* the control that opened a dialog gets focus back once the last one closes */
+  let modalReturn = null, modalSeq = 0;
   function closeModal(){
     if (modalBg){
       const el = modalBg; modalBg = null;
@@ -2593,7 +2785,12 @@
       const sh = el.querySelector('.modal');
       if (sh) sh.style.animation = '';
       el.classList.add('leaving');
-      setTimeout(function(){ el.remove(); }, 140);
+      setTimeout(function(){
+        el.remove();
+        if (modalBg) return;
+        const rf = modalReturn; modalReturn = null;
+        if (rf && rf !== document.body && document.contains(rf) && rf.focus) rf.focus({ preventScroll:true });
+      }, 140);
     }
     if (confirmResolve){ const r = confirmResolve; confirmResolve = null; r(false); }
   }
@@ -2603,12 +2800,14 @@
     const parts = String(text || '').split(/\n\s*\n/);
     const title = parts[0].trim(), body = parts.slice(1).join(' ').trim();
     const first = (title.match(/^([A-Z][a-z]+)/) || [])[1] || '';
-    const cta = /^(Delete|Remove|Cancel|Stop|Clear)$/.test(first) ? first : 'Yes';
+    /* "Cancel" on its own always means "close this", so cancelling a request
+       is spelled out; destructive verbs get the destructive button */
+    const cta = first === 'Cancel' ? 'Yes, cancel it' : (/^(Delete|Remove|Stop|Clear)$/.test(first) ? first : 'Yes');
     return new Promise(function(resolve){
       const bg = openModal(
         '<div class="modal-h"><h2>' + esc(title) + '</h2>' + (body ? '<p>' + esc(body) + '</p>' : '') + '</div>' +
         '<div class="modal-f"><button class="btn" id="pcNo" type="button">' + (first === 'Cancel' ? 'Keep it' : 'Go back') + '</button>' +
-        '<button class="btn primary" id="pcYes" type="button">' + esc(cta) + '</button></div>');
+        '<button class="btn ' + (cta === 'Yes' ? 'primary' : 'danger') + '" id="pcYes" type="button">' + esc(cta) + '</button></div>');
       confirmResolve = resolve;
       bg.querySelector('#pcNo').addEventListener('click', closeModal);
       bg.querySelector('#pcYes').addEventListener('click', function(){ confirmResolve = null; closeModal(); resolve(true); });
@@ -2616,11 +2815,16 @@
     });
   }
   function openModal(html){
+    const ae = document.activeElement;
+    if (!modalBg && !(ae && ae.closest && ae.closest('.modal-bg'))) modalReturn = ae;
     closeModal();
     modalBg = document.createElement('div');
     modalBg.className = 'modal-bg';
     modalBg.id = 'modalBg';
-    modalBg.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>';
+    /* tabindex -1: a click on plain text inside keeps focus in the dialog */
+    modalBg.innerHTML = '<div class="modal" role="dialog" aria-modal="true" tabindex="-1">' + html + '</div>';
+    const panel = modalBg.firstElementChild, head = panel.querySelector('.modal-h h2, .modal-h h3');
+    if (head){ head.id = 'pmTitle' + (++modalSeq); panel.setAttribute('aria-labelledby', head.id); }
     let downOnBg = false;
     /* A selection drag that starts in the modal and ends on the backdrop
        still lands its click there. Closing on that wiped the form, which is
@@ -2636,7 +2840,19 @@
     if (first) first.focus();
     return modalBg;
   }
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeModal();
+    /* Tab and Shift+Tab go round the open dialog instead of the page under it */
+    if (e.key !== 'Tab' || !modalBg) return;
+    const panel = modalBg.querySelector('.modal'); if (!panel) return;
+    const f = Array.prototype.filter.call(panel.querySelectorAll(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'),
+      function(x){ return x.offsetParent !== null; });
+    const a = document.activeElement;
+    if (!f.length){ e.preventDefault(); panel.focus(); return; }
+    if (e.shiftKey && (a === f[0] || !panel.contains(a) || a === panel)){ e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && (a === f[f.length - 1] || !panel.contains(a))){ e.preventDefault(); f[0].focus(); }
+  });
 
   /* ---------- shareable links: read once at startup, no listeners ---------- */
   function baseUrl(){ return location.origin + location.pathname; }
@@ -2799,10 +3015,18 @@
   $('em').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('pw').focus(); });
   async function signIn(){
     const err = $('loginErr'); err.textContent = '';
+    /* nothing to send yet: say so here rather than ask the server */
+    if (!$('em').value.trim() || !$('pw').value){
+      err.textContent = 'Enter your email and password.';
+      ($('em').value.trim() ? $('pw') : $('em')).focus();
+      return;
+    }
     const btn = $('go'); btn.disabled = true; btn.textContent = 'Signing in\u2026';
     try {
       const r = await SB.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
-      if (r.error) err.textContent = r.error.message || 'Could not sign in.';
+      if (r.error) err.textContent = /fetch|network/i.test(r.error.message || '')
+        ? 'Could not reach the sign-in service. Check your connection and try again.'
+        : (r.error.message || 'Could not sign in.');
     } catch(e){
       err.textContent = 'Could not reach the sign-in service. Check your connection and try again.';
     } finally {
@@ -3143,7 +3367,7 @@
      — quietly, because most of the time it is the same story either way. */
   function trkTag(isMaster){
     return isMaster
-      ? '<span class="trk-tag" title="One number for the whole shipment">master</span>'
+      ? '<span class="trk-tag" title="One number for the whole shipment">Master</span>'
       : '';
   }
   function trackHtml(carrier, nums){
@@ -3185,7 +3409,7 @@
     if (!open || !total) return '';
     const segs = [
       { l:'Shipped',           n:shipped, c:'var(--ok)' },
-      { l:'Preparing to ship', n:prep,    c:'var(--accent)' },
+      { l:'Preparing to ship', n:prep,    c:'var(--series, var(--accent))' },
       { l:'Ready to assign',   n:built,   c:'#e6b800' },
       { l:'Remaining to build',n:toBuild, c:'var(--line-strong)', k:'rem' }
     ];
@@ -3356,7 +3580,7 @@
           '<h2>Order status</h2>' +
           '<div id="pdonut">' + pDonutHtml([
             { l:'Complete', n:by.k, c:'var(--ok)' },
-            { l:'Partially shipped', n:by.i, c:'var(--info)' },
+            { l:'Partially shipped', n:by.i, c:'var(--series, var(--info))' },
             { l:'Awaiting shipment', n:by.w, c:'var(--warn)' },
             { l:'In production', n:by.n, c:'var(--line-strong)' }
           ], orders.length === 1 ? 'order' : 'orders') + '</div>' +
@@ -3443,7 +3667,7 @@
       pipeHtml() +
       '<div class="card olist-card">' +
       '<div class="toolbar">' +
-        '<input class="searchbox" id="q" type="text" placeholder="Search invoice or PO" value="' + esc(query) + '">' +
+        '<input class="searchbox" id="q" type="text" placeholder="Search invoice or PO" value="' + esc(query) + '" autocapitalize="off" autocorrect="off" enterkeyhint="search">' +
         '<button class="btn" id="lookup" type="button">Find a serial</button>' +
       '</div>' +
       (rows.length ? rows.map(function(o){
@@ -3452,8 +3676,8 @@
         return '<div class="orow" role="button" tabindex="0" data-id="' + esc(o.id) + '">' +
           '<div><div class="inv"><span class="inv-lbl">Invoice #</span>' +
             '<span class="mono">' + esc(o.invoice_no) + '</span></div>' +
-            '<div class="sub">' + (o.po_number ? 'PO ' + esc(o.po_number) + ' &middot; ' : '') +
-            (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : 'no due date') + '</div></div>' +
+            '<div class="sub">' + (o.po_number ? '<span class="nw">PO ' + esc(o.po_number) + '</span> &middot; ' : '') +
+            '<span class="nw">' + (o.due_date ? 'due ' + esc(fmtDate(o.due_date)) : 'no due date') + '</span></div></div>' +
           '<div class="ostat"><span class="chip ' + s.c + '">' + s.l + '</span></div>' +
           '<div><div class="bar">' +
             '<i class="s" style="width:' + pct(st.shipped) + '%"></i>' +
@@ -3584,8 +3808,8 @@
           '</div>' +
         '</div>' +
         '<div class="chart-tabs" role="group" aria-label="What to chart">' +
-          '<button type="button" data-bchart="money" class="chart-tab' + (units ? '' : ' on') + '">Money</button>' +
-          '<button type="button" data-bchart="units" class="chart-tab' + (units ? ' on' : '') + '">Units</button>' +
+          '<button type="button" data-bchart="money" class="chart-tab' + (units ? '' : ' on') + '" aria-pressed="' + !units + '">Money</button>' +
+          '<button type="button" data-bchart="units" class="chart-tab' + (units ? ' on' : '') + '" aria-pressed="' + units + '">Units</button>' +
         '</div>' +
       '</div>' +
       '<div class="bch">' +
@@ -3608,7 +3832,7 @@
       '</div>' +
       '<div class="bch-tot">' +
         '<span>' + (units ? 'Delivered over these months' : 'Received over these months') + ' <b>' + esc(fmt(total)) + '</b></span>' +
-        (units ? '' : '<span>Invoiced over the same period <b>' + bmoneyBig(billSeries.reduce(function(s, x){ return s + Number(x.invoiced || 0); }, 0)) + '</b></span>') +
+        (units ? '' : '<span>Invoiced over the same period <b>' + bmoney(billSeries.reduce(function(s, x){ return s + Number(x.invoiced || 0); }, 0)) + '</b></span>') +
       '</div>' +
     '</div>';
   }
@@ -3623,7 +3847,7 @@
     if (!(tot > 0.005)) return '';
     return '<div class="card bage-card" style="margin-top:var(--s4);">' +
       '<div class="chart-kpi"><h2 class="card-title">How the balance ages</h2>' +
-      '<div class="chart-sub">' + bmoneyBig(tot) + ' still owing, by how long it has been due.</div></div>' +
+      '<div class="chart-sub">' + bmoney(tot) + ' still owing, by how long it has been due.</div></div>' +
       '<div class="bagebar">' + rowsAge.map(function(b){
         const v = Number(b[1] || 0);
         if (!(v > 0.005)) return '';
@@ -3765,7 +3989,7 @@
         '<div class="chart-kpi"><h2 class="card-title">Open balance</h2>' +
           '<div class="chart-sub">' + (open.length
             ? num(open.length) + (open.length === 1 ? ' open invoice' : ' open invoices') +
-              (overdue > 0.005 ? ' \u00b7 ' + bmoneyBig(overdue) + ' past due' : ' \u00b7 none past due')
+              (overdue > 0.005 ? ' \u00b7 ' + bmoney(overdue) + ' past due' : ' \u00b7 none past due')
             : 'Nothing open. Everything invoiced has been settled.') + '</div></div>' +
         '<div class="bill-kpis">' +
           '<div class="bill-k"><div class="bill-kv">' + bmoney(invoiced) + '</div><div class="bill-kl">Invoiced</div>' +
@@ -3781,10 +4005,10 @@
         '<div class="bill-cap"><span><b>' + bmoney(openPaid) + '</b> paid</span>' +
           '<span><b>' + bmoney(sum.outstanding) + '</b> still owing</span></div>' +
         '<div class="bill-det">' +
-          '<div><div class="bill-det-v">' + (sum.next_due_date ? bmoneyBig(sum.next_due_amount) : '\u2014') + '</div>' +
+          '<div><div class="bill-det-v">' + (sum.next_due_date ? bmoney(sum.next_due_amount) : '\u2014') + '</div>' +
             '<div class="bill-det-l">Next payment due</div>' +
             '<div class="bill-det-s">' + (sum.next_due_date ? esc(fmtDate(sum.next_due_date)) : 'no dated invoice open') + '</div></div>' +
-          '<div><div class="bill-det-v' + (overdue > 0.005 ? ' hot' : '') + '">' + bmoneyBig(overdue) + '</div>' +
+          '<div><div class="bill-det-v' + (overdue > 0.005 ? ' hot' : '') + '">' + bmoney(overdue) + '</div>' +
             '<div class="bill-det-l">Past due</div>' +
             '<div class="bill-det-s">' + (overdue > 0.005 ? 'needs attention' : 'nothing overdue') + '</div></div>' +
           '<div><div class="bill-det-v' + (Number(sum.b_90_plus || 0) > 0.005 ? ' hot' : '') + '">' +
@@ -3804,7 +4028,7 @@
       '<section class="card" style="margin-top:var(--s4);">' +
         '<div class="chart-head" style="margin-bottom:var(--s4);">' +
           '<div class="chart-kpi"><h2 class="card-title">Open invoices</h2>' +
-            '<div class="chart-sub">click one for payments and documents</div></div>' +
+            '<div class="chart-sub">Click one for payments and documents.</div></div>' +
           '<div style="display:flex;gap:var(--s2);flex:0 0 auto;">' +
             '<button class="btn sm" id="bStmt" type="button">Statement</button>' +
             '<button class="btn sm" id="bCsv" type="button">Download CSV</button></div>' +
@@ -3891,7 +4115,7 @@
       '<div class="modal-h"><h2>Tell us you have sent payment</h2>' +
         '<p>This emails NovaTech. Nothing is recorded against the invoice until they confirm it against the bank.</p></div>' +
       '<div class="modal-b">' +
-        '<div class="field"><label for="bRmAmt">Amount sent</label><input id="bRmAmt" type="number" min="0" step="0.01" placeholder="' + Number(r.balance || 0).toFixed(2) + '"></div>' +
+        '<div class="field"><label for="bRmAmt">Amount sent</label><input id="bRmAmt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="' + Number(r.balance || 0).toFixed(2) + '"></div>' +
         '<div class="field"><label for="bRmOn">Date sent</label><input id="bRmOn" type="date" value="' + today + '"></div>' +
         '<div class="field"><label for="bRmMethod">Method</label><input id="bRmMethod" type="text" placeholder="Wire, ACH, check"></div>' +
         '<div class="field"><label for="bRmRef">Reference</label><input id="bRmRef" type="text" placeholder="Check number, wire reference"></div>' +
@@ -4220,7 +4444,7 @@
       const rem = Math.max(0, r.ordered - made);
       const segs = [
         ['Shipped', r.shipped, 'var(--ok)'],
-        ['Preparing to ship', r.assigned, 'var(--accent)'],
+        ['Preparing to ship', r.assigned, 'var(--series, var(--accent))'],
         ['Ready to assign', r.built, '#e6b800']
       ];
       const spec = specLines(cfgById(r.id));
@@ -4252,7 +4476,9 @@
     const tot = del + way + prep;
     if (!tot) return '';
     const pc = function(n){ return n / tot * 100; };
-    const seg = [['delivered', del, 'var(--ok)'], ['on the way', way, 'var(--accent)'], ['preparing', prep, '#e6b800']];
+    /* one colour language with the progress bars: green is shipped (lighter
+       while still on the way), purple is preparing to ship */
+    const seg = [['delivered', del, 'var(--ok)'], ['on the way', way, 'color-mix(in srgb, var(--ok) 50%, var(--paper))'], ['preparing', prep, 'var(--series, var(--accent))']];
     return '<div class="shs">' +
       '<div class="shs-bar" role="img" aria-label="' + num(del) + ' of ' + num(tot) + ' units delivered">' +
         seg.map(function(s){ return s[1] ? '<i style="width:' + pc(s[1]) + '%;background:' + s[2] + '" title="' + num(s[1]) + ' ' + s[0] + '"></i>' : ''; }).join('') +
@@ -4348,7 +4574,7 @@
           : '<p class="muted" style="margin:0;font-size:13px;">No total set on this invoice yet.</p>') +
         '<div class="bill-det">' +
           '<div><div class="bill-det-v">' + bmoney(r.invoice_total) + '</div><div class="bill-det-l">Invoice total</div></div>' +
-          '<div><div class="bill-det-v" style="color:var(--ok);">' + (pd ? bmoney(pd) : '\u2014') + '</div><div class="bill-det-l">Paid to date</div></div>' +
+          '<div><div class="bill-det-v" style="color:var(--ok-fg);">' + (pd ? bmoney(pd) : '\u2014') + '</div><div class="bill-det-l">Paid to date</div></div>' +
           '<div><div class="bill-det-v' + (r.days_late > 0 ? ' hot' : '') + '">' + (tot == null ? '\u2014' : bmoney(r.balance)) + '</div><div class="bill-det-l">Balance</div>' +
             '<div class="bill-det-s">' + (r.due_date ? 'due ' + esc(fmtDate(r.due_date)) : 'no due date') +
               (r.days_late > 0 ? ' \u00b7 ' + num(r.days_late) + ' days late' : '') + '</div></div>' +
@@ -4606,7 +4832,7 @@
       (st.ordered ? (function(){
         const segs = [
           ['Shipped', st.shipped, 'var(--ok)'],
-          ['Preparing to ship', st.assigned, 'var(--accent)'],
+          ['Preparing to ship', st.assigned, 'var(--series, var(--accent))'],
           ['Ready to assign', st.built, '#e6b800'],
           ['Remaining to build', st.remaining, 'var(--line-strong)', 'rem']
         ];
@@ -4770,8 +4996,8 @@
       '<span class="poform">' +
         '<input id="poIn" type="text" maxlength="60" autocomplete="off" spellcheck="false" ' +
           'placeholder="e.g. 4500123987" value="' + esc(o.po_number || '') + '">' +
-        '<button class="btn sm primary" id="poSave" type="button">Save</button>' +
         '<button class="btn sm" id="poCancel" type="button">Cancel</button>' +
+        '<button class="btn sm primary" id="poSave" type="button">Save</button>' +
       '</span>';
     const input = $('poIn'), save = $('poSave');
     input.focus(); input.select();
@@ -4904,7 +5130,7 @@
         const o = byOrder[t.order_id];
         g.push({ r:r, kind:'rma', title:'RMA-' + t.rma_no,
           sub:(t.serial || 'No serial') + (o ? ' \u00b7 ' + o.invoice_no : ''),
-          tag:String(t.status || '').replace(/_/g, ' '),
+          tag:RMA_ST[t.status] ? RMA_ST[t.status].l : String(t.status || '').replace(/_/g, ' '),
           go:function(){ openRma(t.id); } });
       });
       take('RMA', g, 5);
@@ -5247,12 +5473,12 @@
       host.innerHTML =
         '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="height:' + H + 'px">' +
           '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0" style="stop-color:var(--accent)" stop-opacity=".28"/>' +
-            '<stop offset="1" style="stop-color:var(--accent)" stop-opacity="0"/></linearGradient></defs>' +
+            '<stop offset="0" style="stop-color:var(--series, var(--accent))" stop-opacity=".28"/>' +
+            '<stop offset="1" style="stop-color:var(--series, var(--accent))" stop-opacity="0"/></linearGradient></defs>' +
           '<path d="' + line + 'L' + W + ' ' + H + 'L0 ' + H + 'Z" fill="url(#' + gid + ')"/>' +
-          '<path d="' + line + '" fill="none" style="stroke:var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>' +
+          '<path d="' + line + '" fill="none" style="stroke:var(--series, var(--accent))" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>' +
           '<line class="pch-x" x1="0" x2="0" y1="0" y2="' + H + '" style="stroke:var(--line-strong)" vector-effect="non-scaling-stroke" opacity="0"/>' +
-          '<circle class="pch-dot" r="4" style="fill:var(--accent);stroke:var(--paper)" stroke-width="2" vector-effect="non-scaling-stroke" opacity="0"/>' +
+          '<circle class="pch-dot" r="4" style="fill:var(--series, var(--accent));stroke:var(--paper)" stroke-width="2" vector-effect="non-scaling-stroke" opacity="0"/>' +
         '</svg><div class="rchart-tip"></div>' +
         '<div class="rchart-axis"><span>' + fmtShort(series[0].x) + '</span>' +
           (n > 2 ? '<span>' + fmtShort(series[Math.floor((n-1)/2)].x) + '</span>' : '') +
@@ -5326,7 +5552,10 @@
   let rFailRange = localStorage.getItem('ntPortalFailRange') || 'all';
   function renderRmaFail(){
     const el = $('rFail'); if (!el) return;
-    $('rFailTabs').querySelectorAll('[data-pfr]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-pfr') === rFailRange); });
+    $('rFailTabs').querySelectorAll('[data-pfr]').forEach(function(b){
+      const on = b.getAttribute('data-pfr') === rFailRange;
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
 
     let since = null;
     if (rFailRange === '30'){ since = new Date(); since.setDate(since.getDate() - 30); since.setHours(0,0,0,0); }
@@ -5392,7 +5621,7 @@
           '</div>'
         : '') +
       '<div class="card rlist-card">' +
-        '<div class="toolbar"><input id="rSearch" type="text" class="searchbox" placeholder="Search by RMA # or serial number" value="' + esc(rQuery) + '" autocomplete="off"></div>' +
+        '<div class="toolbar"><input id="rSearch" type="text" class="searchbox" placeholder="Search by RMA # or serial number" value="' + esc(rQuery) + '" autocomplete="off" autocapitalize="off" autocorrect="off" enterkeyhint="search"></div>' +
         '<div class="rchips">' + R_FILTERS.map(function(f){ return '<button type="button" data-rf="' + f[0] + '" class="' + (rFilter === f[0] ? 'on' : '') + '">' + f[1] + '</button>'; }).join('') + '</div>' +
         '<div id="rRows"></div>' +
       '</div>';
@@ -5503,7 +5732,7 @@
             : '') +
           '<div class="rbar" style="margin-top:var(--s3);"><select id="rmaRetCar" style="height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
             RMA_CARRIERS.map(function(c){ return '<option>' + c + '</option>'; }).join('') + '</select>' +
-            '<input id="rmaRetTrk" type="text" placeholder="Tracking number" style="flex:1 1 180px;height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
+            '<input id="rmaRetTrk" type="text" placeholder="Tracking number" autocapitalize="characters" autocorrect="off" spellcheck="false" style="flex:1 1 180px;height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font:inherit;padding:0 12px;">' +
             '<button class="btn" id="rmaRetGo" type="button">Add tracking</button></div>' +
           '<div style="margin-top:var(--s3);"><button class="btn sm" data-rslip="1" type="button">Print return slip</button></div></div>'
       : '';
@@ -5513,7 +5742,7 @@
     $('detailView').innerHTML =
       '<div class="back"><button class="btn" id="rmaBack" type="button">&larr; All RMAs</button>' +
         (editable ? '<button class="btn" id="rmaEdit" type="button">Edit request</button>' : '') +
-        (t.status === 'new' ? '<button class="btn" id="rmaCancel" type="button">Cancel request</button>' : '') + '</div>' +
+        (t.status === 'new' ? '<button class="btn danger" id="rmaCancel" type="button">Cancel request</button>' : '') + '</div>' +
       '<h1 class="inv-h1 rma-h1">' + rmaNo(t) + rmaChip(t.status) + (t.coverage ? '<span class="chip n">' + esc(RMA_COV[t.coverage] || t.coverage) + '</span>' : '') + (t.legacy ? '<span class="chip w">Legacy order</span>' : '') + '</h1>' +
       '<p class="muted rhsub"><span>' + serialLink + '</span>' + (cfg ? '<span>' + esc(cfg.name) + '</span>' : '') + '<span>opened ' + esc(fmtDate(t.created_at)) + '</span></p>' +
       (st.next ? '<p class="rnext' + (t.status === 'needs_info' ? ' w' : '') + '">' + esc(st.next) + (editable ? ' You can still edit the request until it is approved.' : '') + '</p>' : '') +
@@ -5736,7 +5965,7 @@
     const bg = openModal(
       '<div class="modal-h"><h3>' + (isEdit ? 'Edit ' + rmaNo(edit) : 'Request an RMA') + '</h3><p>' + (isEdit ? 'Changes are visible to Novatech straight away. Once the request is approved it locks.' : 'Start with the serial number on the unit. If it predates this portal, say so and we will still take it.') + '</p></div>' +
       '<div class="modal-b scroll">' +
-        '<div class="field"><label for="rnSerial">Serial number</label><div style="display:flex;gap:8px;"><input id="rnSerial" type="text" value="' + esc(serial || '') + '" placeholder="NT26001000" autocomplete="off" spellcheck="false" style="flex:1;"><button class="btn" id="rnLook" type="button">Look up</button></div>' +
+        '<div class="field"><label for="rnSerial">Serial number</label><div style="display:flex;gap:8px;"><input id="rnSerial" type="text" value="' + esc(serial || '') + '" placeholder="NT26001000" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" style="flex:1;"><button class="btn" id="rnLook" type="button">Look up</button></div>' +
           '<div class="rlook" id="rnUnit" style="display:none;"></div></div>' +
         '<div id="rnForm" style="display:none;">' +
           '<div id="rnLegacyFields" style="display:none;">' +
@@ -5893,7 +6122,7 @@
       '<p>Type or scan a serial to see which order and shipment it belongs to.</p></div>' +
       '<div class="modal-b">' +
         '<div class="field"><label for="snIn">Serial</label>' +
-        '<input id="snIn" type="text" placeholder="NT26000175" autocomplete="off" spellcheck="false"></div>' +
+        '<input id="snIn" type="text" placeholder="NT26000175" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"></div>' +
         '<div class="lookup-out" id="snOut"></div>' +
       '</div>' +
       '<div class="modal-f"><button class="btn" id="snClose" type="button">Close</button>' +

@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- light only (data-theme above): on a dark-mode device the unthemed dark
+     rules used to half-apply and blank out the carrier buttons -->
+<meta name="theme-color" content="#f6f5f4">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Shipment tracking</title>
@@ -17,7 +20,7 @@
        the spec defines no mono token, so figures ride the UI face with tnum. */
     --font-ui:'Inter',-apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;
     --font-num:var(--font-ui);
-    --ink:#1a1a1a; --charcoal:#37352f; --ink-deep:#000000; --on-ink:#ffffff; --muted:#5d5b54; --faint:#787671;
+    --ink:#1a1a1a; --charcoal:#37352f; --ink-deep:#000000; --on-ink:#ffffff; --muted:#5d5b54; --faint:#6f6d68;
     --stone:#a4a097; --disabled:#bbb8b1;
     --bg:#f6f5f4; --paper:#ffffff; --soft:#fafaf9;
     --line:#e5e3df; --line-strong:#c8c4be;
@@ -31,6 +34,11 @@
     --warn:#dd5b00; --warn-ink:#793400; --warn-bg:#ffe8d4; --warn-line:#f7cba8;
     --bad:#e03131;  --bad-ink:#a02e6d;  --bad-bg:#fde0ec;  --bad-line:#f6c0d8;
     --info:#5645d4; --info-ink:#391c57; --info-bg:#e6e0f5; --info-line:#d6b6f6;
+    /* a status colour as text: the bright hues above stay on dots, bars and
+       borders; words and figures use -fg, which clears 4.5:1 */
+    --ok-fg:#127a28; --warn-fg:#b04a00; --bad-fg:#c62828;
+    /* the keyboard focus outline, one colour everywhere */
+    --focus:#5645d4;
     --e1:rgba(15,15,15,.04) 0 1px 2px 0;
     --e2:rgba(15,15,15,.08) 0 4px 12px 0;
     --e3:rgba(15,15,15,.20) 0 24px 48px -8px;
@@ -53,7 +61,7 @@
   :root[data-theme="dark"]{
     color-scheme:dark;
     /* derived from the spec's own navy band colours — no new hues introduced */
-    --ink:#e8ecf2; --charcoal:#e8ecf2; --muted:#9aa5b4; --faint:#6c7787;
+    --ink:#e8ecf2; --charcoal:#e8ecf2; --muted:#9aa5b4; --faint:#808b9b;
     --stone:#9aa5b4; --disabled:#5b6673;
     --bg:#0e1116; --paper:#161b22; --soft:#1c222b;
     --line:#252c36;
@@ -77,6 +85,8 @@
     --info:#5645d4; --info-ink:#e6e0f5;
     --info-bg:color-mix(in srgb, #5645d4 26%, #161b22);
     --info-line:color-mix(in srgb, #7b3ff2 44%, #161b22);
+    --ok-fg:#2fbf4f; --warn-fg:#f0883e; --bad-fg:#f87171;
+    --focus:#a78bfa;
     --e1:0 1px 2px rgba(0,0,0,.4);
     --e2:0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.4);
     --e3:0 2px 6px rgba(0,0,0,.4), 0 20px 48px rgba(0,0,0,.55);
@@ -101,8 +111,12 @@
   ::selection{ background:var(--accent-soft); color:var(--ink); }
   a{ color:var(--accent-fg); text-decoration:none; }
   a:hover{ color:var(--accent-hover); }
-  a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{
-    outline:none; box-shadow:var(--ring); border-radius:var(--r-sm);
+  /* one focus outline, visible on any surface; fields keep the accent ring */
+  a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--focus); outline-offset:2px;
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:none; border-color:var(--accent); box-shadow:var(--ring);
   }
   .mono{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
   h1,h2,h3,h4{ font-weight:600; letter-spacing:-0.5px; }
@@ -197,7 +211,7 @@
     padding:var(--s5); margin-bottom:var(--s5); box-shadow:none;
   }
   h1{ font-size:24px; letter-spacing:0; margin:0 0 var(--s2); line-height:1.2; }
-  h2{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s4b); }
+  h2{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin:0 0 var(--s4b); }
   .page-head{ margin-bottom:var(--s5); }
   /* the status chip is a sibling of the number, not punctuation after it */
   .inv-h1{ display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; row-gap:var(--s2); }
@@ -213,7 +227,7 @@
     transition:border-color var(--t), box-shadow var(--t);
   }
   .field input:focus, .pickbox:focus, .searchbox:focus{ outline:none; border-color:var(--accent); box-shadow:var(--ring); }
-  .err{ color:var(--bad); font-size:12.5px; min-height:1.2em; margin-top:var(--s2); font-weight:600; }
+  .err{ color:var(--bad-fg); font-size:12.5px; min-height:1.2em; margin-top:var(--s2); font-weight:600; }
 
   /* ---------- order rows ---------- */
   .toolbar{ display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4); }
@@ -248,7 +262,7 @@
     font-size:11.5px; font-weight:600; letter-spacing:.02em;
     padding:4px 10px; border-radius:var(--r-pill); border:1px solid transparent;
   }
-  .chip::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .chip::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--dot, currentColor); }
   .chip.n{ color:var(--muted);  background:var(--soft);      border-color:var(--line); }
   .chip.i{ color:var(--info-ink);   background:var(--info-bg);   border-color:var(--info-line); --dot:var(--info); }
   .chip.w{ color:var(--warn-ink);   background:var(--warn-bg);   border-color:var(--warn-line); --dot:var(--warn); }
@@ -268,8 +282,8 @@
     padding:var(--s4); box-shadow:none; animation:rise var(--t-slow) both;
   }
   .sumv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:0; font-variant-numeric:tabular-nums; }
-  .suml{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); line-height:1.3; text-wrap:balance; }
-  .sumc.ok .sumv{ color:var(--ok); }
+  .suml{ font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--muted); margin-top:var(--s1); line-height:1.3; text-wrap:balance; }
+  .sumc.ok .sumv{ color:var(--ok-fg); }
   .sumc.rem .sumv{ color:var(--muted); }
   .sumc.prep .sumv{ color:var(--accent-fg, var(--accent)); }
   /* the built yellow, deepened on light grounds so the number stays legible */
@@ -306,16 +320,16 @@
   .cfgp-si svg{ width:15px; height:15px; flex:0 0 auto; color:var(--faint); }
   .cfgp-q{ display:flex; align-items:baseline; justify-content:space-between; gap:var(--s2) var(--s3); flex-wrap:wrap; margin-top:var(--s3); font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .cfgp-q b{ font-size:16px; font-weight:600; color:var(--accent-fg, var(--accent)); }
-  .cfgp-q.done b{ color:var(--ok); }
+  .cfgp-q.done b{ color:var(--ok-fg); }
   .cfgp-qs{ font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--warn-ink, var(--warn)); }
-  .cfgp-q.done .cfgp-qs{ color:var(--ok); }
+  .cfgp-q.done .cfgp-qs{ color:var(--ok-fg); }
   .oprog-bar.cfgp-bar{ height:9px; margin-top:6px; border:0; background:color-mix(in srgb, var(--ink) 13%, transparent); box-shadow:inset 0 1px 2px color-mix(in srgb, #000 22%, transparent); }
   @media (max-width:640px){ .cfgp-spec{ display:grid; grid-template-columns:minmax(0,1fr); gap:4px; } }
   .shl-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:4px var(--s4); padding:var(--s3) 0; border-bottom:1px solid var(--line); }
   .shl-row:last-child{ border-bottom:0; padding-bottom:0; }
   .shl-n{ font-weight:600; font-size:14px; min-width:0; overflow-wrap:anywhere; }
   .shl-n small{ font-size:12px; font-weight:500; color:var(--muted); margin-left:6px; }
-  .shl-v{ font-family:var(--font-num); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ok); white-space:nowrap; }
+  .shl-v{ font-family:var(--font-num); font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ok-fg); white-space:nowrap; }
   .shl-v small{ font-family:var(--font-ui); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-left:4px; }
   .shl-b{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12.5px; color:var(--muted); }
   .shl-b b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
@@ -383,7 +397,7 @@
     appearance:none; border:none; background:none; padding:0 2px; cursor:pointer;
     color:var(--faint); font-size:12px; line-height:1; font-family:inherit;
   }
-  .nmsg-x:hover{ color:var(--bad); }
+  .nmsg-x:hover{ color:var(--bad-fg); }
   .ncompose{ margin-top:var(--s4); display:grid; gap:var(--s2); }
   .ncompose textarea{
     width:100%; min-height:76px; resize:vertical; font:inherit; font-size:13.5px;
@@ -421,7 +435,7 @@
   .bill-kv{ font-family:var(--font-num); font-size:26px; font-weight:600; letter-spacing:-0.4px; font-variant-numeric:tabular-nums; line-height:1.2; }
   .bill-kl{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:var(--s1); }
   .bill-ks{ font-size:12px; color:var(--muted); margin-top:2px; }
-  .bill-k.paid .bill-kv{ color:var(--ok); }
+  .bill-k.paid .bill-kv{ color:var(--ok-fg); }
   .bill-k.due .bill-kv{ color:var(--warn-ink, var(--warn)); }
   .bill-rail{ display:flex; height:8px; margin-top:var(--s4); overflow:hidden; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
   .bill-rail i{ display:block; height:100%; background:var(--ok); transition:width var(--t-slow); }
@@ -429,7 +443,7 @@
   .bill-cap b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
   .bill-det{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s3) var(--s4); margin-top:var(--s5); padding-top:var(--s4); border-top:1px solid var(--line); }
   .bill-det-v{ font-family:var(--font-num); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; }
-  .bill-det-v.hot{ color:var(--bad); }
+  .bill-det-v.hot{ color:var(--bad-fg); }
   .bill-det-l{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:2px; }
   .bill-det-s{ font-size:12px; color:var(--muted); margin-top:2px; }
   @media (max-width:700px){
@@ -793,19 +807,20 @@
      Keyed to the card's own width, so a narrow window falls back to the flowing layout. */
   .batch{ container:pbatch / inline-size; }
   @container pbatch (min-width:900px){
-    .bhead{ grid-template-columns:160px minmax(0,1fr) 240px 240px; min-height:84px; }
+    .bhead{ grid-template-columns:160px minmax(0,1fr) 280px 210px; min-height:84px; }
     .bhead > .bno{ justify-content:flex-start; }
     .bhead > .mono{ text-align:left; white-space:nowrap; overflow:hidden; }
     .bhead > .mono .bship{ flex-wrap:nowrap; }
     .bhead .bacts{ flex-wrap:nowrap; white-space:nowrap; }
   }
   @container pbatch (min-width:1100px){
-    .bhead{ grid-template-columns:190px minmax(0,1fr) 300px 240px; }
+    .bhead{ grid-template-columns:190px minmax(0,1fr) 320px 210px; }
   }
   /* sits over the serial column, so it reads as "copy this list" */
   .bbar{ display:flex; margin-bottom:var(--s3); }
   .bhead:hover{ background:var(--soft); }
-  .bhead:focus-visible{ outline:none; box-shadow:var(--ring); }
+  /* drawn just inside the header: the batch card clips anything outside it */
+  .bhead:focus-visible{ outline:2px solid var(--focus); outline-offset:-2px; }
   .bhead button, .bhead a, .bhead .cfg{ cursor:default; }
   .bhead button, .bhead a{ cursor:pointer; }
   .bship{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px; }
@@ -841,8 +856,8 @@
   .ups-line-hist{ border-top:1px solid var(--line); padding-top:10px; }
   .ups-line-hist > summary{ display:flex; align-items:center; gap:8px; width:max-content; max-width:100%; list-style:none; cursor:pointer; border-radius:4px; font-size:12.5px; font-weight:600; color:var(--accent-fg, var(--accent)); }
   .ups-line-hist > summary::-webkit-details-marker{ display:none; }
-  .ups-line-hist > summary:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-  .ups-line-hc{ font-weight:500; color:var(--faint); overflow-wrap:anywhere; }
+  .ups-line-hist > summary:focus-visible{ outline:2px solid var(--focus); outline-offset:-2px; }
+  .ups-line-hc{ font-weight:500; color:var(--faint); white-space:nowrap; }
   .ups-line-hist > summary svg{ width:14px; height:14px; flex:0 0 auto; transition:transform var(--t); }
   .ups-line-hist[open] > summary svg{ transform:rotate(180deg); }
   .ups-line-hist ol{ list-style:none; margin:14px 0 0; padding:0 4px 0 0; max-height:440px; overflow:auto; }
@@ -859,7 +874,7 @@
   @container upsc (max-width:520px){ .ups-line-hist li{ grid-template-columns:76px minmax(0,1fr); gap:10px; } }
   @container upsc (max-width:520px){
     .ups-line-big{ font-size:19px; }
-    .ups-line-steps li:not(.now) span{ visibility:hidden; }
+    .ups-line-steps li:not(.now) span{ display:none; }
   }
   .ups-mini{ display:inline-flex; align-items:center; gap:4px; margin-left:8px; font-family:var(--font-ui); font-size:11px; font-weight:600; color:var(--muted); white-space:nowrap; vertical-align:1px; }
   .ups-mini::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--dot, var(--faint)); }
@@ -897,11 +912,16 @@
   .ups-line-hist > summary:hover span:first-child{ text-decoration:underline; text-underline-offset:3px; }
   .ups-line-hist ol{ margin:0; padding:4px var(--px) 8px; }
   .ups-line > .ups-line-foot{ padding:12px var(--px); }
-  @container upsc (max-width:520px){ .ups-line > *{ --px:16px; } }
+  @container upsc (max-width:520px){
+    .ups-line > *{ --px:16px; }
+    /* narrow card: the scan count stays whole and the check time drops below */
+    .ups-line-hist > summary{ flex-wrap:wrap; row-gap:2px; }
+    .ups-line-ck{ flex-basis:100%; margin-left:0; padding-left:0; }
+  }
   .ups-d{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ups-mini.b{ --dot:var(--bad); color:var(--bad-ink); }
   /* the logo identifies the number, so the two never wrap apart */
-  .trk-grp{ display:inline-flex; align-items:center; gap:8px; min-width:0; }
+  .trk-grp{ display:inline-flex; align-items:center; gap:8px; min-width:0; flex:0 0 auto; }
   .carrier{
     display:inline-flex; align-items:center; flex:0 0 auto;
     height:17px; padding:0 8px; border-radius:var(--r-pill);
@@ -913,8 +933,8 @@
   .trk-btn{ display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:999px; font-size:12.5px; font-weight:600; color:var(--accent-ink); background:var(--accent); text-decoration:none; white-space:nowrap; font-family:inherit; }
   .trk-btn:hover{ background:var(--accent-hover); color:var(--accent-ink); }
   .trk-tag{
-    display:inline-block; margin-left:6px; font-size:9.5px; font-weight:600;
-    letter-spacing:.08em; text-transform:uppercase; color:var(--faint);
+    display:inline-block; margin-left:6px; font-size:12px; font-weight:500;
+    letter-spacing:0; text-transform:none; color:var(--faint);
     font-family:var(--font-ui); vertical-align:middle; white-space:nowrap;
   }
   .carrier img{ height:14px; width:auto; display:block; }
@@ -978,7 +998,7 @@
   table{ width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; }
   thead th{
     position:sticky; top:0; z-index:1; background:var(--paper);
-    text-align:left; padding:8px 12px; font-size:10.5px; font-weight:600;
+    text-align:left; padding:8px 12px; font-size:11px; font-weight:600;
     letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
     border-bottom:1px solid var(--line);
   }
@@ -1051,7 +1071,7 @@
 
   .staffbadge{
     font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
-    color:var(--warn); background:var(--warn-bg); border:1px solid var(--warn-line);
+    color:var(--warn-ink); background:var(--warn-bg); border:1px solid var(--warn-line);
     border-radius:var(--r-pill); padding:2px 8px;
   }
   .pickbox{ height:44px; font-size:14px; max-width:240px; width:auto; min-width:0; flex:0 1 auto; padding-right:var(--s5); }
@@ -1138,7 +1158,7 @@
     #signOut .so-ico{ display:block; }
     .brand > div{ padding-left:var(--s3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .brand b, .brand span{ display:inline; font-size:13px; }
-    .brand span::before{ content:" \00b7 "; color:var(--faint); }
+    .brand span::before{ content:" \00b7\00a0"; color:var(--faint); }
     .who{ width:auto; justify-content:flex-end; gap:var(--s2); flex-wrap:nowrap; flex:0 0 auto; }
     .who-em{ display:none; }
     .pmenu{ order:3; flex:1 1 100%; margin:var(--s1) 0 0; padding:3px; background:var(--soft); border:1px solid var(--line); border-radius:var(--r-pill); }
@@ -1234,9 +1254,33 @@
   @media (max-width:420px){
     .sum{ grid-template-columns:1fr 1fr; }
   }
+  /* Screen only from here to the print block: a printed page is about 740px
+     wide and matches the max-width:820px rules above, so phone layout must
+     not reach the printout. */
+  @media screen and (max-width:820px){
+    /* the page itself scrolls, so browser bars shrink and a status-bar tap goes
+       to the top: clip, unlike hidden, does not turn body into a scroll box */
+    body{ overflow-x:clip; height:auto; min-height:100%; }
+    /* a serial stays on one line, level with its model name; the model and
+       its spec take the rest of the row */
+    .bbody tbody tr{ grid-template-columns:max-content minmax(0,1fr); }
+    .bbody td:nth-child(1){ white-space:nowrap; overflow-wrap:normal; }
+    .bbody td:nth-child(1), .bbody td:nth-child(2){ align-self:baseline; }
+    /* the carrier's button and Details side by side; !important beats the
+       34px the script writes inline */
+    .bhead .bacts{ grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); }
+    .bhead .bacts .btn{ min-height:40px !important; }
+  }
+  @media screen{
+    /* no lone carrier logo before a tracking number exists */
+    .bship:has(> .carrier:only-child){ display:none; }
+  }
   @media print{
     header.top, .toolbar, .back, .btn, .icon-btn, .toast-stack{ display:none !important; }
     body{ background:#fff; }
+    /* a printed page is narrow enough for the phone rules, which make body a
+       page-high scroll box: without this only the first page printed */
+    html, body{ height:auto !important; overflow:visible !important; }
     .card, .batch, .sumc{ box-shadow:none; border-color:#ccc; break-inside:avoid; }
     .bbody{ grid-template-rows:1fr !important; opacity:1 !important; overflow:visible !important; visibility:visible !important; }
     .bbody-pad{ background:#fff; }
@@ -1251,13 +1295,13 @@
   .btn, input:not([type="checkbox"]):not([type="radio"]), select, textarea, .rlook, .rnext{
     border-radius:var(--r-sm) !important;
   }
-  .chip, .carrier, .storenum, .bar, .pipebar, .staffbadge, .btn.sm{ border-radius:var(--r-pill) !important; }
+  .chip, .carrier, .storenum, .bar, .pipebar, .staffbadge{ border-radius:var(--r-pill) !important; }
   .icon-btn{ border-radius:50% !important; }
   /* ============================================================
      DASHBOARD SHELL — matches the staff dashboard: a fixed rail on
      desktop, a bottom tab bar on phones, the same card language.
      ============================================================ */
-  :root{ --rail:284px; --rail-mini:76px; }
+  :root{ --rail:240px; --rail-mini:76px; }
 
   .siderail{ display:none; }
   body.authed{ padding-left:var(--rail); transition:padding-left var(--t); }
@@ -1441,7 +1485,7 @@
   .stat-val{ font-size:32px; font-weight:600; line-height:1.05; color:var(--ink); font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
   .stat-sub{ font-size:12.5px; color:var(--faint); }
   .stat.tone-warn .stat-sub{ color:var(--warn-ink); font-weight:600; }
-  .stat.tone-ok .stat-sub{ color:var(--ok); font-weight:600; }
+  .stat.tone-ok .stat-sub{ color:var(--ok-fg); font-weight:600; }
 
   .dash-grid{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--s4); margin-bottom:var(--s4); }
   .dash-grid > .card{ margin-bottom:0; display:flex; flex-direction:column; }
@@ -1903,7 +1947,11 @@
   /* ---- public dealer tracking page ---- */
   .tk{ max-width:1180px; }
   .tk-top{ margin-bottom:var(--s5); }
-  .tk-k{ font-size:11.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  /* the sender's logo leads every view, so a dealer knows who sent the link */
+  .tk-logo{ display:block; height:24px; width:auto; margin:0 0 var(--s5); }
+  .tk-msg .tk-logo{ margin:0 auto var(--s5); }
+  .tk-logo.is-dark{ display:none; }
+  .tk-k{ font-size:11.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
   .tk-h{ margin:6px 0 0; font-size:30px; font-weight:700; letter-spacing:-.015em; line-height:1.15; color:var(--ink); overflow-wrap:anywhere; }
   .tk-sub{ margin-top:6px; font-size:13px; color:var(--muted); }
   .tk .sum{ grid-template-columns:repeat(4, minmax(0,1fr)); }
@@ -1918,7 +1966,7 @@
     .tk .bhead > .bno{ flex-direction:column; align-items:flex-start; justify-content:center; gap:6px; }
   }
   .tk-spec{ margin-top:2px; font-size:11.5px; color:var(--muted); }
-  .tk-foot{ margin-top:var(--s5); font-size:12px; color:var(--faint); text-align:center; text-wrap:pretty; }
+  .tk-foot{ margin-top:var(--s5); font-size:12px; color:var(--muted); text-align:center; text-wrap:pretty; }
   .tk-msg{ max-width:520px; margin:12vh auto 0; text-align:center; }
   .tk-msg h1{ margin:0 0 8px; font-size:22px; font-weight:700; color:var(--ink); }
   .tk-msg p{ margin:0; font-size:14px; color:var(--muted); text-wrap:pretty; }
@@ -1928,11 +1976,25 @@
     .tk .sumc:last-child{ grid-column:auto; }
     .tk-h{ font-size:24px; }
   }
+  /* tablets: the four tiles share one row (the shared phone rule would give
+     the last one a row of its own) */
+  @media screen and (max-width:820px){
+    .tk .sumc:last-child{ grid-column:auto; }
+  }
+  /* phones: the four figures become one strip instead of a 2 × 2 block of
+     tiles, and it arrives as one piece rather than four rising cells */
+  @media screen and (max-width:700px){
+    .tk .sum{ grid-template-columns:repeat(4, minmax(0,1fr)); gap:0; overflow:hidden; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); }
+    .tk .sumc{ min-width:0; padding:12px 4px; text-align:center; background:none; border:0; border-left:1px solid var(--line); border-radius:0; animation:none; }
+    .tk .sumc:first-child{ border-left:0; }
+    .tk .sumv{ font-size:20px; line-height:1.2; }
+    .tk .suml{ font-size:11px; letter-spacing:0; text-transform:none; margin-top:3px; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap tk" id="app">
-  <div class="tk-top"><div class="tk-k">Shipment tracking</div><div class="tk-skel" style="height:34px;width:240px;margin:8px 0 0;"></div></div>
+  <div class="tk-top"><img class="tk-logo is-light" src="logo.png" alt="Novatech" onerror="this.remove()"><img class="tk-logo is-dark" src="logo-dark.png" alt="Novatech" loading="lazy" onerror="this.remove()"><div class="tk-k">Shipment tracking</div><div class="tk-skel" style="height:34px;width:240px;margin:8px 0 0;"></div></div>
   <div class="tk-skel"></div><div class="tk-skel"></div><div class="tk-skel"></div>
 </div>
 <div class="toast-stack" id="toastStack"></div>
@@ -2005,7 +2067,7 @@
   }
   function trkTag(isMaster){
     return isMaster
-      ? '<span class="trk-tag" title="One number for the whole shipment">master</span>'
+      ? '<span class="trk-tag" title="One number for the whole shipment">Master</span>'
       : '';
   }
   function trackHtml(carrier, nums){
@@ -2199,8 +2261,13 @@
   function locOf(b){ return D.locations.find(function(l){ return String(l.id) === String(b.location_id); }) || null; }
   function cfgOf(id){ return D.configs.find(function(c){ return c.id === id; }) || null; }
 
+  /* the logo leads every view (fixed markup, no user data). The page is light
+     only, so the dark logo stays hidden, and lazy keeps it from downloading. */
+  const LOGO = '<img class="tk-logo is-light" src="logo.png" alt="Novatech" onerror="this.remove()">' +
+    '<img class="tk-logo is-dark" src="logo-dark.png" alt="Novatech" loading="lazy" onerror="this.remove()">';
+
   function message(title, body){
-    $('app').innerHTML = '<div class="tk-msg"><h1>' + esc(title) + '</h1><p>' + esc(body) + '</p></div>';
+    $('app').innerHTML = '<div class="tk-msg">' + LOGO + '<h1>' + esc(title) + '</h1><p>' + esc(body) + '</p></div>';
     document.title = 'Shipment tracking';
   }
 
@@ -2226,7 +2293,7 @@
     document.title = D.dealer + ' \u00b7 Shipment tracking';
 
     $('app').innerHTML =
-      '<header class="tk-top"><div class="tk-k">Shipment tracking</div>' +
+      '<header class="tk-top">' + LOGO + '<div class="tk-k">Shipment tracking</div>' +
         '<h1 class="tk-h">' + esc(D.dealer) + '</h1>' +
         '<div class="tk-sub">' + num(bs.length) + (bs.length === 1 ? ' shipment' : ' shipments') + ' \u00b7 ' +
           num(Object.keys(stores).length) + (Object.keys(stores).length === 1 ? ' store' : ' stores') + '</div></header>' +
