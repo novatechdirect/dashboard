@@ -269,6 +269,47 @@
   .chip.k{ color:var(--ok-ink);     background:var(--ok-bg);     border-color:var(--ok-line); --dot:var(--ok); }
   .chip.b{ color:var(--bad-ink);    background:var(--bad-bg);    border-color:var(--bad-line); --dot:var(--bad); }
 
+  /* shipping issues: one line that opens into the batches needing attention */
+  .shipx{
+    margin:0 0 var(--s4); border:1px solid var(--warn-line); border-radius:var(--r-md);
+    background:color-mix(in srgb, var(--warn-bg) 55%, var(--paper));
+  }
+  .shipx.bad{ border-color:var(--bad-line); background:color-mix(in srgb, var(--bad-bg) 55%, var(--paper)); }
+  .shipx > summary{
+    display:flex; align-items:center; flex-wrap:wrap; gap:4px var(--s3);
+    min-height:44px; padding:8px var(--s4); cursor:pointer; list-style:none;
+  }
+  .shipx > summary::-webkit-details-marker{ display:none; }
+  .shipx > summary:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:var(--r-md); }
+  .shipx-ico{ width:18px; height:18px; flex:0 0 auto; color:var(--warn); }
+  .shipx.bad .shipx-ico{ color:var(--bad); }
+  .shipx-t{ font-weight:600; font-size:13.5px; color:var(--warn-ink); }
+  .shipx.bad .shipx-t{ color:var(--bad-ink); }
+  .shipx-sub{ font-size:12.5px; color:var(--muted); }
+  .shipx-chev{ width:16px; height:16px; margin-left:auto; flex:0 0 auto; color:var(--muted); transition:transform var(--t); }
+  .shipx[open] .shipx-chev{ transform:rotate(180deg); }
+  .shipx-list{ display:flex; flex-direction:column; gap:6px; padding:0 var(--s3) var(--s3); }
+  button.shipx-row{
+    display:grid; justify-items:start; gap:3px; width:100%; position:relative; margin:0;
+    padding:10px 36px 10px 12px; text-align:left; font:inherit; font-size:13px; line-height:1.4;
+    background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:var(--r-sm); cursor:pointer;
+  }
+  @media (hover: hover) and (pointer: fine){
+    button.shipx-row:hover{ background:var(--soft); border-color:var(--line-strong); }
+  }
+  button.shipx-row::after{
+    content:""; position:absolute; right:16px; top:50%; width:7px; height:7px; margin-top:-4px;
+    border:solid var(--muted); border-width:0 1.5px 1.5px 0; transform:rotate(-45deg);
+  }
+  .shipx-top{ display:flex; align-items:center; flex-wrap:wrap; gap:4px var(--s2); width:100%; }
+  .shipx-place{ color:var(--muted); }
+  .shipx-when{ margin-left:auto; font-size:12px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .shipx-trk{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+  /* the batch a strip row jumped to */
+  .batch{ scroll-margin-top:var(--s4); }
+  .batch.shipx-flash{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){ .shipx-chev{ transition:none; } }
+
   .bar{ height:7px; border-radius:var(--r-pill); background:var(--soft); overflow:hidden; display:flex; border:1px solid var(--line); }
   .bar i{ display:block; height:100%; transition:width var(--t-slow); }
   .bar i.s{ background:var(--ok); } .bar i.a{ background:var(--accent); } .bar i.b{ background:#e6b800; }
@@ -2111,6 +2152,89 @@
     const hr = Math.floor(m / 60); if (hr < 24) return hr + ' hour' + (hr === 1 ? '' : 's') + ' ago';
     const d = Math.floor(hr / 24); return d + ' day' + (d === 1 ? '' : 's') + ' ago';
   }
+
+  /* ---- shipping issues ----
+     The staff dashboard's rule: UPS reports an exception or a return, or
+     nothing has moved for more than two working days (a label UPS never
+     picked up, or a box that stopped getting scans). Weekends don't count,
+     and UPS stops checking a number 45 days after its first check. */
+  const SHIP_STALL_H = 48, SHIP_WATCH_DAYS = 45;
+  function shipWorkHours(from, to){
+    let t = new Date(from).getTime(), h = 0;
+    const end = to.getTime();
+    if (isNaN(t)) return 0;
+    while (t < end){
+      const d = new Date(t), wd = d.getDay();
+      const stop = Math.min(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime(), end);
+      if (wd !== 0 && wd !== 6) h += (stop - t) / 36e5;
+      t = stop;
+    }
+    return h;
+  }
+  /* a batch's worst package, or null while every one of them is moving */
+  function shipIssue(b, tk){
+    const now = new Date(), seen = {};
+    let lead = null, n = 0;
+    (tk || []).forEach(function(t){
+      const no = String(t.tracking_no || '').trim().toUpperCase();
+      if (!no || seen[no] || ['label', 'unknown', 'transit', 'out', 'exception', 'returned'].indexOf(t.ups_status) < 0) return;
+      seen[no] = 1;
+      if (t.ups_first_checked_at && now - new Date(t.ups_first_checked_at) > SHIP_WATCH_DAYS * 864e5) return;
+      const bad = t.ups_status === 'exception' || t.ups_status === 'returned';
+      const since = t.ups_event_at || t.ups_first_checked_at || (b.ship_date ? b.ship_date + 'T12:00:00' : null);
+      const h = shipWorkHours(since, now);
+      if (!bad && !(h > SHIP_STALL_H)) return;
+      n++;
+      const p = { t:t, bad:bad, h:h, since:since, r:(bad ? 1e6 : 0) + h };
+      if (!lead || p.r > lead.r) lead = p;
+    });
+    if (lead) lead.n = n;
+    return lead;
+  }
+  /* which strips are open, kept across redraws */
+  const SHIPX_OPEN = new Set();
+  document.addEventListener('toggle', function(e){
+    const d = e.target; if (!d || !d.matches || !d.matches('details.shipx')) return;
+    const k = d.getAttribute('data-k'); if (d.open) SHIPX_OPEN.add(k); else SHIPX_OPEN.delete(k);
+  }, true);
+  const SHIPX_ICO = '<svg class="shipx-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.31171 10.7615C8.23007 5.58716 9.68925 3 12 3C14.3107 3 15.7699 5.58716 18.6883 10.7615L19.0519 11.4063C21.4771 15.7061 22.6897 17.856 21.5937 19.428C20.4978 21 17.7864 21 12.3637 21H11.6363C6.21356 21 3.50217 21 2.40626 19.428C1.31034 17.856 2.52291 15.7061 4.94805 11.4063L5.31171 10.7615Z"/><path stroke-linecap="round" d="M12 8V13"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16H12.0001"/></g></svg>';
+  /* One line that opens into the batches needing attention, and nothing at all
+     while every box is moving. Each item: { b, p (from shipIssue), label, pre, oid } */
+  function shipxHtml(items, k){
+    if (!items.length) return '';
+    items.sort(function(a, c){ return c.p.r - a.p.r; });
+    const nBad = items.filter(function(x){ return x.p.bad; }).length, nStill = items.length - nBad;
+    return '<details class="shipx' + (nBad ? ' bad' : '') + '" data-k="' + esc(k) + '"' + (SHIPX_OPEN.has(k) ? ' open' : '') + '>' +
+      '<summary>' + SHIPX_ICO +
+        '<span class="shipx-t">' + num(items.length) + (items.length === 1 ? ' shipment needs attention' : ' shipments need attention') + '</span>' +
+        '<span class="shipx-sub">' + [nBad ? num(nBad) + (nBad === 1 ? ' delivery exception' : ' delivery exceptions') : '',
+                                      nStill ? num(nStill) + ' not moving' : ''].filter(Boolean).join(' \u00b7 ') + '</span>' +
+        '<svg class="shipx-chev" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
+      '</summary>' +
+      '<div class="shipx-list">' + items.map(shipxRow).join('') + '</div></details>';
+  }
+  function shipxRow(x){
+    const b = x.b, p = x.p, t = p.t, st = t.ups_status, l = locOf(b);
+    const waiting = st === 'label' || st === 'unknown', days = Math.floor(p.h / 24);
+    const city = l ? [l.city, l.state].filter(Boolean).join(', ') : '';
+    const what = p.bad ? (upsWords(t.ups_text) || 'UPS reported a problem with this package')
+      : st === 'unknown' ? 'UPS has no record of this package yet'
+      : waiting ? 'Label created ' + upsDay(p.since) + ', not picked up by UPS yet'
+      : 'No UPS update since ' + upsDay(p.since) + (t.ups_where ? ', last seen in ' + t.ups_where : '');
+    return '<button type="button" class="shipx-row" data-shipfocus="' + esc(b.id) + '"' + (x.oid ? ' data-shipord="' + esc(x.oid) + '"' : '') + '>' +
+      '<span class="shipx-top">' +
+        '<span class="chip ' + (p.bad ? 'b' : 'w') + '">' + (st === 'returned' ? 'Returned' : p.bad ? 'Exception' : waiting ? 'Not picked up' : 'Not moving') + '</span>' +
+        '<b>' + esc((x.pre ? x.pre + ' \u00b7 ' : '') + x.label) + '</b>' +
+        '<span class="shipx-place">' + esc(l ? l.store_name : 'Destination to be confirmed') +
+          (l && l.store_number ? '<span class="storenum">' + esc(l.store_number) + '</span>' : '') +
+          (city ? ' \u00b7 ' + esc(city) : '') + '</span>' +
+        '<span class="shipx-when">' + esc(p.bad ? (t.ups_event_at ? upsAgo(t.ups_event_at) : '') : days + ' working day' + (days === 1 ? '' : 's')) + '</span>' +
+      '</span>' +
+      '<span>' + esc(what) + '</span>' +
+      '<span class="shipx-trk">' + esc([t.tracking_no].concat(p.bad ? [t.ups_where, upsWhen(t.ups_event_at)] : []).filter(Boolean).join(' \u00b7 ')) +
+        (p.n > 1 ? ' \u00b7 ' + num(p.n) + ' packages' : '') + '</span>' +
+    '</button>';
+  }
   function upsSum(tk){
     const seen = {}, pk = [];
     (tk || []).forEach(function(t){
@@ -2312,6 +2436,10 @@
           '<span><i style="background:var(--accent)"></i><b>' + Math.round(pct(transit)) + '%</b> on the way</span>' +
           '<span><i style="background:#e6b800"></i><b>' + Math.round(pct(prep)) + '%</b> preparing</span>' +
         '</div></div>' : '') +
+      shipxHtml(view.map(function(v){
+        const p = shipIssue(v.b, v.tk);
+        return p ? { b:v.b, p:p, label:'Batch ' + v.n } : null;
+      }).filter(Boolean), 'dealer') +
       '<div class="card"><h2>Shipments</h2>' +
       (view.length ? view.map(batchHtml).join('') : '<p class="muted" style="margin:0;">Nothing has been scheduled for these stores yet.</p>') +
       '</div>' +
@@ -2368,6 +2496,15 @@
     '</div>';
   }
 
+  /* a strip row: open that batch and bring it into view */
+  function focusShipment(id){
+    const bd = $('bb_' + id); if (!bd) return;
+    if (!bd.classList.contains('open')) toggle(id);
+    const card = bd.closest('.batch');
+    card.scrollIntoView({ block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    card.classList.add('shipx-flash');
+    setTimeout(function(){ card.classList.remove('shipx-flash'); }, 2400);
+  }
   function toggle(id){
     const bd = $('bb_' + id); if (!bd) return;
     const was = bd.classList.contains('open');
@@ -2385,6 +2522,8 @@
         .then(function(){ toast('Serial numbers copied', 'ok'); }, function(){ toast('Could not copy. Select the serials and copy them by hand.', 'bad'); });
       return;
     }
+    const sf = e.target.closest('[data-shipfocus]');
+    if (sf){ focusShipment(sf.getAttribute('data-shipfocus')); return; }
     const h = e.target.closest('[data-head]');
     if (h && !e.target.closest('button, a')) toggle(h.getAttribute('data-head'));
   });
@@ -2411,22 +2550,25 @@
   }
 
   function demoData(){
+    const EXC = 'The receiver was not available for delivery. A second attempt will be made the next business day.';
     const day = function(n){ const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
     const ymd = function(n){ return day(n).replace(/-/g, ''); };
     const ts = function(n, h){ const d = new Date(); d.setDate(d.getDate() + n); d.setHours(h || 12, 0, 0, 0); return d.toISOString(); };
     const hist = function(st, d){
-      const ev = [{ d:ymd(d - 4), t:'160400', y:'M', s:'Shipper created a label, UPS has not received the package yet.', w:'' }];
+      const ev = [{ d:ymd(st === 'label' ? d : d - 4), t:'160400', y:'M', s:'Shipper created a label, UPS has not received the package yet.', w:'' }];
       if (st !== 'label') ev.push({ d:ymd(d - 4), t:'202100', y:'I', s:'Arrived at Facility', w:'Newark, DE' },
         { d:ymd(d - 3), t:'220500', y:'I', s:'Departed from Facility', w:'Newark, DE' },
         { d:ymd(d - 2), t:'071100', y:'I', s:'Arrived at Facility', w:'Hodgkins, IL' },
         { d:ymd(d - 1), t:'034700', y:'I', s:'Departed from Facility', w:'Hodgkins, IL' });
       if (st === 'out' || st === 'delivered') ev.push({ d:ymd(d), t:'081500', y:'O', s:'Out For Delivery Today', w:'Knoxville, TN' });
       if (st === 'delivered') ev.push({ d:ymd(d), t:'141400', y:'D', s:'Delivered', w:'Knoxville, TN' });
+      if (st === 'exception') ev.push({ d:ymd(d), t:'081500', y:'O', s:'Out For Delivery Today', w:'Knoxville, TN' },
+                                      { d:ymd(d), t:'151000', y:'X', s:EXC, w:'Knoxville, TN' });
       return ev.reverse();
     };
     const t = function(bid, no, st, d){
       return { batch_id:bid, unit_id:null, tracking_no:no, ups_status:st,
-        ups_text:{ delivered:'Delivered', out:'Out For Delivery Today', transit:'On the Way', label:'Label Created' }[st],
+        ups_text:{ delivered:'Delivered', out:'Out For Delivery Today', transit:'On the Way', label:'Label Created', exception:EXC }[st],
         ups_where: st === 'label' ? null : 'Knoxville, TN', ups_event_at: ts(d, 14), ups_pickup_on: st === 'label' ? null : day(d - 4),
         ups_eta: st === 'out' || st === 'transit' ? day(st === 'out' ? 0 : 1) : null,
         ups_eta_from: st === 'out' ? '100000' : null, ups_eta_to: st === 'out' ? '120000' : null,
@@ -2446,8 +2588,8 @@
                { id:'b3', batch_no:3, status:'shipped', ship_date:day(-2), delivered_at:null, carrier:'UPS', location_id:'l2' },
                { id:'b2', batch_no:2, status:'shipped', ship_date:day(-4), delivered_at:null, carrier:'UPS', location_id:'l1' },
                { id:'b1', batch_no:1, status:'shipped', ship_date:day(-12), delivered_at:ts(-8, 14), carrier:'UPS', location_id:'l2' }],
-      tracking:[t('b4', '1Z12D5F00300000041', 'label', 0), t('b3', '1Z12D5F00300000033', 'out', 0),
-                t('b2', '1Z12D5F00300000025', 'transit', -1), t('b1', '1Z12D5F00300000017', 'delivered', -8)],
+      tracking:[t('b4', '1Z12D5F00300000041', 'label', -6), t('b3', '1Z12D5F00300000033', 'out', 0),
+                t('b2', '1Z12D5F00300000025', 'exception', -1), t('b1', '1Z12D5F00300000017', 'delivered', -8)],
       units:units
     };
   }

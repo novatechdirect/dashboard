@@ -4365,6 +4365,36 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      the saturated brand hue instead, so those tiles read tinted, not grey */
   :root[data-theme="dark"] .stat[data-hue="orders"]{ --stat-tint:#5645d4; }
   :root[data-theme="dark"] .stat[data-hue="rma"]{ --stat-tint:#0075de; }
+  .stat[data-hue="ship"]{ --stat-hue:var(--hue-orders); }
+  :root[data-theme="dark"] .stat[data-hue="ship"]{ --stat-tint:#5645d4; }
+  /* Shipping issues turns red past one issue: tint, icon and number together */
+  .stat[data-tone="bad"], :root[data-theme="dark"] .stat[data-tone="bad"]{ --stat-hue:var(--bad); --stat-tint:var(--bad); }
+  .stat[data-tone="bad"] .stat-val, .stat[data-tone="bad"] .stat-sub{ color:var(--bad-fg, var(--bad)); }
+  .stat[data-tone="bad"] .stat-sub{ font-weight:600; }
+
+  /* Shipping issues report: one row per batch, and the whole row opens it */
+  .ship-iss{ display:flex; flex-direction:column; gap:var(--s2); }
+  button.ship-iss-row{
+    display:grid; grid-template-columns:minmax(0,1fr); justify-content:stretch; justify-items:start;
+    gap:3px; width:100%; min-height:0; position:relative;
+    padding:var(--s3) 40px var(--s3) var(--s4); text-align:left; line-height:1.4;
+    background:var(--paper); border:1px solid var(--line); color:var(--ink); font-weight:400;
+  }
+  @media (hover: hover) and (pointer: fine){
+    button.ship-iss-row:hover{ background:var(--soft); border-color:var(--line-strong); }
+  }
+  .ship-iss-row::after{
+    content:""; position:absolute; right:18px; top:50%; width:7px; height:7px; margin-top:-4px;
+    border:solid var(--faint); border-width:0 1.5px 1.5px 0; transform:rotate(-45deg);
+  }
+  .ship-iss-top{ display:flex; align-items:center; gap:6px var(--s2); flex-wrap:wrap; width:100%; }
+  .ship-iss-inv{ font-weight:600; font-family:var(--font-num); }
+  .ship-iss-cust{ color:var(--muted); font-size:13px; }
+  .ship-iss-when{ margin-left:auto; font-size:12px; color:var(--muted); font-family:var(--font-num); white-space:nowrap; }
+  .ship-iss-dest{ font-size:13px; font-weight:600; }
+  .ship-iss-what{ font-size:13px; }
+  .ship-iss-trk{ font-size:12px; color:var(--muted); font-family:var(--font-num); overflow-wrap:anywhere; }
+  .ship-iss-note{ font-size:12px; color:var(--muted); margin:var(--s3) 0 0; }
 
   /* widget rows: one wide panel beside one narrow, as in a real dashboard */
   .dash-grid{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--s4); margin-bottom:var(--s4); }
@@ -5569,10 +5599,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       </div>
     </header>
     <div class="stat-row" id="homeStats">
-      <a class="stat" href="#" data-goto="orders" data-hue="orders">
-        <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg></span><span class="stat-lbl">Open orders</span></span>
-        <span class="stat-val" id="statOrdVal">&mdash;</span>
-        <span class="stat-sub" id="statOrdSub">Loading&hellip;</span>
+      <a class="stat" href="#" id="statShip" data-hue="ship" aria-haspopup="dialog">
+        <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.56541 8.73049C9.0804 6.97492 8.8379 6.09714 9.24954 5.40562C9.66119 4.71409 10.5662 4.47889 12.3763 4.00849L14.2962 3.50955C16.1062 3.03915 17.0113 2.80394 17.7242 3.20319C18.4372 3.60244 18.6797 4.48023 19.1647 6.2358L19.6792 8.09786C20.1642 9.85343 20.4067 10.7312 19.995 11.4227C19.5834 12.1143 18.6784 12.3495 16.8683 12.8199L14.9484 13.3188C13.1384 13.7892 12.2333 14.0244 11.5203 13.6252C10.8073 13.2259 10.5648 12.3481 10.0798 10.5926L9.56541 8.73049Z"/><path stroke-linecap="round" d="M8.23 15.0602L6.08 7.27014C5.89453 6.61732 5.38563 6.12036 4.7 5.92L3 5.4502"/><circle cx="8.05" cy="18.1" r="2.9"/><path stroke-linecap="round" d="M10.9199 17.36L19.9999 15"/></g></svg></span><span class="stat-lbl">Shipping issues</span></span>
+        <span class="stat-val" id="statShipVal">&mdash;</span>
+        <span class="stat-sub" id="statShipSub">Loading&hellip;</span>
       </a>
       <div class="stat" data-hue="builds">
         <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path stroke-linecap="round" d="M8.5 20h7M12 16.5V20"/></g></svg></span><span class="stat-lbl">PCs built</span></span>
@@ -6337,10 +6367,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                customer: 'Demo Gaming Co', order_no: order === o1 ? 'DG001' : 'DG002',
                generated_at: demoStamp(-40), pc_case: null, cpu: null, gpu: null, ram: null, storage: null };
     };
+    const DEMO_EXC = 'The receiver was not available for delivery. A second attempt will be made the next business day.';
     /* a plausible UPS scan trail, oldest first, stored newest first like the server does */
     const demoHist = function(st, d){
       const f = function(n){ return demoDay(n).replace(/-/g, ''); };
-      const ev = [{ d:f(d - 4), t:'160400', y:'M', s:'Shipper created a label, UPS has not received the package yet.', w:'' }];
+      const ev = [{ d:f(st === 'label' ? d : d - 4), t:'160400', y:'M', s:'Shipper created a label, UPS has not received the package yet.', w:'' }];
       if (st !== 'label'){
         ev.push({ d:f(d - 4), t:'202100', y:'I', s:'Arrived at Facility', w:'Newark, DE' },
                 { d:f(d - 3), t:'220500', y:'I', s:'Departed from Facility', w:'Newark, DE' },
@@ -6350,11 +6381,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       }
       if (st === 'out' || st === 'delivered') ev.push({ d:f(d), t:'081500', y:'O', s:'Out For Delivery Today', w:'Louisville, KY' });
       if (st === 'delivered') ev.push({ d:f(d), t:'141400', y:'D', s:'Delivered', w:'Louisville, KY' });
+      if (st === 'exception') ev.push({ d:f(d), t:'081500', y:'O', s:'Out For Delivery Today', w:'Phoenix, AZ' },
+                                      { d:f(d), t:'151000', y:'X', s:DEMO_EXC, w:'Phoenix, AZ' });
       return ev.reverse();
     };
     const demoUps = function(st, d, where){
       const at = demoStamp(d);
-      return { ups_status: st, ups_text: { delivered: 'Delivered', out: 'Out For Delivery Today', label: 'Label Created' }[st],
+      return { ups_status: st, ups_text: { delivered: 'Delivered', out: 'Out For Delivery Today', label: 'Label Created', exception: DEMO_EXC }[st],
                ups_where: where || null, ups_event_at: at, ups_eta: st === 'out' ? demoDay(0) : null, ups_eta_from: st === 'out' ? '100000' : null, ups_eta_to: st === 'out' ? '120000' : null, ups_pickup_on: st === 'label' ? null : demoDay(d - 2),
                ups_delivered_at: st === 'delivered' ? at : null, ups_activity: demoHist(st, d),
                ups_checked_at: new Date(Date.now() - 12 * 60000).toISOString(), ups_first_checked_at: at };
@@ -6387,9 +6420,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     };
     const b2 = batch(o2, 1, 'demo-loc-1', 'shipped', demoDay(-14), '1Z999AA10223456785', demoUps('delivered', -11, 'Austin, TX'));
     addUnits(b2, 'shipped', [[cfgA, 8], [cfgB, 8]]);
-    const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786', demoUps('out', 0, 'Round Rock, TX'));
+    /* batch 2 missed its delivery and batch 3's label has sat for a week, so
+       Shipping issues on home has two to show */
+    const b3 = batch(o2, 2, 'demo-loc-2', 'shipped', demoDay(-9), '1Z999AA10323456786', demoUps('exception', -1, 'Phoenix, AZ'));
     addUnits(b3, 'shipped', [[cfgA, 6], [cfgB, 4], [cfgC, 4]]);
-    const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787', demoUps('label', -1));
+    const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787', demoUps('label', -7));
     addUnits(b4, 'assigned', [[cfgB, 4], [cfgC, 4], [cfgD, 4]]);
     batch(o2, 4, 'demo-loc-4', 'open', null, null);
     addUnits(null, 'built', [[cfgA, 4], [cfgB, 2], [cfgC, 2], [cfgD, 3]]);
@@ -6927,6 +6962,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      renderAuth() can touch them no matter when they first run */
   let ordInited = false, admInited = false, ordCurrentId = null;
   let ordAllUnits = [], ordAllBatches = [], ordAllTracking = [];   // list-level: every order, for serial search, RMAs and warranty
+  /* UPS numbers not delivered yet, with their carrier status, for Shipping
+     issues on home: undefined until loaded, null when the read failed */
+  let ordShipWatch;
   let ordPerm = { view:false, manage:false, admin:false, catalog:false };
   function showTool(which){
     const views = { home: [navHome, toolHome], orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], billing: [navBilling, toolBilling], admin: [navAdmin, toolAdmin], rma: [navRma, toolRma] };
@@ -9881,17 +9919,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* the four numbers at the top of home, off the data already loaded */
   function renderHomeStats(){
     if (!document.getElementById('homeStats')) return;
-    if (!ordInited) setStat('Ord', '\u2014', 'Loading\u2026');
+    var si = shipIssues();
+    if (si === undefined) setStat('Ship', '\u2014', 'Loading\u2026');
+    else if (si === null) setStat('Ship', '\u2014', 'Couldn\u2019t load');
     else {
-      var open = 0, ready = 0;
-      ordOrders.forEach(function(o){
-        var k = ordStatus(ordStats(o)).key;
-        if (k !== 'complete') open++;
-        if (k === 'ready') ready++;
-      });
-      setStat('Ord', CH.nf(open),
-        ready ? CH.nf(ready) + ' awaiting shipment' : (open ? 'in progress' : 'all complete'),
-        open ? '' : 'ok');
+      var nBad = si.filter(function(x){ return x.lead.bad; }).length, nStill = si.length - nBad;
+      setStat('Ship', CH.nf(si.length),
+        si.length ? [nBad ? CH.nf(nBad) + (nBad === 1 ? ' exception' : ' exceptions') : '',
+                     nStill ? CH.nf(nStill) + ' not moving' : ''].filter(Boolean).join(' \u00b7 ')
+                  : 'all UPS shipments moving',
+        si.length > SHIP_RED_OVER ? 'bad' : (si.length ? 'warn' : 'ok'));
     }
     var dates = allBuildDates();
     var end = new Date(); end.setHours(23,59,59,999);
@@ -9931,6 +9968,97 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         lows ? 'warn' : 'ok');
     }
   }
+  /* ---- Shipping issues ----
+     A UPS package counts when UPS reports an exception or a return, or when
+     nothing has moved for more than two working days: a label nobody picked
+     up, or a box that stopped getting scans. Weekends don't count, because UPS
+     barely scans then and a Friday label is normally collected on Monday. UPS
+     stops checking a number 45 days after its first check, so anything older
+     has no fresh status to judge and is left out. */
+  var SHIP_STALL_H = 48, SHIP_RED_OVER = 1, SHIP_WATCH_DAYS = 45;
+  function shipWorkHours(from, to){
+    var t = new Date(from).getTime(), end = to.getTime(), h = 0;
+    if (isNaN(t)) return 0;
+    while (t < end){
+      var d = new Date(t), wd = d.getDay();
+      var stop = Math.min(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime(), end);
+      if (wd !== 0 && wd !== 6) h += (stop - t) / 36e5;
+      t = stop;
+    }
+    return h;
+  }
+  /* one entry per batch, worst first; undefined until loaded, null if the read failed */
+  function shipIssues(){
+    if (!ordShipWatch) return ordShipWatch;
+    var now = new Date(), bat = {}, by = {}, out = [];
+    ordAllBatches.forEach(function(b){ bat[b.id] = b; });
+    ordShipWatch.forEach(function(t){
+      var b = bat[t.batch_id], no = String(t.tracking_no || '').trim().toUpperCase();
+      if (!b || !no) return;
+      var bad = t.ups_status === 'exception' || t.ups_status === 'returned';
+      var since = t.ups_event_at || t.ups_first_checked_at, h = shipWorkHours(since, now);
+      if (!bad && !(h > SHIP_STALL_H)) return;
+      var it = by[b.id];
+      if (!it){ it = by[b.id] = { b:b, pk:[], seen:{} }; out.push(it); }
+      if (it.seen[no]) return;
+      it.seen[no] = 1;
+      it.pk.push({ t:t, bad:bad, h:h, since:since });
+    });
+    /* a problem outranks a wait, then the longest wait goes first */
+    var rank = function(p){ return (p.bad ? 1e6 : 0) + p.h; };
+    out.forEach(function(it){ it.pk.sort(function(a, c){ return rank(c) - rank(a); }); it.lead = it.pk[0]; });
+    return out.sort(function(a, c){ return rank(c.lead) - rank(a.lead); });
+  }
+  function shipIssueRow(it, cust){
+    var b = it.b, p = it.lead, t = p.t, st = t.ups_status;
+    var o = ordOrders.find(function(x){ return x.id === b.order_id; });
+    var loc = ordLocations.find(function(l){ return l.id === b.location_id; });
+    var waiting = st === 'label' || st === 'unknown';
+    var city = loc ? [loc.city, loc.state].filter(Boolean).join(', ') : '';
+    var days = Math.floor(p.h / 24);
+    var what = p.bad ? (ordUpsWords(t.ups_text) || 'UPS reported a problem with this package')
+      : st === 'unknown' ? 'Added ' + ordUpsDay(p.since) + ', and UPS still has no record of it'
+      : waiting ? 'Label created ' + ordUpsDay(p.since) + ', no UPS scan since'
+      : 'Last scan ' + ordUpsDay(p.since) + (t.ups_where ? ' in ' + t.ups_where : '') + (t.ups_text ? ': ' + ordUpsWords(t.ups_text) : '');
+    if (waiting && b.status !== 'shipped') what += ' \u00b7 batch not marked shipped';
+    var trk = [t.tracking_no].concat(p.bad ? [t.ups_where, ordUpsWhen(t.ups_event_at)] : []).filter(Boolean).join(' \u00b7 ');
+    return '<button type="button" class="ship-iss-row" data-shipgo="' + esc(b.id) + '" data-shipord="' + esc(b.order_id) + '">' +
+      '<span class="ship-iss-top">' +
+        '<span class="ord-chip ' + (p.bad ? 'bad' : 'warn') + '">' + (st === 'returned' ? 'Returned' : p.bad ? 'Exception' : waiting ? 'Not picked up' : 'Not moving') + '</span>' +
+        '<span class="ship-iss-inv">' + esc(o ? o.invoice_no : 'Archived invoice') + '</span>' +
+        (o && cust[o.customer_id] ? '<span class="ship-iss-cust">' + esc(cust[o.customer_id]) + '</span>' : '') +
+        '<span class="ship-iss-when">' + esc(p.bad ? (t.ups_event_at ? ordAgoRel(t.ups_event_at) : '') : days + ' working day' + (days === 1 ? '' : 's')) + '</span>' +
+      '</span>' +
+      '<span class="ship-iss-dest">Batch ' + esc(b.batch_no) + ' \u00b7 ' + esc(ordLocName(loc)) +
+        (ordLocNum(loc) ? '<span class="ord-storenum">' + esc(ordLocNum(loc)) + '</span>' : '') +
+        (city ? ' \u00b7 ' + esc(city) : '') + '</span>' +
+      '<span class="ship-iss-what">' + esc(what) + '</span>' +
+      '<span class="ship-iss-trk">' + esc(trk) + (it.pk.length > 1 ? ' \u00b7 ' + ordNum(it.pk.length) + ' packages' : '') + '</span>' +
+    '</button>';
+  }
+  function shipIssuesModal(){
+    var list = shipIssues(), cust = {};
+    ordCustomers.forEach(function(c){ cust[c.id] = c.name; });
+    var checked = (ordShipWatch || []).reduce(function(m, t){ return t.ups_checked_at && (!m || t.ups_checked_at > m) ? t.ups_checked_at : m; }, null);
+    var body = list === undefined ? '<p class="muted-line">Still loading the UPS statuses\u2026</p>'
+      : list === null ? '<p class="muted-line">Could not load the UPS statuses. Try again in a minute.</p>'
+      : !list.length ? '<div class="empty">' + ntIco('checkcircle', 'empty-ico') + '<p>No shipping issues.</p>' +
+          '<p class="muted-sm">Every UPS shipment has moved in the last two working days.</p></div>'
+      : '<div class="ship-iss">' + list.map(function(it){ return shipIssueRow(it, cust); }).join('') + '</div>';
+    var bg = mgModal(mgModalHead('Shipping issues',
+        'UPS exceptions and returns, and packages with no UPS scan for more than two working days. Click one to open its batch.') +
+      '<div class="mg-modal-body">' + body +
+        (checked ? '<p class="ship-iss-note">Checked with UPS ' + esc(ordAgoRel(checked)) + '. Weekends are not counted as waiting time.</p>' : '') +
+      '</div>', true);
+    bg.addEventListener('click', function(e){
+      var r = e.target.closest('[data-shipgo]'); if (!r) return;
+      mgCloseModal(); showTool('orders');
+      ordOpenOrder(r.getAttribute('data-shipord'), r.getAttribute('data-shipgo'));
+    });
+    /* focus goes into the dialog itself, so Tab starts at the first issue without ringing it */
+    setTimeout(function(){ if (bg.firstElementChild) bg.firstElementChild.focus(); }, 30);
+  }
+  document.getElementById('statShip').addEventListener('click', function(e){ e.preventDefault(); shipIssuesModal(); });
   /* twelve weekly buckets ending this week */
   function miniWeeks(dates, n){
     var to = new Date(); to.setHours(23,59,59,999);
@@ -10465,6 +10593,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         const at = await SB.from('batch_tracking').select('batch_id,unit_id,tracking_no').limit(20000);
         ordAllTracking = at.data || [];
       } catch(e){ ordAllTracking = []; }
+      try {
+        const sw = await SB.from('batch_tracking')
+          .select('batch_id,tracking_no,ups_status,ups_text,ups_where,ups_event_at,ups_checked_at,ups_first_checked_at')
+          .in('ups_status', ['label', 'unknown', 'transit', 'out', 'exception', 'returned'])
+          .gt('ups_first_checked_at', new Date(Date.now() - SHIP_WATCH_DAYS * 864e5).toISOString())
+          .limit(5000);
+        ordShipWatch = sw.error ? null : (sw.data || []);
+      } catch(e){ ordShipWatch = null; }
       ordCounts = {};
       ordUnitDates = [];
       (un.data || []).forEach(function(u){
@@ -10481,6 +10617,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       } else ordLines = [];
     } catch(e){
       if (silent === true){ ordLoading = false; return; }
+      if (ordShipWatch === undefined) ordShipWatch = null;
       ordListBody.innerHTML = '<div class="empty">' + ntIco('dangertriangle', 'empty-ico') + '<p>Could not load orders.</p>' +
         '<p class="muted-sm">' + esc(e.message || String(e)) + '</p></div>';
       ordLoading = false;
@@ -11383,7 +11520,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         (function(){
           const r = card.getBoundingClientRect();
           const from = window.scrollY;
-          const to = Math.max(0, from + r.top - (window.innerHeight - Math.min(r.height, window.innerHeight)) / 2);
+          /* centred when it fits; a taller card starts just under the sticky top bar */
+          const pad = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) + 12;
+          const to = Math.max(0, from + r.top - Math.max(pad, (window.innerHeight - Math.min(r.height, window.innerHeight)) / 2));
           if (Math.abs(to - from) < 2) return;
           if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches){ window.scrollTo(0, to); return; }
           const DUR = 260, t0 = performance.now();
@@ -13782,8 +13921,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const bar = document.querySelector('#ordBatchBody .ord-bl-bar');
     if (!bar) return;
     /* paged from the bottom: a page is read from its top, so go there */
-    if (ctl.getAttribute('data-blat') === 'foot')
-      bar.scrollIntoView({ block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    if (ctl.getAttribute('data-blat') === 'foot') ordGlideTo(bar);
     if (!had) return;
     /* the same control in the top bar, or the picker once that button is disabled */
     const go = ctl.getAttribute('data-blgo');
@@ -13800,10 +13938,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ordBlPage = p;
     return true;
   }
+  /* A quick glide to an element, about a fifth of a second however far away it
+     is. The browser's own smooth scroll drags over a long batch list. */
+  function ordGlideTo(el){
+    const pad = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) +
+                (parseFloat(getComputedStyle(el).scrollMarginTop) || 0);
+    const from = window.scrollY, to = Math.max(0, from + el.getBoundingClientRect().top - pad);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(to - from) < 2){ window.scrollTo(0, to); return; }
+    const DUR = 220, t0 = performance.now();
+    (function step(now){
+      const t = Math.min(1, (now - t0) / DUR);
+      window.scrollTo(0, from + (to - from) * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) requestAnimationFrame(step);
+    })(t0);
+  }
   function ordJumpPool(){
     const card = document.getElementById('ordPoolCard');
     if (!card) return;
-    card.scrollIntoView({ block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    ordGlideTo(card);
     const t = card.querySelector('.card-title');
     if (t) t.focus({ preventScroll:true });
   }
