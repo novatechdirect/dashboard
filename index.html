@@ -2572,7 +2572,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-cs-t th{ position:static; padding:8px 14px; background:none; border-bottom-color:var(--line); }
   .ord-cs-t td{ padding:10px 14px; font-size:13px; }
   .ord-cs-t :is(th, td):first-child{ padding-left:0; }
-  .ord-cs-t .ord-cs-barc{ width:100%; min-width:120px; padding-left:20px; padding-right:0; }
+  .ord-cs-t .ord-cs-barc{ width:100%; min-width:120px; padding-left:20px; padding-right:20px; }
   .ord-cs-t tbody tr:hover{ background:none; }
   .ord-cs-t tbody tr:nth-last-child(2) td{ border-bottom-color:var(--line-strong); }
   .ord-cs-t tr.ord-cs-tot td{ font-weight:600; }
@@ -13712,14 +13712,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                 shipped:'color-mix(in srgb, var(--ok) 50%, var(--paper))' };
     const SEG = [['shipped', 'shipped'], ['ready', 'ready for pickup'], ['prep', 'label created'], ['built', 'built'], ['todo', 'to build']];
     const tones = ordCfgTones();
-    const tot = { ordered:0, todo:0, built:0, prep:0, ready:0, shipped:0, left:0 };
+    const tot = { ordered:0, todo:0, built:0, prep:0, ready:0, shipped:0, del:0, left:0 };
     const cell = function(n, l, cls){
       return '<td class="n' + (n ? '' : ' ord-cs-zero') + (cls ? ' ' + cls : '') + '" data-l="' + l + '">' + ordNum(n) + '</td>';
     };
+    /* work still to do sits left of the bar; shipped and delivered sit right of it */
     const cells = function(r){
       return cell(r.ordered, 'Ordered') + cell(r.todo, 'To build') + cell(r.built, 'Built') + cell(r.prep, 'Label created') +
-        cell(r.ready, 'Ready for pickup') + cell(r.shipped, 'Shipped') + cell(r.left, 'Left to prepare', 'ord-cs-left');
+        cell(r.ready, 'Ready for pickup') + cell(r.left, 'Left to prepare', 'ord-cs-left');
     };
+    const doneCells = function(r){ return cell(r.shipped, 'Shipped') + cell(r.del, 'Delivered'); };
     const dot = function(k){ return '<i class="ord-cs-dot" style="background:' + C[k] + '" aria-hidden="true"></i>'; };
     const rows = ids.map(function(id){
       const r = by[id];
@@ -13736,7 +13738,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           SEG.map(function(s){
             return r[s[0]] ? '<i style="width:' + (r[s[0]] / all * 100) + '%;background:' + C[s[0]] + '" title="' + ordNum(r[s[0]]) + ' ' + s[1] + '"></i>' : '';
           }).join('') +
-        '</div></td></tr>';
+        '</div></td>' + doneCells(r) + '</tr>';
     }).join('');
     return '<details class="ord-cs"' + (ordCsOpen ? ' open' : '') + '>' +
       '<summary><span>By config</span><span class="ord-cs-hint">' + ordNum(ids.length) + ' configs</span>' +
@@ -13745,10 +13747,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<th>Config</th><th class="n">Ordered</th>' +
         '<th class="n">' + dot('todo') + 'To build</th><th class="n">' + dot('built') + 'Built</th>' +
         '<th class="n">' + dot('prep') + 'Label created</th><th class="n">' + dot('ready') + 'Ready for pickup</th>' +
-        '<th class="n">' + dot('shipped') + 'Shipped</th>' +
         '<th class="n">Left to prepare</th><th class="ord-cs-barc"></th>' +
+        '<th class="n">' + dot('shipped') + 'Shipped</th><th class="n">Delivered</th>' +
       '</tr></thead><tbody>' + rows +
-        '<tr class="ord-cs-tot"><td data-l="Config">Total</td>' + cells(tot) + '<td class="ord-cs-barc"></td></tr>' +
+        '<tr class="ord-cs-tot"><td data-l="Config">Total</td>' + cells(tot) + '<td class="ord-cs-barc"></td>' + doneCells(tot) + '</tr>' +
       '</tbody></table>' +
       '<p class="ord-cs-note">Built: waiting in the pool. Label created: in a batch, not ready yet. Ready for pickup: waiting for the carrier. Left to prepare: everything not ready for pickup yet. Shipped includes delivered.</p></div>' +
     '</details>';
