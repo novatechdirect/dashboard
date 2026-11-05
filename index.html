@@ -1911,6 +1911,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-chip.info{    color:var(--info-ink); background:var(--accent-soft); border-color:var(--accent-line); --dot:var(--accent); }
   .ord-chip.warn{    color:var(--warn-ink);   background:var(--warn-bg);   border-color:var(--warn-line); --dot:var(--warn); }
   .ord-chip.ok{      color:var(--ok-ink);     background:var(--ok-bg);     border-color:var(--ok-line); --dot:var(--ok); }
+  .ord-chip.ready{   color:var(--ink); background:color-mix(in srgb, #1fa5c4 14%, var(--paper)); border-color:color-mix(in srgb, #1fa5c4 45%, var(--paper)); --dot:#1fa5c4; }
   /* status and build counter each own a centred cell with room either side */
   .ord-stat{ display:flex; align-items:center; justify-content:center; min-width:0; margin-right:var(--s4); }
   .ord-stat .ord-chip{ flex:0 0 auto; }
@@ -2693,7 +2694,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* Mark shipped is always the last button; Track keeps its brand tint and
      stays first. A narrow card (tablet) gives the buttons a row of their own. */
   @media (min-width:701px){
-    .ord-batch-btns > [data-bship]{ order:2; }
+    .ord-batch-btns > :is([data-bship], [data-bready]){ order:2; }
     @container ordbatch (max-width:760px){
       .ord-batch-head{ grid-template-areas:'id dest meta' 'age dest meta' 'btns btns btns'; }
       .ord-batch-age{ align-self:start; }
@@ -4885,12 +4886,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
     #ordDetailPane .ord-batch-btns > [data-bexpand]{ display:none; }
     #ordDetailPane .ord-batch-btns > [data-bss],
+    #ordDetailPane .ord-batch-btns > [data-bready],
     #ordDetailPane .ord-batch-btns > [data-bship]{
       order:1; flex:1 1 40%; font-weight:600;
       min-height:42px !important; font-size:13.5px !important;
     }
     /* until a batch ships, Track is one of the extras rather than the lead */
-    #ordDetailPane .ord-batch-btns:has(> [data-bship]) > [data-btrack]{
+    #ordDetailPane .ord-batch-btns:has(> :is([data-bship], [data-bready])) > [data-btrack]{
       background:var(--paper); border-color:var(--line-strong); color:var(--ink);
     }
     #ordDetailPane .ord-batch-body{ padding:12px; }
@@ -6427,6 +6429,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787', demoUps('label', -7));
     addUnits(b4, 'assigned', [[cfgB, 4], [cfgC, 4], [cfgD, 4]]);
     batch(o2, 4, 'demo-loc-4', 'open', null, null);
+    /* batch 5 is packed and waiting for UPS to collect it */
+    const b5 = batch(o2, 5, 'demo-loc-1', 'ready', null, '1Z999AA10523456788', demoUps('label', 0));
+    addUnits(b5, 'assigned', [[cfgA, 2], [cfgD, 2]]);
     addUnits(null, 'built', [[cfgA, 4], [cfgB, 2], [cfgC, 2], [cfgD, 3]]);
 
     /* one RMA, mid-flight, so the section is not empty */
@@ -12839,6 +12844,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const btk = e.target.closest('[data-btrack]');
     if (btk){ window.open(btk.getAttribute('data-btrack'), '_blank', 'noopener'); return; }
     const bs = bfind('data-bship');  if (bs){ ordMarkShipped(bs); return; }
+    const brd = bfind('data-bready'); if (brd){ ordMarkReady(brd, true); return; }
+    const bur = bfind('data-bunready'); if (bur){ ordMarkReady(bur, false); return; }
     const bdv = bfind('data-bdeliv'); if (bdv){ ordMarkDelivered(bdv, true); return; }
     const bud = bfind('data-bundeliv'); if (bud){ ordMarkDelivered(bud, false); return; }
     const bss = bfind('data-bss');   if (bss){ ordSendShipStation(bss); return; }
@@ -13524,6 +13531,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     };
   }
   function ordUpsChip(b, sum){
+    if (b.status === 'ready' && (!sum || sum.st === 'label'))
+      return '<span class="ord-chip ready"' + (sum ? ' title="' + esc('UPS: ' + sum.text) + '"' : '') + '>Ready for pickup</span>';
     if (!sum){
       if (b.status === 'shipped' && b.delivered_at) return '<span class="ord-chip ok">Delivered</span>';
       const shipped = b.status === 'shipped';
@@ -13677,17 +13686,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   function ordShipSumHtml(list, extra){
-    let del = 0, way = 0, prep = 0;
+    let del = 0, way = 0, ready = 0, prep = 0;
     list.forEach(function(b){
       const n = ordShipSumUnits(b.id);
+      if (b.status === 'ready'){ ready += n; return; }
       if (b.status !== 'shipped'){ prep += n; return; }
       const s = ordUpsSum(b.tk);
       if (s ? s.deliveredAt : b.delivered_at) del += n; else way += n;
     });
-    const tot = del + way + prep;
+    const tot = del + way + ready + prep;
     if (!tot) return extra ? '<div class="shs">' + extra + '</div>' : '';
     const pc = function(n){ return n / tot * 100; };
-    const seg = [['delivered', del, 'var(--ok)'], ['on the way', way, 'color-mix(in srgb, var(--ok) 50%, var(--paper))'], ['preparing', prep, 'var(--series, var(--accent))']];
+    const seg = [['delivered', del, 'var(--ok)'], ['on the way', way, 'color-mix(in srgb, var(--ok) 50%, var(--paper))'],
+                 ['ready for pickup', ready, '#1fa5c4'], ['label created', prep, 'var(--series, var(--accent))']].filter(function(s, i){ return i !== 2 || s[1]; });
     return '<div class="shs">' +
       '<div class="shs-bar" role="img" aria-label="' + ordNum(del) + ' of ' + ordNum(tot) + ' units delivered">' +
         seg.map(function(s){ return s[1] ? '<i style="width:' + pc(s[1]) + '%;background:' + s[2] + '" title="' + ordNum(s[1]) + ' ' + s[0] + '"></i>' : ''; }).join('') +
@@ -13709,13 +13720,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   /* On an invoice that mixes builds: where each config stands, so "how many
      Spectres have shipped and how many are left" is one row to read. A unit
-     counts as delivered by the same rule as the bar above (its whole batch),
+     counts as shipped by the same rule as the bar above (its whole batch),
      so the Total row matches the bar. */
   function ordCfgSumHtml(){
     const ids = [], by = {};
     const row = function(id){
       id = id || '';
-      if (!by[id]){ by[id] = { ordered:0, made:0, built:0, prep:0, way:0, del:0 }; ids.push(id); }
+      if (!by[id]){ by[id] = { ordered:0, made:0, built:0, prep:0, ready:0, way:0, del:0 }; ids.push(id); }
       return by[id];
     };
     ordLines.forEach(function(l){ if (l.order_id === ordCurrentId) row(l.config_id).ordered += (+l.qty_ordered || 0); });
@@ -13723,7 +13734,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     ordTracking.forEach(function(t){ (tk[t.batch_id] || (tk[t.batch_id] = [])).push(t); });
     ordBatches.forEach(function(b){
       const s = ordUpsSum(tk[b.id]);
-      stage[b.id] = b.status !== 'shipped' ? 'prep' : ((s ? s.deliveredAt : b.delivered_at) ? 'del' : 'way');
+      stage[b.id] = b.status === 'ready' ? 'ready' : b.status !== 'shipped' ? 'prep' : ((s ? s.deliveredAt : b.delivered_at) ? 'del' : 'way');
     });
     ordUnits.forEach(function(u){
       const r = row(u.config_id);
@@ -13731,24 +13742,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       r[u.batch_id ? (stage[u.batch_id] || 'prep') : 'built']++;
     });
     if (ids.length < 2) return '';
-    const C = { todo:'var(--line-strong)', built:'#e6b800', prep:'var(--series, var(--accent))',
-                way:'color-mix(in srgb, var(--ok) 50%, var(--paper))', del:'var(--ok)' };
-    const SEG = [['del', 'delivered'], ['way', 'on the way'], ['prep', 'preparing'], ['built', 'built'], ['todo', 'to build']];
+    const C = { todo:'var(--line-strong)', built:'#e6b800', prep:'var(--series, var(--accent))', ready:'#1fa5c4',
+                shipped:'color-mix(in srgb, var(--ok) 50%, var(--paper))' };
+    const SEG = [['shipped', 'shipped'], ['ready', 'ready for pickup'], ['prep', 'label created'], ['built', 'built'], ['todo', 'to build']];
     const tones = ordCfgTones();
-    const tot = { ordered:0, todo:0, built:0, prep:0, shipped:0, del:0, left:0 };
+    const tot = { ordered:0, todo:0, built:0, prep:0, ready:0, shipped:0, left:0 };
     const cell = function(n, l, cls){
       return '<td class="n' + (n ? '' : ' ord-cs-zero') + (cls ? ' ' + cls : '') + '" data-l="' + l + '">' + ordNum(n) + '</td>';
     };
     const cells = function(r){
-      return cell(r.ordered, 'Ordered') + cell(r.todo, 'To build') + cell(r.built, 'Built') + cell(r.prep, 'Preparing') +
-        cell(r.shipped, 'Shipped') + cell(r.del, 'Delivered') + cell(r.left, 'Left to ship', 'ord-cs-left');
+      return cell(r.ordered, 'Ordered') + cell(r.todo, 'To build') + cell(r.built, 'Built') + cell(r.prep, 'Label created') +
+        cell(r.ready, 'Ready for pickup') + cell(r.shipped, 'Shipped') + cell(r.left, 'Left to ship', 'ord-cs-left');
     };
     const dot = function(k){ return '<i class="ord-cs-dot" style="background:' + C[k] + '" aria-hidden="true"></i>'; };
     const rows = ids.map(function(id){
       const r = by[id];
       r.todo = Math.max(0, r.ordered - r.made);
       r.shipped = r.way + r.del;
-      r.left = r.todo + r.built + r.prep;
+      r.left = r.todo + r.built + r.prep + r.ready;
       Object.keys(tot).forEach(function(k){ tot[k] += r[k]; });
       const cfg = ordCfgById(id), all = Math.max(r.ordered, r.made) || 1;
       const tone = tones[id] != null ? tones[id] : null;
@@ -13767,12 +13778,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<div class="ord-cs-body"><table class="hist-table ord-cs-t"><thead><tr>' +
         '<th>Config</th><th class="n">Ordered</th>' +
         '<th class="n">' + dot('todo') + 'To build</th><th class="n">' + dot('built') + 'Built</th>' +
-        '<th class="n">' + dot('prep') + 'Preparing</th><th class="n">' + dot('way') + 'Shipped</th>' +
-        '<th class="n">' + dot('del') + 'Delivered</th><th class="n">Left to ship</th><th class="ord-cs-barc"></th>' +
+        '<th class="n">' + dot('prep') + 'Label created</th><th class="n">' + dot('ready') + 'Ready for pickup</th>' +
+        '<th class="n">' + dot('shipped') + 'Shipped</th>' +
+        '<th class="n">Left to ship</th><th class="ord-cs-barc"></th>' +
       '</tr></thead><tbody>' + rows +
         '<tr class="ord-cs-tot"><td data-l="Config">Total</td>' + cells(tot) + '<td class="ord-cs-barc"></td></tr>' +
       '</tbody></table>' +
-      '<p class="ord-cs-note">Built: waiting in the pool. Preparing: in a batch, not shipped yet. Shipped includes delivered.</p></div>' +
+      '<p class="ord-cs-note">Built: waiting in the pool. Label created: in a batch, not ready yet. Ready for pickup: waiting for the carrier. Shipped includes delivered.</p></div>' +
     '</details>';
   }
   function ordRenderBatches(){
@@ -13839,9 +13851,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             (trackLink ? '<button class="btn-sm trk-btn c-' + ordCarrierKey(b.carrier)[0] + '" data-btrack="' + esc(trackLink) + '" type="button" title="' + esc(trackLink) + '">' + esc(ordCarrierKey(b.carrier)[1]) + ' \u2197</button>' : '') +
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
             '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
-            (ordPerm.manage && !shipped && loc && !/uber|freight|ltl/i.test(String(b.carrier || '')) ? ordSsBtnHtml(b) : '') +
+            (ordPerm.manage && !shipped && b.status !== 'ready' && loc && !/uber|freight|ltl/i.test(String(b.carrier || '')) ? ordSsBtnHtml(b) : '') +
             (ordPerm.manage && b.ss_order_id && !tk.length ? '<button class="ghost btn-sm" data-bsstrk="' + esc(b.id) + '" type="button" title="Copy the tracking numbers of this order\u2019s labels from ShipStation">Get tracking</button>' : '') +
-            (ordPerm.manage && !shipped ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
+            (ordPerm.manage && b.status === 'ready' ? '<button class="ghost btn-sm" data-bunready="' + esc(b.id) + '" type="button" title="Set this batch back to Label created">Undo ready</button>' : '') +
+            (ordPerm.manage && !shipped && b.status !== 'ready' && tk.length ? '<button class="green btn-sm" data-bready="' + esc(b.id) + '" type="button" title="Packed and labelled, waiting for the carrier to collect it">Ready for pickup</button>' : '') +
+            (ordPerm.manage && !shipped && (b.status === 'ready' || !tk.length) ? '<button class="green btn-sm" data-bship="' + esc(b.id) + '" type="button">Mark shipped</button>' : '') +
             (ordPerm.manage && shipped && !delivered && !ups && ordCarrierKey(b.carrier)[0] !== 'ups' ? '<button class="ghost btn-sm" data-bdeliv="' + esc(b.id) + '" type="button" title="For carriers we can\u2019t track: the batch has arrived">Mark delivered</button>' : '') +
             (ordPerm.manage ? '<button class="ghost btn-sm" data-bedit="' + esc(b.id) + '" type="button">Edit</button>' : '') +
           '</div>' +
@@ -14729,6 +14743,31 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordShipping.delete(b.id);
       if (gotTrk) ordSsRedraw(b);
     }
+  }
+
+  /* Ready for pickup: packed and labelled, waiting for the carrier. UPS still
+     marks it shipped at the first scan; Undo sets it back to Label created.
+     A batch already shipped is never moved back, even from a stale page. */
+  const ordReadying = new Set();
+  async function ordMarkReady(b, on){
+    if (ordReadying.has(b.id) || b.status === 'shipped') return;
+    ordReadying.add(b.id);
+    const body = document.getElementById('ordBatchBody_' + b.id);
+    const wasOpen = !!(body && body.style.display !== 'none');
+    const btn = document.querySelector('[data-bready="' + b.id + '"],[data-bunready="' + b.id + '"]');
+    if (btn){ btn.disabled = true; btn.textContent = 'Saving\u2026'; }
+    try {
+      const r = await SB.from('batches').update({ status: on ? 'ready' : 'open' }).eq('id', b.id).neq('status', 'shipped');
+      if (r.error){
+        toast(/status_check/.test(r.error.message) ? 'Ready for pickup needs the database update first.' : 'Could not update batch ' + b.batch_no + ': ' + r.error.message, 'bad', 7000);
+        if (btn){ btn.disabled = false; btn.textContent = on ? 'Ready for pickup' : 'Undo ready'; }
+        return;
+      }
+      b.status = on ? 'ready' : 'open';
+      const keep = liveKeep(ordDetailPane); ordRenderBatches(); keep();
+      if (wasOpen){ const bd = document.getElementById('ordBatchBody_' + b.id); if (bd) bd.style.display = ''; }
+      toast('Batch ' + b.batch_no + (on ? ' is ready for pickup' : ' back to Label created'), 'ok');
+    } finally { ordReadying.delete(b.id); }
   }
 
   /* the last step for carriers we can't track: set or clear the batch's delivered date */

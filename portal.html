@@ -310,6 +310,7 @@
   .chip.i{ color:var(--info-ink);   background:var(--info-bg);   border-color:var(--info-line); --dot:var(--info); }
   .chip.w{ color:var(--warn-ink);   background:var(--warn-bg);   border-color:var(--warn-line); --dot:var(--warn); }
   .chip.k{ color:var(--ok-ink);     background:var(--ok-bg);     border-color:var(--ok-line); --dot:var(--ok); }
+  .chip.r{ color:var(--ink); background:color-mix(in srgb, #1fa5c4 14%, var(--paper)); border-color:color-mix(in srgb, #1fa5c4 45%, var(--paper)); --dot:#1fa5c4; }
   .chip.b{ color:var(--bad-ink);    background:var(--bad-bg);    border-color:var(--bad-line); --dot:var(--bad); }
 
   /* shipping issues: one line that opens into the batches needing attention */
@@ -2452,6 +2453,9 @@
     const b4 = batch(o2, 3, 'demo-loc-3', 'open', null, '1Z999AA10423456787', demoUps('label', -7));
     addUnits(b4, 'assigned', [[cfgB, 4], [cfgC, 4], [cfgD, 4]]);
     batch(o2, 4, 'demo-loc-4', 'open', null, null);
+    /* batch 5 is packed and waiting for UPS to collect it */
+    const b5 = batch(o2, 5, 'demo-loc-1', 'ready', null, '1Z999AA10523456788', demoUps('label', 0));
+    addUnits(b5, 'assigned', [[cfgA, 2], [cfgD, 2]]);
     addUnits(null, 'built', [[cfgA, 4], [cfgB, 2], [cfgC, 2], [cfgD, 3]]);
 
     /* one RMA, mid-flight, so the section is not empty */
@@ -4938,6 +4942,8 @@
     };
   }
   function upsChip(b, sum){
+    if (b.status === 'ready' && (!sum || sum.st === 'label'))
+      return '<span class="chip r"' + (sum ? ' title="' + esc('UPS: ' + sum.text) + '"' : '') + '>Ready for pickup</span>';
     if (!sum){
       if (b.status === 'shipped' && b.delivered_at) return '<span class="chip k">Delivered</span>';
       const shipped = b.status === 'shipped';

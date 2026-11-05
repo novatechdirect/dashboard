@@ -267,6 +267,7 @@
   .chip.i{ color:var(--info-ink);   background:var(--info-bg);   border-color:var(--info-line); --dot:var(--info); }
   .chip.w{ color:var(--warn-ink);   background:var(--warn-bg);   border-color:var(--warn-line); --dot:var(--warn); }
   .chip.k{ color:var(--ok-ink);     background:var(--ok-bg);     border-color:var(--ok-line); --dot:var(--ok); }
+  .chip.r{ color:var(--ink); background:color-mix(in srgb, #1fa5c4 14%, var(--paper)); border-color:color-mix(in srgb, #1fa5c4 45%, var(--paper)); --dot:#1fa5c4; }
   .chip.b{ color:var(--bad-ink);    background:var(--bad-bg);    border-color:var(--bad-line); --dot:var(--bad); }
 
   /* shipping issues: one line that opens into the batches needing attention */
@@ -2266,6 +2267,8 @@
     };
   }
   function upsChip(b, sum){
+    if (b.status === 'ready' && (!sum || sum.st === 'label'))
+      return '<span class="chip r"' + (sum ? ' title="' + esc('UPS: ' + sum.text) + '"' : '') + '>Ready for pickup</span>';
     if (!sum){
       if (b.status === 'shipped' && b.delivered_at) return '<span class="chip k">Delivered</span>';
       const shipped = b.status === 'shipped';
@@ -2577,18 +2580,19 @@
     };
     const units = []; let sn = 30101;
     const add = function(bid, n, cfg){ for (let i = 0; i < n; i++) units.push({ id:'u' + sn, serial:'NT-' + (sn++), batch_id:bid, config_id:cfg, unit_status:'shipped' }); };
-    add('b4', 4, 'c1'); add('b3', 6, 'c2'); add('b2', 5, 'c1'); add('b1', 3, 'c2');
+    add('b5', 2, 'c2'); add('b4', 4, 'c1'); add('b3', 6, 'c2'); add('b2', 5, 'c1'); add('b1', 3, 'c2');
     return {
       ok:true, dealer:'Rent One', generated_at:new Date().toISOString(),
       locations:[{ id:'l1', store_name:'Rent One', store_number:'214', address1:'4410 Clinton Hwy', city:'Knoxville', state:'TN', zip:'37912' },
                  { id:'l2', store_name:'Rent One', store_number:'102', address1:'2200 Gunbarrel Rd', city:'Chattanooga', state:'TN', zip:'37421' }],
       configs:[{ id:'c1', name:'Revenant', pc_case:'Lian Li O11 Mini', cpu:'Ryzen 7 7800X3D', gpu:'RTX 4070 Super', ram:'DDR5 16GB', ram_sticks:2, storage:'2TB NVMe' },
                { id:'c2', name:'Reaper', pc_case:'NZXT H5 Flow', cpu:'Core i5-14600K', gpu:'RTX 4060 Ti', ram:'DDR5 16GB', ram_sticks:2, storage:'1TB NVMe' }],
-      batches:[{ id:'b4', batch_no:4, status:'open', ship_date:null, delivered_at:null, carrier:'UPS', location_id:'l1' },
+      batches:[{ id:'b5', batch_no:5, status:'ready', ship_date:null, delivered_at:null, carrier:'UPS', location_id:'l2' },
+               { id:'b4', batch_no:4, status:'open', ship_date:null, delivered_at:null, carrier:'UPS', location_id:'l1' },
                { id:'b3', batch_no:3, status:'shipped', ship_date:day(-2), delivered_at:null, carrier:'UPS', location_id:'l2' },
                { id:'b2', batch_no:2, status:'shipped', ship_date:day(-4), delivered_at:null, carrier:'UPS', location_id:'l1' },
                { id:'b1', batch_no:1, status:'shipped', ship_date:day(-12), delivered_at:ts(-8, 14), carrier:'UPS', location_id:'l2' }],
-      tracking:[t('b4', '1Z12D5F00300000041', 'label', -6), t('b3', '1Z12D5F00300000033', 'out', 0),
+      tracking:[t('b5', '1Z12D5F00300000058', 'label', 0), t('b4', '1Z12D5F00300000041', 'label', -6), t('b3', '1Z12D5F00300000033', 'out', 0),
                 t('b2', '1Z12D5F00300000025', 'exception', -1), t('b1', '1Z12D5F00300000017', 'delivered', -8)],
       units:units
     };
