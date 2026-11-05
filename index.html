@@ -2577,6 +2577,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   .ord-cs-t tbody tr:nth-last-child(2) td{ border-bottom-color:var(--line-strong); }
   .ord-cs-t tr.ord-cs-tot td{ font-weight:600; }
   .ord-cs-t td.ord-cs-zero{ color:var(--faint); }
+  .ord-cs-t .ord-cs-ship > span{ white-space:nowrap; }
+  .ord-cs-t .ord-cs-del{ color:var(--faint); font-weight:400; }
   .ord-cs-t td.ord-cs-left{ color:var(--ink); font-weight:700; }
   .ord-cs-bar{ display:flex; height:8px; overflow:hidden; border-radius:999px; background:var(--soft); border:1px solid var(--line); }
   .ord-cs-bar i{ display:block; height:100%; }
@@ -13721,7 +13723,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return cell(r.ordered, 'Ordered') + cell(r.todo, 'To build') + cell(r.built, 'Built') + cell(r.prep, 'Label created') +
         cell(r.ready, 'Ready for pickup') + cell(r.left, 'Left to prepare', 'ord-cs-left');
     };
-    const doneCells = function(r){ return cell(r.shipped, 'Shipped') + cell(r.del, 'Delivered'); };
+    /* one column: everything shipped, then how many of those are delivered in brackets */
+    const doneCells = function(r){
+      return '<td class="n ord-cs-ship' + (r.shipped ? '' : ' ord-cs-zero') + '" data-l="Shipped (delivered)"><span>' + ordNum(r.shipped) +
+        (r.shipped ? ' <span class="ord-cs-del">(' + ordNum(r.del) + ')</span>' : '') + '</span></td>';
+    };
     const dot = function(k){ return '<i class="ord-cs-dot" style="background:' + C[k] + '" aria-hidden="true"></i>'; };
     const rows = ids.map(function(id){
       const r = by[id];
@@ -13748,11 +13754,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<th class="n">' + dot('todo') + 'To build</th><th class="n">' + dot('built') + 'Built</th>' +
         '<th class="n">' + dot('prep') + 'Label created</th><th class="n">' + dot('ready') + 'Ready for pickup</th>' +
         '<th class="n">Left to prepare</th><th class="ord-cs-barc"></th>' +
-        '<th class="n">' + dot('shipped') + 'Shipped</th><th class="n">Delivered</th>' +
+        '<th class="n">' + dot('shipped') + 'Shipped <span class="ord-cs-del">(delivered)</span></th>' +
       '</tr></thead><tbody>' + rows +
         '<tr class="ord-cs-tot"><td data-l="Config">Total</td>' + cells(tot) + '<td class="ord-cs-barc"></td>' + doneCells(tot) + '</tr>' +
       '</tbody></table>' +
-      '<p class="ord-cs-note">Built: waiting in the pool. Label created: in a batch, not ready yet. Ready for pickup: waiting for the carrier. Left to prepare: everything not ready for pickup yet. Shipped includes delivered.</p></div>' +
+      '<p class="ord-cs-note">Built: waiting in the pool. Label created: in a batch, not ready yet. Ready for pickup: waiting for the carrier. Left to prepare: everything not ready for pickup yet. Shipped counts everything shipped; the number in brackets is how many of those are delivered.</p></div>' +
     '</details>';
   }
   function ordRenderBatches(){
