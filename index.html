@@ -5396,6 +5396,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     button.gov-hide{ height:34px; padding:0 12px 0 10px; font-size:13px; }
     .gov-tags button.gov-tag-x{ padding:4px 8px; font-size:17px; }
   }
+
+  /* a title that is only a reference number, with the start of the description beside it */
+  .gov-ref{ color:var(--muted); font-weight:500; font-size:12.5px; margin-right:2px; }
+  .gov-lead{ margin:4px 0 6px; color:var(--muted); font-size:13.5px; line-height:1.45; max-width:72ch; }
 </style>
 <style id="retroTheme">
   /* ============================================================
@@ -7014,6 +7018,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           response_due: at(25, 15), naics:'334111', psc:'', set_aside_code:'SBA', set_aside:'Total Small Business Set-Aside (FAR 19.5)', pop_city:'BETHESDA', pop_state:'MD',
           score:76, flags:['presolicitation'], first_seen_at: demoStamp(0),
           reasons:[R('naics', 'NAICS 334111', 35), R('title', 'workstation, gpu', 40), R('sb', 'Small business set-aside', 10)] })
+        ,opp(11, ['DEPT OF DEFENSE', 'DEPT OF THE NAVY', 'NAVSUP WEAPON SYSTEMS SUPPORT'],
+          { title:'N0038327QF052', solicitation_no:'N0038327QF052', notice_type:'Presolicitation', type_code:'p',
+          response_due: at(14, 14), naics:'334111', psc:'7B22', set_aside_code:null, set_aside:'No Set aside used', pop_city:'PHILADELPHIA', pop_state:'PA',
+          score:70, flags:['presolicitation', 'sole_source', 'nsn_part'], status:'watching', status_changed_at: demoStamp(-1), status_changed_by:'Anthony',
+          first_seen_at: demoStamp(-1), description_at: demoStamp(-1),
+          description:'NAVSUP Weapon Systems Support (NAVSUP WSS) Philadelphia intends to solicit on a sole source basis with Lockheed Martin Corp. for the repair of the following:\n\n' +
+            'PN: 266A640-530\n\nNSN: 7R7021016851725\n\nQTY: 1\n\nThe Government intends to solicit and negotiate with Only One Responsible Source.',
+          reasons:[R('naics', 'NAICS 334111', 35), R('psc', 'PSC 7B22', 35)] })
       ];
       const ev = function(n, kind, detail, d, by){ return { id: n, opp_id: 'demo-gov-' + kind[0], kind: kind[1], detail: detail, created_at: demoStamp(d), created_by: by }; };
       db.gov_events = [
@@ -7069,6 +7081,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         if (/brand[\s-]+name/i.test(t)) fl.push('brand_name');
         if (/\b(sewp|gsa schedule|bpa holders|idiq holders)\b/i.test(t)) fl.push('vehicle');
         if (/\bcancel+ed\b|\bcancellation\b/i.test(t)) fl.push('cancelled');
+        if (/\bsole[\s-]+sourc/i.test(t)) fl.push('sole_source');
+        if (/(^|[^a-z0-9])nsn([^a-z]|$)/i.test(t)) fl.push('nsn_part');
         const sa = String(n.set_aside_code || '').toUpperCase();
         if (OTHER_SA.indexOf(sa) >= 0){ ok = false; fl.push('not_eligible'); }
         else if (sa === 'SBA' || sa === 'SBP') add('sb', 'Small business set-aside', 10);
@@ -7095,8 +7109,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         o.eligible = s.eligible;
       };
       db.gov_opps.forEach(function(o){
-        o._dflags = (o.flags || []).filter(function(f){ return /^(brand_name|taa|buy_american|cmmc|vehicle|onsite)$/.test(f); });
+        o._dflags = (o.flags || []).filter(function(f){ return /^(brand_name|taa|buy_american|cmmc|vehicle|onsite|sole_source|nsn_part)$/.test(f); });
         rescore(o, db.gov_config[0]);
+        const tt = String(o.title || '').trim();
+        o.gov_summary = (o.description && tt.length <= 40 && !/\s/.test(tt) && /\d/.test(tt)) ? String(o.description).replace(/\s+/g, ' ').trim().slice(0, 180) : null;
       });
 
       /* A month of other SAM.gov notices: parts, services, IT that is not
@@ -18871,6 +18887,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     local_area:      ['Local area', 'warn', 'Local-area set-aside: only for companies in the named disaster area.'],
     not_eligible:    ['Set-aside', 'bad', 'Reserved for a program NovaTech is not in: 8(a), HUBZone, SDVOSB, WOSB/EDWOSB or veteran-owned.'],
     cancelled:       ['Cancelled', 'bad', 'The agency cancelled this notice.'],
+    sole_source:     ['Sole source', 'bad', 'The agency means to buy from one named company. Others can usually only send a capability statement, so it is rarely worth a bid.'],
+    nsn_part:        ['Spare part (NSN)', 'warn', 'A military spare part with a stock number (NSN). It usually has to be that exact part, from an approved source.'],
     muted:           ['Hidden by a rule', 'neutral', 'Matches one of the \u201cnever show\u201d rules in Settings (a title word or an office), so it stays out of the inbox.']
   };
   const GOV_PASS = ['Not interested', 'Not our product', 'Brand name only', 'Too big for us', 'Too small to bother', 'Services or on-site work',
@@ -18893,7 +18911,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   const GOV_COLS = 'id,opp_key,notice_id,solicitation_no,title,notice_type,type_code,agency,subtier,office,posted_on,response_due,' +
     'archive_on,naics,psc,set_aside_code,set_aside,eligible,pop_city,pop_state,pop_zip,pop_country,ui_link,description_url,' +
     'description_at,attachments,award,score,reasons,flags,active,first_seen_at,last_seen_at,status,pass_reason,owner_name,' +
-    'notes,bid_amount,internal_due,submitted_at,checklist,status_changed_at,status_changed_by,updated_at,contacts';
+    'notes,bid_amount,internal_due,submitted_at,checklist,status_changed_at,status_changed_by,updated_at,contacts,gov_summary';
   const GOV_PAGE = 25;
   const GOV_ICO = '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 4l9 5.5"/><path d="M5.5 10.5v7M10 10.5v7M14 10.5v7M18.5 10.5v7"/><path d="M3.5 20.5h17"/></g></svg>';
   const GOV_CHEV = '<span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span>';
@@ -18931,6 +18949,26 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return out;
     }).join('');
   }
+  /* places arrive in capitals, half in capitals ("SAN Marcos") or as a bare 0 */
+  function govCity(c){
+    const s = String(c || '').trim();
+    if (!s || /^\d*$/.test(s)) return '';
+    return s.split(/(\s+|-|\/)/).map(function(w){
+      if (!/^[A-Za-z][A-Za-z.']*$/.test(w)) return w;
+      if (/^(AFB|ARB|JB|NAS|NSA|NAVSTA|USA|DC|NW|NE|SW|SE|II|III|IV)$/.test(w)) return w;
+      return /[a-z]/.test(w.slice(1)) ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }).join('');
+  }
+  /* a title that is only a reference number (N0038327QF052): the page shows the start of the description beside it */
+  function govRefTitle(t){ const s = String(t || '').trim(); return !!s && s.length <= 40 && !/\s/.test(s) && /\d/.test(s); }
+  function govSummary(o){
+    if (o.gov_summary) return o.gov_summary;
+    return govRefTitle(o.title) && o.description ? String(o.description).replace(/\s+/g, ' ').trim().slice(0, 180) : '';
+  }
+  function govTitleHtml(o){
+    const sum = govSummary(o);
+    return sum ? '<span class="gov-ref ord-mono">' + esc(o.title) + '</span> ' + esc(sum) : esc(o.title);
+  }
   function govAgency(o){
     const a = govNice(o.subtier || o.agency || '');
     return a.replace(/^Veterans Affairs, Department of$/, 'Veterans Affairs').replace(/^Dept of Defense$/, 'Defense');
@@ -18963,7 +19001,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   function govSaLabel(o){
     if (o.set_aside_code === 'SBA') return 'Small business set-aside';
     if (o.set_aside_code === 'SBP') return 'Partial small business set-aside';
-    if (!o.set_aside && !o.set_aside_code) return 'Open to all';
+    if (!o.set_aside_code && (!o.set_aside || /^no set.?aside/i.test(o.set_aside))) return 'Open to all';
     return String(o.set_aside || o.set_aside_code).replace(/\s*\(FAR [^)]*\)\s*$/, '');
   }
   function govTypeLabel(o){
@@ -19270,7 +19308,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const k = document.getElementById('govKpis'); if (!k) return;
     const inbox = govOpps.filter(govInbox);
     const fresh = inbox.filter(govFresh).length;
-    const week = govOpps.filter(function(o){ return (o.status === 'watching' || o.status === 'bidding') && govIsOpen(o) && o.response_due && govDays(o.response_due) <= 7; }).length;
+    const week = govOpps.filter(function(o){ return (govInbox(o) || o.status === 'watching' || o.status === 'bidding') && govIsOpen(o) && o.response_due && govDays(o.response_due) <= 7; }).length;
     const working = govOpps.filter(function(o){ return o.status === 'watching' || o.status === 'bidding'; }).length;
     const sub = govOpps.filter(function(o){ return o.status === 'submitted'; }).length;
     const yr = new Date().getFullYear();
@@ -19278,7 +19316,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const wonAmt = won.reduce(function(s, o){ return s + Number(o.bid_amount || 0); }, 0);
     k.innerHTML =
       '<div class="rma-kpi' + (fresh ? ' hot' : '') + '" style="--kpi-hue:var(--hue-gov)" title="Matches nobody has looked at yet, still open"><b>' + inbox.length + '</b><span>In the inbox' + (fresh ? '<i class="gov-kpi-new"><span class="gov-x"> \u00b7 </span>' + fresh + ' new</i>' : '') + '</span></div>' +
-      '<div class="rma-kpi' + (week ? ' hot' : '') + '" style="--kpi-hue:var(--warn)" title="Watching or bidding, due in the next 7 days"><b>' + week + '</b><span>Due this week</span></div>' +
+      '<div class="rma-kpi' + (week ? ' hot' : '') + '" style="--kpi-hue:var(--warn)" title="In the inbox, watching or bidding, and due in the next 7 days"><b>' + week + '</b><span>Due this week</span></div>' +
       '<div class="rma-kpi" style="--kpi-hue:var(--info)"><b>' + working + '</b><span>Watching or bidding</span></div>' +
       '<div class="rma-kpi" style="--kpi-hue:#1fa5c4"><b>' + sub + '</b><span>Submitted, waiting</span></div>' +
       '<div class="rma-kpi" style="--kpi-hue:var(--ok)" title="Bids marked Won this year' + (wonAmt ? ', with the bid amounts entered' : '') + '"><b>' + won.length + '</b><span>Won in ' + yr + (wonAmt ? ' \u00b7 ' + govMoney(wonAmt) : '') + '</span></div>';
@@ -19331,10 +19369,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         ? '<span class="gov-pick"><input type="checkbox" tabindex="-1" aria-hidden="true"' + (picked ? ' checked' : '') + '></span>'
         : '<div class="gov-score ' + govScoreCls(o.score) + '" title="Match score">' + o.score + '</div>') +
       '<div class="gov-main">' +
-        '<div class="gov-title">' + (govFresh(o) ? '<span class="gov-new" title="New since your last visit"></span>' : '') + esc(o.title) + '</div>' +
+        '<div class="gov-title">' + (govFresh(o) ? '<span class="gov-new" title="New since your last visit"></span>' : '') + govTitleHtml(o) + '</div>' +
         '<div class="gov-meta">' + [['ag', govAgency(o)], ['ty', govTypeLabel(o)], ['sa', govSaLabel(o)]]
             .filter(function(x){ return x[1]; }).map(function(x){ return '<span class="gov-m-' + x[0] + '">' + esc(x[1]) + '</span>'; }).join('') +
-          (o.pop_state ? '<span class="gov-place">' + esc((o.pop_city ? govNice(o.pop_city) + ', ' : '') + o.pop_state) + '</span>' : '') +
+          (o.pop_state ? '<span class="gov-place">' + esc((govCity(o.pop_city) ? govCity(o.pop_city) + ', ' : '') + o.pop_state) + '</span>' : '') +
           (o.naics || o.psc ? '<span class="gov-codes ord-mono">' + esc([o.naics, o.psc].filter(Boolean).join(' \u00b7 ')) + '</span>' : '') + '</div>' +
         ((o.flags || []).length || o.status !== 'new' ? '<div class="gov-flags">' + (o.status !== 'new' ? govChip(o.status) : '') + govFlagChips(o) + '</div>' : '') +
       '</div>' +
@@ -19404,7 +19442,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const reasons = Array.isArray(o.reasons) ? o.reasons : [];
     const pocs = Array.isArray(o.contacts) ? o.contacts.filter(function(p){ return p && (p.fullName || p.email || p.phone); }) : [];
     const files = Array.isArray(o.attachments) ? o.attachments.filter(function(u){ return typeof u === 'string' && /^https:\/\//.test(u); }) : [];
-    const pop = [o.pop_city ? govNice(o.pop_city) : '', o.pop_state, o.pop_zip].filter(Boolean).join(', ');
+    const pop = [govCity(o.pop_city), o.pop_state, o.pop_zip].filter(Boolean).join(', ');
     const aw = o.award && typeof o.award === 'object' ? o.award : null;
     const fl = (o.flags || []).filter(function(f){ return GOV_FLAGS[f] && f !== 'muted'; });
     const mr = reasons.filter(function(r){ return r.k === 'muted'; })[0];
@@ -19412,6 +19450,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       '<div class="gov-head"><div>' +
         '<div class="gov-eyebrow">' + esc([govAgency(o), govNice(o.office)].filter(Boolean).join(' \u00b7 ')) + '</div>' +
         '<h1>' + esc(o.title) + '</h1>' +
+        (govSummary(o) ? '<p class="gov-lead">' + esc(govSummary(o)) + (govSummary(o).length >= 180 ? '\u2026' : '') + '</p>' : '') +
         '<div class="rma-sub"><span>' + govChip(o.status) + '</span><span>' + esc(govTypeLabel(o) || 'Notice') + '</span><span>' + esc(govSaLabel(o)) + '</span>' +
           (o.solicitation_no ? '<span class="ord-mono">' + esc(o.solicitation_no) + '</span>' : '') + '</div>' +
         '<div class="gov-head-due gov-sm ' + due + '">' + (o.response_due
