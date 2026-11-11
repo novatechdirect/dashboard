@@ -7833,6 +7833,26 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         const b = (db.batches || []).find(function(x){ return String(x.id) === String(args.p_batch); });
         return ok([{ state: 'ok', order_id: b ? b.ss_order_id : '1', message: null }]);
       }
+      /* an RMA in ShipStation: the order appears at once and its label
+         already carries a tracking number */
+      case 'ss_send_rma': {
+        const tbl = demoTable('rma_shipstation');
+        let x = tbl.find(function(r){ return String(r.rma_id) === String(args.p_rma); });
+        if (!x){ x = { rma_id: args.p_rma }; tbl.push(x); }
+        x.ss_request_id = 1; x.ss_sent_at = new Date().toISOString();
+        x.ss_order_id = x.ss_order_id || String(200000000 + Math.floor(Math.random() * 1e6));
+        return ok(1);
+      }
+      case 'ss_rma_result': {
+        const x = demoTable('rma_shipstation').find(function(r){ return String(r.rma_id) === String(args.p_rma); });
+        return ok([{ state: 'ok', order_id: x ? x.ss_order_id : '1', message: null }]);
+      }
+      case 'ss_fetch_rma_tracking': return ok(1);
+      case 'ss_rma_tracking_result': {
+        const x = demoTable('rma_shipstation').find(function(r){ return String(r.rma_id) === String(args.p_rma); });
+        if (!x) return ok([{ state: 'none', tracking: null, carrier: null, ship_date: null, message: null }]);
+        return ok([{ state: 'ok', tracking: '1Z999AA1' + String(x.ss_order_id || '0').slice(-8).padStart(8, '0'), carrier: 'UPS', ship_date: demoDay(0), message: null }]);
+      }
       case 'is_margin_admin': return ok(true);
       case 'find_user_by_email': return ok([]);
       case 'portal_remittance_notice': return ok();
@@ -16223,6 +16243,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   let rmaTickets = [], rmaParts = [], rmaShipments = [], rmaComments = [], rmaAttachments = [], rmaEvents = [], rmaContacts = [], rmaSettings = {};
   let rmaInited = false, rmaLoading = false, rmaCurrentId = null, rmaFilter = 'open', rmaQuery = '';
   let rmaEditPart = false;
+  /* which RMAs have an order in ShipStation: { rma_id, ss_order_id, ss_sent_at } */
+  let rmaSs = [];
+  const rmaSsBusy = new Set();
 
   function rmaNo(t){ return 'RMA-' + t.rma_no; }
   function rmaCatLabel(k){ const c = RMA_CATS.find(function(x){ return x[0] === k; }); return c ? c[1] : (k || 'Other'); }
@@ -16298,9 +16321,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         SB.from('rma_attachments').select('*').order('created_at'),
         SB.from('rma_events').select('*').order('created_at'),
         SB.from('customer_contacts').select('*').order('name'),
-        SB.from('app_settings').select('*')
+        SB.from('app_settings').select('*'),
+        SB.from('rma_shipstation').select('rma_id, ss_order_id, ss_sent_at')
       ]);
       if (r[0].error) throw r[0].error;
+      rmaSs = r[8].error ? [] : (r[8].data || []);
       rmaTickets = r[0].data || []; rmaParts = r[1].data || []; rmaShipments = r[2].data || [];
       rmaComments = r[3].data || []; rmaAttachments = r[4].data || []; rmaEvents = r[5].data || []; rmaContacts = r[6].data || [];
       rmaSettings = {}; (r[7].data || []).forEach(function(s){ rmaSettings[s.key] = s.value; });
@@ -16651,16 +16676,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const shipHtml = (out.length || ret.length)
       ? '<div class="rma-thread">' + out.map(shipRow).join('') + ret.map(shipRow).join('') + '</div>'
       : '<p class="muted-sm" style="margin:0;">Nothing shipped yet.</p>';
-    const shipToDl = '<dl class="rma-dl" style="margin-top:var(--s3);"><dt>Ship to</dt><dd>' +
-      ({ hq:'Their head office', store:'The store', custom:'An address the technician gave' }[t.ship_to_kind] || 'The technician') +
-      (shipTo ? '<div class="rma-addr">' + esc(shipTo) + '</div>' : '<div class="muted-sm" style="margin-top:4px;">No address on file \u2014 ' + (t.ship_to_kind === 'hq' ? 'set their head office in Admin \u2192 Customers.' : 'add the technician in Admin \u2192 RMA.') + '</div>') + '</dd></dl>';
+    /* a technician on file needs no label: the name and address say it */
+    const shipKind = { hq:'Their head office', store:'The store', custom:'An address the technician gave' }[t.ship_to_kind] || '';
+    const shipTop = shipKind ? '' : ' style="margin-top:0;"';
+    const shipToDl = '<dl class="rma-dl" style="margin-top:var(--s3);"><dt>Ship to</dt><dd>' + shipKind +
+      (shipTo ? '<div class="rma-addr"' + shipTop + '>' + esc(shipTo) + '</div>' : '<div class="muted-sm" style="margin-top:' + (shipKind ? '4px' : '0') + ';">No address on file \u2014 ' + (t.ship_to_kind === 'hq' ? 'set their head office in Admin \u2192 Customers.' : 'add the technician in Admin \u2192 RMA.') + '</div>') + '</dd></dl>';
     const shipSlipBtn =
       (can && ['approved','shipped','return_received','closed'].indexOf(t.status) >= 0 ? '<button class="ghost btn-sm" data-rmaact="slip">Packing slip</button>' : '');
-    /* ShipStation wants the address pasted in, so hand it over in one click */
+    /* the ShipStation buttons sit in a wrapper of their own, so a send can
+       repaint them without redrawing the page under a half-typed reply */
     const shipToHtml = shipToDl +
       (shipTo || shipSlipBtn ? '<div class="rma-slip-act">' +
-        (shipTo ? '<button class="ghost btn-sm" data-rmaact="copyaddr" title="Copy the address for ShipStation">' + ntIco('clipboard', 'nt-ico') + 'Copy address</button>' : '') +
-        shipSlipBtn + '</div>' : '');
+        (shipTo ? '<button class="ghost btn-sm" data-rmaact="copyaddr" title="Copy the address">' + ntIco('clipboard', 'nt-ico') + 'Copy address</button>' : '') +
+        shipSlipBtn + '<span id="rmaSsBtns" style="display:contents;">' + rmaSsBtnsHtml(t) + '</span></div>' : '');
 
     const thread = cmts.length ? cmts.map(function(c){
         const atts = rmaAttachments.filter(function(x){ return x.comment_id === c.id; });
@@ -16875,6 +16903,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       if (!addr){ toast('No address on this ticket yet.', 'warn'); return; }
       rmaCopyAddress(addr, 'Address'); return;
     }
+    if (act === 'sssend') return rmaSendShipStation(t);
+    if (act === 'sstrack'){
+      if (rmaSsBusy.has('t' + t.id)) return;
+      rmaSsBusy.add('t' + t.id);
+      btn.disabled = true; btn.textContent = 'Checking\u2026';
+      let res;
+      try { res = await rmaSsFetchTracking(t); }
+      finally { rmaSsBusy.delete('t' + t.id); if (btn.isConnected){ btn.disabled = false; btn.textContent = 'Get tracking'; } }
+      if (res.state === 'none'){ toast(rmaNo(t) + ': no label in ShipStation yet.', 'warn', 6000); return; }
+      if (res.state !== 'ok'){ toast(rmaNo(t) + ': ' + res.message, 'bad', 8000); return; }
+      const have = rmaTicketShips(t.id).map(function(x){ return x.tracking_no; });
+      const fresh = res.list.filter(function(x){ return have.indexOf(x) < 0; });
+      if (!fresh.length){ toast(rmaNo(t) + ': that tracking number is already on this RMA.', 'ok'); return; }
+      return rmaShipModal(t, 'outbound', { tracking: fresh[0], carrier: res.carrier, date: res.date, more: fresh.length - 1 });
+    }
     if (act === 'approve') return rmaApproveModal(t);
     if (act === 'deny') return rmaReasonModal(t, 'Deny this RMA', 'Tell the technician why. They will see this on the ticket.', 'Deny', async function(reason){
       await rmaSetStatus(t, 'denied', { denial_reason: reason }, reason);
@@ -17007,20 +17050,216 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       mgCloseModal();
     });
   }
-  function rmaShipModal(t, direction){
+  /* ---- ShipStation for an RMA: the same order-then-label round trip as a
+     batch. Send creates (or updates) an Awaiting Shipment order from the
+     address under Ship to; Get tracking reads the label back and hands the
+     number to Mark shipped, which stays the one place a part ships from. ---- */
+  function rmaSsOf(id){ return rmaSs.find(function(x){ return String(x.rma_id) === String(id); }) || null; }
+  /* one click makes the order from the address under Ship to; once a label
+     exists there, Get tracking brings its number into Mark shipped */
+  function rmaSsBtnsHtml(t){
+    const shipTo = rmaShipToText(t, rmaUnitById(t.unit_id) || rmaUnitBySerial(t.serial));
+    if (!(ordPerm.rma && shipTo && ['approved','shipped','return_received'].indexOf(t.status) >= 0)) return '';
+    const ss = rmaSsOf(t.id), ssIn = !!(ss && ss.ss_order_id), busy = rmaSsBusy.has(t.id);
+    const shipped = rmaTicketShips(t.id).some(function(x){ return x.direction === 'outbound'; });
+    return '<button class="ghost btn-sm" data-rmaact="sssend"' + (busy ? ' disabled' : '') + ' title="' +
+        (ssIn ? 'In ShipStation since ' + esc(new Date(ss.ss_sent_at || Date.now()).toLocaleString()) + '. Click to send the address again.'
+              : 'Create an order in ShipStation with this ship-to address') + '">' +
+        (busy ? 'Sending\u2026' : (ssIn ? 'In ShipStation \u2713' : 'Send to ShipStation')) + '</button>' +
+      (ssIn && !shipped ? '<button class="ghost btn-sm" data-rmaact="sstrack" title="Bring the tracking number from the ShipStation label into Mark shipped">Get tracking</button>' : '');
+  }
+  function rmaSsPaint(t){
+    const host = document.getElementById('rmaSsBtns');
+    if (host && rmaCurrentId === t.id) host.innerHTML = rmaSsBtnsHtml(t);
+  }
+  const RMA_ST = { alabama:'AL', alaska:'AK', arizona:'AZ', arkansas:'AR', california:'CA', colorado:'CO', connecticut:'CT', delaware:'DE',
+    'district of columbia':'DC', florida:'FL', georgia:'GA', hawaii:'HI', idaho:'ID', illinois:'IL', indiana:'IN', iowa:'IA', kansas:'KS',
+    kentucky:'KY', louisiana:'LA', maine:'ME', maryland:'MD', massachusetts:'MA', michigan:'MI', minnesota:'MN', mississippi:'MS',
+    missouri:'MO', montana:'MT', nebraska:'NE', nevada:'NV', 'new hampshire':'NH', 'new jersey':'NJ', 'new mexico':'NM', 'new york':'NY',
+    'north carolina':'NC', 'north dakota':'ND', ohio:'OH', oklahoma:'OK', oregon:'OR', pennsylvania:'PA', 'puerto rico':'PR',
+    'rhode island':'RI', 'south carolina':'SC', 'south dakota':'SD', tennessee:'TN', texas:'TX', utah:'UT', vermont:'VT',
+    virginia:'VA', washington:'WA', 'west virginia':'WV', wisconsin:'WI', wyoming:'WY' };
+  const RMA_ST_CODES = Object.keys(RMA_ST).map(function(k){ return RMA_ST[k]; });
+  function rmaStCode(v){
+    v = String(v || '').trim().replace(/\.$/, '');
+    const c = v.length === 2 ? v.toUpperCase() : (RMA_ST[v.toLowerCase()] || '');
+    return RMA_ST_CODES.indexOf(c) >= 0 ? c : '';
+  }
+  /* "..., TX 75247" or "... Texas 75247", with or without a trailing USA */
+  const RMA_CSZ = new RegExp('(?:^|[,\\s])\\s*(' + Object.keys(RMA_ST).sort(function(a, b){ return b.length - a.length; }).join('|') +
+    '|[A-Za-z]{2})\\.?[,\\s]+(\\d{5}(?:-\\d{4})?)(?:[,\\s]+(?:usa?|u\\.s\\.a?\\.?|united states(?: of america)?))?\\s*$', 'i');
+  /* A typed address, read into the boxes ShipStation wants: the last line
+     ending in a state and ZIP is the city line, the first line that starts
+     with a number (or a PO box) is the street, and what sits above it is who. */
+  function rmaParseAddress(text){
+    const a = { name:'', company:'', street1:'', street2:'', street3:'', city:'', state:'', postalCode:'', phone:'' };
+    const PHONE = /^(?:(?:tel|phone|ph|cell|mobile)[.:\s]*)?(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?:\s*(?:x|ext\.?)\s*\d+)?$/i;
+    const lines = String(text || '').split(/\r?\n/).map(function(l){ return l.trim().replace(/,+$/, '').trim(); }).filter(function(l){
+      if (!l) return false;
+      if (PHONE.test(l)){ if (!a.phone) a.phone = l.replace(/^[A-Za-z.:\s]+/, ''); return false; }
+      return true;
+    });
+    let ci = -1, m = null;
+    for (let i = lines.length - 1; i >= 0; i--){
+      const x = RMA_CSZ.exec(lines[i]), st = x ? rmaStCode(x[1]) : '';
+      if (!st) continue;
+      ci = i; m = x; a.state = st; a.postalCode = x[2]; break;
+    }
+    let head = ci < 0 ? lines.slice() : lines.slice(0, ci);
+    if (ci >= 0){
+      /* "500 Main St, Austin, TX 78701" on one line: the city is the last piece */
+      const pre = lines[ci].slice(0, m.index).split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+      a.city = pre.pop() || '';
+      head = head.concat(pre);
+    }
+    const STREET = /^(?:\d+[A-Za-z]?(?:[-\/]\d+)?\s+\S|p\.?\s*o\.?\s*box\b|box\s+\d)/i;
+    let si = -1;
+    for (let i = 0; i < head.length; i++){ if (STREET.test(head[i])){ si = i; break; } }
+    if (si < 0 && head.length > 1) si = head.length - 1;
+    const who = si < 0 ? head : head.slice(0, si);
+    if (si >= 0){ a.street1 = head[si]; a.street2 = head[si + 1] || ''; a.street3 = head.slice(si + 2).join(', '); }
+    const ATTN = /^(?:attn|attention|c\/o)\b[.:\s]*/i;
+    const attn = who.find(function(l){ return ATTN.test(l); });
+    if (attn){
+      a.name = attn.replace(ATTN, '').trim();
+      a.company = who.filter(function(l){ return l !== attn && l.toLowerCase() !== a.name.toLowerCase(); }).join(', ');
+      if (!a.name){ a.name = a.company; a.company = ''; }
+    } else {
+      a.name = who[0] || '';
+      a.company = who.slice(1).join(', ');
+    }
+    return a;
+  }
+  /* the address ShipStation gets for this ticket: a store's own fields when
+     the part goes to a store, otherwise the text under Ship to, read apart */
+  function rmaSsAddress(t, u){
+    let a;
+    const l = !t.ship_to_text && t.ship_to_kind === 'store' ? rmaStoreOf(t, u) : null;
+    if (l){
+      a = { name: ordLocName(l) + (ordLocNum(l) ? ' #' + ordLocNum(l) : ''), company:'', street1: l.address1 || '', street2: l.address2 || '', street3:'',
+            city: l.city || '', state: rmaStCode(l.state), postalCode: String(l.zip || '').trim(), phone: l.phone || '' };
+    } else {
+      a = rmaParseAddress(rmaShipToText(t, u));
+    }
+    /* a technician on file lends a name and phone when the address has none */
+    const c = !t.ship_to_text && ['hq','store','custom'].indexOf(t.ship_to_kind) < 0 ? rmaTechContact(t.customer_id) : null;
+    if (c){ if (!a.name) a.name = c.name || ''; if (!a.phone) a.phone = c.phone || ''; }
+    if (!a.name){ const cn = rmaCustName(t.customer_id); a.name = cn === '\u2014' ? '' : cn; }
+    return a;
+  }
+  /* which boxes ShipStation would refuse: [input id, what to say] */
+  function rmaSsMissing(a){
+    const miss = [];
+    if (!String(a.name || '').trim()) miss.push(['rmaSsName', 'Add a name.']);
+    if (!String(a.street1 || '').trim()) miss.push(['rmaSsSt1', 'Add the street.']);
+    if (!String(a.city || '').trim()) miss.push(['rmaSsCity', 'Add the city.']);
+    if (!rmaStCode(a.state)) miss.push(['rmaSsState', 'Use the two-letter state, like TX.']);
+    if (!/^\d{5}(-\d{4})?$/.test(String(a.postalCode || '').trim())) miss.push(['rmaSsZip', 'Add the 5-digit ZIP.']);
+    return miss;
+  }
+  /* an address typed loosely cannot always be read apart; finish it by hand */
+  function rmaSsAddressModal(t, a){
+    const f = function(id, label, val, opt, span, more){
+      return '<div class="field' + (span ? ' span2' : '') + '"><label for="' + id + '">' + label + (opt ? ' <span class="muted-sm">optional</span>' : '') + '</label>' +
+        '<input id="' + id + '" type="text" autocomplete="off" autocorrect="off" spellcheck="false" value="' + esc(val || '') + '"' + (more || '') + '></div>';
+    };
+    const bg = mgModal(mgModalHead('Send ' + rmaNo(t) + ' to ShipStation', 'ShipStation takes the address in separate boxes. Fill in what could not be read from the ticket.') +
+      '<div class="spec-grid">' +
+        f('rmaSsName', 'Name', a.name) + f('rmaSsCo', 'Company', a.company, true) +
+        f('rmaSsSt1', 'Street', a.street1, false, true) +
+        f('rmaSsSt2', 'Apt, suite or unit', [a.street2, a.street3].filter(Boolean).join(', '), true, true) +
+        f('rmaSsCity', 'City', a.city) + f('rmaSsState', 'State', a.state, false, false, ' maxlength="2" autocapitalize="characters" placeholder="TX"') +
+        f('rmaSsZip', 'ZIP', a.postalCode, false, false, ' inputmode="numeric" placeholder="75247"') + f('rmaSsPhone', 'Phone', a.phone, true, false, ' inputmode="tel"') +
+      '</div>' +
+      '<div class="mg-modal-foot"><button class="ghost" id="rmaSsCancel" type="button">Cancel</button>' +
+        '<button class="primary" id="rmaSsGo" type="button" data-primary>Send to ShipStation</button></div>');
+    const v = function(id){ return bg.querySelector('#' + id).value.trim(); };
+    bg.querySelector('#rmaSsCancel').addEventListener('click', mgCloseModal);
+    bg.querySelector('#rmaSsGo').addEventListener('click', function(){
+      const b = { name: v('rmaSsName'), company: v('rmaSsCo'), street1: v('rmaSsSt1'), street2: v('rmaSsSt2'), street3: '',
+                  city: v('rmaSsCity'), state: rmaStCode(v('rmaSsState')) || v('rmaSsState'), postalCode: v('rmaSsZip'), phone: v('rmaSsPhone') };
+      const miss = rmaSsMissing(b);
+      if (miss.length){ mgFieldErr(bg, '#' + miss[0][0], miss[0][1]); return; }
+      mgCloseModal();
+      rmaSendShipStation(t, b);
+    });
+    /* start in the first box that still needs filling (after the dialog's own first focus) */
+    const first = rmaSsMissing(a)[0];
+    if (first) setTimeout(function(){ const el = bg.querySelector('#' + first[0]); if (el && el.isConnected) el.focus(); }, 80);
+  }
+  async function rmaSendShipStation(t, addr){
+    if (rmaSsBusy.has(t.id)) return;
+    if (!addr){
+      addr = rmaSsAddress(t, rmaUnitById(t.unit_id) || rmaUnitBySerial(t.serial));
+      if (rmaSsMissing(addr).length) return rmaSsAddressModal(t, addr);
+    }
+    rmaSsBusy.add(t.id);
+    const label = rmaNo(t);
+    const fail = function(msg){ toast(label + ' did not reach ShipStation: ' + msg, 'bad', 9000); };
+    rmaSsPaint(t);
+    try {
+      const s = await SB.rpc('ss_send_rma', { p_rma: t.id, p_ship_to: addr });
+      if (s.error){ fail(/ss_send_rma/.test(s.error.message) ? 'the database update for RMA ShipStation has not been run yet.' : s.error.message); return; }
+      for (let i = 0; i < 20; i++){
+        await new Promise(function(r){ setTimeout(r, i < 4 ? 700 : 1500); });
+        const r = await SB.rpc('ss_rma_result', { p_rma: t.id });
+        if (r.error){ fail(r.error.message); return; }
+        const row = (r.data || [])[0] || {};
+        if (row.state === 'waiting') continue;
+        if (row.state === 'ok'){
+          rmaSs = rmaSs.filter(function(x){ return String(x.rma_id) !== String(t.id); })
+            .concat({ rma_id: t.id, ss_order_id: row.order_id, ss_sent_at: new Date().toISOString() });
+          toast(label + ' is in ShipStation under Awaiting Shipment \u00b7 ' +
+            [addr.name, addr.street1, addr.city + ' ' + addr.state + ' ' + addr.postalCode].join(', '), 'ok', 7000);
+          return;
+        }
+        fail(row.message || 'unknown error'); return;
+      }
+      fail('no answer yet. Check ShipStation in a minute before sending again.');
+    } finally {
+      rmaSsBusy.delete(t.id);
+      rmaSsPaint(t);
+    }
+  }
+  /* the labels ShipStation holds for this RMA:
+     { state:'ok', list, carrier, date } | { state:'none' } | { state:'error', message } */
+  async function rmaSsFetchTracking(t){
+    const s = await SB.rpc('ss_fetch_rma_tracking', { p_rma: t.id });
+    if (s.error) return { state:'error', message: /ss_fetch_rma_tracking/.test(s.error.message) ? 'the database update for RMA ShipStation has not been run yet.' : s.error.message };
+    for (let i = 0; i < 20; i++){
+      await new Promise(function(r){ setTimeout(r, i < 4 ? 700 : 1500); });
+      const r = await SB.rpc('ss_rma_tracking_result', { p_rma: t.id });
+      if (r.error) return { state:'error', message: r.error.message };
+      const row = (r.data || [])[0] || {};
+      if (row.state === 'waiting') continue;
+      if (row.state === 'none') return { state:'none' };
+      if (row.state !== 'ok') return { state:'error', message: row.message || 'ShipStation did not answer.' };
+      return { state:'ok', list: String(row.tracking || '').split(', ').filter(Boolean), carrier: row.carrier || 'UPS', date: row.ship_date || null };
+    }
+    return { state:'error', message:'ShipStation has not answered yet. Try again in a minute.' };
+  }
+  function rmaShipModal(t, direction, pre){
     const isRet = direction === 'return';
     const u = rmaUnitById(t.unit_id) || rmaUnitBySerial(t.serial);
     const parts = rmaTicketParts(t.id).filter(function(p){ return p.status === 'approved' || p.status === 'requested'; });
     const invParts = parts.filter(function(p){ return p.kind === 'inventory' && p.inv_item_id; });
     /* the technician usually logs the return before it lands; reuse that row */
     const techRet = isRet ? rmaTicketShips(t.id).filter(function(s){ return s.direction === 'return' && !s.received_at; }).slice(-1)[0] : null;
-    const defCarrier = techRet && techRet.carrier ? (RMA_CARRIERS.find(function(c){ return c.toLowerCase() === String(techRet.carrier).toLowerCase(); }) || 'Other') : 'UPS';
+    const defCarrier = pre && pre.carrier ? (RMA_CARRIERS.indexOf(pre.carrier) >= 0 ? pre.carrier : 'Other')
+      : techRet && techRet.carrier ? (RMA_CARRIERS.find(function(c){ return c.toLowerCase() === String(techRet.carrier).toLowerCase(); }) || 'Other') : 'UPS';
     const defShipTo = isRet ? '' : rmaShipToText(t, u);
+    /* in ShipStation with nothing shipped yet: the label's number is fetched
+       into the box, so nobody has to copy it across */
+    const ssLook = !isRet && !pre && !!(rmaSsOf(t.id) || {}).ss_order_id && !rmaTicketShips(t.id).some(function(s){ return s.direction === 'outbound'; });
+    const ssHint = isRet ? '' : pre
+      ? 'Filled from ShipStation.' + (pre.more ? ' It holds ' + (pre.more + 1) + ' labels for this RMA; this is the first. Add the others with Add shipment.' : '')
+      : (ssLook ? 'Checking ShipStation for the label\u2026' : '');
     const bg = mgModal(mgModalHead(isRet ? 'Failed part received' : 'Mark shipped', isRet ? 'Log the return so the ticket can close.' : 'The technician sees the tracking number on the ticket.') +
       '<div class="spec-grid">' +
         '<div class="field"><label for="rmaShCarrier">Carrier</label><select id="rmaShCarrier" class="spec-select">' + RMA_CARRIERS.map(function(c){ return '<option' + (c === defCarrier ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></div>' +
-        '<div class="field"><label for="rmaShDate">' + (isRet ? 'Received' : 'Ship date') + '</label><input id="rmaShDate" type="date" value="' + fmtYMD(new Date()) + '"></div>' +
-        '<div class="field span2"><label for="rmaShTrack">Tracking number' + (isRet ? ' (optional)' : '') + '</label><input id="rmaShTrack" type="text" placeholder="1Z\u2026" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="done" value="' + esc(techRet && techRet.tracking_no || '') + '">' +
+        '<div class="field"><label for="rmaShDate">' + (isRet ? 'Received' : 'Ship date') + '</label><input id="rmaShDate" type="date" value="' + esc(pre && pre.date || fmtYMD(new Date())) + '"></div>' +
+        '<div class="field span2"><label for="rmaShTrack">Tracking number' + (isRet ? ' (optional)' : '') + '</label><input id="rmaShTrack" type="text" placeholder="1Z\u2026" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="done" value="' + esc(pre && pre.tracking || techRet && techRet.tracking_no || '') + '">' +
+          (ssHint ? '<div class="muted-sm" id="rmaShSsHint" style="margin-top:6px;">' + ssHint + '</div>' : '') +
           (techRet ? '<div class="muted-sm" style="margin-top:6px;">' + (techRet.tracking_no ? 'Filled from the technician\u2019s return, added ' + rmaDate(techRet.created_at) + '. ' : 'The technician logged a return on ' + rmaDate(techRet.created_at) + '. ') +
             (techRet.tracking_no ? '<a class="rma-link" href="#" id="rmaShUseTech">Use theirs</a>' : '') + '</div>' : '') + '</div>' +
         (isRet ? '' : '<div class="field span2"><label for="rmaShTo">Ship to</label><textarea id="rmaShTo" rows="5" style="resize:vertical;">' + esc(defShipTo) + '</textarea>' +
@@ -17033,6 +17272,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         (isRet ? '' : '<button class="ghost" id="rmaShSlip" type="button">Print packing slip</button>') +
         '<button class="primary" id="rmaShGo" type="button">' + (isRet ? 'Mark received' : 'Mark shipped') + '</button></div>');
     bg.querySelector('#rmaShCancel').addEventListener('click', mgCloseModal);
+    if (ssLook){
+      const hint = bg.querySelector('#rmaShSsHint');
+      rmaSsFetchTracking(t).then(function(res){
+        if (!hint.isConnected) return;
+        const inp = bg.querySelector('#rmaShTrack');
+        if (res.state === 'ok' && res.list.length && !inp.value.trim()){
+          inp.value = res.list[0];
+          if (RMA_CARRIERS.indexOf(res.carrier) >= 0) bg.querySelector('#rmaShCarrier').value = res.carrier;
+          if (res.date) bg.querySelector('#rmaShDate').value = res.date;
+          hint.textContent = 'Filled from ShipStation.';
+        } else {
+          hint.textContent = res.state === 'none' ? 'No label in ShipStation yet. Create it there first, or type the number.' : '';
+        }
+      });
+    }
     const useTech = bg.querySelector('#rmaShUseTech');
     if (useTech) useTech.addEventListener('click', function(e){ e.preventDefault(); bg.querySelector('#rmaShTrack').value = techRet.tracking_no || ''; bg.querySelector('#rmaShCarrier').value = defCarrier; });
     const slipBtn = bg.querySelector('#rmaShSlip');
@@ -17261,7 +17515,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       people:    'Employee logins are created in Supabase. This is where you set what each person can reach.',
       logins:    'Read-only portal access for a customer. Create the login in Supabase first, then map it here.',
       rma:       'The technician we talk to at each customer, where their parts ship, and the Discord channel inbound activity posts to.',
-      shipstation: 'Send to ShipStation on a batch creates an Awaiting Shipment order there with the store\u2019s address, the invoice and the units. Labels are still bought in ShipStation.',
+      shipstation: 'Send to ShipStation on a batch creates an Awaiting Shipment order there with the store\u2019s address, the invoice and the units. On an RMA it does the same with the part\u2019s ship-to address. Labels are still bought in ShipStation.',
       sam:       'The key the Gov Bids scanner reads SAM.gov with. A key stops working 90 days after SAM.gov makes it; Home, Gov Bids and the Discord summary remind you two weeks ahead.',
       ups:       'Carrier status on every UPS batch, checked every 30 minutes. A batch is marked shipped at its first UPS scan.',
       email:     'One Resend connection, two kinds of mail. Order notifications and RMA notifications keep their own recipients, their own From address and their own history.',
@@ -17296,7 +17550,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         '<div class="field"><label for="admSsSecret">API secret</label>' +
           '<div class="adm-inline"><input id="admSsSecret" type="password" autocomplete="off">' +
           '<button class="ghost btn-sm" id="admSsSave" type="button">Save</button></div></div>' +
-        '<p class="card-note">Sending the same batch twice updates its order in ShipStation instead of adding a second one. Orders go to ShipStation\u2019s Manual Orders store.</p>' +
+        '<p class="card-note">Sending the same batch or RMA twice updates its order in ShipStation instead of adding a second one. Orders go to ShipStation\u2019s Manual Orders store.</p>' +
       '</section>';
     admSsState();
   }
@@ -20674,6 +20928,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (focused && Date.now() - liveInputAt < 2500) return 'recent input';
     if ((p === 'orders' || p === 'home') && ordLoading) return 'orders loading';
     if (p === 'rma' && (rmaLoading || rmaEditPart)) return 'rma editing';
+    if (p === 'rma' && rmaSsBusy.size) return 'sending to ShipStation';
     if (p === 'inventory' && (invOpenAdjust || invAddCat)) return 'inventory editing';
     if (p === 'timeclock' && (tcEditEmpId || tcEditHoursUid)) return 'timeclock editing';
     if (p === 'margins' && mgSaving) return 'saving';
