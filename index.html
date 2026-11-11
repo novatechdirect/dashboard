@@ -4294,10 +4294,14 @@ window.ntBootSignIn = function(){
   .gs-rico svg{ width:15px; height:15px; display:block; }
   .gs-txt{ min-width:0; }
   .gs-t{ display:block; font-size:13.5px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .gs-t mark{ background:color-mix(in srgb, var(--accent) 22%, transparent); color:inherit; border-radius:2px; padding:0 1px; }
+  .gs-t mark, .gs-s mark{ background:color-mix(in srgb, var(--accent) 22%, transparent); color:inherit; border-radius:2px; padding:0 1px; }
   .gs-s{ display:block; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .gs-tag{ flex:0 0 auto; font-size:11px; color:var(--faint); white-space:nowrap; }
   .gs-empty{ padding:var(--s5) var(--s4); text-align:center; font-size:13px; color:var(--muted); }
+  /* a row that only tells you something (no batch yet, more results): not a place to go */
+  .gs-row.is-info{ cursor:default; }
+  .gs-row.is-info:hover, .gs-row.is-info.sel{ background:none; }
+  .gs-row.is-info .gs-t{ font-weight:500; color:var(--muted); }
   .gs-more{
     display:block; width:100%; padding:9px var(--s4); border:0; border-top:1px solid var(--line);
     background:var(--soft); color:var(--muted); font:inherit; font-size:12px; text-align:center;
@@ -4348,7 +4352,7 @@ window.ntBootSignIn = function(){
     }
     body.gs-open .gs-field:focus-within .gs-ico{ color:var(--ink); }
     body.gs-open .gs-rico{ color:var(--ink); }
-    body.gs-open .gs-t mark{ background:color-mix(in srgb, var(--ink) 16%, transparent); }
+    body.gs-open .gs-t mark, body.gs-open .gs-s mark{ background:color-mix(in srgb, var(--ink) 16%, transparent); }
     body.gs-open .gs-cancel{
       display:inline-flex; align-items:center; flex:0 0 auto; padding:0 0 0 var(--s2);
       min-height:0; background:none; border:0; border-radius:0 !important;
@@ -6247,7 +6251,7 @@ window.ntBootSignIn = function(){
         <div class="gs-field">
           <span class="gs-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></g></svg></span>
           <input type="text" id="gsInput" autocomplete="off" spellcheck="false" enterkeyhint="search" autocapitalize="off" autocorrect="off"
-                 placeholder="Serial, invoice, PO, tracking or RMA"
+                 placeholder="Serial, invoice, PO, tracking, RMA or address"
                  aria-label="Search" role="combobox" aria-expanded="false" aria-controls="gsPanel">
           <kbd class="gs-kbd" aria-hidden="true">/</kbd>
           <button type="button" class="gs-x" id="gsClear" aria-label="Clear search" tabindex="-1">
@@ -7166,10 +7170,10 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
           pc_case: 'Nova ITX', cpu: 'Ryzen 5 7600', gpu: 'RTX 4060 Ti', ram: '32GB DDR5', storage: '1TB NVMe' }
       ],
       ship_to_locations: [
-        { id: 'demo-loc-1', customer_id: CUST, store_name: 'Riverside Gaming', store_number: '204', address: '1180 Riverside Dr', city: 'Austin', state: 'TX', zip: '78701', active: true },
-        { id: 'demo-loc-2', customer_id: CUST, store_name: 'Northgate Play', store_number: '311', address: '88 Northgate Mall', city: 'Phoenix', state: 'AZ', zip: '85004', active: true },
-        { id: 'demo-loc-3', customer_id: CUST, store_name: 'Lakeside Arcade', store_number: '118', address: '7 Lakeside Blvd', city: 'Tampa', state: 'FL', zip: '33602', active: true },
-        { id: 'demo-loc-4', customer_id: CUST, store_name: 'Westway Games', store_number: '402', address: '2200 Westway Pkwy', city: 'Denver', state: 'CO', zip: '80202', active: true }
+        { id: 'demo-loc-1', customer_id: CUST, store_name: 'Riverside Gaming', store_number: '204', address1: '1180 Riverside Dr', city: 'Austin', state: 'TX', zip: '78701', active: true },
+        { id: 'demo-loc-2', customer_id: CUST, store_name: 'Northgate Play', store_number: '311', address1: '88 Northgate Mall', city: 'Phoenix', state: 'AZ', zip: '85004', active: true },
+        { id: 'demo-loc-3', customer_id: CUST, store_name: 'Lakeside Arcade', store_number: '118', address1: '7 Lakeside Blvd', city: 'Tampa', state: 'FL', zip: '33602', active: true },
+        { id: 'demo-loc-4', customer_id: CUST, store_name: 'Westway Games', store_number: '402', address1: '2200 Westway Pkwy', city: 'Denver', state: 'CO', zip: '80202', active: true }
       ],
       orders: [
         { id: o1, customer_id: CUST, invoice_no: 'DG001', created_at: demoStamp(-96), archived: false,
@@ -7282,7 +7286,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     for (let i = 0; i < 45; i++){
       const t = towns[i % towns.length], loc = 'demo-loc-s' + (i + 1), day = -90 + Math.floor(i * 18 / 45);
       db.ship_to_locations.push({ id: loc, customer_id: CUST, store_name: t[0] + ' ' + malls[Math.floor(i / towns.length)],
-                                  store_number: String(601 + i), address: (120 + i * 17) + ' Commerce St',
+                                  store_number: String(601 + i), address1: (120 + i * 17) + ' Commerce St',
                                   city: t[0], state: t[1], zip: '', active: true });
       const b = batch(o1, i + 1, loc, 'shipped', demoDay(day), '1Z999AA1' + (1000000000 + i * 7919), demoUps('delivered', day + 3, t[0] + ', ' + t[1]));
       db.batches[db.batches.length - 1].created_at = demoStamp(day - 1);
@@ -8489,6 +8493,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
      GLOBAL SEARCH
      Everything it matches is a unique identifier, so a hit is a place
      to go, not a filter. Serials and invoices rank above the rest.
+     An address is the one loose match: any words of a ship-to address,
+     store name or store number, and the hit is the batch that went there.
      --------------------------------------------------------------- */
   (function(){
     var wrap = document.getElementById('gsearch');
@@ -8507,9 +8513,92 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       rma:'<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>'
     };
     var GS_HUE = { serial:'var(--hue-builds, var(--accent))', order:'var(--accent)',
-                   tracking:'var(--ok)', rma:'var(--hue-rma, var(--info))' };
+                   tracking:'var(--ok)', rma:'var(--hue-rma, var(--info))', address:'var(--hue-margins, var(--warn))' };
+    GS_ICO.address = '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.2s-6.6-5.5-6.6-10.6a6.6 6.6 0 0 1 13.2 0c0 5.1-6.6 10.6-6.6 10.6z"/><circle cx="12" cy="10.5" r="2.4"/></g></svg>';
+
+    /* ---- address words ----
+       An address is typed every which way ("Street" or "St", "North" or "N",
+       with or without commas), so both sides are cut into words and the
+       common long forms are folded onto their short ones before comparing.
+       A typed word matches an address word it is the start of, which is what
+       keeps results on screen while the word is still being typed. */
+    var GS_ABBR = Object.assign(Object.create(null), { street:'st', avenue:'ave', av:'ave', boulevard:'blvd', road:'rd', drive:'dr', lane:'ln',
+      court:'ct', place:'pl', parkway:'pkwy', pky:'pkwy', highway:'hwy', suite:'ste', apartment:'apt',
+      building:'bldg', center:'ctr', centre:'ctr', square:'sq', terrace:'ter', circle:'cir', trail:'trl',
+      plaza:'plz', expressway:'expy', freeway:'fwy', turnpike:'tpke', route:'rt', rte:'rt', mount:'mt',
+      saint:'st', fort:'ft', north:'n', south:'s', east:'e', west:'w', northeast:'ne', northwest:'nw',
+      southeast:'se', southwest:'sw' });
+    var GS_LONG = Object.create(null);
+    Object.keys(GS_ABBR).forEach(function(k){ (GS_LONG[GS_ABBR[k]] = GS_LONG[GS_ABBR[k]] || []).push(k); });
+    /* lower case, accents and apostrophes dropped ("Aaron's" reads as "aarons") */
+    function gsPlain(v){
+      var s = String(v == null ? '' : v).toLowerCase();
+      try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch(e){}
+      return s.replace(/['\u2019]/g, '');
+    }
+    /* every word twice: as written (w) and folded onto its short form (f) */
+    function gsWords(v){
+      return gsPlain(v).replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean)
+        .map(function(w){ return { w:w, f:GS_ABBR[w] || w }; });
+    }
+    /* what was typed: a ZIP+4 counts as its first five digits and a country on the end is ignored */
+    function gsTyped(v){
+      return gsWords(gsPlain(v).replace(/([0-9]{5})-[0-9]{4}(?![0-9])/g, '$1').replace(/[^a-z0-9]+/g, ' ').trim()
+        .replace(/ (usa|united states of america|united states)$/, ''));
+    }
+    /* one typed word against one address word: 2 = the same word in either
+       form ("west" and "W"), 1 = the start of the word as written or of its
+       long form ("wes" for "Westway", "dri" for "Dr"), 0 = no */
+    function gsWordHit(have, typed){
+      if (have.f === typed.f) return 2;
+      if (have.w.indexOf(typed.w) === 0) return 1;
+      var long = GS_LONG[have.f];
+      if (long) for (var i = 0; i < long.length; i++){ if (long[i].indexOf(typed.w) === 0) return 1; }
+      return 0;
+    }
+    /* how well a store fits what was typed; 0 unless every typed word is found.
+       The street counts for most, then city, state and ZIP, then the store's name and number. */
+    function gsAddrScore(l, typed){
+      var street = gsWords(l.address1), other = gsWords([l.address2, l.city, l.state, l.zip].join(' ')),
+          name = gsWords([l.store_name, l.store_number].join(' ')), total = 0;
+      for (var i = 0; i < typed.length; i++){
+        var best = 0, k, h;
+        for (k = 0; k < street.length; k++){ h = gsWordHit(street[k], typed[i]); if (h && 4 + h > best) best = 4 + h; }
+        for (k = 0; k < other.length; k++){ h = gsWordHit(other[k], typed[i]); if (h && 2 + h > best) best = 2 + h; }
+        for (k = 0; k < name.length; k++){ h = gsWordHit(name[k], typed[i]); if (h && 2 + h > best) best = 2 + h; }
+        if (!best) return 0;
+        total += best;
+      }
+      return total;
+    }
+    function gsAddrLine(l){
+      var cs = [l.city, l.state].filter(Boolean).join(', ');
+      return [l.address1, l.address2, [cs, l.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ') || 'No address on file';
+    }
+    /* light up the words that matched: the letters typed when they start the
+       word as written, otherwise the whole word ("drive" typed, "Dr" on file) */
+    function gsMarkWords(text, typed){
+      return String(text == null ? '' : text).replace(/[A-Za-z0-9]+|[^A-Za-z0-9]+/g, function(part){
+        if (!/[A-Za-z0-9]/.test(part)) return esc(part);
+        var low = part.toLowerCase(), have = { w:low, f:GS_ABBR[low] || low };
+        for (var i = 0; i < typed.length; i++){
+          if (!gsWordHit(have, typed[i])) continue;
+          if (low.indexOf(typed[i].w) === 0) return '<mark>' + esc(part.slice(0, typed[i].w.length)) + '</mark>' + esc(part.slice(typed[i].w.length));
+          return '<mark>' + esc(part) + '</mark>';
+        }
+        return esc(part);
+      });
+    }
 
     var hits = [], sel = -1, warmed = false;
+    var GS_HINT = input.getAttribute('placeholder'), GS_HINT_PHONE = 'Serial, invoice, tracking or address';
+    /* the next result that can be opened, skipping rows that only inform */
+    function gsStep(from, dir){
+      var n = hits.length;
+      if (from < 0 && dir < 0) from = 0;
+      for (var k = 1; k <= n; k++){ var i = (((from + dir * k) % n) + n) % n; if (hits[i] && hits[i].go) return i; }
+      return from + dir;
+    }
 
     /* the lists load per view, so the first keystroke pulls them in */
     function warm(){
@@ -8589,6 +8678,47 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       });
       take('Tracking', g.filter(function(x){ return x.go; }), 5);
 
+      /* Address. Each hit is one batch that went to a matching store, so it
+         opens that exact batch; a store with several batches lists them all,
+         newest first. Archived stores are searched too: an old shipment is
+         exactly what gets asked about. */
+      (function(){
+        var typed = gsTyped(raw);
+        if (!typed.length || typed.map(function(x){ return x.w; }).join('').length < 3) return;
+        var locs = (typeof ordLocations !== 'undefined' ? ordLocations : [])
+          .concat(typeof ordLocPast !== 'undefined' ? ordLocPast : []);
+        var fits = [];
+        locs.forEach(function(l){ var sc = gsAddrScore(l, typed); if (sc) fits.push({ l:l, sc:sc }); });
+        if (!fits.length) return;
+        fits.sort(function(a, b){ return b.sc - a.sc || String(a.l.store_name || '').localeCompare(String(b.l.store_name || '')); });
+        var atLoc = {};
+        (typeof ordAllBatches !== 'undefined' ? ordAllBatches : []).forEach(function(b){
+          if (b.location_id) (atLoc[b.location_id] = atLoc[b.location_id] || []).push(b);
+        });
+        var rows = [], bare = [];
+        fits.forEach(function(f){
+          var l = f.l, line = gsAddrLine(l), store = gsMarkWords(ordLocLabel(l), typed);
+          var bs = (atLoc[l.id] || []).slice().sort(function(a, b){ return String(b.created_at || '').localeCompare(String(a.created_at || '')) || ((+b.batch_no || 0) - (+a.batch_no || 0)); });
+          if (!bs.length){
+            bare.push({ kind:'address', title:line, words:typed, subHtml:store, tag:'No batch yet', go:null });
+            return;
+          }
+          bs.forEach(function(b){
+            var o = byOrder[b.order_id];
+            rows.push({ kind:'address', title:line, words:typed,
+              subHtml: esc((o ? o.invoice_no : 'Archived order') + ' \u00b7 Batch ' + b.batch_no + ' \u00b7 ') + store,
+              tag: b.status === 'shipped' ? 'Shipped' : (b.status === 'ready' ? 'Ready for pickup' : 'Not shipped'),
+              go: goOrder(b.order_id, b.id) });
+          });
+        });
+        var CAP = 8, list = rows.length ? rows : bare.slice(0, 3);
+        list.slice(0, CAP).forEach(function(x){ x.group = 'Address'; out.push(x); });
+        if (rows.length > CAP){
+          out.push({ group:'Address', kind:'address', title:'+' + (rows.length - CAP) + ' more', words:[],
+            sub:'Add a street number, city or ZIP', tag:'', go:null });
+        }
+      })();
+
       g = [];
       var bare = q.replace(/^rma[-\s]?/, '');
       (typeof rmaTickets !== 'undefined' ? rmaTickets : []).forEach(function(t){
@@ -8621,10 +8751,10 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         var html = '', last = '';
         hits.forEach(function(h, n){
           if (h.group !== last){ html += '<div class="gs-group">' + h.group + '</div>'; last = h.group; }
-          html += '<button type="button" class="gs-row" role="option" id="gsr' + n + '" data-i="' + n + '" style="--gs-hue:' + GS_HUE[h.kind] + '">' +
+          html += '<button type="button" class="gs-row' + (h.go ? '' : ' is-info') + '" role="option" id="gsr' + n + '" data-i="' + n + '"' + (h.go ? '' : ' aria-disabled="true"') + ' style="--gs-hue:' + GS_HUE[h.kind] + '">' +
             '<span class="gs-rico">' + GS_ICO[h.kind] + '</span>' +
-            '<span class="gs-txt"><span class="gs-t">' + mark(h.title, q) + '</span>' +
-            '<span class="gs-s">' + esc(h.sub) + '</span></span>' +
+            '<span class="gs-txt"><span class="gs-t">' + (h.words ? gsMarkWords(h.title, h.words) : mark(h.title, q)) + '</span>' +
+            '<span class="gs-s">' + (h.subHtml || esc(h.sub)) + '</span></span>' +
             '<span class="gs-tag">' + esc(h.tag || '') + '</span></button>';
         });
         panel.innerHTML = html;
@@ -8658,15 +8788,16 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       input.removeAttribute('aria-activedescendant');
       panel.innerHTML = ''; hits = []; sel = -1;
       document.body.classList.remove('gs-open');
+      input.setAttribute('placeholder', GS_HINT);
     }
     window.gsClose = close;
 
     input.addEventListener('focus', warm);
     input.addEventListener('input', render);
     input.addEventListener('keydown', function(e){
-      if (e.key === 'ArrowDown'){ e.preventDefault(); highlight(sel + 1); }
-      else if (e.key === 'ArrowUp'){ e.preventDefault(); highlight(sel - 1); }
-      else if (e.key === 'Enter'){ e.preventDefault(); run(sel < 0 ? 0 : sel); }
+      if (e.key === 'ArrowDown'){ e.preventDefault(); highlight(gsStep(sel, 1)); }
+      else if (e.key === 'ArrowUp'){ e.preventDefault(); highlight(gsStep(sel, -1)); }
+      else if (e.key === 'Enter'){ e.preventDefault(); run(sel < 0 ? gsStep(-1, 1) : sel); }
       else if (e.key === 'Escape'){ e.preventDefault(); close(); }
     });
     panel.addEventListener('mousedown', function(e){
@@ -8678,6 +8809,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     scrim.addEventListener('click', close);
     openB.addEventListener('click', function(){
       document.body.classList.add('gs-open');
+      input.setAttribute('placeholder', GS_HINT_PHONE);
       warm();
       setTimeout(function(){ input.focus(); }, 60);
     });
@@ -11362,7 +11494,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   function shipIssueRow(it, cust){
     var b = it.b, p = it.lead, t = p.t, st = t.ups_status;
     var o = ordOrders.find(function(x){ return x.id === b.order_id; });
-    var loc = ordLocations.find(function(l){ return l.id === b.location_id; });
+    var loc = ordLocById(b.location_id);
     var waiting = st === 'label' || st === 'unknown';
     var city = loc ? [loc.city, loc.state].filter(Boolean).join(', ') : '';
     var days = Math.floor(p.h / 24);
@@ -11790,6 +11922,10 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
   let ordLoading = false;
   let ordCustomers = [], ordConfigs = [], ordLocations = [], ordOrders = [];
+  /* Archived stores. They stay out of ordLocations so the destination pickers
+     only offer live ones, but a batch already sent to one still points at it,
+     so anything that shows or searches where a batch went looks here as well. */
+  let ordLocPast = [];
   let ordCounts = {};                 // order_id -> {built, assigned, shipped}
   let ordUnits = [], ordBatches = [], ordTracking = [], ordLines = [];
   let ordFilter = '', ordQuery = '';
@@ -11938,7 +12074,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
        past that, so its first two pages go out together. */
     const pBill = ordPerm.admin ? sbSoft(obLoad()) : null;
     try {
-      const [cu, cf, lo, or_, un, ab, at, sw, ln] = await Promise.all([
+      const [cu, cf, lo, or_, un, ab, at, sw, ln, lp] = await Promise.all([
         /* every customer, archived included: an archived one still has to
            resolve its name on the orders it already owns */
         SB.from('customers').select('*').order('name'),
@@ -11953,12 +12089,14 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
           .in('ups_status', ['label', 'unknown', 'transit', 'out', 'exception', 'returned'])
           .gt('ups_first_checked_at', new Date(Date.now() - SHIP_WATCH_DAYS * 864e5).toISOString())
           .limit(5000)),
-        sbSoft(sbAll(function(){ return SB.from('order_lines').select('*').order('id'); }))
+        sbSoft(sbAll(function(){ return SB.from('order_lines').select('*').order('id'); })),
+        sbSoft(sbAll(function(){ return SB.from('ship_to_locations').select('*').eq('active', false).order('id'); }))
       ]);
       if (or_.error) throw or_.error;
       ordCustomers = cu.data || [];
       ordConfigs   = cf.data || [];
       ordLocations = lo.data || [];
+      if (!lp.error) ordLocPast = lp.data || [];
       ordOrders    = or_.data || [];
       ordAllUnits  = un.data || [];
       ordAllBatches = ab.data || [];
@@ -12436,7 +12574,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     const groups = [], byKey = {};
     shipped.forEach(function(u){
       const b = u.batch_id ? ordBatches.find(function(x){ return x.id === u.batch_id; }) : null;
-      const l = b && b.location_id ? ordLocations.find(function(x){ return x.id === b.location_id; }) : null;
+      const l = b && b.location_id ? ordLocById(b.location_id) : null;
       const name = l && l.store_name ? String(l.store_name).trim() : 'No destination';
       const key = name.toLowerCase();
       let g = byKey[key];
@@ -13232,7 +13370,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     const head = ['Serial','Config','Invoice','Customer','Batch','Store','Store #','Address','Carrier','Tracking','Ship date','Status','RMA'];
     const rows = ordUnits.map(function(u){
       const b = u.batch_id ? ordBatches.find(function(x){ return x.id === u.batch_id; }) : null;
-      const loc = b ? ordLocations.find(function(l){ return l.id === b.location_id; }) : null;
+      const loc = b ? ordLocById(b.location_id) : null;
       const tk = b ? ordTracking.filter(function(t){ return t.batch_id === b.id && (!t.unit_id || t.unit_id === u.id); }) : [];
       const rm = rmaTickets.filter(function(t){ return String(t.unit_id) === String(u.id); }).map(rmaNo).join(' ');
       return [u.serial, cfgName[u.config_id] || '', o.invoice_no, cust ? cust.name : '', b ? 'Batch ' + b.batch_no : '',
@@ -14796,6 +14934,12 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   }
   function ordLocName(l){ return l ? l.store_name : 'No destination'; }
   function ordLocNum(l){ return (l && l.store_number) ? l.store_number : ''; }
+  /* the store a batch went to, whether or not that store has been archived since */
+  function ordLocById(id){
+    if (!id) return null;
+    const same = function(l){ return String(l.id) === String(id); };
+    return ordLocations.find(same) || ordLocPast.find(same) || null;
+  }
   function ordLocAddress(l){
     if (!l) return '';
     return [l.address1, l.address2, [l.city, l.state].filter(Boolean).join(', '), l.zip]
@@ -15172,7 +15316,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     host.innerHTML = (cfgSum ? '<div class="shs">' + cfgSum + '</div>' : '') +
       (pages > 1 || merge ? '<div class="ord-bl-bar">' + ordBlPagerHtml(pages, 'top') + merge + '</div>' : '') +
       ordBatches.slice(Math.max(0, end - ORD_BL_PER), end).map(function(b){
-      const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
+      const loc = ordLocById(b.location_id);
       const units = ordBatchUnits(b.id);
       const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; });
       const perUnit = {}; tk.forEach(function(t){ if (t.unit_id) perUnit[t.unit_id] = t.tracking_no; });
@@ -15194,6 +15338,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
           '<div class="ord-batch-dest">' +
             '<div class="ord-batch-store">' + esc(ordLocName(loc)) +
               (ordLocNum(loc) ? '<span class="ord-storenum">' + esc(ordLocNum(loc)) + '</span>' : '') +
+              (loc && loc.active === false && !shipped ? '<span class="ord-sub" style="font-weight:400;"> \u00b7 archived store</span>' : '') +
             '</div>' +
             '<div class="ord-sub">' + esc(ordLocAddress(loc) || 'No address on file') + '</div>' +
           '</div>' +
@@ -15217,7 +15362,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
             (trackLink ? '<button class="btn-sm trk-btn c-' + ordCarrierKey(b.carrier)[0] + '" data-btrack="' + esc(trackLink) + '" type="button" title="' + esc(trackLink) + '">' + esc(ordCarrierKey(b.carrier)[1]) + ' \u2197</button>' : '') +
             '<button class="ghost btn-sm" data-bexpand="' + esc(b.id) + '" type="button">Details</button>' +
             '<button class="ghost btn-sm" data-blink="' + esc(b.id) + '" type="button" title="Link straight to this batch">Link</button>' +
-            (ordPerm.manage && !shipped && b.status !== 'ready' && loc && !/uber|freight|ltl/i.test(String(b.carrier || '')) ? ordSsBtnHtml(b) : '') +
+            (ordPerm.manage && !shipped && b.status !== 'ready' && loc && loc.active !== false && !/uber|freight|ltl/i.test(String(b.carrier || '')) ? ordSsBtnHtml(b) : '') +
             (ordPerm.manage && b.ss_order_id && !tk.length ? '<button class="ghost btn-sm" data-bsstrk="' + esc(b.id) + '" type="button" title="Copy the tracking numbers of this order\u2019s labels from ShipStation">Get tracking</button>' : '') +
             (ordPerm.manage && b.status === 'ready' ? '<button class="ghost btn-sm" data-bunready="' + esc(b.id) + '" type="button" title="Set this batch back to Label created">Undo ready</button>' : '') +
             (ordPerm.manage && !shipped && b.status !== 'ready' && tk.length ? '<button class="green btn-sm" data-bready="' + esc(b.id) + '" type="button" title="Packed and labelled, waiting for the carrier to collect it">Ready for pickup</button>' : '') +
@@ -15359,7 +15504,11 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     const list = ordLocations.slice().sort(function(a, b){
       return (b.last_used_at || '').localeCompare(a.last_used_at || '');
     });
+    /* a batch whose store has been archived since keeps it in the list (and
+       chosen), so saving another field cannot blank where the batch went */
+    const past = (sel && !list.some(function(l){ return l.id === sel; })) ? ordLocPast.find(function(l){ return l.id === sel; }) : null;
     return '<option value="">Select a destination\u2026</option>' +
+      (past ? '<option value="' + esc(past.id) + '" selected>' + esc(ordLocLabel(past) + ([past.city, past.state].filter(Boolean).length ? ' \u00b7 ' + [past.city, past.state].filter(Boolean).join(', ') : '') + ' (archived)') + '</option>' : '') +
       list.map(function(l){
         return '<option value="' + esc(l.id) + '"' + (l.id === sel ? ' selected' : '') + '>' + esc(ordLocLabel(l) + ([l.city, l.state].filter(Boolean).length ? ' \u00b7 ' + [l.city, l.state].filter(Boolean).join(', ') : '')) + '</option>';
       }).join('') +
@@ -15371,7 +15520,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   function ordDestAddrShow(bg){
     const el = bg.querySelector('#ordBDestAddr'), sel = bg.querySelector('#ordBDest');
     if (!el || !sel) return;
-    const l = ordLocations.find(function(x){ return String(x.id) === sel.value; });
+    const l = ordLocById(sel.value);
     const a = l ? ordLocAddress(l) : '';
     el.textContent = a;
     el.style.display = a ? '' : 'none';
@@ -15873,7 +16022,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     const open = ordBatches.filter(function(b){ return b.status !== 'shipped'; });
     if (open.length < 2){ toast('You need at least two open batches to merge.', 'warn'); return; }
     const row = function(b){
-      const loc = ordLocations.find(function(l){ return l.id === b.location_id; });
+      const loc = ordLocById(b.location_id);
       const n = ordBatchUnits(b.id).length;
       return '<div style="display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:var(--s3);align-items:center;padding:10px 0;border-top:1px solid var(--line);">' +
         '<input type="checkbox" data-mpick="' + esc(b.id) + '" aria-label="Include batch ' + b.batch_no + '">' +
@@ -16249,6 +16398,9 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
           if (made.error) throw new Error(made.error);
           locId = made.loc.id;
         }
+        /* a destination the list could not offer (its store is archived and
+           the archived list did not load) is kept as it is, never blanked */
+        if (!locId && b.location_id && !Array.prototype.some.call(destEl.options, function(op){ return op.value === String(b.location_id); })) locId = b.location_id;
         const u = await SB.from('batches').update({
           location_id: locId || null,
           carrier: bg.querySelector('#ordBCarrier').value || null,
@@ -16467,7 +16619,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   function rmaOrder(id){ return ordOrders.find(function(o){ return o.id === id; }) || null; }
   function rmaCfgName(id){ const c = ordConfigs.find(function(x){ return String(x.id) === String(id); }); return c ? c.name : '\u2014'; }
   function rmaUnitBatch(u){ return (u && u.batch_id) ? (rmaAllBatches().find(function(b){ return b.id === u.batch_id; }) || null) : null; }
-  function rmaUnitStore(u){ const b = rmaUnitBatch(u); return (b && b.location_id) ? (ordLocations.find(function(l){ return l.id === b.location_id; }) || null) : null; }
+  function rmaUnitStore(u){ const b = rmaUnitBatch(u); return (b && b.location_id) ? (ordLocById(b.location_id) || null) : null; }
   function rmaById(id){ return rmaTickets.find(function(t){ return t.id === id; }) || null; }
   function rmaDays(a, b){ return Math.round((new Date(b) - new Date(a)) / 86400000); }
   function rmaAgeDays(t){ return Math.max(0, rmaDays(t.created_at, new Date())); }
@@ -16731,7 +16883,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     return cs.find(function(c){ return c.address; }) || cs[0] || null;
   }
   function rmaStoreOf(t, u){
-    if (t && t.store_location_id){ const l = ordLocations.find(function(x){ return String(x.id) === String(t.store_location_id); }); if (l) return l; }
+    if (t && t.store_location_id){ const l = ordLocById(t.store_location_id); if (l) return l; }
     return rmaUnitStore(u);
   }
   /* Copy an address verbatim, line breaks and all, with no modal in the way.
@@ -17592,7 +17744,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         (open.length ? '<div style="color:var(--warn-ink);margin-top:6px;">This unit already has an open RMA (' + open.map(rmaNo).join(', ') + ').</div>' : '');
       const cts = rmaContacts.filter(function(c){ return o && String(c.customer_id) === String(o.customer_id) && c.active !== false && c.address; });
       bg.querySelector('#rmaNewTechAddr').textContent = cts.length ? cts[0].name + ' \u2014 ' + cts[0].address.replace(/\n+/g, ', ') : 'No technician address on file (Admin \u2192 RMA)';
-      bg.querySelector('#rmaNewStoreAddr').textContent = store ? ordLocName(store) + (ordLocNum(store) ? ' #' + ordLocNum(store) : '') + (ordLocAddress(store) ? ' \u2014 ' + ordLocAddress(store) : '') : 'Unknown \u2014 the unit has not shipped to a store';
+      bg.querySelector('#rmaNewStoreAddr').textContent = store ? ordLocName(store) + (ordLocNum(store) ? ' #' + ordLocNum(store) : '') + (store.active === false ? ' (archived store)' : '') + (ordLocAddress(store) ? ' \u2014 ' + ordLocAddress(store) : '') : 'Unknown \u2014 the unit has not shipped to a store';
       const hqC = o ? ordCustomers.find(function(x){ return String(x.id) === String(o.customer_id); }) : null;
       const hqOpt = bg.querySelector('#rmaNewHqOpt');
       if (hqC && hqC.hq_address){
