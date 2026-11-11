@@ -3,8 +3,8 @@
   "short_name": "NovaTech",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#161a1f",
-  "theme_color": "#0e1116",
+  "background_color": "#191919",
+  "theme_color": "#191919",
   "icons": [
     {
       "src": "/icon-192.png",
