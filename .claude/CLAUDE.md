@@ -14,6 +14,7 @@ notes in it.
 | `track.html` | Shipment tracking page. |
 | `dashboard/index.html` | Redirect to `/`, for old links. |
 | `.github/workflows/keepalive.yml` | Pings Supabase every 3 days so the project doesn't pause. |
+| `lib/supabase-js-2.119.0.js` | The Supabase library, served from the site. It is the unmodified `dist/umd/supabase.js` from the npm package. |
 
 ## Working rules
 
@@ -30,6 +31,10 @@ just a description.
 - To move unfinished work to the other computer, push it to a `wip/<topic>` branch. Only `main`
   is served, so this doesn't affect the live site. The branch is still publicly readable.
 - Editing `.github/workflows/` needs an extra permission: `gh auth refresh -s workflow`.
+- The database API returns at most 1,000 rows per request, whatever `limit` asks for. Read any
+  list that can grow past that in pages (`sbAll` in `index.html` and `portal.html`).
+- To move to a newer Supabase library, add the new file to `lib/`, then update the script tag,
+  the jsDelivr fallback and its `integrity` hash in all three pages.
 
 ### Database
 

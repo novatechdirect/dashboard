@@ -401,20 +401,58 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 //# sourceMappingURL=jspdf.umd.min.js.map
 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Nothing served by another company may hold up the first paint. A stalled
+     download here used to leave the whole page blank, worst in the home-screen
+     app, which has no reload button. The fonts below load as "print" sheets and
+     switch on when they arrive; the Supabase library loads further down, just
+     before the app script, once the page has something to show. -->
+<link rel="preconnect" href="https://vajrnbniwkvnkkkigeit.supabase.co" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <script>/* v30: set theme before first paint to avoid a flash */(function(){try{var t=localStorage.getItem('ntTheme')==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',t);var dark=t==='dark';var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++){metas[i].setAttribute('content',dark?'#191919':'#ffffff');}document.documentElement.style.colorScheme=dark?'dark':'light';var bar=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');if(bar)bar.setAttribute('content',dark?'black-translucent':'default');}catch(e){}})();</script>
 <script>/* Retro rides on dark mode; set it before first paint too */(function(){try{if(localStorage.getItem('ntRetro')==='1'){var r=document.documentElement;r.setAttribute('data-retro','on');r.setAttribute('data-theme','dark');r.style.colorScheme='dark';var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].setAttribute('content','#120f26');}}}catch(e){}})();</script>
 <script>/* the session resolves asynchronously; until it does, show neither screen
   rather than flashing the sign-in card at someone who is already signed in */
-(function(){try{document.documentElement.classList.add('nt-boot');
-/* if the check never comes back, fall through to the normal screens
-         rather than spinning forever */
-      setTimeout(function(){ document.documentElement.classList.remove('nt-boot'); }, 5000);
-}catch(e){}})();</script>
+(function(){try{
+  var d = document.documentElement, was = false;
+  d.classList.add('nt-boot');
+  try { was = localStorage.getItem('ntWasAuthed') === '1'; } catch(e){}
+  /* A slow check must never leave a wrong or an empty screen. Someone who has
+     not signed in on this device falls through to the sign-in card. Someone
+     who has stays on the loading frame, which says it is still connecting
+     and offers a way out. */
+  if (!was) setTimeout(function(){ d.classList.remove('nt-boot'); }, 5000);
+  setTimeout(function(){ if (d.classList.contains('nt-boot')) d.classList.add('nt-slow'); }, 8000);
+}catch(e){}
+/* "Try again" reloads only once the site itself answers. Reloading the
+   home-screen app with no connection leaves a blank page that cannot be
+   refreshed, so until then the page stays put and says so. */
+window.ntBootRetry = function(btn){
+  var box = btn && btn.closest ? btn.closest('[data-retry-box]') : document.querySelector('[data-retry-box]');
+  var msg = box ? box.querySelector('[data-retry-msg]') : null, label = btn ? btn.textContent : '';
+  var end = function(ok){
+    end = function(){};
+    if (ok){ location.reload(); return; }
+    if (btn){ btn.disabled = false; btn.textContent = label; }
+    if (msg && btn) msg.textContent = 'No connection yet. Check Wi-Fi or mobile data, then try again.';
+  };
+  try {
+    if (btn){ btn.disabled = true; btn.textContent = 'Checking\u2026'; }
+    var ctl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function(){ try { if (ctl) ctl.abort(); } catch(e){} end(false); }, 6000);
+    fetch(location.pathname + '?ping=' + Date.now(), { method:'HEAD', cache:'no-store', signal: ctl ? ctl.signal : undefined })
+      .then(function(r){ clearTimeout(t); end(!!(r && r.ok)); }, function(){ clearTimeout(t); end(false); });
+  } catch(e){ end(true); }
+};
+/* the way out of the loading frame for someone who would rather sign in afresh */
+window.ntBootSignIn = function(){
+  var d = document.documentElement;
+  d.classList.remove('nt-boot', 'nt-slow');
+  try { document.body.classList.remove('authed'); } catch(e){}
+};
+})();</script>
 <style>
   /* ============================================================
      v30 DESIGN TOKENS
@@ -4697,6 +4735,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     min-height:min(50vh, 340px);
   }
   :root.nt-boot #loginView{ display:none !important; }
+  /* the check is taking a while: say so, and offer a way out */
+  .boot-slow{ display:none; }
+  :root.nt-boot.nt-slow .boot-splash{ flex-direction:column; gap:var(--s5); padding:0 var(--s5); text-align:center; }
+  :root.nt-boot.nt-slow .boot-slow{ display:block; max-width:340px; }
+  .boot-slow-t{ margin:0 0 6px; font-size:15px; font-weight:600; color:var(--ink); }
+  .boot-slow-s{ margin:0 0 var(--s4); font-size:13px; line-height:1.5; color:var(--muted); }
+  /* the sign-in form only works once the app script is running */
+  .boot-slow-alt{ display:none; margin:var(--s4) auto 0; padding:4px 8px; min-height:0; border:0; background:none; color:var(--faint); font-size:12.5px; font-weight:400; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
+  :root.nt-app .boot-slow-alt{ display:block; }
+  .boot-slow-alt:hover{ color:var(--ink); background:none; }
   .boot-dot{
     width:22px; height:22px; border-radius:50%;
     border:2px solid var(--line); border-top-color:var(--accent);
@@ -5691,6 +5739,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   html:not([data-retro]) .toast .t-x{ color:rgba(255,255,255,.55); }
   html:not([data-retro]) .toast .t-x:hover{ color:#fff; }
+  /* the top bar is solid, as Notion's is. A frosted bar re-blurs whatever
+     scrolls beneath it on every frame, which costs most on a very wide screen */
+  html:not([data-retro]) .topnav{ background:var(--paper); -webkit-backdrop-filter:none; backdrop-filter:none; }
 </style>
 <style id="retroTheme">
   /* ============================================================
@@ -6271,7 +6322,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
 <div class="controls">
 
-  <div class="boot-splash"><span class="boot-dot"></span></div>
+  <div class="boot-splash">
+    <span class="boot-dot"></span>
+    <div class="boot-slow" data-retry-box role="status">
+      <p class="boot-slow-t">Still connecting&hellip;</p>
+      <p class="boot-slow-s" data-retry-msg>This is taking longer than usual. It carries on by itself as soon as the connection is back.</p>
+      <button type="button" class="ghost btn-sm" onclick="ntBootRetry(this)">Try again</button>
+      <button type="button" class="boot-slow-alt" onclick="ntBootSignIn()">Sign in again instead</button>
+    </div>
+  </div>
 
   <div id="loginView">
     <div class="login-card">
@@ -6825,6 +6884,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
 <div id="printArea"></div>
 
+<!-- The Supabase library (supabase-js 2.119.0, MIT), served from this site so that
+     starting up depends on no other company's server. It sits here, below the
+     page's own markup, so the loading frame is already on screen while it loads. -->
+<script src="lib/supabase-js-2.119.0.js"></script>
+<script>/* our own copy did not arrive: take the identical file from jsDelivr, which the browser
+   only runs if it matches the fingerprint of the copy this site was tested with */
+window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"><\/script>');</script>
 <script>
 (function(){
   const authChip    = document.getElementById('authChip');
@@ -7018,8 +7084,47 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* Google Places (New) browser key, restricted to this site's domain in Google Cloud.
      Empty = address suggestions stay off; everything else works as before. */
   const GOOGLE_PLACES_KEY = 'AIzaSyDKr5MFMOTAEX5dXOvHHBLaPA9cCqBylc8';
+  /* A request that never answers used to freeze the app until it was closed
+     and reopened: mostly on phones, where a connection dies while the app
+     sleeps in the background. Reads and the sign-in refresh now give up after
+     a while, so the next check can try again on a fresh connection. Saves,
+     uploads and server functions are never cut short. */
+  const NT_READ_MS = 20000, NT_TOKEN_MS = 15000;
+  const NT_READ_RPC = /[/]rest[/]v1[/]rpc[/](order_billing|order_payments_for|is_margin_admin)([?]|$)/;
+  const ntInFlight = new Set();
+  function ntFetch(input, init){
+    let ms = 0;
+    try {
+      const url = typeof input === 'string' ? input : String((input && input.url) || input || '');
+      const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      if (url.indexOf('/auth/v1/token') !== -1) ms = NT_TOKEN_MS;
+      else if (url.indexOf('/rest/v1/') !== -1 && (method === 'GET' || method === 'HEAD' || NT_READ_RPC.test(url))) ms = NT_READ_MS;
+    } catch(e){}
+    if (!ms || typeof AbortController === 'undefined') return fetch(input, init);
+    const ctl = new AbortController(), rec = { ctl: ctl, at: Date.now() };
+    const outer = init && init.signal;
+    if (outer){
+      if (outer.aborted) ctl.abort();
+      else outer.addEventListener('abort', function(){ ctl.abort(); }, { once:true });
+    }
+    const timer = setTimeout(function(){ ctl.abort(); }, ms);
+    const done = function(){ clearTimeout(timer); ntInFlight.delete(rec); };
+    ntInFlight.add(rec);
+    return fetch(input, Object.assign({}, init, { signal: ctl.signal }))
+      .then(function(r){ done(); return r; }, function(e){ done(); throw e; });
+  }
+  /* back from the background: a read still waiting from before the app went
+     away is on a dead connection. Let go of it now rather than at its timeout. */
+  let ntHiddenAt = 0;
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState !== 'visible'){ ntHiddenAt = Date.now(); return; }
+    const away = ntHiddenAt ? Date.now() - ntHiddenAt : 0;
+    ntHiddenAt = 0;
+    if (away < 15000) return;
+    Array.from(ntInFlight).forEach(function(r){ if (Date.now() - r.at > 10000) r.ctl.abort(); });
+  });
   const SB_LIVE = (window.supabase && window.supabase.createClient)
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } })
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true }, global: { fetch: ntFetch } })
     : null;
   const DEMO_SIDE = 'staff';
 
@@ -7561,7 +7666,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 
   function demoFrom(name){
-    let filters = [], ord = null, lim = null, one = false, maybe = false;
+    let filters = [], ord = null, lim = null, off = 0, one = false, maybe = false;
     let mode = 'select', payload = null, conflict = null;
     const add = function(op, col, val){ filters.push({ op: op, col: col, val: val }); return api; };
     /* The signed-in person is real; the fixture rows are not. Matching them on
@@ -7612,7 +7717,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             return (a > b ? 1 : -1) * (ord.asc ? 1 : -1);
           });
         }
-        if (lim != null) out = out.slice(0, lim);
+        if (lim != null) out = out.slice(off, off + lim);
       } else if (mode === 'insert'){
         const rows = (Array.isArray(payload) ? payload : [payload]).map(stamp);
         rows.forEach(function(r){ tbl.push(r); });
@@ -7659,7 +7764,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       not: function(c, op, v){ return add(op === 'is' ? 'notis' : 'neq', c, v); },
       or: function(){ return api; },
       limit: function(n){ lim = n; return api; },
-      range: function(f, t){ lim = t + 1; return api; },
+      range: function(f, t){ off = f; lim = t - f + 1; return api; },
       order: function(c, o){ ord = { col: c, asc: !(o && o.ascending === false) }; return api; },
       single: function(){ one = true; return api; },
       maybeSingle: function(){ maybe = true; return api; },
@@ -7950,6 +8055,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     functions: SB_LIVE.functions
   };
 
+  /* The API hands back at most 1,000 rows per request, whatever limit is asked
+     for, so a long list has to be read in pages or everything past the first
+     thousand is silently dropped. make() builds the query, which must be
+     ordered so the pages cannot overlap. `ahead` pages are asked for side by
+     side (use 2 for a list already past a thousand rows); a short page ends
+     the read. All or nothing: an error on any page returns no rows. */
+  async function sbAll(make, ahead){
+    const PAGE = 1000, step = Math.max(1, ahead || 1);
+    let out = [];
+    for (let from = 0; ; from += PAGE * step){
+      const reqs = [];
+      for (let i = 0; i < step; i++) reqs.push(make().range(from + i * PAGE, from + (i + 1) * PAGE - 1));
+      const res = await Promise.all(reqs);
+      for (let i = 0; i < res.length; i++){
+        if (res[i].error) return { data: null, error: res[i].error };
+        const d = res[i].data || [];
+        out = out.concat(d);
+        if (d.length < PAGE) return { data: out, error: null };
+      }
+    }
+  }
+  /* a read that may fail without taking the rest of the page down with it */
+  function sbSoft(p){ return Promise.resolve(p).then(null, function(e){ return { data: null, error: e }; }); }
+
   function demoBanner(){
     let el = document.getElementById('demoBar');
     if (!DEMO.on){ if (el) el.remove(); document.documentElement.removeAttribute('data-demo'); return; }
@@ -7975,8 +8104,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   // ---- Auth ----
   async function initAuth(){
     demoBanner();
+    document.documentElement.classList.add('nt-app');
     if (!SB){
-      loginView.innerHTML = '<div class="login-card"><h2 class="login-title">Connection problem</h2><p class="muted-line">Could not load the sign-in library. Check your internet connection and refresh the page.</p></div>';
+      /* The library did not arrive, so nothing else can start. Say so at once
+         rather than behind the loading frame, with a way to try again that
+         works in the home-screen app, and keep checking quietly: the page
+         reloads itself as soon as the site answers (twice at most, so a
+         library that is blocked outright cannot loop). */
+      document.documentElement.classList.remove('nt-boot', 'nt-slow');
+      document.body.classList.remove('authed');
+      loginView.innerHTML = '<div class="login-card" data-retry-box><h2 class="login-title">Connection problem</h2><p class="muted-line" data-retry-msg>The page could not finish loading. Check your internet connection.</p><button type="button" class="primary" id="bootLibRetry">Try again</button></div>';
+      loginView.style.display = '';
+      const rb = document.getElementById('bootLibRetry');
+      if (rb) rb.addEventListener('click', function(){ window.ntBootRetry(rb); });
+      let auto = 0;
+      try { auto = +sessionStorage.getItem('ntLibAuto') || 0; } catch(e){ auto = 9; }
+      if (auto < 2){
+        const again = setInterval(function(){
+          if (document.visibilityState !== 'visible') return;
+          try { sessionStorage.setItem('ntLibAuto', String(auto + 1)); } catch(e){ clearInterval(again); return; }
+          window.ntBootRetry(null);
+        }, 6000);
+      }
       return;
     }
     const { data } = await SB.auth.getSession();
@@ -7993,8 +8142,26 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       renderAuth();
       if (s){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
     });
+    /* Signed in on this device, but the check could not reach the server. The
+       saved sign-in is still there (the library only drops it when the server
+       says it is no longer good), so this is a connection problem, not a
+       signed-out person. Stay on the connecting frame and keep trying; the
+       listener above starts the app the moment a try gets through. */
+    if (!session && ntSavedSignIn()){
+      document.documentElement.classList.add('nt-boot', 'nt-slow');
+      const hold = setInterval(function(){
+        if (session || !document.documentElement.classList.contains('nt-boot')){ clearInterval(hold); return; }
+        /* the server has since said the saved sign-in is no longer good: time for the sign-in card */
+        if (!ntSavedSignIn()){ clearInterval(hold); renderAuth(); return; }
+        if (document.visibilityState === 'visible') SB.auth.getSession().then(null, function(){});
+      }, 6000);
+      return;
+    }
     renderAuth();
     if (session){ loadHistory(); if (!invLoaded){ invLoaded = true; loadInventory(); } if (!tcInited){ tcInited = true; tcLoadAll(); } mgCheckAdmin(); ordBoot(); }
+  }
+  function ntSavedSignIn(){
+    try { return !!localStorage.getItem('sb-' + SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token'); } catch(e){ return false; }
   }
 
   /* This browser's last choice wins. The account copy only seeds a device that
@@ -8024,7 +8191,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
   function renderAuth(){
     /* the answer is in: stop holding the frame and remember it for next time */
-    document.documentElement.classList.remove('nt-boot');
+    document.documentElement.classList.remove('nt-boot', 'nt-slow');
+    try { sessionStorage.removeItem('ntLibAuto'); } catch(e){}
     try { localStorage.setItem('ntWasAuthed', (session && session.user) ? '1' : '0'); } catch(e){}
     if (session && session.user){
       ntApplyAccountTheme(session);
@@ -9237,14 +9405,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
   async function tcLoadAll(silent){
     if (silent !== true){ try { await SB.rpc('tc_link_profile'); } catch(e){} }
-    const emp = await SB.from('tc_employees').select('*').order('name');
+    /* the three reads do not depend on each other: ask for them together */
+    const tcR = await Promise.all([
+      SB.from('tc_employees').select('*').order('name'),
+      SB.from('tc_hours').select('*').order('period_ending', { ascending: false }).limit(2000),
+      SB.from('tc_pay_rates').select('*')
+    ]);
+    const emp = tcR[0], hrs = tcR[1], pr = tcR[2];
     tcEmployees = emp.data || [];
     const myEmail = ((session && session.user && session.user.email) || '').toLowerCase();
     tcMe = tcEmployees.find(function(r){ return (r.email||'').toLowerCase() === myEmail; }) || null;
     tcIsAdmin = !!(tcMe && tcMe.is_admin && tcMe.active);
-    const hrs = await SB.from('tc_hours').select('*').order('period_ending', { ascending: false }).limit(2000);
     tcHoursRows = hrs.data || [];
-    const pr = await SB.from('tc_pay_rates').select('*');
     tcRatesOk = !pr.error;
     tcRates = pr.data || [];
     if (tcIsAdmin){ initPeriodSelect(); renderTcSummary(); renderTcTeam(); }
@@ -11760,15 +11932,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     if (!SB || !session || ordLoading) return;
     ordLoading = true;
     if (silent !== true) ordListBody.innerHTML = '<div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:62%"></div></div>'.repeat(3);
+    /* One wait, not six: everything is asked for side by side, and the billing
+       figures (admins) ride alongside. The long lists are read in pages, since
+       the API returns at most 1,000 rows per request; the unit list is already
+       past that, so its first two pages go out together. */
+    const pBill = ordPerm.admin ? sbSoft(obLoad()) : null;
     try {
-      const [cu, cf, lo, or_, un] = await Promise.all([
+      const [cu, cf, lo, or_, un, ab, at, sw, ln] = await Promise.all([
         /* every customer, archived included: an archived one still has to
            resolve its name on the orders it already owns */
         SB.from('customers').select('*').order('name'),
         SB.from('configs').select('*').order('name'),
         SB.from('ship_to_locations').select('*').eq('active', true).order('store_name'),
         SB.from('orders').select('*').eq('archived', false).order('created_at', { ascending:false }),
-        SB.from('pc_log').select('id,serial,order_id,batch_id,config_id,unit_status,created_at').not('order_id', 'is', null).limit(20000)
+        sbAll(function(){ return SB.from('pc_log').select('id,serial,order_id,batch_id,config_id,unit_status,created_at').not('order_id', 'is', null).order('id'); }, 2),
+        sbSoft(sbAll(function(){ return SB.from('batches').select('*').order('id'); })),
+        sbSoft(sbAll(function(){ return SB.from('batch_tracking').select('batch_id,unit_id,tracking_no').order('id'); })),
+        sbSoft(SB.from('batch_tracking')
+          .select('batch_id,tracking_no,ups_status,ups_text,ups_where,ups_event_at,ups_checked_at,ups_first_checked_at')
+          .in('ups_status', ['label', 'unknown', 'transit', 'out', 'exception', 'returned'])
+          .gt('ups_first_checked_at', new Date(Date.now() - SHIP_WATCH_DAYS * 864e5).toISOString())
+          .limit(5000)),
+        sbSoft(sbAll(function(){ return SB.from('order_lines').select('*').order('id'); }))
       ]);
       if (or_.error) throw or_.error;
       ordCustomers = cu.data || [];
@@ -11776,19 +11961,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       ordLocations = lo.data || [];
       ordOrders    = or_.data || [];
       ordAllUnits  = un.data || [];
-      try { const ab = await SB.from('batches').select('*'); ordAllBatches = ab.data || []; } catch(e){ ordAllBatches = []; }
-      try {
-        const at = await SB.from('batch_tracking').select('batch_id,unit_id,tracking_no').limit(20000);
-        ordAllTracking = at.data || [];
-      } catch(e){ ordAllTracking = []; }
-      try {
-        const sw = await SB.from('batch_tracking')
-          .select('batch_id,tracking_no,ups_status,ups_text,ups_where,ups_event_at,ups_checked_at,ups_first_checked_at')
-          .in('ups_status', ['label', 'unknown', 'transit', 'out', 'exception', 'returned'])
-          .gt('ups_first_checked_at', new Date(Date.now() - SHIP_WATCH_DAYS * 864e5).toISOString())
-          .limit(5000);
-        ordShipWatch = sw.error ? null : (sw.data || []);
-      } catch(e){ ordShipWatch = null; }
+      ordAllBatches = ab.data || [];
+      ordAllTracking = at.data || [];
+      ordShipWatch = sw.error ? null : (sw.data || []);
       ordCounts = {};
       ordUnitDates = [];
       (un.data || []).forEach(function(u){
@@ -11798,11 +11973,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         else if (u.unit_status === 'assigned') c.assigned++;
         else c.built++;
       });
-      const ids = ordOrders.map(function(o){ return o.id; });
-      if (ids.length){
-        const ln = await SB.from('order_lines').select('*').in('order_id', ids).order('position');
-        ordLines = ln.data || [];
-      } else ordLines = [];
+      /* the lines of the orders on the list, in their saved order (lines of
+         archived orders are left out, as before) */
+      const onList = {};
+      ordOrders.forEach(function(o){ onList[o.id] = true; });
+      ordLines = (ln.data || []).filter(function(l){ return onList[l.order_id]; })
+        .sort(function(a, b){ return (+a.position || 0) - (+b.position || 0); });
     } catch(e){
       if (silent === true){ ordLoading = false; return; }
       if (ordShipWatch === undefined) ordShipWatch = null;
@@ -11813,7 +11989,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return;
     }
     ordLoading = false;
-    if (ordPerm.admin) await obLoad();
+    if (pBill) await pBill;
     ordRenderList();
     renderHomeStatus();
     if (silent !== true) liveRebase('orders');
@@ -12668,8 +12844,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       }
       ordOrders.unshift(o);
     }
+    /* The tracking rows and (for admins) the payments are asked for alongside
+       the units instead of after them, using the batches the list already
+       knows about. A batch made since then is caught by the check below.
+       Tracking is asked for 100 batches at a time: a longer list of ids makes
+       an address the gateway refuses. */
+    const trOf = function(bids){
+      const parts = [];
+      for (let i = 0; i < bids.length; i += 100) parts.push(SB.from('batch_tracking').select('*').in('batch_id', bids.slice(i, i + 100)));
+      return sbSoft(Promise.all(parts).then(function(rs){
+        let rows = [];
+        for (let i = 0; i < rs.length; i++){
+          if (rs[i].error) return { data: null, error: rs[i].error };
+          rows = rows.concat(rs[i].data || []);
+        }
+        return { data: rows, error: null };
+      }));
+    };
+    const knownB = ordAllBatches.filter(function(b){ return b.order_id === id; }).map(function(b){ return b.id; });
+    const pTr = knownB.length ? trOf(knownB) : null;
+    const pPay = (ordPerm.admin && !obPays[id]) ? sbSoft(obLoadPays(id)) : null;
     const [un, ba, ln] = await Promise.all([
-      SB.from('pc_log').select('*').eq('order_id', id).order('serial'),
+      sbAll(function(){ return SB.from('pc_log').select('*').eq('order_id', id).order('serial'); }),
       SB.from('batches').select('*').eq('order_id', id).order('batch_no'),
       SB.from('order_lines').select('*').eq('order_id', id).order('position')
     ]);
@@ -12684,8 +12880,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     const mine = ln.data || [];
     ordLines = ordLines.filter(function(l){ return l.order_id !== id; }).concat(mine);
     if (ordBatches.length){
-      const tr = await SB.from('batch_tracking').select('*').in('batch_id', ordBatches.map(function(b){ return b.id; }));
-      ordTracking = tr.data || [];
+      const bids = ordBatches.map(function(b){ return b.id; });
+      const had = {}, now = {};
+      knownB.forEach(function(x){ had[x] = true; });
+      bids.forEach(function(x){ now[x] = true; });
+      let tr = pTr ? await pTr : null;
+      if (!tr || tr.error || bids.some(function(x){ return !had[x]; })) tr = await trOf(bids);
+      ordTracking = (tr.data || []).filter(function(t){ return now[t.batch_id]; });
     } else ordTracking = [];
     ordCounts[id] = { built:0, assigned:0, shipped:0 };
     ordUnits.forEach(function(u){
@@ -12693,7 +12894,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       else if (u.unit_status === 'assigned') ordCounts[id].assigned++;
       else ordCounts[id].built++;
     });
-    if (ordPerm.admin && !obPays[id]) await obLoadPays(id);
+    if (pPay) await pPay;
     if (focusBatch) ordBlShow(focusBatch);
     ordRenderDetail(o);
     if (silent !== true) liveRebase('detail:' + id);
@@ -20832,7 +21033,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      under someone mid-edit: a focused field, an open dialog, a chosen file,
      selected text or input in the last few seconds waits for the next check. */
   var LIVE_MS = 10000, liveSig = {}, liveRunning = false, liveInputAt = 0, liveTimer = null;
-  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){
+  /* scrolling counts as input too, so the page is never redrawn (and its
+     scroll position put back) under a scroll that is still moving */
+  ['pointerdown', 'keydown', 'wheel', 'touchstart', 'touchmove', 'scroll'].forEach(function(ev){
     document.addEventListener(ev, function(){ liveInputAt = Date.now(); }, { capture:true, passive:true });
   });
   function liveN(t){ return SB.from(t).select('id', { count:'exact', head:true }); }
@@ -21002,7 +21205,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
      for the starting point. */
   function liveRebase(k){ if (!liveSig) return; delete liveSig[k]; liveSoon(300); }
   async function liveTick(){
-    if (liveRunning){ if (liveHint) liveHintSoon(); return; }
+    /* a check that has not come back after 45 seconds is given up on, so one
+       lost request cannot switch live updates off for the rest of the visit */
+    if (liveRunning && Date.now() - liveLastTick < 45000){ if (liveHint) liveHintSoon(); return; }
     if (!SB || !session || document.visibilityState !== 'visible') return;
     var act = liveActive(); if (!act) return;
     var p = act.page, keys = liveKeys(p);
@@ -21057,6 +21262,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   /* coming back to the tab: check at once rather than after a pause */
   document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') liveSoon(400); });
   window.addEventListener('focus', function(){ liveSoon(400); });
+  /* a page brought back from the browser's back/forward store is stale too */
+  window.addEventListener('pageshow', function(e){ if (e.persisted) liveSoon(400); });
 
 })();
 </script>

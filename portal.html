@@ -14,9 +14,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <title>NovaTech &middot; Order Portal</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://vajrnbniwkvnkkkigeit.supabase.co" crossorigin>
 <script>
   (function(){
     try{
@@ -2460,7 +2458,12 @@
 <div class="pop" id="pop"></div>
 <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- supabase-js 2.119.0 (MIT), served from this site: one tested version, and no other
+     company's server to wait for before the page can start -->
+<script src="lib/supabase-js-2.119.0.js"></script>
+<script>/* our own copy did not arrive: take the identical file from jsDelivr, which the browser
+   only runs if it matches the fingerprint of the copy this site was tested with */
+window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"><\/script>');</script>
 <script>
 (function(){
   'use strict';
