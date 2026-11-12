@@ -470,55 +470,55 @@ window.ntBootSignIn = function(){
     /* neutrals — Notion's warm greys. Ink is rgb(55,53,47); secondary text and
        hairlines are that ink at lower strength. The page is white and the
        sidebar sits on a warm off-white. */
-    --ink:#37352f;
-    --charcoal:#37352f;
-    --ink-deep:#191918; --on-ink:#ffffff;
-    --muted:#73726e;
-    --faint:#8b8a86;
+    --ink:#262521;
+    --charcoal:#262521;
+    --ink-deep:#0d0d0c; --on-ink:#ffffff;
+    --muted:#65635e;
+    --faint:#7c7a75;
     --stone:#a5a4a0;
     --disabled:#c4c3bf;
     --bg:#ffffff;
     --paper:#ffffff;
     --soft:#f7f7f5;
-    --line:#e9e9e7;
-    --line-strong:#dfdedc;
+    --line:#e3e2df;
+    --line-strong:#d1cfc9;
     /* sidebar, hover and pressed fills, and the sidebar's own text */
     --side:#f7f7f5;
     --hover:rgba(55,53,47,.06);
     --press:rgba(55,53,47,.1);
-    --nav-ink:#5f5e5b; --nav-ico:#91918e; --nav-sel:rgba(55,53,47,.08);
+    --nav-ink:#4b4a46; --nav-ico:#7f7e7a; --nav-sel:rgba(55,53,47,.08);
     /* fields: Notion's warm fill on an inset hairline; table cell padding */
     --field:rgba(242,241,238,.6); --field-line:rgba(15,15,15,.1); --field-hover:rgba(15,15,15,.2); --field-pad:12px;
     --cell-y:8px; --cell-x:12px;
     /* tag dots, the key of a segmented switch and the toast slip */
-    --dot-ok:#6c9b7d; --dot-warn:#d7813a; --dot-bad:#e16f64; --dot-series:#a782c3; --dot-neutral:#91918e;
+    --dot-ok:#47a56c; --dot-warn:#e37a22; --dot-bad:#e7574b; --dot-series:#9968cc; --dot-neutral:#86857f;
     --seg-on:#ffffff; --toast-bg:#2f2f2f; --toast-line:transparent;
 
     /* accent — Notion blue: primary buttons, focus, selection and links.
        Text on a tint uses the deeper -fg so it stays legible. */
-    --accent:#2383e2;
-    --accent-fg:#1f6fbf;
-    --accent-hover:#0077d4;
-    --accent-soft:#e9f3fc;
-    --accent-line:#b5d5f5;
+    --accent:#1877e0;
+    --accent-fg:#1565c0;
+    --accent-hover:#0c69cf;
+    --accent-soft:#e3f0fd;
+    --accent-line:#a6cdf6;
     --accent-ink:#ffffff;
-    --link:#1f6fbf;
-    --link-hover:#185a9d;
+    --link:#1565c0;
+    --link-hover:#114f9c;
 
     /* status — Notion's tag colours: a pale tint behind deep text, the mid hue
        on dots and bars. Tags carry no border; -line is for tinted controls. */
-    --ok:#448361;   --ok-ink:#1c3829;   --ok-bg:#dbeddb;   --ok-line:#c3dfc6;
-    --warn:#d9730d; --warn-ink:#49290e; --warn-bg:#fadec9; --warn-line:#f2c6a3;
-    --bad:#d44c47;  --bad-ink:#5d1715;  --bad-bg:#ffe2dd;  --bad-line:#f6c3bb;
-    --info:#337ea9; --info-ink:#183347; --info-bg:#d3e5ef; --info-line:#b4d1e2;
-    --go:#2383e2;   --go-hover:#0077d4;
+    --ok:#2e9455;   --ok-ink:#1c3829;   --ok-bg:#d5efdb;   --ok-line:#b4dfc0;
+    --warn:#de6808; --warn-ink:#49290e; --warn-bg:#fadec9; --warn-line:#f2c6a3;
+    --bad:#dc3e39;  --bad-ink:#5d1715;  --bad-bg:#ffe2dd;  --bad-line:#f6c3bb;
+    --info:#2678bd; --info-ink:#183347; --info-bg:#d3e5ef; --info-line:#b4d1e2;
+    --go:#1877e0;   --go-hover:#0c69cf;
     /* text-safe status colours: the mid hues stay on dots, bars and borders,
        text uses -fg; --bad-solid fills the destructive confirm button */
-    --ok-fg:#3f7a5a; --warn-fg:#b5610b; --bad-fg:#c4423d;
-    --bad-solid:#d44c47;
+    --ok-fg:#23804a; --warn-fg:#b25405; --bad-fg:#c8322e;
+    --bad-solid:#dc3e39;
     /* focus outline, chart series and raised surfaces (toasts, search panel) */
-    --focus:#2383e2;
-    --series:#9065b0; --series-bg:#e8deee; --series-ink:#412454;
+    --focus:#1877e0;
+    --series:#8553c2; --series-bg:#e8deee; --series-ink:#412454;
     --raised:var(--paper); --raised-line:var(--line); --skel-hi:var(--soft);
 
     /* elevation — Notion's layered shadows: a hairline ring, a short contact
@@ -528,7 +528,7 @@ window.ntBootSignIn = function(){
     --e3:rgba(15,15,15,.05) 0 0 0 1px, rgba(15,15,15,.1) 0 5px 10px, rgba(15,15,15,.2) 0 15px 40px;
     --e4:rgba(15,15,15,.05) 0 0 0 1px, rgba(15,15,15,.1) 0 5px 10px, rgba(15,15,15,.2) 0 15px 40px;
     --shadow:var(--e2);
-    --ring:0 0 0 2px rgba(35,131,226,.3);
+    --ring:0 0 0 2px rgba(24,119,224,.35);
 
     /* spacing, 4px base */
     --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s4b:20px;
@@ -564,14 +564,14 @@ window.ntBootSignIn = function(){
     --ease-out:cubic-bezier(.2,.8,.3,1);
 
     /* per-surface icon hues, from Notion's text colours */
-    --hue-orders:#9065b0;
-    --hue-inventory:#9f6b53;   /* cardboard */
-    --hue-timeclock:#c14c8a;
-    --hue-margins:#d9730d;
-    --hue-billing:#448361;
-    --hue-admin:#787774;
-    --hue-rma:#337ea9;
-    --hue-gov:#2f6f9f;          /* federal blue */
+    --hue-orders:#8553c2;
+    --hue-inventory:#a5603a;   /* cardboard */
+    --hue-timeclock:#d64496;
+    --hue-margins:#de6808;
+    --hue-billing:#2e9455;
+    --hue-admin:#696864;
+    --hue-rma:#1f7bc7;
+    --hue-gov:#2a66ad;          /* federal blue */
   }
   @media (pointer:coarse){ :root{ --h-xs:40px; --h-sm:40px; --h-md:44px; --h-lg:44px; } }
   :root[data-demo]{ --dock:calc(76px + var(--demo-bar, 44px) + env(safe-area-inset-bottom)); }
@@ -581,38 +581,38 @@ window.ntBootSignIn = function(){
     color-scheme:dark;
     /* Notion's dark theme: a near-black page beside a lifted sidebar, with
        text and hairlines in white at reduced strength */
-    --ink:#d4d4d4; --charcoal:#d4d4d4; --muted:#9b9b9b; --faint:#7f7f7f;
+    --ink:#e4e4e4; --charcoal:#e4e4e4; --muted:#a8a8a8; --faint:#8c8c8c;
     --stone:#6f6f6f; --disabled:#4f4f4f;
     --bg:#191919; --paper:#191919; --soft:#252525;
-    --line:#2f2f2f;
-    --line-strong:#3f3f3f;
+    --line:#343434;
+    --line-strong:#484848;
     --side:#202020; --hover:rgba(255,255,255,.055); --press:rgba(255,255,255,.09);
-    --nav-ink:#a3a3a3; --nav-ico:#7f7f7f; --nav-sel:rgba(255,255,255,.07);
+    --nav-ink:#b4b4b4; --nav-ico:#8c8c8c; --nav-sel:rgba(255,255,255,.07);
     --field:rgba(255,255,255,.055); --field-line:rgba(255,255,255,.09); --field-hover:rgba(255,255,255,.2);
     --seg-on:rgba(255,255,255,.13); --toast-bg:#2f2f2f; --toast-line:rgba(255,255,255,.09);
-    --ink-deep:#e6e6e6; --on-ink:#191919;
-    --accent:#2383e2; --accent-fg:#529cca; --accent-hover:#3a92e8;
+    --ink-deep:#f3f3f3; --on-ink:#191919;
+    --accent:#2383e2; --accent-fg:#5aa8ea; --accent-hover:#3a92e8;
     --accent-soft:color-mix(in srgb, #2383e2 18%, #191919);
     --accent-line:color-mix(in srgb, #2383e2 45%, #191919);
     --accent-ink:#ffffff;
-    --link:#529cca; --link-hover:#73b2db;
-    --ok:#4f9768;   --ok-ink:#cfe6d6;
-    --ok-bg:color-mix(in srgb, #4f9768 24%, #191919);
-    --ok-line:color-mix(in srgb, #4f9768 42%, #191919);
-    --warn:#cb7b37; --warn-ink:#f3d9c2;
-    --warn-bg:color-mix(in srgb, #cb7b37 24%, #191919);
-    --warn-line:color-mix(in srgb, #cb7b37 42%, #191919);
-    --bad:#be524b;  --bad-ink:#f4cdc9;
-    --bad-bg:color-mix(in srgb, #be524b 24%, #191919);
-    --bad-line:color-mix(in srgb, #be524b 42%, #191919);
-    --info:#447acb; --info-ink:#cfdcf2;
-    --info-bg:color-mix(in srgb, #447acb 26%, #191919);
-    --info-line:color-mix(in srgb, #447acb 45%, #191919);
+    --link:#5aa8ea; --link-hover:#7fbcf0;
+    --ok:#3fab63;   --ok-ink:#cfe6d6;
+    --ok-bg:color-mix(in srgb, #3fab63 24%, #191919);
+    --ok-line:color-mix(in srgb, #3fab63 42%, #191919);
+    --warn:#dc7a28; --warn-ink:#f3d9c2;
+    --warn-bg:color-mix(in srgb, #dc7a28 24%, #191919);
+    --warn-line:color-mix(in srgb, #dc7a28 42%, #191919);
+    --bad:#d54a42;  --bad-ink:#f4cdc9;
+    --bad-bg:color-mix(in srgb, #d54a42 24%, #191919);
+    --bad-line:color-mix(in srgb, #d54a42 42%, #191919);
+    --info:#3d7fe0; --info-ink:#cfdcf2;
+    --info-bg:color-mix(in srgb, #3d7fe0 26%, #191919);
+    --info-line:color-mix(in srgb, #3d7fe0 45%, #191919);
     --go:#2383e2;   --go-hover:#0077d4;
-    --ok-fg:#6fb289; --warn-fg:#e09a5f; --bad-fg:#e0756d;
-    --bad-solid:#be524b;
-    --focus:#529cca;
-    --series:#9a6dd7; --series-bg:color-mix(in srgb, #9a6dd7 24%, #191919); --series-ink:#e2d4f5;
+    --ok-fg:#5cc487; --warn-fg:#f0964c; --bad-fg:#f06d63;
+    --bad-solid:#d54a42;
+    --focus:#5aa8ea;
+    --series:#a472ea; --series-bg:color-mix(in srgb, #a472ea 24%, #191919); --series-ink:#e2d4f5;
     --raised:#252525; --raised-line:#373737; --skel-hi:rgba(255,255,255,.06);
     --e1:0 1px 2px rgba(0,0,0,.3);
     --e2:rgba(15,15,15,.1) 0 0 0 1px, rgba(15,15,15,.2) 0 3px 6px, rgba(15,15,15,.4) 0 9px 24px;
@@ -621,9 +621,9 @@ window.ntBootSignIn = function(){
     --scrim:rgba(0,0,0,.6);
     --glass:rgba(32,32,32,.68); --glass-solid:#202020;
     --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#ececec;
-    --hue-orders:#9a6dd7; --hue-inventory:#a27763;   /* cardboard */ --hue-timeclock:#c94a85;
-    --hue-margins:#cb7b37; --hue-admin:#9b9b9b; --hue-rma:#529cca;
-    --hue-billing:#4f9768; --hue-gov:#5b8fc7;
+    --hue-orders:#a472ea; --hue-inventory:#b47a58;   /* cardboard */ --hue-timeclock:#e04e95;
+    --hue-margins:#dc7a28; --hue-admin:#a8a8a8; --hue-rma:#4fa5e6;
+    --hue-billing:#3fab63; --hue-gov:#5a96e0;
     --ring:0 0 0 2px rgba(35,131,226,.45);
   }
   @media (prefers-color-scheme:dark){
@@ -631,38 +631,38 @@ window.ntBootSignIn = function(){
       color-scheme:dark;
       /* Notion's dark theme: a near-black page beside a lifted sidebar, with
          text and hairlines in white at reduced strength */
-      --ink:#d4d4d4; --charcoal:#d4d4d4; --muted:#9b9b9b; --faint:#7f7f7f;
+      --ink:#e4e4e4; --charcoal:#e4e4e4; --muted:#a8a8a8; --faint:#8c8c8c;
       --stone:#6f6f6f; --disabled:#4f4f4f;
       --bg:#191919; --paper:#191919; --soft:#252525;
-      --line:#2f2f2f;
-      --line-strong:#3f3f3f;
+      --line:#343434;
+      --line-strong:#484848;
       --side:#202020; --hover:rgba(255,255,255,.055); --press:rgba(255,255,255,.09);
-      --nav-ink:#a3a3a3; --nav-ico:#7f7f7f; --nav-sel:rgba(255,255,255,.07);
+      --nav-ink:#b4b4b4; --nav-ico:#8c8c8c; --nav-sel:rgba(255,255,255,.07);
       --field:rgba(255,255,255,.055); --field-line:rgba(255,255,255,.09); --field-hover:rgba(255,255,255,.2);
       --seg-on:rgba(255,255,255,.13); --toast-bg:#2f2f2f; --toast-line:rgba(255,255,255,.09);
-      --ink-deep:#e6e6e6; --on-ink:#191919;
-      --accent:#2383e2; --accent-fg:#529cca; --accent-hover:#3a92e8;
+      --ink-deep:#f3f3f3; --on-ink:#191919;
+      --accent:#2383e2; --accent-fg:#5aa8ea; --accent-hover:#3a92e8;
       --accent-soft:color-mix(in srgb, #2383e2 18%, #191919);
       --accent-line:color-mix(in srgb, #2383e2 45%, #191919);
       --accent-ink:#ffffff;
-      --link:#529cca; --link-hover:#73b2db;
-      --ok:#4f9768;   --ok-ink:#cfe6d6;
-      --ok-bg:color-mix(in srgb, #4f9768 24%, #191919);
-      --ok-line:color-mix(in srgb, #4f9768 42%, #191919);
-      --warn:#cb7b37; --warn-ink:#f3d9c2;
-      --warn-bg:color-mix(in srgb, #cb7b37 24%, #191919);
-      --warn-line:color-mix(in srgb, #cb7b37 42%, #191919);
-      --bad:#be524b;  --bad-ink:#f4cdc9;
-      --bad-bg:color-mix(in srgb, #be524b 24%, #191919);
-      --bad-line:color-mix(in srgb, #be524b 42%, #191919);
-      --info:#447acb; --info-ink:#cfdcf2;
-      --info-bg:color-mix(in srgb, #447acb 26%, #191919);
-      --info-line:color-mix(in srgb, #447acb 45%, #191919);
+      --link:#5aa8ea; --link-hover:#7fbcf0;
+      --ok:#3fab63;   --ok-ink:#cfe6d6;
+      --ok-bg:color-mix(in srgb, #3fab63 24%, #191919);
+      --ok-line:color-mix(in srgb, #3fab63 42%, #191919);
+      --warn:#dc7a28; --warn-ink:#f3d9c2;
+      --warn-bg:color-mix(in srgb, #dc7a28 24%, #191919);
+      --warn-line:color-mix(in srgb, #dc7a28 42%, #191919);
+      --bad:#d54a42;  --bad-ink:#f4cdc9;
+      --bad-bg:color-mix(in srgb, #d54a42 24%, #191919);
+      --bad-line:color-mix(in srgb, #d54a42 42%, #191919);
+      --info:#3d7fe0; --info-ink:#cfdcf2;
+      --info-bg:color-mix(in srgb, #3d7fe0 26%, #191919);
+      --info-line:color-mix(in srgb, #3d7fe0 45%, #191919);
       --go:#2383e2;   --go-hover:#0077d4;
-      --ok-fg:#6fb289; --warn-fg:#e09a5f; --bad-fg:#e0756d;
-      --bad-solid:#be524b;
-      --focus:#529cca;
-      --series:#9a6dd7; --series-bg:color-mix(in srgb, #9a6dd7 24%, #191919); --series-ink:#e2d4f5;
+      --ok-fg:#5cc487; --warn-fg:#f0964c; --bad-fg:#f06d63;
+      --bad-solid:#d54a42;
+      --focus:#5aa8ea;
+      --series:#a472ea; --series-bg:color-mix(in srgb, #a472ea 24%, #191919); --series-ink:#e2d4f5;
       --raised:#252525; --raised-line:#373737; --skel-hi:rgba(255,255,255,.06);
       --e1:0 1px 2px rgba(0,0,0,.3);
       --e2:rgba(15,15,15,.1) 0 0 0 1px, rgba(15,15,15,.2) 0 3px 6px, rgba(15,15,15,.4) 0 9px 24px;
@@ -671,9 +671,9 @@ window.ntBootSignIn = function(){
       --scrim:rgba(0,0,0,.6);
       --glass:rgba(32,32,32,.68); --glass-solid:#202020;
       --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#ececec;
-      --hue-orders:#9a6dd7; --hue-inventory:#a27763;   /* cardboard */ --hue-timeclock:#c94a85;
-      --hue-margins:#cb7b37; --hue-admin:#9b9b9b; --hue-rma:#529cca;
-      --hue-billing:#4f9768; --hue-gov:#5b8fc7;
+      --hue-orders:#a472ea; --hue-inventory:#b47a58;   /* cardboard */ --hue-timeclock:#e04e95;
+      --hue-margins:#dc7a28; --hue-admin:#a8a8a8; --hue-rma:#4fa5e6;
+      --hue-billing:#3fab63; --hue-gov:#5a96e0;
       --ring:0 0 0 2px rgba(35,131,226,.45);
     }
   }

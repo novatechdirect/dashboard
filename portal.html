@@ -40,26 +40,26 @@
        or iPhone, Segoe UI on Windows. Figures ride it with tnum. */
     --font-ui:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";
     --font-num:var(--font-ui);
-    --ink:#37352f; --charcoal:#37352f; --ink-deep:#191918; --on-ink:#ffffff; --muted:#73726e; --faint:#8b8a86;
+    --ink:#262521; --charcoal:#262521; --ink-deep:#0d0d0c; --on-ink:#ffffff; --muted:#65635e; --faint:#7c7a75;
     --stone:#a5a4a0; --disabled:#c4c3bf;
     --bg:#ffffff; --paper:#ffffff; --soft:#f7f7f5;
-    --line:#e9e9e7; --line-strong:#dfdedc;
-    --accent:#2383e2; --accent-fg:#1f6fbf; --accent-hover:#0077d4;
-    --accent-soft:#e9f3fc; --accent-line:#b5d5f5; --accent-ink:#ffffff;
-    --link:#1f6fbf; --link-hover:#185a9d;
-    --hue-rma:#337ea9;
+    --line:#e3e2df; --line-strong:#d1cfc9;
+    --accent:#1877e0; --accent-fg:#1565c0; --accent-hover:#0c69cf;
+    --accent-soft:#e3f0fd; --accent-line:#a6cdf6; --accent-ink:#ffffff;
+    --link:#1565c0; --link-hover:#114f9c;
+    --hue-rma:#1f7bc7;
     /* hue drives the dot and any fill; the pastel tint sits behind and the
        label uses the family's deep variant so it clears 4.5:1 */
-    --ok:#448361;   --ok-ink:#1c3829;   --ok-bg:#dbeddb;   --ok-line:#c3dfc6;
-    --warn:#d9730d; --warn-ink:#49290e; --warn-bg:#fadec9; --warn-line:#f2c6a3;
-    --bad:#d44c47;  --bad-ink:#5d1715;  --bad-bg:#ffe2dd;  --bad-line:#f6c3bb;
-    --info:#337ea9; --info-ink:#183347; --info-bg:#d3e5ef; --info-line:#b4d1e2;
+    --ok:#2e9455;   --ok-ink:#1c3829;   --ok-bg:#d5efdb;   --ok-line:#b4dfc0;
+    --warn:#de6808; --warn-ink:#49290e; --warn-bg:#fadec9; --warn-line:#f2c6a3;
+    --bad:#dc3e39;  --bad-ink:#5d1715;  --bad-bg:#ffe2dd;  --bad-line:#f6c3bb;
+    --info:#2678bd; --info-ink:#183347; --info-bg:#d3e5ef; --info-line:#b4d1e2;
     /* the bright hues stay on dots, bars and borders; text in a status colour
        uses -fg; --bad-solid fills the destructive confirm button */
-    --ok-fg:#3f7a5a; --warn-fg:#b5610b; --bad-fg:#c4423d;
-    --bad-solid:#d44c47;
-    --focus:#2383e2;
-    --series:#9065b0;
+    --ok-fg:#23804a; --warn-fg:#b25405; --bad-fg:#c8322e;
+    --bad-solid:#dc3e39;
+    --focus:#1877e0;
+    --series:#8553c2;
     --raised:var(--paper); --raised-line:var(--line);
     --e1:rgba(15,15,15,.04) 0 1px 2px 0;
     --e2:rgba(15,15,15,.05) 0 0 0 1px, rgba(15,15,15,.1) 0 3px 6px, rgba(15,15,15,.2) 0 9px 24px;
@@ -72,7 +72,7 @@
     --tab-chip:#f6f5f4; --tab-chip-ink:#15171d;
     --ease-drawer:cubic-bezier(.32,.72,0,1);
     --ease-out:cubic-bezier(.2,.8,.3,1);
-    --ring:0 0 0 2px rgba(35,131,226,.3);
+    --ring:0 0 0 2px rgba(24,119,224,.35);
     --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s4b:20px;
     --s5:24px; --s6:32px; --s6b:40px; --s7:48px; --s8:64px;
     --r-xs:4px; --r-tag:4px; --r-sm:6px; --r-md:10px;
@@ -85,10 +85,10 @@
        inset hairline, the purple of in-progress work, tag dots, the key of
        a segmented switch and the toast slip */
     --side:#f7f7f5; --hover:rgba(55,53,47,.06); --press:rgba(55,53,47,.1);
-    --nav-ink:#5f5e5b; --nav-ico:#91918e; --nav-sel:rgba(55,53,47,.08);
+    --nav-ink:#4b4a46; --nav-ico:#7f7e7a; --nav-sel:rgba(55,53,47,.08);
     --field:rgba(242,241,238,.6); --field-line:rgba(15,15,15,.1); --field-hover:rgba(15,15,15,.2);
     --series-bg:#e8deee; --series-ink:#412454;
-    --dot-ok:#6c9b7d; --dot-warn:#d7813a; --dot-bad:#e16f64; --dot-series:#a782c3; --dot-neutral:#91918e;
+    --dot-ok:#47a56c; --dot-warn:#e37a22; --dot-bad:#e7574b; --dot-series:#9968cc; --dot-neutral:#86857f;
     --seg-on:#ffffff; --toast-bg:#2f2f2f; --toast-line:transparent;
 }
   /* touch screens (phones and iPads) get finger-sized targets */
@@ -96,34 +96,34 @@
   :root[data-theme="dark"]{
     color-scheme:dark;
     /* Notion's dark theme: a near-black page beside a lifted sidebar */
-    --ink:#d4d4d4; --charcoal:#d4d4d4; --muted:#9b9b9b; --faint:#7f7f7f;
+    --ink:#e4e4e4; --charcoal:#e4e4e4; --muted:#a8a8a8; --faint:#8c8c8c;
     --stone:#6f6f6f; --disabled:#4f4f4f;
     --bg:#191919; --paper:#191919; --soft:#252525;
-    --line:#2f2f2f;
-    --line-strong:#3f3f3f;
-    --ink-deep:#e6e6e6; --on-ink:#191919;
-    --accent:#2383e2; --accent-fg:#529cca; --accent-hover:#3a92e8;
+    --line:#343434;
+    --line-strong:#484848;
+    --ink-deep:#f3f3f3; --on-ink:#191919;
+    --accent:#2383e2; --accent-fg:#5aa8ea; --accent-hover:#3a92e8;
     --accent-soft:color-mix(in srgb, #2383e2 18%, #191919);
     --accent-line:color-mix(in srgb, #2383e2 45%, #191919);
     --accent-ink:#ffffff;
-    --link:#529cca; --link-hover:#73b2db;
-    --hue-rma:#529cca;
-    --ok:#4f9768;   --ok-ink:#cfe6d6;
-    --ok-bg:color-mix(in srgb, #4f9768 24%, #191919);
-    --ok-line:color-mix(in srgb, #4f9768 42%, #191919);
-    --warn:#cb7b37; --warn-ink:#f3d9c2;
-    --warn-bg:color-mix(in srgb, #cb7b37 24%, #191919);
-    --warn-line:color-mix(in srgb, #cb7b37 42%, #191919);
-    --bad:#be524b;  --bad-ink:#f4cdc9;
-    --bad-bg:color-mix(in srgb, #be524b 24%, #191919);
-    --bad-line:color-mix(in srgb, #be524b 42%, #191919);
-    --info:#447acb; --info-ink:#cfdcf2;
-    --info-bg:color-mix(in srgb, #447acb 26%, #191919);
-    --info-line:color-mix(in srgb, #447acb 45%, #191919);
-    --ok-fg:#6fb289; --warn-fg:#e09a5f; --bad-fg:#e0756d;
-    --bad-solid:#be524b;
-    --focus:#529cca;
-    --series:#9a6dd7;
+    --link:#5aa8ea; --link-hover:#7fbcf0;
+    --hue-rma:#4fa5e6;
+    --ok:#3fab63;   --ok-ink:#cfe6d6;
+    --ok-bg:color-mix(in srgb, #3fab63 24%, #191919);
+    --ok-line:color-mix(in srgb, #3fab63 42%, #191919);
+    --warn:#dc7a28; --warn-ink:#f3d9c2;
+    --warn-bg:color-mix(in srgb, #dc7a28 24%, #191919);
+    --warn-line:color-mix(in srgb, #dc7a28 42%, #191919);
+    --bad:#d54a42;  --bad-ink:#f4cdc9;
+    --bad-bg:color-mix(in srgb, #d54a42 24%, #191919);
+    --bad-line:color-mix(in srgb, #d54a42 42%, #191919);
+    --info:#3d7fe0; --info-ink:#cfdcf2;
+    --info-bg:color-mix(in srgb, #3d7fe0 26%, #191919);
+    --info-line:color-mix(in srgb, #3d7fe0 45%, #191919);
+    --ok-fg:#5cc487; --warn-fg:#f0964c; --bad-fg:#f06d63;
+    --bad-solid:#d54a42;
+    --focus:#5aa8ea;
+    --series:#a472ea;
     --raised:#252525; --raised-line:#373737;
     --e1:0 1px 2px rgba(0,0,0,.3);
     --e2:rgba(15,15,15,.1) 0 0 0 1px, rgba(15,15,15,.2) 0 3px 6px, rgba(15,15,15,.4) 0 9px 24px;
@@ -134,9 +134,9 @@
     --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#ececec;
     --ring:0 0 0 2px rgba(35,131,226,.45);
       --side:#202020; --hover:rgba(255,255,255,.055); --press:rgba(255,255,255,.09);
-    --nav-ink:#a3a3a3; --nav-ico:#7f7f7f; --nav-sel:rgba(255,255,255,.07);
+    --nav-ink:#b4b4b4; --nav-ico:#8c8c8c; --nav-sel:rgba(255,255,255,.07);
     --field:rgba(255,255,255,.055); --field-line:rgba(255,255,255,.09); --field-hover:rgba(255,255,255,.2);
-    --series-bg:color-mix(in srgb, #9a6dd7 24%, #191919); --series-ink:#e2d4f5;
+    --series-bg:color-mix(in srgb, #a472ea 24%, #191919); --series-ink:#e2d4f5;
     --seg-on:rgba(255,255,255,.13); --toast-bg:#2f2f2f; --toast-line:rgba(255,255,255,.09);
 }
   *{ box-sizing:border-box; }
