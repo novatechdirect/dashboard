@@ -1175,7 +1175,7 @@
     background:var(--soft); border:1px solid var(--line); color:var(--faint);
   }
   .empty-ico svg{ width:22px; height:22px; }
-  .skel{ background:linear-gradient(90deg,var(--soft) 25%,var(--line) 37%,var(--soft) 63%);
+  .skel{ background:linear-gradient(90deg,var(--line) 25%,var(--soft) 37%,var(--line) 63%);
     background-size:400% 100%; animation:shimmer 1.3s ease-in-out infinite; border-radius:var(--r-sm); }
   .skel-line{ height:12px; margin-bottom:var(--s2); }
   .skel-card{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md);
@@ -2104,6 +2104,10 @@
     animation:bootSpin 700ms linear infinite;
   }
   @keyframes bootSpin{ to{ transform:rotate(360deg); } }
+  /* start-up: an outline of the page instead of a lone spinner */
+  :root.nt-boot .boot-splash{ align-items:flex-start; }
+  .boot-skel{ width:100%; max-width:1080px; margin:0 auto; padding:var(--s5); }
+  .boot-skel-h{ width:220px; height:30px; margin-bottom:var(--s5); }
   @media (prefers-reduced-motion: reduce){ .boot-dot{ animation-duration:2s; } }
 
   /* wide window: the status card has room for the ring and its key on one
@@ -2427,7 +2431,7 @@
 
 <div id="staffPick" style="display:none;"></div>
 
-<div class="boot-splash"><span class="boot-dot"></span></div>
+<div class="boot-splash"><div class="boot-skel" role="status" aria-label="Loading"><div class="skel boot-skel-h"></div><div class="skel-card"><div class="skel skel-line" style="width:32%"></div><div class="skel skel-line" style="width:64%"></div></div><div class="skel-card"><div class="skel skel-line" style="width:32%"></div><div class="skel skel-line" style="width:64%"></div></div><div class="skel-card"><div class="skel skel-line" style="width:32%"></div><div class="skel skel-line" style="width:64%"></div></div></div></div>
 
 <div id="loginView" class="login">
   <img class="login-logo is-light" src="logo.png" alt="Novatech" onerror="this.style.display='none'">
@@ -4304,7 +4308,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
                   (r.held ? '<p class="muted" style="margin:var(--s3) 0 0;font-size:13px;">This invoice is awaiting payment in full. The build details stay hidden until it is settled.</p>' : '') +
                   '<div class="binv-sec">Payments</div>' +
                   (billPays[r.order_id] === undefined
-                    ? '<p class="muted" style="margin:0;font-size:13px;">Loading\u2026</p>'
+                    ? '<div class="skel skel-line" style="width:60%;margin:4px 0;" role="status" aria-label="Loading"></div>'
                     : billPays[r.order_id].length
                       ? billPays[r.order_id].map(function(p){
                           return '<div class="bpay"><span class="bpay-a">' + bmoney(p.amount) + '</span>' +
@@ -4315,7 +4319,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
                   '<div class="binv-sec">Your documents</div>' +
                   (billDocs[r.order_id] === undefined
-                    ? '<p class="muted" style="margin:0;font-size:13px;">Loading\u2026</p>'
+                    ? '<div class="skel skel-line" style="width:60%;margin:4px 0;" role="status" aria-label="Loading"></div>'
                     : billDocs[r.order_id].length
                       ? billDocs[r.order_id].map(function(d){
                           return '<div class="bdoc"><span class="bdoc-n" title="' + esc(d.filename) + '">' + esc(d.filename) + '</span>' +
@@ -4922,7 +4926,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     const pays = r ? billPays[r.order_id] : undefined;
     return '<details class="card obill" id="obill"' + (obillOpen ? ' open' : '') + '>' +
       '<summary><span class="obill-t">Billing</span>' +
-        (r ? '<span class="bst ' + (BILL_CHIP[st] || '') + '">' + esc(lbl) + '</span>' : '<span class="muted" style="font-size:12px;">Loading\u2026</span>') +
+        (r ? '<span class="bst ' + (BILL_CHIP[st] || '') + '">' + esc(lbl) + '</span>' : '<span class="skel" style="display:inline-block;width:64px;height:12px;vertical-align:middle;"></span>') +
         '<svg viewBox="0 0 24 24" class="obill-chev" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
       '</summary>' +
       (r ? '<div class="obill-in">' +
@@ -4940,7 +4944,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         '</div>' +
         '<div class="binv-sec">Payments</div>' +
         (pays === undefined
-          ? '<p class="muted" style="margin:0;font-size:13px;">Loading\u2026</p>'
+          ? '<div class="skel skel-line" style="width:60%;margin:4px 0;" role="status" aria-label="Loading"></div>'
           : pays.length
             ? pays.map(function(p){
                 return '<div class="bpay"><span class="bpay-a">' + bmoney(p.amount) + '</span>' +
@@ -5378,7 +5382,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         '<p>Nothing has shipped yet.</p><p class="muted">Shipments appear here as they leave the building.</p></div>') +
       '</div>' +
       '<div class="card" id="notesCard"><h2>Notes <span class="subtle">from NovaTech, and anything you want on the record</span></h2>' +
-        '<div id="notesBody"><p class="nempty">Loading\u2026</p></div></div>';
+        '<div id="notesBody"><div class="skel skel-line" style="width:60%;margin:4px 0;" role="status" aria-label="Loading"></div></div></div>';
 
     $('back').addEventListener('click', renderList);
     notesLoad(o.id);

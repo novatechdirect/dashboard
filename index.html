@@ -1688,6 +1688,25 @@ window.ntBootSignIn = function(){
   .skel-kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:var(--s3); margin-bottom:var(--s4); }
   .skel-kpi{ background:var(--paper); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); box-shadow:var(--e1); }
   .skel-kpi .skel-line:last-child{ margin-bottom:0; }
+  /* placeholders that are in the page from the first paint, until the data
+     replaces them. A little firmer than the line colour so they read on white.
+     One that is never replaced (a card this person cannot use) fades out after
+     20 seconds rather than shimmering for ever. */
+  .skel{ background:color-mix(in srgb, var(--line) 55%, var(--line-strong)); }
+  .skel-num{ display:inline-block; vertical-align:middle; width:56px; height:22px; margin:3px 0; }
+  .skel-sub{ display:inline-block; vertical-align:middle; width:96px; height:10px; }
+  .skel-wait{ animation:skelGone 0s linear 20s forwards; }
+  @keyframes skelGone{ to{ visibility:hidden; } }
+  .skel-rows{ padding:var(--s2) 0; }
+  /* Timeclock: until the app knows whether you are on the roster */
+  .tc-wait{ display:none; }
+  .card:has(> #tcNoProfile[style*="none"]):has(> #tcMine[style*="none"]) > .tc-wait{ display:block; }
+  /* start-up: an outline of the dashboard instead of a lone spinner */
+  .boot-skel{ width:100%; max-width:1180px; margin:0 auto; padding:var(--s5) 0; align-self:flex-start; }
+  .boot-skel-h{ width:200px; height:30px; margin-bottom:var(--s5); }
+  .boot-skel-grid{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--s3); }
+  .boot-skel-grid .skel-card{ margin-bottom:0; min-height:150px; }
+  @media (max-width:700px){ .boot-skel-grid{ grid-template-columns:minmax(0,1fr); } }
 
   /* toasts (replacing alert()) */
   .toast-stack{ position:fixed; z-index:80; right:var(--s5); bottom:var(--s5); display:flex; flex-direction:column; gap:var(--s2); pointer-events:none; }
@@ -4747,6 +4766,7 @@ window.ntBootSignIn = function(){
   .boot-slow{ display:none; }
   :root.nt-boot.nt-slow .boot-splash{ flex-direction:column; gap:var(--s5); padding:0 var(--s5); text-align:center; }
   :root.nt-boot.nt-slow .boot-slow{ display:block; max-width:340px; }
+  :root.nt-boot.nt-slow .boot-skel{ display:none; }
   .boot-slow-t{ margin:0 0 6px; font-size:15px; font-weight:600; color:var(--ink); }
   .boot-slow-s{ margin:0 0 var(--s4); font-size:13px; line-height:1.5; color:var(--muted); }
   /* the sign-in form only works once the app script is running */
@@ -6331,7 +6351,7 @@ window.ntBootSignIn = function(){
 <div class="controls">
 
   <div class="boot-splash">
-    <span class="boot-dot"></span>
+    <div class="boot-skel" role="status" aria-label="Loading"><div class="skel boot-skel-h"></div><div class="skel-kpis"><div class="skel-kpi"><div class="skel skel-line w40"></div><div class="skel skel-line" style="height:24px;width:60%;margin:12px 0 10px;"></div><div class="skel skel-line w80"></div></div><div class="skel-kpi"><div class="skel skel-line w40"></div><div class="skel skel-line" style="height:24px;width:60%;margin:12px 0 10px;"></div><div class="skel skel-line w80"></div></div><div class="skel-kpi"><div class="skel skel-line w40"></div><div class="skel skel-line" style="height:24px;width:60%;margin:12px 0 10px;"></div><div class="skel skel-line w80"></div></div><div class="skel-kpi"><div class="skel skel-line w40"></div><div class="skel skel-line" style="height:24px;width:60%;margin:12px 0 10px;"></div><div class="skel skel-line w80"></div></div></div><div class="boot-skel-grid"><div class="skel-card"><div class="skel skel-line w40"></div><div class="skel skel-line w80" style="margin-top:16px;"></div><div class="skel skel-line w60"></div><div class="skel skel-line w80"></div></div><div class="skel-card"><div class="skel skel-line w40"></div><div class="skel skel-line w80" style="margin-top:16px;"></div><div class="skel skel-line w60"></div><div class="skel skel-line w80"></div></div></div></div>
     <div class="boot-slow" data-retry-box role="status">
       <p class="boot-slow-t">Still connecting&hellip;</p>
       <p class="boot-slow-s" data-retry-msg>This is taking longer than usual. It carries on by itself as soon as the connection is back.</p>
@@ -6387,23 +6407,23 @@ window.ntBootSignIn = function(){
     <div class="stat-row" id="homeStats">
       <a class="stat" href="#" id="statShip" data-hue="ship" aria-haspopup="dialog">
         <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.56541 8.73049C9.0804 6.97492 8.8379 6.09714 9.24954 5.40562C9.66119 4.71409 10.5662 4.47889 12.3763 4.00849L14.2962 3.50955C16.1062 3.03915 17.0113 2.80394 17.7242 3.20319C18.4372 3.60244 18.6797 4.48023 19.1647 6.2358L19.6792 8.09786C20.1642 9.85343 20.4067 10.7312 19.995 11.4227C19.5834 12.1143 18.6784 12.3495 16.8683 12.8199L14.9484 13.3188C13.1384 13.7892 12.2333 14.0244 11.5203 13.6252C10.8073 13.2259 10.5648 12.3481 10.0798 10.5926L9.56541 8.73049Z"/><path stroke-linecap="round" d="M8.23 15.0602L6.08 7.27014C5.89453 6.61732 5.38563 6.12036 4.7 5.92L3 5.4502"/><circle cx="8.05" cy="18.1" r="2.9"/><path stroke-linecap="round" d="M10.9199 17.36L19.9999 15"/></g></svg></span><span class="stat-lbl">Shipping issues</span></span>
-        <span class="stat-val" id="statShipVal">&mdash;</span>
-        <span class="stat-sub" id="statShipSub">Loading&hellip;</span>
+        <span class="stat-val" id="statShipVal"><span class="skel skel-num skel-wait"></span></span>
+        <span class="stat-sub" id="statShipSub"><span class="skel skel-sub skel-wait"></span></span>
       </a>
       <div class="stat" data-hue="builds">
         <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path stroke-linecap="round" d="M8.5 20h7M12 16.5V20"/></g></svg></span><span class="stat-lbl">PCs built</span></span>
-        <span class="stat-val count-int" id="statBldVal">&mdash;</span>
+        <span class="stat-val count-int" id="statBldVal"><span class="skel skel-num skel-wait"></span></span>
         <span class="stat-sub" id="statBldSub">last 30 days</span>
       </div>
       <a class="stat" href="#" data-goto="rma" data-hue="rma">
         <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></span><span class="stat-lbl">RMAs to action</span></span>
-        <span class="stat-val" id="statRmaVal">&mdash;</span>
+        <span class="stat-val" id="statRmaVal"><span class="skel skel-num skel-wait"></span></span>
         <span class="stat-sub" id="statRmaSub">&nbsp;</span>
       </a>
       <a class="stat" href="#" data-goto="inventory" data-hue="inventory">
         <span class="stat-top"><span class="stat-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg></span><span class="stat-lbl">Low stock</span></span>
-        <span class="stat-val" id="statInvVal">&mdash;</span>
-        <span class="stat-sub" id="statInvSub">Loading&hellip;</span>
+        <span class="stat-val" id="statInvVal"><span class="skel skel-num skel-wait"></span></span>
+        <span class="stat-sub" id="statInvSub"><span class="skel skel-sub skel-wait"></span></span>
       </a>
     </div>
     <div class="dash-grid">
@@ -6411,15 +6431,15 @@ window.ntBootSignIn = function(){
         <div class="chart-head">
           <div class="chart-kpi">
             <h2 class="card-title">Builds</h2>
-            <div class="chart-val" id="hbarVal">&mdash;</div>
+            <div class="chart-val" id="hbarVal"><span class="skel skel-num skel-wait"></span></div>
             <div class="chart-sub" id="hbarSub">last 12 weeks</div>
           </div>
         </div>
-        <div id="hbarPlot"></div>
+        <div id="hbarPlot"><div class="ch-skel skel-wait" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div></div>
       </section>
       <section class="card" id="homeStatusCard">
         <h2 class="card-title" style="margin:0;">Order status</h2>
-        <div id="hdonut"></div>
+        <div id="hdonut"><div class="ch-skel skel-wait" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div></div>
       </section>
     </div>
     <div class="dash-grid">
@@ -6428,7 +6448,7 @@ window.ntBootSignIn = function(){
           <h2 class="card-title" style="margin:0;">Recent orders</h2>
           <button class="ghost btn-sm" type="button" id="homeOrdAll" style="flex:0 0 auto;">View all</button>
         </div>
-        <div id="hrecent"></div>
+        <div id="hrecent"><div class="ch-skel skel-wait" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div></div>
       </section>
       <section class="card" id="homeQuick">
         <h2 class="card-title" style="margin:0;">Quick actions</h2>
@@ -6472,7 +6492,7 @@ window.ntBootSignIn = function(){
           <div class="chart-head">
             <div class="chart-kpi">
               <h2 class="card-title">Builds</h2>
-              <div class="chart-val" id="hbVal">&mdash;</div>
+              <div class="chart-val" id="hbVal"><span class="skel skel-num skel-wait"></span></div>
               <div class="chart-sub" id="hbSub"></div>
             </div>
             <div class="chart-tabs" id="hbTabs">
@@ -6486,10 +6506,10 @@ window.ntBootSignIn = function(){
         <section class="card chart-card" id="homePipe">
           <div class="chart-kpi">
             <h2 class="card-title">Pipeline</h2>
-            <div class="chart-val" id="hpVal">&mdash;</div>
+            <div class="chart-val" id="hpVal"><span class="skel skel-num skel-wait"></span></div>
             <div class="chart-sub" id="hpSub"></div>
           </div>
-          <div id="hpBody"></div>
+          <div id="hpBody"><div class="ch-skel skel-wait" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div></div>
         </section>
       </div>
 
@@ -6519,7 +6539,7 @@ window.ntBootSignIn = function(){
           <button type="button" class="mg-pill" data-ordfilter="partial" aria-pressed="false">Partially shipped</button>
           <button type="button" class="mg-pill" data-ordfilter="complete" aria-pressed="false">Complete</button>
         </div>
-        <div id="ordListBody"></div>
+        <div id="ordListBody"><div class="skel-wait" role="status" aria-label="Loading"><div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:62%"></div></div><div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:62%"></div></div><div class="skel-card"><div class="skel skel-line"></div><div class="skel skel-line" style="width:62%"></div></div></div></div>
       </section>
 
     </div><!-- /ordListPane -->
@@ -6569,7 +6589,7 @@ window.ntBootSignIn = function(){
           <button class="ghost btn-sm" id="invRefresh">Refresh</button>
         </div>
       </div>
-      <div id="invBody"><p class="muted-line">Loading&hellip;</p></div>
+      <div id="invBody"><div class="skel-rows skel-wait" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div></div>
     </section>
 
     <section class="card" id="invTrends" style="display:none;">
@@ -6585,7 +6605,7 @@ window.ntBootSignIn = function(){
       <div class="table-wrap stack-wrap">
         <table class="hist-table stack">
           <thead><tr><th>When</th><th>Part</th><th class="n">Change</th><th>Reason</th><th>Note</th><th>By</th></tr></thead>
-          <tbody id="invHistBody"></tbody>
+          <tbody id="invHistBody"><tr class="skel-wait"><td colspan="6"><div class="skel skel-line w80" style="margin:6px 0;"></div></td></tr><tr class="skel-wait"><td colspan="6"><div class="skel skel-line w80" style="margin:6px 0;"></div></td></tr><tr class="skel-wait"><td colspan="6"><div class="skel skel-line w80" style="margin:6px 0;"></div></td></tr><tr class="skel-wait"><td colspan="6"><div class="skel skel-line w80" style="margin:6px 0;"></div></td></tr></tbody>
         </table>
       </div>
       <div class="hist-pager">
@@ -6613,6 +6633,7 @@ window.ntBootSignIn = function(){
 
     <section class="card">
       <h2 class="card-title">My hours</h2>
+      <div class="tc-wait skel-rows skel-wait" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div>
       <div id="tcNoProfile" style="display:none;"><p class="muted-line">You&rsquo;re signed in, but not on the team roster yet. Ask the admin to add you.</p></div>
       <div id="tcMine" style="display:none;">
         <p class="tc-reminder">
@@ -6652,7 +6673,7 @@ window.ntBootSignIn = function(){
       <div class="chart-head">
         <div class="chart-kpi">
           <h2 class="card-title" id="thTitle">Team hours</h2>
-          <div class="chart-val" id="thVal">&mdash;</div>
+          <div class="chart-val" id="thVal"><span class="skel skel-num skel-wait"></span></div>
           <div class="chart-sub" id="thSub"></div>
         </div>
         <div class="chart-tabs" id="thTabs" style="display:none;">
@@ -6718,7 +6739,7 @@ window.ntBootSignIn = function(){
         <section class="card chart-card">
           <div class="chart-kpi">
             <h2 class="card-title">RMAs opened</h2>
-            <div class="chart-val" id="rmaTrendVal">&mdash;</div>
+            <div class="chart-val" id="rmaTrendVal"><span class="skel skel-num skel-wait"></span></div>
             <div class="chart-sub" id="rmaTrendSub"></div>
           </div>
           <div class="chart-plot" id="rmaTrendPlot"></div>
@@ -6778,7 +6799,7 @@ window.ntBootSignIn = function(){
       <button class="ghost btn-sm" id="mgCompareBtn">Compare</button>
       <button class="primary btn-sm" id="mgAddBtn">+ Add build</button>
     </div>
-    <div id="mgBody"><p class="muted-line">Loading&hellip;</p></div>
+    <div id="mgBody"><div class="skel-rows skel-wait" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div></div>
     <div style="margin:22px 0 8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <div class="inv-cat" style="margin:0;">Custom one-off builds</div>
       <button class="ghost btn-sm" id="mgAddCustomBtn">+ Custom build</button>
@@ -9059,7 +9080,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   async function loadInventory(silent){
     silent = silent === true;
     if (!SB || !session) return;
-    if (!silent) invBody.innerHTML = '<p class="muted-line">Loading&hellip;</p>';
+    if (!silent) invBody.innerHTML = '<div class="skel-rows" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div>';
     const { data, error } = await SB.from('inv_items').select('*').eq('archived', false)
       .order('category').order('sort_order').order('name');
     if (error){ invState = 'error'; invBody.innerHTML = '<p class="muted-line">Could not load inventory: ' + esc(error.message||'error') + '. Make sure the inventory tables are set up.</p>'; renderHomeStatus(); return; }
@@ -11396,7 +11417,11 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
   function setStat(id, val, sub, tone){
     var v = document.getElementById('stat' + id + 'Val'), s = document.getElementById('stat' + id + 'Sub');
-    if (v){
+    /* still waiting for the data: shimmer bars instead of a dash and the word Loading */
+    var wait = sub === 'Loading\u2026';
+    if (wait) sub = '<span class="skel skel-sub skel-wait"></span>';
+    if (v && wait){ v.innerHTML = '<span class="skel skel-num skel-wait"></span>'; }
+    else if (v){
       v.textContent = val;
       if (v.classList.contains('count-int') && window.ntCountUp) window.ntCountUp(v);
     }
@@ -11646,7 +11671,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     renderHomeWidgets();
     const to = document.getElementById('tileOrdStatus');
     if (to){
-      if (!ordInited){ to.innerHTML = '<span class="ts-lbl">Loading\u2026</span>'; to.className = 'tile-status'; }
+      if (!ordInited){ to.innerHTML = '<span class="skel skel-sub"></span>'; to.className = 'tile-status'; }
       else if (!ordOrders.length){ to.innerHTML = '<span class="ts-lbl">No orders yet</span>'; to.className = 'tile-status'; }
       else {
         var open = 0, ready = 0;
@@ -11683,7 +11708,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
           ? tileStat(lows + ' item' + (lows===1?'':'s'), 'below threshold')
           : tileStat('All stocked', invItems.length + ' parts tracked');
         ti.className = 'tile-status ' + (lows ? 'warn' : 'ok');
-      } else { ti.innerHTML = '<span class="ts-lbl">Loading\u2026</span>'; ti.className = 'tile-status'; }
+      } else { ti.innerHTML = '<span class="skel skel-sub"></span>'; ti.className = 'tile-status'; }
     }
     if (tt){
       if (!tcMe){ tt.innerHTML = '<span class="ts-lbl">Not on the roster yet</span>'; tt.className = 'tile-status'; }
@@ -12325,7 +12350,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
                   '<h3 class="bill-exp-h">Payments</h3>' +
                   (pays === undefined
-                    ? '<p class="muted-sm" style="margin:0;">Loading\u2026</p>'
+                    ? '<div class="skel skel-line w60" style="margin:4px 0;" role="status" aria-label="Loading"></div>'
                     : pays.length
                       ? '<div class="bill-pays">' + pays.map(function(p){
                           return '<div class="bill-pay-row"><span class="bill-pay-a">' + obMoney(p.amount) + '</span>' +
@@ -12704,7 +12729,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
   function obDocsHtml(orderId){
     const list = obDocs[orderId];
-    if (!list) return '<p class="muted-sm" style="margin:0;">Loading\u2026</p>';
+    if (!list) return '<div class="skel skel-line w60" style="margin:4px 0;" role="status" aria-label="Loading"></div>';
     if (!list.length) return '<p class="muted-sm" style="margin:0;">Nothing attached yet.</p>';
     return '<div class="bill-docs">' + list.map(function(d){
       return '<div class="bill-doc">' +
@@ -13242,7 +13267,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
       '<section class="card" id="ordNotesCard">' +
         '<h2 class="card-title">Notes</h2>' +
-        '<div id="ordNotesBody"><p class="onote-empty">Loading\u2026</p></div>' +
+        '<div id="ordNotesBody"><div class="skel skel-line w60" style="margin:4px 0;" role="status" aria-label="Loading"></div></div>' +
       '</section>';
 
     if (!gated){ ordRenderPool(); ordRenderBatches(); }
@@ -18577,7 +18602,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
               : '') +
 
             '<h3 class="adm-sub">Order mail history</h3>' +
-            '<div id="admHist_order"><p class="muted-sm" style="margin:0;">Loading\u2026</p></div>') +
+            '<div id="admHist_order"><div class="skel skel-line w60" style="margin:4px 0;" role="status" aria-label="Loading"></div></div>') +
       '</section>' +
 
       /* ---- 3. RMA notifications ---- */
@@ -18619,7 +18644,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
               : '') +
 
             '<h3 class="adm-sub">RMA mail history</h3>' +
-            '<div id="admHist_rma"><p class="muted-sm" style="margin:0;">Loading\u2026</p></div>') +
+            '<div id="admHist_rma"><div class="skel skel-line w60" style="margin:4px 0;" role="status" aria-label="Loading"></div></div>') +
       '</section>';
 
     admEmailConn();
