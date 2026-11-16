@@ -480,8 +480,8 @@ window.ntBootSignIn = function(){
     --bg:#ffffff;
     --paper:#ffffff;
     --soft:#f7f7f5;
-    --line:#e3e2df;
-    --line-strong:#d1cfc9;
+    --line:rgb(55 53 47 / .15);
+    --line-strong:rgb(55 53 47 / .24);
     /* sidebar, hover and pressed fills, and the sidebar's own text */
     --side:#f7f7f5;
     --hover:rgba(55,53,47,.06);
@@ -491,7 +491,7 @@ window.ntBootSignIn = function(){
     --field:rgba(242,241,238,.6); --field-line:rgba(15,15,15,.1); --field-hover:rgba(15,15,15,.2); --field-pad:12px;
     --cell-y:8px; --cell-x:12px;
     /* tag dots, the key of a segmented switch and the toast slip */
-    --dot-ok:#47a56c; --dot-warn:#e37a22; --dot-bad:#e7574b; --dot-series:#9968cc; --dot-neutral:#86857f;
+    --dot-ok:oklch(0.650 0.124 154.3); --dot-warn:oklch(0.650 0.159 54.2); --dot-bad:oklch(0.650 0.181 28.0); --dot-series:oklch(0.650 0.153 304.9); --dot-neutral:#86857f;
     --seg-on:#ffffff; --toast-bg:#2f2f2f; --toast-line:transparent;
 
     /* accent — Notion blue: primary buttons, focus, selection and links.
@@ -507,18 +507,18 @@ window.ntBootSignIn = function(){
 
     /* status — Notion's tag colours: a pale tint behind deep text, the mid hue
        on dots and bars. Tags carry no border; -line is for tinted controls. */
-    --ok:#2e9455;   --ok-ink:#1c3829;   --ok-bg:#d5efdb;   --ok-line:#b4dfc0;
-    --warn:#de6808; --warn-ink:#49290e; --warn-bg:#fadec9; --warn-line:#f2c6a3;
-    --bad:#dc3e39;  --bad-ink:#5d1715;  --bad-bg:#ffe2dd;  --bad-line:#f6c3bb;
-    --info:#2678bd; --info-ink:#183347; --info-bg:#d3e5ef; --info-line:#b4d1e2;
+    --ok:oklch(0.595 0.133 152.3);   --ok-ink:oklch(0.317 0.044 159.0);   --ok-bg:oklch(0.925 0.038 152.5);   --ok-line:oklch(0.858 0.062 153.6);
+    --warn:oklch(0.595 0.158 49.4); --warn-ink:oklch(0.317 0.062 57.7); --warn-bg:oklch(0.925 0.042 59.1); --warn-line:oklch(0.858 0.069 60.2);
+    --bad:oklch(0.595 0.196 26.8);  --bad-ink:oklch(0.317 0.102 26.3);  --bad-bg:oklch(0.925 0.033 29.4);  --bad-line:oklch(0.858 0.060 28.6);
+    --info:oklch(0.595 0.132 248.5); --info-ink:oklch(0.317 0.049 242.6); --info-bg:oklch(0.925 0.024 231.9); --info-line:oklch(0.858 0.039 233.6);
     --go:#1877e0;   --go-hover:#0c69cf;
     /* text-safe status colours: the mid hues stay on dots, bars and borders,
        text uses -fg; --bad-solid fills the destructive confirm button */
-    --ok-fg:#23804a; --warn-fg:#b25405; --bad-fg:#c8322e;
+    --ok-fg:oklch(0.540 0.120 153.3); --warn-fg:oklch(0.540 0.141 50.5); --bad-fg:oklch(0.540 0.187 27.1);
     --bad-solid:#dc3e39;
     /* focus outline, chart series and raised surfaces (toasts, search panel) */
     --focus:#1877e0;
-    --series:#8553c2; --series-bg:#e8deee; --series-ink:#412454;
+    --series:oklch(0.595 0.169 301.9); --series-bg:oklch(0.925 0.024 313.1); --series-ink:oklch(0.317 0.088 310.3);
     --raised:var(--paper); --raised-line:var(--line); --skel-hi:var(--soft);
 
     /* elevation — Notion's layered shadows: a hairline ring, a short contact
@@ -564,14 +564,14 @@ window.ntBootSignIn = function(){
     --ease-out:cubic-bezier(.2,.8,.3,1);
 
     /* per-surface icon hues, from Notion's text colours */
-    --hue-orders:#8553c2;
-    --hue-inventory:#a5603a;   /* cardboard */
-    --hue-timeclock:#d64496;
-    --hue-margins:#de6808;
-    --hue-billing:#2e9455;
+    --hue-orders:oklch(0.595 0.169 301.9);
+    --hue-inventory:oklch(0.595 0.104 48.4);   /* cardboard */
+    --hue-timeclock:oklch(0.595 0.198 349.9);
+    --hue-margins:oklch(0.595 0.158 49.4);
+    --hue-billing:oklch(0.595 0.133 152.3);
     --hue-admin:#696864;
-    --hue-rma:#1f7bc7;
-    --hue-gov:#2a66ad;          /* federal blue */
+    --hue-rma:oklch(0.595 0.143 249.0);
+    --hue-gov:oklch(0.595 0.129 266.0);          /* federal blue */
   }
   @media (pointer:coarse){ :root{ --h-xs:40px; --h-sm:40px; --h-md:44px; --h-lg:44px; } }
   :root[data-demo]{ --dock:calc(76px + var(--demo-bar, 44px) + env(safe-area-inset-bottom)); }
@@ -583,37 +583,37 @@ window.ntBootSignIn = function(){
        text and hairlines in white at reduced strength */
     --ink:#e4e4e4; --charcoal:#e4e4e4; --muted:#a8a8a8; --faint:#8c8c8c;
     --stone:#6f6f6f; --disabled:#4f4f4f;
-    --bg:#191919; --paper:#191919; --soft:#252525;
-    --line:#343434;
-    --line-strong:#484848;
+    --bg:#191919; --paper:oklch(0.240 0 0); --soft:oklch(0.277 0 0);
+    --line:rgb(255 255 255 / .12);
+    --line-strong:rgb(255 255 255 / .2);
     --side:#202020; --hover:rgba(255,255,255,.055); --press:rgba(255,255,255,.09);
     --nav-ink:#b4b4b4; --nav-ico:#8c8c8c; --nav-sel:rgba(255,255,255,.07);
     --field:rgba(255,255,255,.055); --field-line:rgba(255,255,255,.09); --field-hover:rgba(255,255,255,.2);
     --seg-on:rgba(255,255,255,.13); --toast-bg:#2f2f2f; --toast-line:rgba(255,255,255,.09);
     --ink-deep:#f3f3f3; --on-ink:#191919;
     --accent:#2383e2; --accent-fg:#5aa8ea; --accent-hover:#3a92e8;
-    --accent-soft:color-mix(in srgb, #2383e2 18%, #191919);
-    --accent-line:color-mix(in srgb, #2383e2 45%, #191919);
+    --accent-soft:oklch(0.330 0.039 249.3);
+    --accent-line:oklch(0.420 0.086 250.4);
     --accent-ink:#ffffff;
     --link:#5aa8ea; --link-hover:#7fbcf0;
-    --ok:#3fab63;   --ok-ink:#cfe6d6;
-    --ok-bg:color-mix(in srgb, #3fab63 24%, #191919);
-    --ok-line:color-mix(in srgb, #3fab63 42%, #191919);
-    --warn:#dc7a28; --warn-ink:#f3d9c2;
-    --warn-bg:color-mix(in srgb, #dc7a28 24%, #191919);
-    --warn-line:color-mix(in srgb, #dc7a28 42%, #191919);
-    --bad:#d54a42;  --bad-ink:#f4cdc9;
-    --bad-bg:color-mix(in srgb, #d54a42 24%, #191919);
-    --bad-line:color-mix(in srgb, #d54a42 42%, #191919);
-    --info:#3d7fe0; --info-ink:#cfdcf2;
-    --info-bg:color-mix(in srgb, #3d7fe0 26%, #191919);
-    --info-line:color-mix(in srgb, #3d7fe0 45%, #191919);
+    --ok:oklch(0.650 0.145 151.2);   --ok-ink:oklch(0.894 0.033 155.3);
+    --ok-bg:oklch(0.330 0.044 154.6);
+    --ok-line:oklch(0.420 0.071 152.9);
+    --warn:oklch(0.650 0.151 55.2); --warn-ink:oklch(0.894 0.042 63.8);
+    --warn-bg:oklch(0.330 0.046 58.6);
+    --warn-line:oklch(0.420 0.075 59.0);
+    --bad:oklch(0.650 0.176 27.0);  --bad-ink:oklch(0.894 0.045 24.9);
+    --bad-bg:oklch(0.330 0.051 24.1);
+    --bad-line:oklch(0.420 0.084 25.8);
+    --info:oklch(0.650 0.162 258.2); --info-ink:oklch(0.894 0.033 261.0);
+    --info-bg:oklch(0.330 0.051 256.8);
+    --info-line:oklch(0.420 0.083 257.9);
     --go:#2383e2;   --go-hover:#0077d4;
-    --ok-fg:#5cc487; --warn-fg:#f0964c; --bad-fg:#f06d63;
+    --ok-fg:oklch(0.725 0.132 155.5); --warn-fg:oklch(0.725 0.140 57.6); --bad-fg:oklch(0.725 0.164 26.6);
     --bad-solid:#d54a42;
     --focus:#5aa8ea;
-    --series:#a472ea; --series-bg:color-mix(in srgb, #a472ea 24%, #191919); --series-ink:#e2d4f5;
-    --raised:#252525; --raised-line:#373737; --skel-hi:rgba(255,255,255,.06);
+    --series:oklch(0.650 0.176 300.9); --series-bg:oklch(0.330 0.052 302.6); --series-ink:oklch(0.894 0.047 304.6);
+    --raised:oklch(0.295 0 0); --raised-line:rgb(255 255 255 / .09); --skel-hi:rgba(255,255,255,.06);
     --e1:0 1px 2px rgba(0,0,0,.3);
     --e2:rgba(15,15,15,.1) 0 0 0 1px, rgba(15,15,15,.2) 0 3px 6px, rgba(15,15,15,.4) 0 9px 24px;
     --e3:rgba(15,15,15,.1) 0 0 0 1px, rgba(15,15,15,.2) 0 5px 10px, rgba(15,15,15,.4) 0 15px 40px;
@@ -621,9 +621,9 @@ window.ntBootSignIn = function(){
     --scrim:rgba(0,0,0,.6);
     --glass:rgba(32,32,32,.68); --glass-solid:#202020;
     --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#ececec;
-    --hue-orders:#a472ea; --hue-inventory:#b47a58;   /* cardboard */ --hue-timeclock:#e04e95;
-    --hue-margins:#dc7a28; --hue-admin:#a8a8a8; --hue-rma:#4fa5e6;
-    --hue-billing:#3fab63; --hue-gov:#5a96e0;
+    --hue-orders:oklch(0.650 0.176 300.9); --hue-inventory:oklch(0.650 0.087 51.0);   /* cardboard */ --hue-timeclock:oklch(0.650 0.193 353.9);
+    --hue-margins:oklch(0.650 0.151 55.2); --hue-admin:#a8a8a8; --hue-rma:oklch(0.650 0.127 244.0);
+    --hue-billing:oklch(0.650 0.145 151.2); --hue-gov:oklch(0.650 0.127 266.0);
     --ring:0 0 0 2px rgba(35,131,226,.45);
   }
   @media (prefers-color-scheme:dark){
@@ -633,37 +633,37 @@ window.ntBootSignIn = function(){
          text and hairlines in white at reduced strength */
       --ink:#e4e4e4; --charcoal:#e4e4e4; --muted:#a8a8a8; --faint:#8c8c8c;
       --stone:#6f6f6f; --disabled:#4f4f4f;
-      --bg:#191919; --paper:#191919; --soft:#252525;
-      --line:#343434;
-      --line-strong:#484848;
+      --bg:#191919; --paper:oklch(0.240 0 0); --soft:oklch(0.277 0 0);
+      --line:rgb(255 255 255 / .12);
+      --line-strong:rgb(255 255 255 / .2);
       --side:#202020; --hover:rgba(255,255,255,.055); --press:rgba(255,255,255,.09);
       --nav-ink:#b4b4b4; --nav-ico:#8c8c8c; --nav-sel:rgba(255,255,255,.07);
       --field:rgba(255,255,255,.055); --field-line:rgba(255,255,255,.09); --field-hover:rgba(255,255,255,.2);
       --seg-on:rgba(255,255,255,.13); --toast-bg:#2f2f2f; --toast-line:rgba(255,255,255,.09);
       --ink-deep:#f3f3f3; --on-ink:#191919;
       --accent:#2383e2; --accent-fg:#5aa8ea; --accent-hover:#3a92e8;
-      --accent-soft:color-mix(in srgb, #2383e2 18%, #191919);
-      --accent-line:color-mix(in srgb, #2383e2 45%, #191919);
+      --accent-soft:oklch(0.330 0.039 249.3);
+      --accent-line:oklch(0.420 0.086 250.4);
       --accent-ink:#ffffff;
       --link:#5aa8ea; --link-hover:#7fbcf0;
-      --ok:#3fab63;   --ok-ink:#cfe6d6;
-      --ok-bg:color-mix(in srgb, #3fab63 24%, #191919);
-      --ok-line:color-mix(in srgb, #3fab63 42%, #191919);
-      --warn:#dc7a28; --warn-ink:#f3d9c2;
-      --warn-bg:color-mix(in srgb, #dc7a28 24%, #191919);
-      --warn-line:color-mix(in srgb, #dc7a28 42%, #191919);
-      --bad:#d54a42;  --bad-ink:#f4cdc9;
-      --bad-bg:color-mix(in srgb, #d54a42 24%, #191919);
-      --bad-line:color-mix(in srgb, #d54a42 42%, #191919);
-      --info:#3d7fe0; --info-ink:#cfdcf2;
-      --info-bg:color-mix(in srgb, #3d7fe0 26%, #191919);
-      --info-line:color-mix(in srgb, #3d7fe0 45%, #191919);
+      --ok:oklch(0.650 0.145 151.2);   --ok-ink:oklch(0.894 0.033 155.3);
+      --ok-bg:oklch(0.330 0.044 154.6);
+      --ok-line:oklch(0.420 0.071 152.9);
+      --warn:oklch(0.650 0.151 55.2); --warn-ink:oklch(0.894 0.042 63.8);
+      --warn-bg:oklch(0.330 0.046 58.6);
+      --warn-line:oklch(0.420 0.075 59.0);
+      --bad:oklch(0.650 0.176 27.0);  --bad-ink:oklch(0.894 0.045 24.9);
+      --bad-bg:oklch(0.330 0.051 24.1);
+      --bad-line:oklch(0.420 0.084 25.8);
+      --info:oklch(0.650 0.162 258.2); --info-ink:oklch(0.894 0.033 261.0);
+      --info-bg:oklch(0.330 0.051 256.8);
+      --info-line:oklch(0.420 0.083 257.9);
       --go:#2383e2;   --go-hover:#0077d4;
-      --ok-fg:#5cc487; --warn-fg:#f0964c; --bad-fg:#f06d63;
+      --ok-fg:oklch(0.725 0.132 155.5); --warn-fg:oklch(0.725 0.140 57.6); --bad-fg:oklch(0.725 0.164 26.6);
       --bad-solid:#d54a42;
       --focus:#5aa8ea;
-      --series:#a472ea; --series-bg:color-mix(in srgb, #a472ea 24%, #191919); --series-ink:#e2d4f5;
-      --raised:#252525; --raised-line:#373737; --skel-hi:rgba(255,255,255,.06);
+      --series:oklch(0.650 0.176 300.9); --series-bg:oklch(0.330 0.052 302.6); --series-ink:oklch(0.894 0.047 304.6);
+      --raised:oklch(0.295 0 0); --raised-line:rgb(255 255 255 / .09); --skel-hi:rgba(255,255,255,.06);
       --e1:0 1px 2px rgba(0,0,0,.3);
       --e2:rgba(15,15,15,.1) 0 0 0 1px, rgba(15,15,15,.2) 0 3px 6px, rgba(15,15,15,.4) 0 9px 24px;
       --e3:rgba(15,15,15,.1) 0 0 0 1px, rgba(15,15,15,.2) 0 5px 10px, rgba(15,15,15,.4) 0 15px 40px;
@@ -671,9 +671,9 @@ window.ntBootSignIn = function(){
       --scrim:rgba(0,0,0,.6);
       --glass:rgba(32,32,32,.68); --glass-solid:#202020;
       --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#ececec;
-      --hue-orders:#a472ea; --hue-inventory:#b47a58;   /* cardboard */ --hue-timeclock:#e04e95;
-      --hue-margins:#dc7a28; --hue-admin:#a8a8a8; --hue-rma:#4fa5e6;
-      --hue-billing:#3fab63; --hue-gov:#5a96e0;
+      --hue-orders:oklch(0.650 0.176 300.9); --hue-inventory:oklch(0.650 0.087 51.0);   /* cardboard */ --hue-timeclock:oklch(0.650 0.193 353.9);
+      --hue-margins:oklch(0.650 0.151 55.2); --hue-admin:#a8a8a8; --hue-rma:oklch(0.650 0.127 244.0);
+      --hue-billing:oklch(0.650 0.145 151.2); --hue-gov:oklch(0.650 0.127 266.0);
       --ring:0 0 0 2px rgba(35,131,226,.45);
     }
   }
@@ -1329,7 +1329,7 @@ window.ntBootSignIn = function(){
     }
     .tab-btn{
       flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-      padding:7px 0; min-height:50px; background:none; border:none; border-radius:16px;
+      padding:7px 0; min-height:50px; background:none; border:none; border-radius:17px;
       font-family:var(--font-ui); font-size:10px; font-weight:600; letter-spacing:.01em;
       color:rgba(255,255,255,.64); cursor:pointer; position:relative; z-index:1;
       transition:color 240ms var(--ease-drawer), transform 150ms var(--ease-out);
@@ -1340,7 +1340,7 @@ window.ntBootSignIn = function(){
     /* the rail's sliding fill, inverted for the dark glass */
     .tab-ind{
       position:absolute; top:5px; left:0; width:0; height:0; z-index:0;
-      background:var(--tab-chip); border-radius:16px;
+      background:var(--tab-chip); border-radius:17px;
       box-shadow:0 4px 14px -8px rgba(0,0,0,.45);
       opacity:0; pointer-events:none; transition:none;
     }
@@ -1920,7 +1920,7 @@ window.ntBootSignIn = function(){
   .ord-chips .mg-pill[data-ordfilter]::before{ transition:background var(--t), box-shadow 220ms ease; }
   /* light mode: a saturated core with a small hot spot and a strong halo, so it still reads lit on a pale ground */
   .ord-chips .mg-pill[data-ordfilter].on::before{
-    background:radial-gradient(circle at 38% 35%, #fff 0, color-mix(in srgb, var(--chip-hue) 40%, #fff) 22%, var(--chip-hue) 60%);
+    background:radial-gradient(circle at 38% 35% in oklch, #fff 0, color-mix(in oklch, var(--chip-hue) 40%, #fff) 22%, var(--chip-hue) 60%);
     box-shadow:0 0 0 2px color-mix(in srgb, var(--chip-hue) 30%, transparent),
                0 0 7px 2px var(--chip-hue), 0 0 16px 4px color-mix(in srgb, var(--chip-hue) 60%, transparent);
     filter:saturate(1.35);
@@ -1928,14 +1928,14 @@ window.ntBootSignIn = function(){
   }
   /* dark mode: the paler glow already reads as lit */
   :root[data-theme="dark"] .ord-chips .mg-pill[data-ordfilter].on::before{
-    background:radial-gradient(circle at 40% 38%, color-mix(in srgb, var(--chip-hue) 35%, #fff) 0, color-mix(in srgb, var(--chip-hue) 70%, #fff) 45%, color-mix(in srgb, var(--chip-hue) 88%, #fff) 100%);
+    background:radial-gradient(circle at 40% 38% in oklch, color-mix(in oklch, var(--chip-hue) 35%, #fff) 0, color-mix(in oklch, var(--chip-hue) 70%, #fff) 45%, color-mix(in oklch, var(--chip-hue) 88%, #fff) 100%);
     box-shadow:0 0 0 2px color-mix(in srgb, var(--chip-hue) 22%, transparent),
                0 0 6px 1px var(--chip-hue), 0 0 12px 2px color-mix(in srgb, var(--chip-hue) 45%, transparent);
     filter:none;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme]) .ord-chips .mg-pill[data-ordfilter].on::before{
-      background:radial-gradient(circle at 40% 38%, color-mix(in srgb, var(--chip-hue) 35%, #fff) 0, color-mix(in srgb, var(--chip-hue) 70%, #fff) 45%, color-mix(in srgb, var(--chip-hue) 88%, #fff) 100%);
+      background:radial-gradient(circle at 40% 38% in oklch, color-mix(in oklch, var(--chip-hue) 35%, #fff) 0, color-mix(in oklch, var(--chip-hue) 70%, #fff) 45%, color-mix(in oklch, var(--chip-hue) 88%, #fff) 100%);
       box-shadow:0 0 0 2px color-mix(in srgb, var(--chip-hue) 22%, transparent),
                0 0 6px 1px var(--chip-hue), 0 0 12px 2px color-mix(in srgb, var(--chip-hue) 45%, transparent);
       filter:none;
@@ -3325,9 +3325,6 @@ window.ntBootSignIn = function(){
       scrollbar-width:none; scroll-snap-type:x proximity;
       gap:var(--s1); padding-bottom:0;
       margin-inline:-12px; padding-inline:12px;
-      /* the right edge fades out: there are more sections past it */
-      -webkit-mask-image:linear-gradient(90deg, #000 calc(100% - 28px), transparent);
-      mask-image:linear-gradient(90deg, #000 calc(100% - 28px), transparent);
     }
     .adm-tabs::-webkit-scrollbar{ display:none; }
     .adm-tabs .mg-pill{ white-space:nowrap; flex:0 0 auto; scroll-snap-align:start; }
@@ -3948,7 +3945,7 @@ window.ntBootSignIn = function(){
   .tab-more-sheet button{
     display:flex; width:100%; align-items:center; justify-content:flex-start;
     gap:13px; padding:11px 12px; min-height:48px;
-    background:none; border:0; border-radius:12px !important; font-size:14.5px; font-weight:500;
+    background:none; border:0; border-radius:14px !important; font-size:14.5px; font-weight:500;
     color:rgba(255,255,255,.72); text-align:left;
     -webkit-user-select:none; user-select:none;
     transition:background .15s ease, color .15s ease, transform .15s var(--ease-out);
@@ -4383,7 +4380,7 @@ window.ntBootSignIn = function(){
     }
     body.gs-open .gs-panel{
       position:static; margin-top:var(--s3); box-shadow:none; border-radius:var(--r-sm);
-      max-height:calc(100vh - 140px); animation:none;
+      max-height:calc(100vh - 140px); max-height:calc(100dvh - 140px); animation:none;
     }
   }
   @media (prefers-reduced-motion: reduce){
@@ -5755,7 +5752,7 @@ window.ntBootSignIn = function(){
   html:not([data-retro]) .mg-modal{ border-color:transparent; border-radius:var(--r-lg); box-shadow:var(--e3); }
   /* dark: a dialog sits one step above the page, and whatever inside it
      paints with the page colour follows */
-  html:not([data-retro])[data-theme="dark"] .mg-modal{ --paper:var(--raised); background:var(--raised); border-color:var(--raised-line); }
+  html:not([data-retro])[data-theme="dark"] .mg-modal{ --paper:var(--raised); --soft:oklch(0.330 0 0); background:var(--raised); border-color:var(--raised-line); }
   html:not([data-retro]) .login-card{ box-shadow:none; }
   html:not([data-retro]) .login-card .field label{ font-weight:500; }
   html:not([data-retro]) .mg-x{ border-color:transparent; background:transparent; border-radius:var(--r-sm) !important; color:var(--faint); }
@@ -5769,7 +5766,33 @@ window.ntBootSignIn = function(){
   html:not([data-retro]) .toast .t-x:hover{ color:#fff; }
   /* the top bar is solid, as Notion's is. A frosted bar re-blurs whatever
      scrolls beneath it on every frame, which costs most on a very wide screen */
-  html:not([data-retro]) .topnav{ background:var(--paper); -webkit-backdrop-filter:none; backdrop-filter:none; }
+  html:not([data-retro]) .topnav{ background:var(--bg); -webkit-backdrop-filter:none; backdrop-filter:none; }
+
+  /* ---- design rules (2026-11-15) ---------------------------------------
+     Icons: the stroke follows the weight of the text beside it, on the
+     24-unit grid: regular text 1.5, medium 1.75, semibold 2. Buttons and
+     the sidebar are medium; pills and small buttons are semibold. */
+  button svg *, .nav-item > svg *, .rt-ico svg *, .rail-btn svg *{ stroke-width:1.75; }
+  .mini svg *, .mg-pill svg *, .seg-btn svg *, .btn-sm svg *, .mg-badge svg *, .sev svg *, .low-chip svg *, .tab-btn svg *{ stroke-width:2; }
+  .gs-ico svg *, .toast .t-ico *{ stroke-width:1.5; }
+  /* Icon swaps (sun/moon, show/hide password): the outgoing icon blurs as
+     it fades out. The hidden icon is lifted out of the row (absolute, with
+     no offsets, so it stays on the same spot) instead of display:none */
+  .rt-ico > svg, .pw-see > svg, .theme-btn > svg{
+    transition:opacity .2s ease, filter .2s ease, transform .2s ease;
+  }
+  .theme-btn .i-sun, :root[data-theme="dark"] .theme-btn .i-moon, .rt-ico .i-moon, :root[data-theme="dark"] .rt-ico .i-sun,
+  .pw-see .pw-eye-off, .pw-see.on .pw-eye{ display:block; position:absolute; opacity:0; filter:blur(4px); transform:scale(.6); }
+  :root[data-theme="dark"] .theme-btn .i-sun, :root[data-theme="dark"] .rt-ico .i-moon, .pw-see.on .pw-eye-off{ position:static; opacity:1; filter:none; transform:none; }
+  @media (prefers-reduced-motion: reduce){ .rt-ico > svg, .pw-see > svg, .theme-btn > svg{ transition:none; } }
+  /* Carousels and scrolling rows fade at an edge only while there is more
+     to scroll that way (the script at the end of the page sets data-fade) */
+  :is(.adm-tabs, .ord-chips, .status-pills, .nav-menu, #previewScroll)[data-fade]{
+    -webkit-mask-image:linear-gradient(90deg, var(--fade-l, #000), #000 15% 85%, var(--fade-r, #000));
+            mask-image:linear-gradient(90deg, var(--fade-l, #000), #000 15% 85%, var(--fade-r, #000));
+  }
+  [data-fade~="l"]{ --fade-l:transparent; }
+  [data-fade~="r"]{ --fade-r:transparent; }
 </style>
 <style id="retroTheme">
   /* ============================================================
@@ -5783,7 +5806,7 @@ window.ntBootSignIn = function(){
   /* the Retro switch has its own state; the shared track follows dark mode */
   :root[data-theme="dark"] .rr-track{ background:var(--line-strong); }
   :root[data-theme="dark"] .rr-knob{ transform:none; }
-  :root[data-retro] .rr-track{ background:linear-gradient(90deg, #ff2a8a, #7b3ff2); box-shadow:0 0 10px rgba(255,42,138,.55); }
+  :root[data-retro] .rr-track{ background:linear-gradient(90deg in oklch, #ff2a8a, #7b3ff2); box-shadow:0 0 10px rgba(255,42,138,.55); }
   :root[data-retro] .rr-knob{ transform:translateX(16px); }
   :root[data-retro] #themeSwitch, :root[data-retro] #themeBtn{ opacity:.42; cursor:not-allowed; }
 
@@ -5807,7 +5830,7 @@ window.ntBootSignIn = function(){
       --ink:#ece8ff; --charcoal:#ece8ff; --muted:#b3acd9; --faint:#8f88bf;
       --stone:#9c95c9; --disabled:#5c5590;
       --bg:#1a1a2e; --paper:#1f1c3a; --soft:#28244b;
-      --line:#352f66; --line-strong:#4f4596;
+      --line:rgb(140 120 255 / .21); --line-strong:rgb(140 120 255 / .45);
       --ink-deep:#ff2a8a; --on-ink:#16001f;
 
       --accent:#1a8cff; --accent-fg:#33e1ff; --accent-hover:#4aa8ff;
@@ -5849,7 +5872,7 @@ window.ntBootSignIn = function(){
       --dk-rim-top:rgba(0,229,255,.42); --dk-rim-bot:rgba(255,16,240,.3); --dk-bg:rgba(20,16,44,.9);
       --dk-solid:#16122e; --dk-line:rgba(0,229,255,.14); --dk-pill:rgba(255,42,138,.28); --dk-pill-drag:rgba(255,42,138,.4);
       --dk-ink:#fff2fb; --dk-ink2:#c9c2ee; --dk-shadow:8,0,30;
-      --rail-ind:linear-gradient(90deg, rgba(255,42,138,.95), rgba(123,63,242,.9));
+      --rail-ind:linear-gradient(90deg in oklch, rgba(255,42,138,.95), rgba(123,63,242,.9));
 
       background:#07061a;
       scrollbar-width:thin;
@@ -5863,7 +5886,7 @@ window.ntBootSignIn = function(){
     :root[data-retro] ::selection{ background:rgba(255,42,138,.85); color:#16001f; }
     :root[data-retro] ::-webkit-scrollbar{ width:8px; height:8px; }
     :root[data-retro] ::-webkit-scrollbar-track{ background:transparent; }
-    :root[data-retro] ::-webkit-scrollbar-thumb{ background:linear-gradient(180deg, rgba(255,42,138,.7), rgba(106,63,214,.7)); border-radius:8px; border:2px solid transparent; background-clip:padding-box; }
+    :root[data-retro] ::-webkit-scrollbar-thumb{ background:linear-gradient(180deg in oklch, rgba(255,42,138,.7), rgba(106,63,214,.7)); border-radius:8px; border:2px solid transparent; background-clip:padding-box; }
     :root[data-retro] body.authed .siderail{ scrollbar-width:none; }
     :root[data-retro] body.authed .siderail::-webkit-scrollbar{ display:none; }
     :where([data-retro]) :is(h1,h2,h3,h4){ font-family:var(--rx-display); font-weight:700; letter-spacing:.05em; }
@@ -5900,7 +5923,7 @@ window.ntBootSignIn = function(){
         linear-gradient(var(--rx-cyan), var(--rx-cyan)) left top / 1px 14px no-repeat,
         linear-gradient(var(--rx-pink), var(--rx-pink)) right bottom / 14px 1px no-repeat,
         linear-gradient(var(--rx-pink), var(--rx-pink)) right bottom / 1px 14px no-repeat,
-        linear-gradient(180deg, rgba(123,63,242,.10), rgba(123,63,242,0) 140px),
+        linear-gradient(180deg in oklch, rgba(123,63,242,.10), rgba(123,63,242,0) 140px),
         var(--paper);
       border-color:var(--rx-edge);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 18px 40px -22px rgba(0,0,0,.9);
@@ -5927,12 +5950,12 @@ window.ntBootSignIn = function(){
     :where([data-retro]) :is(.primary, .ghost, .green, .soft, .danger, .mini, .btn-sm, .saved){ text-transform:uppercase; letter-spacing:.04em; }
     :where([data-retro]) :is(.primary, .green){ font-weight:700; }
     :where([data-retro]) .primary{
-      background:linear-gradient(180deg, #3aa2ff, #1a7cff); color:#07061a; border-color:rgba(255,255,255,.18);
+      background:linear-gradient(180deg in oklch, #3aa2ff, #1a7cff); color:#07061a; border-color:rgba(255,255,255,.18);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 1px rgba(26,140,255,.35);
     }
     :where([data-retro]) .primary:not(:disabled):hover,
     :where([data-retro]) .primary:not(:disabled):active{
-      background:linear-gradient(180deg, #5cb4ff, #2a8cff);
+      background:linear-gradient(180deg in oklch, #5cb4ff, #2a8cff);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 0 18px rgba(26,140,255,.6);
     }
     :where([data-retro]) .ghost{ background:rgba(10,8,28,.35); border-color:#5a4fa8; color:var(--ink); }
@@ -5944,8 +5967,8 @@ window.ntBootSignIn = function(){
     :where([data-retro]) .danger{ color:var(--bad-ink); border-color:var(--bad-line); }
     :where([data-retro]) .danger:not(:disabled):hover{ background:var(--bad-bg); border-color:var(--bad); color:#ffe0ea; box-shadow:0 0 14px rgba(255,60,125,.45); }
     :where([data-retro]) .mini:not(:disabled):hover{ border-color:var(--rx-cyan); color:var(--rx-cyan); box-shadow:0 0 10px rgba(0,229,255,.28); }
-    :root[data-retro] .green{ background:linear-gradient(180deg, #5affbd, #21e996); color:#04140d; border-color:rgba(255,255,255,.2); box-shadow:inset 0 1px 0 rgba(255,255,255,.45); }
-    :root[data-retro] .green:not(:disabled):hover{ background:linear-gradient(180deg, #86ffd0, #3bf5a8); box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 18px rgba(43,255,168,.5); }
+    :root[data-retro] .green{ background:linear-gradient(180deg in oklch, #5affbd, #21e996); color:#04140d; border-color:rgba(255,255,255,.2); box-shadow:inset 0 1px 0 rgba(255,255,255,.45); }
+    :root[data-retro] .green:not(:disabled):hover{ background:linear-gradient(180deg in oklch, #86ffd0, #3bf5a8); box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 18px rgba(43,255,168,.5); }
     :where([data-retro]) .soft{ background:rgba(26,140,255,.12); border-color:rgba(26,140,255,.5); color:#8fd0ff; }
     :where([data-retro]) .soft:not(:disabled):hover{ border-color:var(--rx-cyan); color:var(--rx-cyan); box-shadow:0 0 12px rgba(0,229,255,.3); }
     :where([data-retro]) .saved{ box-shadow:0 0 12px rgba(43,255,168,.3); }
@@ -5968,7 +5991,7 @@ window.ntBootSignIn = function(){
 
     /* ---------- home tiles ---------- */
     :where([data-retro]) .tile{
-      background:linear-gradient(180deg, color-mix(in srgb, var(--tile-hue, var(--rx-violet)) 8%, var(--paper)), var(--paper) 72%);
+      background:linear-gradient(180deg in oklch, color-mix(in srgb, var(--tile-hue, var(--rx-violet)) 8%, var(--paper)), var(--paper) 72%);
       border-color:color-mix(in srgb, var(--tile-hue, var(--rx-violet)) 32%, var(--line)); box-shadow:none;
     }
     :where([data-retro]) .tile:hover{
@@ -5980,7 +6003,7 @@ window.ntBootSignIn = function(){
     :where([data-retro]) .tile-icon{ box-shadow:0 0 14px -3px color-mix(in srgb, var(--tile-hue, var(--muted)) 65%, transparent); }
     :where([data-retro]) .tile-icon svg{ filter:drop-shadow(0 0 4px currentColor); }
     :root[data-retro] .stat{
-      background:linear-gradient(135deg, color-mix(in srgb, var(--stat-hue, var(--rx-cyan)) 16%, var(--paper)), var(--paper) 68%);
+      background:linear-gradient(135deg in oklch, color-mix(in srgb, var(--stat-hue, var(--rx-cyan)) 16%, var(--paper)), var(--paper) 68%);
       border-color:color-mix(in srgb, var(--stat-hue, var(--rx-cyan)) 45%, var(--paper));
       box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 0 22px -12px var(--stat-hue, var(--rx-cyan));
     }
@@ -5996,7 +6019,7 @@ window.ntBootSignIn = function(){
     :where([data-retro]) .topnav{ background:rgba(14,11,34,.74); border-bottom-color:transparent; }
     :where([data-retro]) .topnav::after{
       height:2px; bottom:-2px;
-      background:linear-gradient(90deg, var(--rx-pink), var(--rx-violet) 45%, var(--rx-cyan));
+      background:linear-gradient(90deg in oklch, var(--rx-pink), var(--rx-violet) 45%, var(--rx-cyan));
       box-shadow:0 0 12px rgba(255,16,240,.55), 0 0 26px rgba(0,229,255,.22);
     }
     :where([data-retro]) .top-title{
@@ -6005,7 +6028,7 @@ window.ntBootSignIn = function(){
     }
     :where([data-retro]) .nav-wordmark{ font-family:var(--rx-display); letter-spacing:.14em; color:#ff6bd6; text-shadow:0 0 10px rgba(255,16,240,.6); }
     :where([data-retro]) body.authed .siderail{
-      background:linear-gradient(180deg, rgba(20,15,46,.95), rgba(11,8,28,.97));
+      background:linear-gradient(180deg in oklch, rgba(20,15,46,.95), rgba(11,8,28,.97));
       border-right:1px solid rgba(255,16,240,.38);
       box-shadow:1px 0 0 rgba(0,229,255,.08), 10px 0 32px -14px rgba(255,16,240,.4);
     }
@@ -6014,7 +6037,7 @@ window.ntBootSignIn = function(){
     :where([data-retro]) .siderail .nav-item > svg{ transition:filter var(--t); }
     :where([data-retro]) .siderail .nav-item:hover > svg{ filter:drop-shadow(0 0 4px rgba(0,229,255,.8)); }
     :root[data-retro] .nav-ind{
-      background:linear-gradient(90deg, rgba(255,42,138,.92), rgba(123,63,242,.85));
+      background:linear-gradient(90deg in oklch, rgba(255,42,138,.92), rgba(123,63,242,.85));
       box-shadow:0 0 16px rgba(255,16,240,.45), inset 0 0 0 1px rgba(255,255,255,.12);
     }
     :root[data-retro] body.authed .siderail .nav-item.active{ color:#fff4fc; text-shadow:0 0 8px rgba(255,255,255,.45); }
@@ -6041,7 +6064,7 @@ window.ntBootSignIn = function(){
 
     /* ---------- overlays ---------- */
     :where([data-retro]) .mg-modal{
-      background:linear-gradient(90deg, var(--rx-pink), var(--rx-violet), var(--rx-cyan)) top / 100% 2px no-repeat, var(--paper);
+      background:linear-gradient(90deg in oklch, var(--rx-pink), var(--rx-violet), var(--rx-cyan)) top / 100% 2px no-repeat, var(--paper);
       border-color:rgba(0,229,255,.45);
       box-shadow:0 0 0 1px rgba(255,16,240,.18), 0 0 40px rgba(255,16,240,.18), 0 30px 80px -10px rgba(0,0,0,.85);
     }
@@ -6059,9 +6082,9 @@ window.ntBootSignIn = function(){
     }
     :where([data-retro]) .empty-ico{ color:var(--rx-cyan); filter:drop-shadow(0 0 6px rgba(0,229,255,.6)); }
     :where([data-retro]) .skel{ background:#2a2552; }
-    :where([data-retro]) .skel::after{ background:linear-gradient(90deg, transparent, rgba(0,229,255,.16), rgba(255,42,138,.16), transparent); }
+    :where([data-retro]) .skel::after{ background:linear-gradient(90deg in oklch, transparent, rgba(0,229,255,.16), rgba(255,42,138,.16), transparent); }
     :where([data-retro]) .login-card{
-      background:linear-gradient(90deg, var(--rx-pink), var(--rx-violet), var(--rx-cyan)) top / 100% 2px no-repeat, var(--paper);
+      background:linear-gradient(90deg in oklch, var(--rx-pink), var(--rx-violet), var(--rx-cyan)) top / 100% 2px no-repeat, var(--paper);
       border-color:rgba(0,229,255,.45);
       box-shadow:0 0 0 1px rgba(255,16,240,.2), 0 0 50px rgba(255,16,240,.2), 0 30px 70px -20px rgba(0,0,0,.9);
     }
@@ -6082,7 +6105,7 @@ window.ntBootSignIn = function(){
     :root[data-retro] .adm-sec > .card-title{ font-family:var(--rx-display); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--rx-cyan); }
     /* on a phone the header is pinned over the sheet's top edge, so it carries the neon rule */
     @media (max-width:700px){
-      :where([data-retro]) .mg-modal > .mg-modal-head{ background:linear-gradient(90deg, var(--rx-pink), var(--rx-violet), var(--rx-cyan)) top / 100% 2px no-repeat, var(--paper); }
+      :where([data-retro]) .mg-modal > .mg-modal-head{ background:linear-gradient(90deg in oklch, var(--rx-pink), var(--rx-violet), var(--rx-cyan)) top / 100% 2px no-repeat, var(--paper); }
     }
 
     /* ---------- the horizon behind everything ---------- */
@@ -6090,7 +6113,7 @@ window.ntBootSignIn = function(){
       display:block; position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none;
       background:
         radial-gradient(90% 55% at 50% 72%, rgba(255,16,240,.20), rgba(255,16,240,0) 70%),
-        linear-gradient(180deg, #08061a 0%, #110d2c 40%, #24104a 62%, #3d1157 71.6%, #0c0720 72%, #07051a 100%);
+        linear-gradient(180deg in oklch, #08061a 0%, #110d2c 40%, #24104a 62%, #3d1157 71.6%, #0c0720 72%, #07051a 100%);
     }
     .rx-stars{
       position:absolute; left:0; right:0; top:0; height:72%; opacity:.6;
@@ -6121,30 +6144,30 @@ window.ntBootSignIn = function(){
     }
     .rx-sun::after{
       content:""; position:absolute; inset:0; border-radius:50%; opacity:.62;
-      background:linear-gradient(180deg, #ffe66b 0%, #ffb340 28%, #ff5e7a 52%, #ff1fa8 62%, #b0129e 100%);
+      background:linear-gradient(180deg in oklch, #ffe66b 0%, #ffb340 28%, #ff5e7a 52%, #ff1fa8 62%, #b0129e 100%);
       -webkit-mask-image:linear-gradient(180deg, #000 0 34%, transparent 34% 36%, #000 36% 42%, transparent 42% 45%, #000 45% 49.5%, transparent 49.5% 53%, #000 53% 56%, transparent 56% 60.5%, #000 60.5%);
               mask-image:linear-gradient(180deg, #000 0 34%, transparent 34% 36%, #000 36% 42%, transparent 42% 45%, #000 45% 49.5%, transparent 49.5% 53%, #000 53% 56%, transparent 56% 60.5%, #000 60.5%);
     }
     .rx-floor{
       position:absolute; left:0; right:0; bottom:0; height:28%; overflow:hidden;
       perspective:240px; perspective-origin:50% 0;
-      background:linear-gradient(180deg, #1c0b3a 0%, #0a0620 100%);
+      background:linear-gradient(180deg in oklch, #1c0b3a 0%, #0a0620 100%);
     }
     .rx-floor::before{
       content:""; position:absolute; left:0; right:0; top:0; height:2px; z-index:2;
-      background:linear-gradient(90deg, transparent, #ff2a8a 18%, #ffb3e6 50%, #ff2a8a 82%, transparent);
+      background:linear-gradient(90deg in oklch, transparent, #ff2a8a 18%, #ffb3e6 50%, #ff2a8a 82%, transparent);
       box-shadow:0 0 18px 2px rgba(255,42,138,.6);
     }
     .rx-floor::after{
       content:""; position:absolute; inset:0; z-index:1;
-      background:linear-gradient(180deg, rgba(14,7,36,.92), rgba(14,7,36,0) 50%, rgba(7,5,26,0) 80%, rgba(7,5,26,.6));
+      background:linear-gradient(180deg in oklch, rgba(14,7,36,.92), rgba(14,7,36,0) 50%, rgba(7,5,26,0) 80%, rgba(7,5,26,.6));
     }
     .rx-grid{
       position:absolute; left:-60%; right:-60%; top:0; height:240%;
       transform-origin:50% 0; transform:rotateX(74deg);
       background-image:
-        linear-gradient(90deg, rgba(255,42,138,.62) 0 1.5px, transparent 1.5px),
-        linear-gradient(180deg, rgba(255,42,138,.62) 0 1.5px, transparent 1.5px);
+        linear-gradient(90deg in oklch, rgba(255,42,138,.62) 0 1.5px, transparent 1.5px),
+        linear-gradient(180deg in oklch, rgba(255,42,138,.62) 0 1.5px, transparent 1.5px);
       background-size:64px 64px;
       animation:rxFloor 4s linear infinite;
     }
@@ -6160,12 +6183,12 @@ window.ntBootSignIn = function(){
     }
     .rx-crt::before{
       content:""; position:absolute; left:0; right:0; top:0; height:22vh;
-      background:linear-gradient(180deg, rgba(0,229,255,0), rgba(0,229,255,.045) 50%, rgba(0,229,255,0));
+      background:linear-gradient(180deg in oklch, rgba(0,229,255,0), rgba(0,229,255,.045) 50%, rgba(0,229,255,0));
       transform:translateY(-30vh); animation:rxRoll 10s linear infinite;
     }
     .rx-crt::after{
       content:""; position:absolute; inset:0; opacity:0; transform-origin:50% 50%;
-      background:linear-gradient(180deg, rgba(230,252,255,.94), rgba(255,200,245,.94));
+      background:linear-gradient(180deg in oklch, rgba(230,252,255,.94), rgba(255,200,245,.94));
     }
     :root[data-retro].rx-boot .rx-crt::after{ animation:rxPowerOn 720ms cubic-bezier(.2,.7,.2,1) 1 both; }
     :root[data-retro].rx-shutdown .rx-crt::after{ animation:rxPowerOff 430ms cubic-bezier(.5,0,.8,.4) 1 both; }
@@ -6237,8 +6260,8 @@ window.ntBootSignIn = function(){
     <button type="button" class="rail-toggle in-rail" id="railToggle" title="Collapse sidebar" aria-label="Collapse sidebar"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14.5 6L9 12l5.5 6"/></svg></button>
   </div>
     <div class="nav-menu">
-      <a class="nav-item active" href="#" id="navHome" aria-current="page"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z"/><path stroke-linecap="round" d="M12 15L12 18"/></g></svg><span class="nav-lbl">Home</span></a>
-      <a class="nav-item" href="#" id="navOrders"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg><span class="nav-lbl">Orders</span></a>
+      <a class="nav-item active" href="#" id="navHome" aria-current="page"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M2.75 11 12 3.25 21.25 11"/><path d="M5 9.25v11.5h14V9.25"/><path d="M9.75 20.75V15h4.5v5.75"/></g></svg><span class="nav-lbl">Home</span></a>
+      <a class="nav-item" href="#" id="navOrders"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.5 4.5H5.25v16.25h13.5V4.5H15.5"/><rect x="8.5" y="3" width="7" height="3" rx=".75"/><path stroke-linecap="round" d="M8.75 11h6.5M8.75 14.5h6.5M8.75 18H12"/></g></svg><span class="nav-lbl">Orders</span></a>
       <a class="nav-item" href="#" id="navRma"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg><span class="nav-lbl">RMA</span><span class="nav-badge" id="navRmaBadge" style="display:none;"></span></a>
       <a class="nav-item" href="#" id="navInventory"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg><span class="nav-lbl">Inventory</span></a>
       <a class="nav-item" href="#" id="navTimeclock"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg><span class="nav-lbl">Timeclock</span></a>
@@ -6300,11 +6323,11 @@ window.ntBootSignIn = function(){
 
 <nav class="tabbar" id="tabbar">
   <button type="button" class="tab-btn active" data-goto="home" aria-current="page">
-    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z"/><path stroke-linecap="round" d="M12 15L12 18"/></g></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M2.75 11 12 3.25 21.25 11"/><path d="M5 9.25v11.5h14V9.25"/><path d="M9.75 20.75V15h4.5v5.75"/></g></svg>
     <span>Home</span>
   </button>
   <button type="button" class="tab-btn" data-goto="orders">
-    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg>
+    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.5 4.5H5.25v16.25h13.5V4.5H15.5"/><rect x="8.5" y="3" width="7" height="3" rx=".75"/><path stroke-linecap="round" d="M8.75 11h6.5M8.75 14.5h6.5M8.75 18H12"/></g></svg>
     <span>Orders</span>
   </button>
   <button type="button" class="tab-btn" data-goto="rma" id="tabRma"><span class="tab-badge" id="tabRmaBadge" style="display:none;"></span>
@@ -6453,7 +6476,7 @@ window.ntBootSignIn = function(){
       <section class="card" id="homeQuick">
         <h2 class="card-title" style="margin:0;">Quick actions</h2>
         <div class="tile-grid qa-grid" id="tileGrid">
-        <a class="tile qa" href="#" data-goto="orders"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg></span><span class="tile-title">B2B Orders</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
+        <a class="tile qa" href="#" data-goto="orders"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.5 4.5H5.25v16.25h13.5V4.5H15.5"/><rect x="8.5" y="3" width="7" height="3" rx=".75"/><path stroke-linecap="round" d="M8.75 11h6.5M8.75 14.5h6.5M8.75 18H12"/></g></svg></span><span class="tile-title">B2B Orders</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
         <a class="tile qa" href="#" data-goto="rma"><span class="tile-icon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></span><span class="tile-title">RMA</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
         <a class="tile qa" href="#" data-goto="inventory"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg></span><span class="tile-title">Inventory</span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
         <a class="tile qa" href="#" data-goto="timeclock"><span class="tile-icon"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg></span><span class="tile-title">Timeclock</span><span class="tile-status" id="tileTcStatus"></span><span class="qa-chev"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5L15 12L9 19"/></svg></span></a>
@@ -9033,7 +9056,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     "archive":"<path fill=\"currentColor\" d=\"m223.68 66.15l-88-48.15a15.88 15.88 0 0 0-15.36 0l-88 48.17a16 16 0 0 0-8.32 14v95.64a16 16 0 0 0 8.32 14l88 48.17a15.88 15.88 0 0 0 15.36 0l88-48.17a16 16 0 0 0 8.32-14V80.18a16 16 0 0 0-8.32-14.03M128 32l80.34 44l-29.77 16.3l-80.35-44Zm0 88L47.66 76l33.9-18.56l80.34 44ZM40 90l80 43.78v85.79l-80-43.75Zm176 85.78l-80 43.79v-85.75l32-17.51V152a8 8 0 0 0 16 0v-44.45L216 90v85.77Z\"/>",
     "widget":"<path fill=\"currentColor\" d=\"M208 32H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16M88 160a8 8 0 1 1-8 8a8 8 0 0 1 8-8M48 48h32v97.38a24 24 0 1 0 16 0v-30.07l48 48V208H48Zm160 160h-48v-48a8 8 0 0 0-2.34-5.66L96 92.69V48h32v24a8 8 0 0 0 2.34 5.66l16 16A23.74 23.74 0 0 0 144 104a24 24 0 1 0 24-24a23.74 23.74 0 0 0-10.34 2.35L144 68.69V48h64zM168 96a8 8 0 1 1-8 8a8 8 0 0 1 8-8\"/>",
     "wifi":"<path fill=\"currentColor\" d=\"M140 204a12 12 0 1 1-12-12a12 12 0 0 1 12 12m97.08-117a172 172 0 0 0-218.16 0a8 8 0 0 0 10.16 12.37a156 156 0 0 1 197.84 0A8 8 0 0 0 237.08 87M205 122.77a124 124 0 0 0-153.94 0A8 8 0 0 0 61 135.31a108 108 0 0 1 134.06 0a8 8 0 0 0 11.24-1.3a8 8 0 0 0-1.3-11.24m-32.26 35.76a76.05 76.05 0 0 0-89.42 0a8 8 0 0 0 9.42 12.94a60 60 0 0 1 70.58 0a8 8 0 1 0 9.42-12.94\"/>",
-    "clipboard":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195\"/><path stroke-linecap=\"round\" d=\"M7 14.5H15\"/><path stroke-linecap=\"round\" d=\"M7 18H12.5\"/><path d=\"M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z\"/></g>",
+    "clipboard":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M8.5 4.5H5.25v16.25h13.5V4.5H15.5\"/><rect x=\"8.5\" y=\"3\" width=\"7\" height=\"3\" rx=\".75\"/><path stroke-linecap=\"round\" d=\"M8.75 11h6.5M8.75 14.5h6.5M8.75 18H12\"/></g>",
     "checklist":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 15.8L7.14286 17L10 14\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 8.8L7.14286 10L10 7\"/><path stroke-linecap=\"round\" d=\"M13 9L18 9\"/><path stroke-linecap=\"round\" d=\"M13 16L18 16\"/></g>",
     "checkcircle":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8.5 12.5L10.5 14.5L15.5 9.5\"/></g>",
     "clock":"<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 8V12L14.5 14.5\"/></g>",
@@ -12935,7 +12958,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
     if (!rows.length){
       ordListBody.innerHTML = '<div class="empty">' +
-        '<div class="empty-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4.00195C18.175 4.01406 19.3529 4.11051 20.1213 4.87889C21 5.75757 21 7.17179 21 10.0002V16.0002C21 18.8286 21 20.2429 20.1213 21.1215C19.2426 22.0002 17.8284 22.0002 15 22.0002H9C6.17157 22.0002 4.75736 22.0002 3.87868 21.1215C3 20.2429 3 18.8286 3 16.0002V10.0002C3 7.17179 3 5.75757 3.87868 4.87889C4.64706 4.11051 5.82497 4.01406 8 4.00195"/><path stroke-linecap="round" d="M7 14.5H15"/><path stroke-linecap="round" d="M7 18H12.5"/><path d="M8 3.5C8 2.67157 8.67157 2 9.5 2H14.5C15.3284 2 16 2.67157 16 3.5V4.5C16 5.32843 15.3284 6 14.5 6H9.5C8.67157 6 8 5.32843 8 4.5V3.5Z"/></g></svg></div>' +
+        '<div class="empty-ico"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.5 4.5H5.25v16.25h13.5V4.5H15.5"/><rect x="8.5" y="3" width="7" height="3" rx=".75"/><path stroke-linecap="round" d="M8.75 11h6.5M8.75 14.5h6.5M8.75 18H12"/></g></svg></div>' +
         '<p>' + (ordOrders.length ? 'No orders match that filter.' : 'No orders yet.') + '</p>' +
         (ordPerm.manage && !ordOrders.length
           ? '<p class="muted-sm">Create one to start generating units and building batches.</p>'
@@ -21546,5 +21569,36 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
+<script>/* design rules: carousels and scrolling rows fade at an edge that has more
+   to scroll. data-fade="l", "r" or "l r"; no attribute when it all fits.
+   Rows the app builds later are picked up too (checked once per frame). */
+(function(){
+  var SEL = '.adm-tabs, .ord-chips, .status-pills, .nav-menu, #previewScroll';
+  function mark(el){
+    var max = el.scrollWidth - el.clientWidth, f = '';
+    if (max > 2){
+      if (el.scrollLeft > 2) f = 'l';
+      if (el.scrollLeft < max - 2) f += (f ? ' ' : '') + 'r';
+    }
+    if (f){ if (el.getAttribute('data-fade') !== f) el.setAttribute('data-fade', f); }
+    else if (el.hasAttribute('data-fade')) el.removeAttribute('data-fade');
+  }
+  var ro = window.ResizeObserver ? new ResizeObserver(function(es){ es.forEach(function(e){ mark(e.target); }); }) : null;
+  var seen = typeof WeakSet === 'function' ? new WeakSet() : null, queued = false;
+  function sweep(){
+    queued = false;
+    var els = document.querySelectorAll(SEL);
+    for (var i = 0; i < els.length; i++){
+      if (ro && seen && !seen.has(els[i])){ seen.add(els[i]); ro.observe(els[i]); }
+      mark(els[i]);
+    }
+  }
+  function queue(){ if (!queued){ queued = true; requestAnimationFrame(sweep); } }
+  document.addEventListener('scroll', function(e){ var t = e.target; if (t && t.matches && t.matches(SEL)) mark(t); }, { capture:true, passive:true });
+  window.addEventListener('resize', queue);
+  window.addEventListener('load', queue);
+  if (window.MutationObserver) new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', queue); else queue();
+})();</script>
 </body>
 </html>

@@ -36,6 +36,26 @@ just a description.
 - To move to a newer Supabase library, add the new file to `lib/`, then update the script tag,
   the jsDelivr fallback and its `integrity` hash in all three pages.
 
+### Design
+
+Follow these in every screen:
+
+- Nested rounded corners: the inner radius is the outer radius minus the padding between them.
+- Borders and hairlines: alpha colours (for example `rgb(55 53 47 / .15)`), not solid hex, so they
+  blend into any background.
+- Palettes: build them in OKLCH. Colours that should look equally strong share one lightness.
+- Gradients between colours: interpolate `in oklch` so they don't go grey in the middle.
+- Icons: match the stroke to the weight of the text beside them (24-unit icons: regular 1.5,
+  medium 1.75, semibold 2).
+- Carousels and scrolling rows: fade the edges with
+  `mask: linear-gradient(90deg, transparent, black 15% 85%, transparent)`, on a side only while
+  there is more to scroll that way.
+- Icon swaps: the outgoing icon blurs (`filter: blur(4px)`) as it fades out.
+- Dark mode: show depth with lighter surfaces (page, then cards, then menus and dialogs), because
+  shadows barely show.
+- Full-height sections: `100dvh`, with `100vh` before it as a fallback.
+- Product photos on a white background: `mix-blend-mode: multiply`, in the light theme only.
+
 ### Database
 
 - There is no staging database. Supabase is live production data.

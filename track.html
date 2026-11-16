@@ -21,20 +21,20 @@
     --ink:#262521; --charcoal:#262521; --ink-deep:#0d0d0c; --on-ink:#ffffff; --muted:#65635e; --faint:#7c7a75;
     --stone:#a5a4a0; --disabled:#c4c3bf;
     --bg:#ffffff; --paper:#ffffff; --soft:#f7f7f5;
-    --line:#e3e2df; --line-strong:#d1cfc9;
+    --line:rgb(55 53 47 / .15); --line-strong:rgb(55 53 47 / .24);
     --accent:#1877e0; --accent-fg:#1565c0; --accent-hover:#0c69cf;
     --accent-soft:#e3f0fd; --accent-line:#a6cdf6; --accent-ink:#ffffff;
     --link:#1565c0; --link-hover:#114f9c;
-    --hue-rma:#1f7bc7;
+    --hue-rma:oklch(0.595 0.143 249.0);
     /* hue drives the dot and any fill; the pastel tint sits behind and the
        label uses the family's deep variant so it clears 4.5:1 */
-    --ok:#2e9455;   --ok-ink:#1c3829;   --ok-bg:#d5efdb;   --ok-line:#b4dfc0;
-    --warn:#de6808; --warn-ink:#49290e; --warn-bg:#fadec9; --warn-line:#f2c6a3;
-    --bad:#dc3e39;  --bad-ink:#5d1715;  --bad-bg:#ffe2dd;  --bad-line:#f6c3bb;
-    --info:#2678bd; --info-ink:#183347; --info-bg:#d3e5ef; --info-line:#b4d1e2;
+    --ok:oklch(0.595 0.133 152.3);   --ok-ink:oklch(0.317 0.044 159.0);   --ok-bg:oklch(0.925 0.038 152.5);   --ok-line:oklch(0.858 0.062 153.6);
+    --warn:oklch(0.595 0.158 49.4); --warn-ink:oklch(0.317 0.062 57.7); --warn-bg:oklch(0.925 0.042 59.1); --warn-line:oklch(0.858 0.069 60.2);
+    --bad:oklch(0.595 0.196 26.8);  --bad-ink:oklch(0.317 0.102 26.3);  --bad-bg:oklch(0.925 0.033 29.4);  --bad-line:oklch(0.858 0.060 28.6);
+    --info:oklch(0.595 0.132 248.5); --info-ink:oklch(0.317 0.049 242.6); --info-bg:oklch(0.925 0.024 231.9); --info-line:oklch(0.858 0.039 233.6);
     /* a status colour as text: the bright hues above stay on dots, bars and
        borders; words and figures use -fg, which clears 4.5:1 */
-    --ok-fg:#23804a; --warn-fg:#b25405; --bad-fg:#c8322e;
+    --ok-fg:oklch(0.540 0.120 153.3); --warn-fg:oklch(0.540 0.141 50.5); --bad-fg:oklch(0.540 0.187 27.1);
     /* the keyboard focus outline, one colour everywhere */
     --focus:#1877e0;
     --e1:rgba(15,15,15,.04) 0 1px 2px 0;
@@ -61,9 +61,9 @@
     --side:#f7f7f5; --hover:rgba(55,53,47,.06); --press:rgba(55,53,47,.1);
     --nav-ink:#4b4a46; --nav-ico:#7f7e7a; --nav-sel:rgba(55,53,47,.08);
     --field:rgba(242,241,238,.6); --field-line:rgba(15,15,15,.1); --field-hover:rgba(15,15,15,.2);
-    --series-bg:#e8deee; --series-ink:#412454;
-    --dot-ok:#47a56c; --dot-warn:#e37a22; --dot-bad:#e7574b; --dot-series:#9968cc; --dot-neutral:#86857f;
-    --series:#8553c2; --bad-solid:#dc3e39; --raised:var(--paper); --raised-line:var(--line);
+    --series-bg:oklch(0.925 0.024 313.1); --series-ink:oklch(0.317 0.088 310.3);
+    --dot-ok:oklch(0.650 0.124 154.3); --dot-warn:oklch(0.650 0.159 54.2); --dot-bad:oklch(0.650 0.181 28.0); --dot-series:oklch(0.650 0.153 304.9); --dot-neutral:#86857f;
+    --series:oklch(0.595 0.169 301.9); --bad-solid:#dc3e39; --raised:var(--paper); --raised-line:var(--line);
     --seg-on:#ffffff; --toast-bg:#2f2f2f; --toast-line:transparent;
 }
   :root[data-theme="dark"]{
@@ -71,29 +71,29 @@
     /* Notion's dark theme: a near-black page beside a lifted sidebar */
     --ink:#e4e4e4; --charcoal:#e4e4e4; --muted:#a8a8a8; --faint:#8c8c8c;
     --stone:#6f6f6f; --disabled:#4f4f4f;
-    --bg:#191919; --paper:#191919; --soft:#252525;
-    --line:#343434;
-    --line-strong:#484848;
+    --bg:#191919; --paper:oklch(0.240 0 0); --soft:oklch(0.277 0 0);
+    --line:rgb(255 255 255 / .12);
+    --line-strong:rgb(255 255 255 / .2);
     --ink-deep:#f3f3f3; --on-ink:#191919;
     --accent:#2383e2; --accent-fg:#5aa8ea; --accent-hover:#3a92e8;
-    --accent-soft:color-mix(in srgb, #2383e2 18%, #191919);
-    --accent-line:color-mix(in srgb, #2383e2 45%, #191919);
+    --accent-soft:oklch(0.330 0.039 249.3);
+    --accent-line:oklch(0.420 0.086 250.4);
     --accent-ink:#ffffff;
     --link:#5aa8ea; --link-hover:#7fbcf0;
-    --hue-rma:#4fa5e6;
-    --ok:#3fab63;   --ok-ink:#cfe6d6;
-    --ok-bg:color-mix(in srgb, #3fab63 24%, #191919);
-    --ok-line:color-mix(in srgb, #3fab63 42%, #191919);
-    --warn:#dc7a28; --warn-ink:#f3d9c2;
-    --warn-bg:color-mix(in srgb, #dc7a28 24%, #191919);
-    --warn-line:color-mix(in srgb, #dc7a28 42%, #191919);
-    --bad:#d54a42;  --bad-ink:#f4cdc9;
-    --bad-bg:color-mix(in srgb, #d54a42 24%, #191919);
-    --bad-line:color-mix(in srgb, #d54a42 42%, #191919);
-    --info:#3d7fe0; --info-ink:#cfdcf2;
-    --info-bg:color-mix(in srgb, #3d7fe0 26%, #191919);
-    --info-line:color-mix(in srgb, #3d7fe0 45%, #191919);
-    --ok-fg:#5cc487; --warn-fg:#f0964c; --bad-fg:#f06d63;
+    --hue-rma:oklch(0.650 0.127 244.0);
+    --ok:oklch(0.650 0.145 151.2);   --ok-ink:oklch(0.894 0.033 155.3);
+    --ok-bg:oklch(0.330 0.044 154.6);
+    --ok-line:oklch(0.420 0.071 152.9);
+    --warn:oklch(0.650 0.151 55.2); --warn-ink:oklch(0.894 0.042 63.8);
+    --warn-bg:oklch(0.330 0.046 58.6);
+    --warn-line:oklch(0.420 0.075 59.0);
+    --bad:oklch(0.650 0.176 27.0);  --bad-ink:oklch(0.894 0.045 24.9);
+    --bad-bg:oklch(0.330 0.051 24.1);
+    --bad-line:oklch(0.420 0.084 25.8);
+    --info:oklch(0.650 0.162 258.2); --info-ink:oklch(0.894 0.033 261.0);
+    --info-bg:oklch(0.330 0.051 256.8);
+    --info-line:oklch(0.420 0.083 257.9);
+    --ok-fg:oklch(0.725 0.132 155.5); --warn-fg:oklch(0.725 0.140 57.6); --bad-fg:oklch(0.725 0.164 26.6);
     --focus:#5aa8ea;
     --e1:0 1px 2px rgba(0,0,0,.3);
     --e2:rgba(15,15,15,.1) 0 0 0 1px, rgba(15,15,15,.2) 0 3px 6px, rgba(15,15,15,.4) 0 9px 24px;
@@ -106,8 +106,8 @@
       --side:#202020; --hover:rgba(255,255,255,.055); --press:rgba(255,255,255,.09);
     --nav-ink:#b4b4b4; --nav-ico:#8c8c8c; --nav-sel:rgba(255,255,255,.07);
     --field:rgba(255,255,255,.055); --field-line:rgba(255,255,255,.09); --field-hover:rgba(255,255,255,.2);
-    --series-bg:color-mix(in srgb, #a472ea 24%, #191919); --series-ink:#e2d4f5;
-    --series:#a472ea; --bad-solid:#d54a42; --raised:#252525; --raised-line:#373737;
+    --series-bg:oklch(0.330 0.052 302.6); --series-ink:oklch(0.894 0.047 304.6);
+    --series:oklch(0.650 0.176 300.9); --bad-solid:#d54a42; --raised:oklch(0.295 0 0); --raised-line:rgb(255 255 255 / .09);
     --seg-on:rgba(255,255,255,.13); --toast-bg:#2f2f2f; --toast-line:rgba(255,255,255,.09);
 }
   *{ box-sizing:border-box; }
@@ -145,7 +145,7 @@
   header.top{
     display:flex; align-items:center; justify-content:space-between; gap:var(--s5);
     /* brand and actions land on the same columns as the page content below */
-    padding:var(--s3) max(var(--s5), calc((100% - 1600px) / 2)); background:var(--paper);
+    padding:var(--s3) max(var(--s5), calc((100% - 1600px) / 2)); background:var(--bg);
     border-bottom:1px solid var(--line); position:sticky; top:0; z-index:30; flex-wrap:nowrap;
     box-shadow:var(--e1);
   }
@@ -1283,7 +1283,7 @@
     .modal-bg{ align-items:flex-end; padding:0; }
     .modal{
       max-width:none; border-bottom-left-radius:0; border-bottom-right-radius:0;
-      max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      max-height:88vh; max-height:88dvh; overflow-y:auto; -webkit-overflow-scrolling:touch;
       overscroll-behavior:contain; animation:sheetIn 300ms cubic-bezier(.32,.72,0,1);
     }
     /* grabber: says the sheet can be pulled, and holds while it scrolls */
@@ -1671,7 +1671,7 @@
     /* the rail's sliding fill, laid on its side */
     .nav-ind{
       display:block; left:0; right:auto; top:0;
-      background:var(--tab-chip); border-radius:16px;
+      background:var(--tab-chip); border-radius:17px;
       box-shadow:0 4px 14px -8px rgba(0,0,0,.45);
     }
     .nav-ind.ready{
@@ -1700,7 +1700,7 @@
     }
     body.authed .pmenu a, body.authed.rail-mini .pmenu a{
       flex:1 1 0; flex-direction:column; justify-content:center; gap:3px;
-      padding:7px 2px; min-height:50px; font-size:10.5px; border-radius:16px !important;
+      padding:7px 2px; min-height:50px; font-size:10.5px; border-radius:17px !important;
       transition:color 240ms var(--ease-drawer), transform 150ms var(--ease-out);
     }
     body.authed .pmenu a .nav-lbl, body.authed.rail-mini .pmenu a .nav-lbl{ display:block; }
@@ -1901,7 +1901,7 @@
     }
     body.gs-open .gs-panel{
       position:static; margin-top:var(--s3); box-shadow:none; border-radius:var(--r-sm);
-      max-height:calc(100vh - 140px); animation:none;
+      max-height:calc(100vh - 140px); max-height:calc(100dvh - 140px); animation:none;
     }
   }
   @media (prefers-reduced-motion: reduce){
@@ -1998,6 +1998,32 @@
   @media (prefers-reduced-motion: reduce){ #rRatePlot > svg{ animation:none; } }
 
   @media print{ .siderail{ display:none !important; } body{ padding:0 !important; } }
+
+  /* ---- design rules (2026-11-15) ---------------------------------------
+     Icons: the stroke follows the weight of the text beside it, on the
+     24-unit grid: regular text 1.5, medium 1.75, semibold 2. Buttons and
+     the sidebar are medium; pills and small buttons are semibold. */
+  button svg *, .nav-item > svg *, .rt-ico svg *, .rail-btn svg *{ stroke-width:1.75; }
+  .mini svg *, .mg-pill svg *, .seg-btn svg *, .btn-sm svg *, .mg-badge svg *, .sev svg *, .low-chip svg *, .tab-btn svg *{ stroke-width:2; }
+  .gs-ico svg *, .toast .t-ico *{ stroke-width:1.5; }
+  /* Icon swaps (sun/moon, show/hide password): the outgoing icon blurs as
+     it fades out. The hidden icon is lifted out of the row (absolute, with
+     no offsets, so it stays on the same spot) instead of display:none */
+  .rt-ico > svg, .pw-see > svg, #themeBtn > svg, #themeBtn2 > svg{
+    transition:opacity .2s ease, filter .2s ease, transform .2s ease;
+  }
+  :root[data-theme="light"] .rt-ico .i-moon, :root[data-theme="dark"] .rt-ico .i-sun, :root[data-theme="light"] :is(#themeBtn, #themeBtn2) .i-sun, :root:not([data-theme="light"]) :is(#themeBtn, #themeBtn2) .i-moon,
+  .pw-see .pw-eye-off, .pw-see.on .pw-eye{ display:block; position:absolute; opacity:0; filter:blur(4px); transform:scale(.6); }
+  .pw-see.on .pw-eye-off{ position:static; opacity:1; filter:none; transform:none; }
+  @media (prefers-reduced-motion: reduce){ .rt-ico > svg, .pw-see > svg, #themeBtn > svg, #themeBtn2 > svg{ transition:none; } }
+  /* Carousels and scrolling rows fade at an edge only while there is more
+     to scroll that way (the script at the end of the page sets data-fade) */
+  :is(.rchips)[data-fade]{
+    -webkit-mask-image:linear-gradient(90deg, var(--fade-l, #000), #000 15% 85%, var(--fade-r, #000));
+            mask-image:linear-gradient(90deg, var(--fade-l, #000), #000 15% 85%, var(--fade-r, #000));
+  }
+  [data-fade~="l"]{ --fade-l:transparent; }
+  [data-fade~="r"]{ --fade-r:transparent; }
 </style>
 <style>
   /* ---- public dealer tracking page ---- */
@@ -2801,5 +2827,36 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   setInterval(function(){ if (D && !document.hidden) load(true); }, 5 * 60 * 1000);
 })();
 </script>
+<script>/* design rules: carousels and scrolling rows fade at an edge that has more
+   to scroll. data-fade="l", "r" or "l r"; no attribute when it all fits.
+   Rows the app builds later are picked up too (checked once per frame). */
+(function(){
+  var SEL = '.rchips';
+  function mark(el){
+    var max = el.scrollWidth - el.clientWidth, f = '';
+    if (max > 2){
+      if (el.scrollLeft > 2) f = 'l';
+      if (el.scrollLeft < max - 2) f += (f ? ' ' : '') + 'r';
+    }
+    if (f){ if (el.getAttribute('data-fade') !== f) el.setAttribute('data-fade', f); }
+    else if (el.hasAttribute('data-fade')) el.removeAttribute('data-fade');
+  }
+  var ro = window.ResizeObserver ? new ResizeObserver(function(es){ es.forEach(function(e){ mark(e.target); }); }) : null;
+  var seen = typeof WeakSet === 'function' ? new WeakSet() : null, queued = false;
+  function sweep(){
+    queued = false;
+    var els = document.querySelectorAll(SEL);
+    for (var i = 0; i < els.length; i++){
+      if (ro && seen && !seen.has(els[i])){ seen.add(els[i]); ro.observe(els[i]); }
+      mark(els[i]);
+    }
+  }
+  function queue(){ if (!queued){ queued = true; requestAnimationFrame(sweep); } }
+  document.addEventListener('scroll', function(e){ var t = e.target; if (t && t.matches && t.matches(SEL)) mark(t); }, { capture:true, passive:true });
+  window.addEventListener('resize', queue);
+  window.addEventListener('load', queue);
+  if (window.MutationObserver) new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', queue); else queue();
+})();</script>
 </body>
 </html>
