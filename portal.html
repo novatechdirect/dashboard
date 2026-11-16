@@ -2137,11 +2137,8 @@
     .stat-lbl{ white-space:normal; text-wrap:balance; line-height:1.25; }
   }
   @media (max-width:700px){
-    /* switching a page reads as a step forward, not a flash */
-    @keyframes viewIn{ from{ opacity:0; transform:translateY(6px); } }
-    body.authed #app > div{ animation:viewIn 220ms var(--ease-out); }
+    /* switching pages shows the new page at once, with no slide-in */
     @media (prefers-reduced-motion: reduce){
-      body.authed #app > div{ animation:none; }
       .nav-ind.ready{ transition:opacity 140ms linear; }
     }
   }
@@ -2392,6 +2389,12 @@
   }
   [data-fade~="l"]{ --fade-l:transparent; }
   [data-fade~="r"]{ --fade-r:transparent; }
+  /* Page entrances play once per visit (the script at the end of the page
+     marks each group seen after its first run); after that, coming back to
+     a page shows it at once */
+  :root.nt-seen-qa .qa-in, :root.nt-seen-bars .hbar, :root.nt-seen-donut .dn-center,
+  :root.nt-seen-rmaplot #rRatePlot > svg{ animation:none; }
+  :root.nt-seen-donut .dn circle{ transition:none !important; }
 </style>
 </head>
 <body>
@@ -7059,6 +7062,30 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   window.addEventListener('load', queue);
   if (window.MutationObserver) new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', queue); else queue();
+})();</script>
+<script>/* Page entrances play once per visit. When the last element of a group
+   below finishes its first run, the group is marked seen on <html>, and the
+   CSS shows it at once from then on: a page people open many times a day
+   shouldn't make them wait for the same entrance again. */
+(function(){
+  var GROUPS = [['.qa-in', 'nt-seen-qa'], ['.hbar', 'nt-seen-bars'], ['.dn-center, .dn circle', 'nt-seen-donut'], ['#rRatePlot > svg', 'nt-seen-rmaplot']];
+  var root = document.documentElement;
+  function done(e){
+    var el = e.target;
+    if (!el || !el.matches) return;
+    for (var i = 0; i < GROUPS.length; i++){
+      var sel = GROUPS[i][0], flag = GROUPS[i][1];
+      if (root.classList.contains(flag) || !el.matches(sel)) continue;
+      /* a staggered set (every bar, every tile) is one run: wait for the last */
+      var busy = typeof document.getAnimations === 'function' && document.getAnimations().some(function(a){
+        var t = a.effect && a.effect.target;
+        return t && t !== el && t.matches && t.matches(sel) && a.playState === 'running';
+      });
+      if (!busy) root.classList.add(flag);
+    }
+  }
+  document.addEventListener('animationend', done, true);
+  document.addEventListener('transitionend', done, true);
 })();</script>
 </body>
 </html>
