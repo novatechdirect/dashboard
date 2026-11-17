@@ -5779,6 +5779,34 @@ window.ntBootSignIn = function(){
   .pw-see .pw-eye-off, .pw-see.on .pw-eye{ display:block; position:absolute; opacity:0; filter:blur(4px); transform:scale(.6); }
   :root[data-theme="dark"] .theme-btn .i-sun, :root[data-theme="dark"] .rt-ico .i-moon, .pw-see.on .pw-eye-off{ position:static; opacity:1; filter:none; transform:none; }
   @media (prefers-reduced-motion: reduce){ .rt-ico > svg, .pw-see > svg, .theme-btn > svg{ transition:none; } }
+  /* Starred destinations. One gold for the star, a touch lighter in dark mode */
+  :root{ --star:oklch(0.760 0.150 78); }
+  :root[data-theme="dark"]{ --star:oklch(0.820 0.140 82); }
+  .star-ico{ width:16px; height:16px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linejoin:round; }
+  .star-btn{ appearance:none; border:0; background:none; padding:4px; margin:-4px 2px -4px -4px; border-radius:var(--r-sm);
+    color:var(--muted); cursor:pointer; display:inline-grid; place-items:center; flex:0 0 auto; }
+  .star-btn:hover{ color:var(--ink); background:var(--soft); }
+  .star-btn:focus-visible{ outline:none; box-shadow:var(--ring); }
+  .star-btn[aria-pressed="true"]{ color:var(--star); }
+  .star-btn[aria-pressed="true"] .star-ico{ fill:currentColor; }
+  .star-btn .star-ico{ transition:transform .16s cubic-bezier(.32,.72,0,1); }
+  .star-btn:active .star-ico{ transform:scale(.82); }
+  .star-gap{ display:inline-block; width:24px; margin-right:2px; flex:0 0 auto; }
+  .adm-dst-name{ display:inline-flex; align-items:center; }
+  .ord-dstar{ display:flex; align-items:center; gap:var(--s2); margin-top:var(--s3); font-size:13px; cursor:pointer; }
+  .ord-newdest .ord-dstar input{ width:auto; height:auto; padding:0; margin:0; flex:0 0 auto; }
+  /* the "already saved" banner sits flush with the top of the dashed box:
+     its corners are the box's 10px less the 1px border */
+  .ord-dmatch{ margin:calc(-1 * var(--s3)) calc(-1 * var(--s3)) var(--s3); padding:var(--s3);
+    background:var(--accent-soft); border-bottom:1px solid var(--line); border-radius:calc(var(--r-md) - 1px) calc(var(--r-md) - 1px) 0 0; }
+  .ord-dmatch-h{ margin:0 0 var(--s2); font-size:13px; font-weight:600; }
+  .ord-dmatch-row{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); padding:var(--s2) 0; }
+  .ord-dmatch-row + .ord-dmatch-row{ border-top:1px solid var(--line); }
+  .ord-dmatch-t{ display:flex; flex-direction:column; gap:2px; min-width:0; font-size:13px; }
+  .ord-dmatch-t b{ display:inline-flex; align-items:center; gap:4px; }
+  .ord-dmatch-t b .star-ico{ width:14px; height:14px; color:var(--star); fill:currentColor; }
+  .ord-dmatch-row button{ flex:0 0 auto; }
+  @media (prefers-reduced-motion: reduce){ .star-btn .star-ico{ transition:none; } }
   /* Carousels and scrolling rows fade at an edge only while there is more
      to scroll that way (the script at the end of the page sets data-fade) */
   :is(.adm-tabs, .ord-chips, .status-pills, .nav-menu, #previewScroll)[data-fade]{
@@ -7218,10 +7246,10 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
           pc_case: 'Nova ITX', cpu: 'Ryzen 5 7600', gpu: 'RTX 4060 Ti', ram: '32GB DDR5', storage: '1TB NVMe' }
       ],
       ship_to_locations: [
-        { id: 'demo-loc-1', customer_id: CUST, store_name: 'Riverside Gaming', store_number: '204', address1: '1180 Riverside Dr', city: 'Austin', state: 'TX', zip: '78701', active: true },
-        { id: 'demo-loc-2', customer_id: CUST, store_name: 'Northgate Play', store_number: '311', address1: '88 Northgate Mall', city: 'Phoenix', state: 'AZ', zip: '85004', active: true },
-        { id: 'demo-loc-3', customer_id: CUST, store_name: 'Lakeside Arcade', store_number: '118', address1: '7 Lakeside Blvd', city: 'Tampa', state: 'FL', zip: '33602', active: true },
-        { id: 'demo-loc-4', customer_id: CUST, store_name: 'Westway Games', store_number: '402', address1: '2200 Westway Pkwy', city: 'Denver', state: 'CO', zip: '80202', active: true }
+        { id: 'demo-loc-1', customer_id: CUST, starred: true, store_name: 'Riverside Gaming', store_number: '204', address1: '1180 Riverside Dr', city: 'Austin', state: 'TX', zip: '78701', active: true },
+        { id: 'demo-loc-2', customer_id: CUST, starred: true, store_name: 'Northgate Play', store_number: '311', address1: '88 Northgate Mall', city: 'Phoenix', state: 'AZ', zip: '85004', active: true },
+        { id: 'demo-loc-3', customer_id: CUST, starred: true, store_name: 'Lakeside Arcade', store_number: '118', address1: '7 Lakeside Blvd', city: 'Tampa', state: 'FL', zip: '33602', active: true },
+        { id: 'demo-loc-4', customer_id: CUST, starred: false, store_name: 'Westway Games', store_number: '402', address1: '2200 Westway Pkwy', city: 'Denver', state: 'CO', zip: '80202', active: true }
       ],
       orders: [
         { id: o1, customer_id: CUST, invoice_no: 'DG001', created_at: demoStamp(-96), archived: false,
@@ -7335,7 +7363,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       const t = towns[i % towns.length], loc = 'demo-loc-s' + (i + 1), day = -90 + Math.floor(i * 18 / 45);
       db.ship_to_locations.push({ id: loc, customer_id: CUST, store_name: t[0] + ' ' + malls[Math.floor(i / towns.length)],
                                   store_number: String(601 + i), address1: (120 + i * 17) + ' Commerce St',
-                                  city: t[0], state: t[1], zip: '', active: true });
+                                  city: t[0], state: t[1], zip: '', active: true, starred: i % 9 === 0 });
       const b = batch(o1, i + 1, loc, 'shipped', demoDay(day), '1Z999AA1' + (1000000000 + i * 7919), demoUps('delivered', day + 3, t[0] + ', ' + t[1]));
       db.batches[db.batches.length - 1].created_at = demoStamp(day - 1);
       db.pc_log.push(unit(o1, cfgA, b, 'shipped'));
@@ -9071,6 +9099,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   window.NT_ICO.labelsn = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.75" y="7.75" width="18.5" height="8.5" rx="2"/><path d="M6.5 10.5v3M8.5 10.5v3M11 10.5v3M13 10.5v3M15.5 10.5v3M17.5 10.5v3"/></g>';
   window.NT_ICO.trashup = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16"/><path d="M9.5 6.5V5A1.5 1.5 0 0 1 11 3.5h2A1.5 1.5 0 0 1 14.5 5v1.5"/><path d="M6 6.5l.9 12.6A2 2 0 0 0 8.9 21h6.2a2 2 0 0 0 2-1.9L18 6.5"/><path d="M12 17.5v-7M9.5 13l2.5-2.5 2.5 2.5"/></g>';
   window.NT_ICO.grid4 = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></g>';
+  window.STAR_SVG = '<svg class="star-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.55 5.17 5.7.83-4.13 4.02.98 5.68L12 16.62l-5.1 2.68.98-5.68L3.75 9.6l5.7-.83z"/></svg>';
   window.ntIco = function(key, cls){
     var b = window.NT_ICO[key]; if (!b) return '';
     var vb = window.NT_VB256[key] ? '0 0 256 256' : '0 0 24 24';
@@ -15599,18 +15628,32 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     host.querySelectorAll('.ord-batch-id').forEach(function(el){ w = Math.max(w, el.scrollWidth); });
     if (w) host.style.setProperty('--ob-id', Math.max(110, Math.ceil(w)) + 'px');
   }
+  /* true once the database has the starred column (starred-destinations.sql);
+     until then the star buttons stay hidden and every store is listed */
+  function ordHasStar(){
+    const l = ordLocations[0] || ordLocPast[0];
+    return !l || 'starred' in l;
+  }
   function ordDestOptions(sel){
-    const list = ordLocations.slice().sort(function(a, b){
+    /* Only starred stores are listed, so the list stays short. Any other saved
+       store is found by typing it under "+ New destination", which offers the
+       saved one rather than a copy. Until something is starred, all are listed. */
+    const live = ordLocations.filter(function(l){ return l.active !== false; });
+    const anyStar = live.some(function(l){ return l.starred; });
+    const list = live.filter(function(l){ return !anyStar || l.starred; }).sort(function(a, b){
       return (b.last_used_at || '').localeCompare(a.last_used_at || '');
     });
-    /* a batch whose store has been archived since keeps it in the list (and
-       chosen), so saving another field cannot blank where the batch went */
-    const past = (sel && !list.some(function(l){ return l.id === sel; })) ? ordLocPast.find(function(l){ return l.id === sel; }) : null;
+    /* the store a batch already points at stays in the list (and chosen) even
+       when it is not starred or has been archived since, so saving another
+       field cannot blank where the batch went */
+    const cur = (sel && !list.some(function(l){ return String(l.id) === String(sel); })) ? ordLocById(sel) : null;
+    const opt = function(l, on, tail){
+      const where = [l.city, l.state].filter(Boolean).join(', ');
+      return '<option value="' + esc(l.id) + '"' + (on ? ' selected' : '') + '>' + esc(ordLocLabel(l) + (where ? ' \u00b7 ' + where : '') + (tail || '')) + '</option>';
+    };
     return '<option value="">Select a destination\u2026</option>' +
-      (past ? '<option value="' + esc(past.id) + '" selected>' + esc(ordLocLabel(past) + ([past.city, past.state].filter(Boolean).length ? ' \u00b7 ' + [past.city, past.state].filter(Boolean).join(', ') : '') + ' (archived)') + '</option>' : '') +
-      list.map(function(l){
-        return '<option value="' + esc(l.id) + '"' + (l.id === sel ? ' selected' : '') + '>' + esc(ordLocLabel(l) + ([l.city, l.state].filter(Boolean).length ? ' \u00b7 ' + [l.city, l.state].filter(Boolean).join(', ') : '')) + '</option>';
-      }).join('') +
+      (cur ? opt(cur, true, cur.active === false ? ' (archived)' : '') : '') +
+      list.map(function(l){ return opt(l, String(l.id) === String(sel)); }).join('') +
       '<option value="__new">+ New destination\u2026</option>';
   }
 
@@ -15627,6 +15670,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
   function ordDestFieldsHtml(){
     return '<div class="ord-newdest" id="ordNewDest" style="display:none;">' +
+      '<div class="ord-dmatch" id="ordDMatch" aria-live="polite" style="display:none;"></div>' +
+      (ordLocations.length ? '<p class="muted-sm" id="ordDHint" style="margin:0 0 var(--s3);">Shipped there before? Type the street or store number and the saved store comes up, so it isn\u2019t saved twice.</p>' : '') +
       ordAddrPasteHtml('ordDPaste') +
       '<div class="ord-cfg-grid">' +
         '<div class="field"><label for="ordDStore">Store name</label><input id="ordDStore" type="text" placeholder="Rent-A-Center" autocomplete="off"></div>' +
@@ -15638,7 +15683,9 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         '<div class="field"><label for="ordDZip">ZIP</label><input id="ordDZip" type="text" autocomplete="off"></div>' +
         '<div class="field"><label for="ordDPhone">Phone</label><input id="ordDPhone" type="text" inputmode="tel" autocomplete="off"></div>' +
       '</div>' +
-      '<p class="muted-sm">Saved to this customer\u2019s destination list for next time.</p>' +
+      (ordHasStar()
+        ? '<label class="ord-dstar"><input type="checkbox" id="ordDStar"> Star it, so it shows in this list next time</label>'
+        : '<p class="muted-sm">Saved to this customer\u2019s destination list for next time.</p>') +
     '</div>';
   }
 
@@ -15945,7 +15992,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   async function ordSaveNewDest(bg, customerId){
     const store = bg.querySelector('#ordDStore').value.trim();
     if (!store) return { error: 'Give the destination a store name.' };
-    const r = await SB.from('ship_to_locations').insert({
+    const r = await SB.from('ship_to_locations').insert(Object.assign({
       customer_id: customerId,
       store_name: store,
       store_number: bg.querySelector('#ordDNum').value.trim() || null,
@@ -15956,11 +16003,88 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       zip: bg.querySelector('#ordDZip').value.trim() || null,
       phone: bg.querySelector('#ordDPhone').value.trim() || null,
       last_used_at: new Date().toISOString()
-    }).select().limit(1);
+    }, (bg.querySelector('#ordDStar') || {}).checked ? { starred: true } : {})).select().limit(1);
     if (r.error) return { error: r.error.message || 'Could not save the destination.' };
     ordLocations.push(r.data[0]);
     return { loc: r.data[0] };
   }
+
+  /* ---- a new destination that is already saved ----
+     Typing a street or store number under "+ New destination" offers the
+     saved store it matches, so a store is picked rather than saved twice.
+     Street words are shortened first, so "Drive" and "Dr." read the same. */
+  const ADDR_ABBR = { street:'st', avenue:'ave', av:'ave', road:'rd', drive:'dr', boulevard:'blvd', parkway:'pkwy', lane:'ln',
+    court:'ct', place:'pl', highway:'hwy', suite:'ste', circle:'cir', terrace:'ter', trail:'trl', center:'ctr', centre:'ctr',
+    square:'sq', north:'n', south:'s', east:'e', west:'w', northeast:'ne', northwest:'nw', southeast:'se', southwest:'sw' };
+  function ordStreetKey(v){
+    return String(v || '').toLowerCase().replace(/[.,#]/g, ' ').split(/\s+/).filter(Boolean)
+      .map(function(w){ return ADDR_ABBR[w] || w; }).join(' ');
+  }
+  function ordNameKey(v){ return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function ordNumKey(v){ return String(v || '').trim().replace(/^#\s*/, '').replace(/^0+(?=.)/, '').toLowerCase(); }
+  function ordDestMatches(scope, customerId){
+    const v = function(id){ const el = scope.querySelector('#' + id); return el ? el.value.trim() : ''; };
+    const a1 = ordStreetKey(v('ordDAddr1')), zip = v('ordDZip').slice(0, 5), num = ordNumKey(v('ordDNum')), name = ordNameKey(v('ordDStore'));
+    if (a1.length < 5 && !num) return [];
+    return ordLocations.filter(function(l){ return l.active !== false && (!customerId || l.customer_id === customerId); })
+      .map(function(l){
+        const la = ordStreetKey(l.address1), lz = String(l.zip || '').slice(0, 5);
+        let score = 0, why = '';
+        if (a1.length >= 5 && la){
+          if (la === a1){ score = 3; why = 'Same street address'; }
+          else if ((a1.length >= 8 && la.indexOf(a1) === 0) || (la.length >= 8 && a1.indexOf(la + ' ') === 0)){ score = 2; why = 'Street address looks the same'; }
+          if (score && zip.length === 5 && lz.length === 5 && lz !== zip) score = 0;   /* same street, another town */
+        }
+        const ln = ordNumKey(l.store_number), lname = ordNameKey(l.store_name);
+        if (num && ln === num && (!name || !lname || lname.slice(0, 4) === name.slice(0, 4))){
+          score += 2; why = why ? 'Same store number and address' : 'Same store number';
+        }
+        return { l:l, score:score, why:why };
+      })
+      .filter(function(m){ return m.score >= 2; })
+      .sort(function(a, b){ return b.score - a.score || (b.l.last_used_at || '').localeCompare(a.l.last_used_at || ''); })
+      .slice(0, 3);
+  }
+  function ordDestMatchShow(scope){
+    const box = scope.querySelector('#ordDMatch'); if (!box) return;
+    const sel = scope.querySelector('#ordBDest');
+    const o = ordOrders.find(function(x){ return x.id === ordCurrentId; });
+    const ms = sel && sel.value === '__new' ? ordDestMatches(scope, o && o.customer_id) : [];
+    box.innerHTML = ms.length
+      ? '<p class="ord-dmatch-h">Already saved \u2014 use it instead of adding it again</p>' +
+        ms.map(function(m){
+          return '<div class="ord-dmatch-row"><div class="ord-dmatch-t">' +
+              '<b>' + (m.l.starred ? STAR_SVG : '') + esc(ordLocLabel(m.l)) + '</b>' +
+              '<span>' + esc(ordLocAddress(m.l)) + '</span>' +
+              '<span class="muted-sm">' + esc(m.why) + '</span></div>' +
+            '<button class="primary btn-sm" type="button" data-dmatch="' + esc(m.l.id) + '">Use this one</button></div>';
+        }).join('')
+      : '';
+    box.style.display = ms.length ? '' : 'none';
+    const hint = scope.querySelector('#ordDHint');
+    if (hint) hint.style.display = ms.length ? 'none' : '';
+  }
+  const ORD_DMATCH_IDS = { ordDStore:1, ordDNum:1, ordDAddr1:1, ordDZip:1, ordDCity:1, ordBDest:1 };
+  let ordDMatchT = null;
+  ['input', 'change'].forEach(function(ev){
+    document.addEventListener(ev, function(e){
+      const t = e.target;
+      if (!t || !ORD_DMATCH_IDS[t.id]) return;
+      const scope = t.closest('.mg-modal'); if (!scope) return;
+      clearTimeout(ordDMatchT);
+      ordDMatchT = setTimeout(function(){ ordDestMatchShow(scope); }, 120);
+    });
+  });
+  document.addEventListener('click', function(e){
+    const b = e.target.closest('[data-dmatch]'); if (!b) return;
+    const scope = b.closest('.mg-modal'), sel = scope && scope.querySelector('#ordBDest');
+    if (!sel) return;
+    const id = b.getAttribute('data-dmatch');
+    sel.innerHTML = ordDestOptions(id);
+    sel.value = id;
+    sel.dispatchEvent(new Event('change', { bubbles:true }));
+    toast('Using the saved store', 'ok');
+  });
 
   /* ---- add selected units to a batch ---- */
   function ordAddToBatchModal(){
@@ -17900,6 +18024,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   /* ================= ADMIN ================= */
   let admTab = 'customers', admStaff = [], admLogins = [], admSeqs = [], admCustFilter = '';
   let admShowArch = false;
+  let admDstStarOnly = false;
 
   async function admOpen(){
     if (!ordPerm.admin && !ordPerm.catalog) return;
@@ -17965,7 +18090,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     if (bl) bl.textContent = {
       customers: 'Each customer has its own serial sequence and its own configs.',
       configs:   'Named build specs. Parts come from inventory so stock deducts correctly when units are generated.',
-      dests:     'Ship-to stores. A new one saves itself when you type it on a batch, so near-duplicates build up \u2014 merge them here.',
+      dests:     'Ship-to stores. Star the ones you ship to often: only starred stores are listed when picking a batch destination. Any other is still found by typing it as a new one. Merge near-duplicates here.',
       people:    'Employee logins are created in Supabase. This is where you set what each person can reach.',
       logins:    'Read-only portal access for a customer. Create the login in Supabase first, then map it here.',
       rma:       'The technician we talk to at each customer, where their parts ship, and the Discord channel inbound activity posts to.',
@@ -18268,15 +18393,25 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   }
 
   /* ---- destinations ---- */
+  function admStarBtn(l){
+    const on = !!l.starred;
+    return '<button class="star-btn" type="button" data-admdststar="' + esc(l.id) + '" aria-pressed="' + on + '"' +
+      ' aria-label="' + (on ? 'Unstar ' : 'Star ') + esc(ordLocLabel(l)) + '"' +
+      ' title="' + (on ? 'Starred: listed when picking a batch destination' : 'Star it to list it when picking a batch destination') + '">' + STAR_SVG + '</button>';
+  }
   function admPaneDests(p){
+    const hasStar = ordHasStar();
     const archL = ordLocations.filter(function(l){ return l.active === false; }).length;
+    const starN = ordLocations.filter(function(l){ return l.active !== false && l.starred; }).length;
     const list = ordLocations.filter(function(l){
       if (admCustFilter && l.customer_id !== admCustFilter) return false;
+      if (hasStar && admDstStarOnly && !l.starred) return false;
       return admShowArch || l.active !== false;
-    });
+    }).sort(function(a, b){ return (b.starred ? 1 : 0) - (a.starred ? 1 : 0); });
     p.innerHTML =
       '<div class="adm-bar">' + admCustSelect('admDstCust', admCustFilter, 'All customers') +
         '<button class="primary btn-sm" id="admAddDest" type="button">Add destination</button>' +
+        (hasStar ? '<label class="adm-arch"><input type="checkbox" id="admDstStar"' + (admDstStarOnly ? ' checked' : '') + '> Starred only <span id="admDstStarN">(' + ordNum(starN) + ')</span></label>' : '') +
         admArchToggle(archL) +
       '</div>' +
       (list.length
@@ -18284,7 +18419,9 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
             '<th>Store</th><th>Store #</th><th>Address</th><th>Batches</th><th>Status</th><th></th></tr></thead><tbody>' +
           list.map(function(l){
             const used = ordBatches.filter(function(b){ return b.location_id === l.id; }).length;
-            return '<tr><td data-l="Store"><b>' + esc(ordLocName(l)) + '</b></td>' +
+            return '<tr><td data-l="Store"><span class="adm-dst-name">' +
+                (hasStar ? (l.active === false ? '<span class="star-gap"></span>' : admStarBtn(l)) : '') +
+                '<b>' + esc(ordLocName(l)) + '</b></span></td>' +
               '<td class="ord-mono" data-l="Store #">' + esc(ordLocNum(l) || '\u2014') + '</td>' +
               '<td class="adm-spec" data-l="Address">' + esc(ordLocAddress(l) || '\u2014') + '</td>' +
               '<td class="ord-mono" data-l="Batches">' + used + '</td>' +
@@ -18992,6 +19129,25 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     const dm = e.target.closest('[data-admdstmerge]');
     if (dm){ admMergeModal(ordLocations.find(function(l){ return l.id === dm.getAttribute('data-admdstmerge'); })); return; }
 
+    /* starring updates the row where it is, so the list doesn't jump while
+       you work down it; starred stores sort to the top on the next visit */
+    const dst = e.target.closest('[data-admdststar]');
+    if (dst){
+      const l = ordLocations.find(function(x){ return x.id === dst.getAttribute('data-admdststar'); });
+      if (!l || dst.disabled) return;
+      const on = !l.starred;
+      dst.disabled = true;
+      const r = await SB.from('ship_to_locations').update({ starred: on }).eq('id', l.id);
+      dst.disabled = false;
+      if (r.error){ toast(r.error.message, 'bad'); return; }
+      l.starred = on;
+      if (admDstStarOnly && !on){ admRenderPane(); return; }
+      dst.outerHTML = admStarBtn(l);
+      const n = document.getElementById('admDstStarN');
+      if (n) n.textContent = '(' + ordNum(ordLocations.filter(function(x){ return x.active !== false && x.starred; }).length) + ')';
+      return;
+    }
+
     const da = e.target.closest('[data-admdstarch]');
     if (da){
       const l = ordLocations.find(function(x){ return x.id === da.getAttribute('data-admdstarch'); });
@@ -19031,6 +19187,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       admCustFilter = e.target.value; admRenderPane(); return;
     }
     if (e.target.id === 'admArch'){ admShowArch = e.target.checked; admRenderPane(); return; }
+    if (e.target.id === 'admDstStar'){ admDstStarOnly = e.target.checked; admRenderPane(); return; }
     const pb = e.target.closest('[data-admperm]');
     if (pb){
       if (!ordPerm.admin){
@@ -19316,7 +19473,9 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         f('admLA1','Address',loc.address1) + f('admLA2','Address line 2',loc.address2) +
         f('admLCity','City',loc.city) + f('admLState','State',loc.state,' maxlength="2"') +
         f('admLZip','ZIP',loc.zip) + f('admLPhone','Phone',loc.phone) +
-      '</div><div class="err" id="admLErr"></div></div>' +
+      '</div>' +
+      (ordHasStar() ? '<label class="ord-dstar"><input type="checkbox" id="admLStar"' + ((creating || loc.starred) ? ' checked' : '') + '> Starred: listed when picking a batch destination</label>' : '') +
+      '<div class="err" id="admLErr"></div></div>' +
       '<div class="mg-modal-foot"><button class="ghost" id="admLCancel">Cancel</button>' +
       '<button class="primary" id="admLSave" data-primary>' + (creating ? 'Create destination' : 'Save') + '</button></div>', true);
     bg.querySelector('#admLCancel').addEventListener('click', mgCloseModal);
@@ -19333,6 +19492,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         zip: bg.querySelector('#admLZip').value.trim() || null,
         phone: bg.querySelector('#admLPhone').value.trim() || null
       };
+      const starEl = bg.querySelector('#admLStar');
+      if (starEl) patch.starred = starEl.checked;
       let r;
       if (creating){
         patch.customer_id = bg.querySelector('#admLCust').value;
