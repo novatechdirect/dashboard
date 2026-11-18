@@ -12689,8 +12689,17 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         }).join('') + '</div></div>';
     }).join('');
     const subTxt = ordNum(shipped.length) + ' shipped to ' + ordNum(groups.length) + (groups.length === 1 ? ' dealer' : ' dealers');
-    return '<section class="card shl"><h2 class="card-title">Shipped by Dealers <span class="card-sub">' + subTxt + '</span></h2>' + rowsHtml + '</section>';
+    return '<details class="card ord-pdf shl"' + (ordShlOpen ? ' open' : '') + '>' +
+      '<summary><span>Shipped by Dealers</span><span class="ord-pdf-sum-f">' + subTxt + '</span>' +
+        '<svg viewBox="0 0 24 24" class="ord-pdf-chev"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9L12 15L5 9"/></svg>' +
+      '</summary>' +
+      '<div class="ord-pdf-in">' + rowsHtml + '</div></details>';
   }
+  /* folded each time the page loads; once opened it stays open through redraws */
+  let ordShlOpen = false;
+  document.addEventListener('toggle', function(e){
+    if (e.target && e.target.matches && e.target.matches('details.shl')) ordShlOpen = e.target.open;
+  }, true);
 
   function obDetailCard(o){
     if (!ordPerm.admin) return '';
