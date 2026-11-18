@@ -2465,6 +2465,9 @@ window.ntBootSignIn = function(){
   .ord-sel-count{ font-family:var(--font-num); font-weight:600; font-size:13px; font-variant-numeric:tabular-nums; }
   .ord-sel-note{ color:var(--warn-fg, var(--warn)); font-size:12px; flex:1 1 auto; }
   .ord-pool-actions{ display:flex; gap:var(--s2); margin-left:auto; flex-wrap:wrap; justify-content:flex-end; }
+  /* the Ctrl+B hint inside Add to batch; touch screens have no keyboard to press it on */
+  .ord-kbd{ font:600 10.5px/1 var(--font-ui); padding:2px 5px; margin-left:var(--s1); border:1px solid color-mix(in oklch, currentColor 45%, transparent); border-radius:var(--r-xs); opacity:.85; }
+  @media (hover:none), (max-width:700px){ .ord-kbd{ display:none; } }
   .ord-ram-row{ display:grid; grid-template-columns:74px minmax(0,1fr); gap:var(--s2); }
   .ord-ram-row select{
     width:100%; height:var(--h-lg, 40px); padding:0 12px; font:inherit; font-size:13px;
@@ -13305,7 +13308,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
             '<button class="ghost btn-sm" id="ordPrint46" type="button">' + ntIco('label46', 'nt-ico nt-ico-sm') + '4\u00d76 box PDF</button>' +
             '<button class="ghost btn-sm" id="ordPrintDymo" type="button">' + ntIco('labelsn', 'nt-ico nt-ico-sm') + 'Dymo PDF</button>' +
             '<button class="ghost btn-sm ord-printed-btn" id="ordMarkPrinted" type="button">' + ntIco('printcheck', 'nt-ico nt-ico-sm') + '<span>Mark as printed</span></button>' +
-            (ordPerm.manage ? '<button class="primary btn-sm" id="ordAddBatch" type="button">' + ntIco('grid4', 'nt-ico nt-ico-sm') + 'Add to batch</button>' : '') +
+            (ordPerm.manage ? '<button class="primary btn-sm" id="ordAddBatch" type="button" aria-keyshortcuts="Control+B Meta+B">' + ntIco('grid4', 'nt-ico nt-ico-sm') + 'Add to batch<kbd class="ord-kbd" aria-hidden="true">Ctrl+B</kbd></button>' : '') +
           '</span>' +
         '</div>' +
       '</section>' +
@@ -16084,6 +16087,22 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     sel.value = id;
     sel.dispatchEvent(new Event('change', { bubbles:true }));
     toast('Using the saved store', 'ok');
+  });
+
+  /* Ctrl/Cmd+B with units picked: Add to batch, set to a new destination,
+     with the cursor in Address so it can be typed straight away */
+  document.addEventListener('keydown', function(e){
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || (e.key !== 'b' && e.key !== 'B')) return;
+    const btn = document.getElementById('ordAddBatch');
+    if (!btn || btn.offsetParent === null || document.querySelector('.mg-modal-bg')) return;
+    e.preventDefault();
+    btn.click();
+    const bg = document.getElementById('mgModalBg'), dest = bg && bg.querySelector('#ordBDest');
+    if (!dest) return;
+    dest.value = '__new';
+    dest.dispatchEvent(new Event('change'));
+    /* after mgModal's own focus on the first field (30 ms) */
+    setTimeout(function(){ const a = bg.querySelector('#ordDAddr1'); if (a) a.focus(); }, 60);
   });
 
   /* ---- add selected units to a batch ---- */
