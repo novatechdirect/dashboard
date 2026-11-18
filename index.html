@@ -12036,8 +12036,14 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   }
   let ordPoolPage = 0, ordBatchPage = {};
   /* The batch list pages from the newest end, so a long invoice opens on its
-     latest batches. Page 0 is the newest ORD_BL_PER, page 1 the ones before. */
-  const ORD_BL_PER = 20;
+     latest batches. Page 0 is the newest ordBlSize(), page 1 the ones before.
+     The Show picker beside the pager sets how many; 0 is All, and the choice sticks. */
+  const ORD_BL_OPTS = [20, 50, 100, 0];
+  let ordBlPer = (function(){
+    const v = parseInt(localStorage.getItem('ordBlPer') || '', 10);
+    return ORD_BL_OPTS.indexOf(v) >= 0 ? v : 20;
+  })();
+  function ordBlSize(){ return ordBlPer || Number.MAX_SAFE_INTEGER; }
   let ordBlPage = 0;
 
   const ordListPane   = document.getElementById('ordListPane');
@@ -14522,6 +14528,16 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   ordDetailBody.addEventListener('change', function(e){
     const blp = e.target.closest('[data-blpick]');
     if (blp){ ordBlGo(parseInt(blp.value, 10) || 0, blp); return; }
+    const blper = e.target.closest('[data-blper]');
+    if (blper){
+      const n = parseInt(blper.value, 10);
+      ordBlPer = ORD_BL_OPTS.indexOf(n) >= 0 ? n : 20;   /* 0 means All */
+      try { localStorage.setItem('ordBlPer', String(ordBlPer)); } catch(err){}
+      ordBlGo(0, blper);
+      const f = document.querySelector('#ordBatchBody [data-blper][data-blat="' + blper.getAttribute('data-blat') + '"]');
+      if (f && document.activeElement !== f) f.focus({ preventScroll:true });
+      return;
+    }
     const sel = e.target.closest('[data-ordrows]');
     if (!sel) return;
     const open = [];
@@ -15437,16 +15453,16 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     }
     const cfgs = {}; ordConfigs.forEach(function(c){ cfgs[c.id] = c.name; });
     const openCount = ordBatches.filter(function(b){ return b.status !== 'shipped'; }).length;
-    const pages = Math.ceil(ordBatches.length / ORD_BL_PER);
+    const pages = Math.ceil(ordBatches.length / ordBlSize());
     ordBlPage = Math.max(0, Math.min(ordBlPage, pages - 1));
-    const end = ordBatches.length - ordBlPage * ORD_BL_PER;
+    const end = ordBatches.length - ordBlPage * ordBlSize();
     const merge = ordPerm.manage && openCount >= 2
       ? '<button class="ghost btn-sm" id="ordMergeBtn" type="button" title="Combine open batches into one">Merge batches</button>' : '';
     /* By config counts every batch; only the cards are paged */
     const cfgSum = ordCfgSumHtml();
     host.innerHTML = (cfgSum ? '<div class="shs">' + cfgSum + '</div>' : '') +
-      (pages > 1 || merge ? '<div class="ord-bl-bar">' + ordBlPagerHtml(pages, 'top') + merge + '</div>' : '') +
-      ordBatches.slice(Math.max(0, end - ORD_BL_PER), end).map(function(b){
+      (pages > 1 || merge || ordBlPerPicker('top') ? '<div class="ord-bl-bar">' + ordBlPagerHtml(pages, 'top') + ordBlPerPicker('top') + merge + '</div>' : '') +
+      ordBatches.slice(Math.max(0, end - ordBlSize()), end).map(function(b){
       const loc = ordLocById(b.location_id);
       const units = ordBatchUnits(b.id);
       const tk = ordTracking.filter(function(t){ return t.batch_id === b.id; });
@@ -15547,7 +15563,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         '</div>' +
       '</div>';
     }).join('') +
-      '<div class="ord-bl-bar ord-bl-foot">' + ordBlPagerHtml(pages, 'foot') +
+      '<div class="ord-bl-bar ord-bl-foot">' + ordBlPagerHtml(pages, 'foot') + ordBlPerPicker('foot') +
         '<button class="ghost btn-sm" id="ordJumpPool" type="button" title="Scroll back up to the unit pool">\u2191 Jump to Pool</button>' +
       '</div>';
     ordAlignBatches(host);
@@ -15558,7 +15574,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     if (pages < 2) return '';
     const n = ordBatches.length, opts = [];
     for (let p = 0; p < pages; p++){
-      const end = n - p * ORD_BL_PER, start = Math.max(0, end - ORD_BL_PER);
+      const end = n - p * ordBlSize(), start = Math.max(0, end - ordBlSize());
       opts.push('<option value="' + p + '"' + (p === ordBlPage ? ' selected' : '') + '>Batches ' +
         ordBatches[start].batch_no + '\u2013' + ordBatches[end - 1].batch_no + (p ? '' : ' (latest)') + '</option>');
     }
@@ -15567,6 +15583,15 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       '<select class="sel-sm" data-blpick data-blat="' + at + '" aria-label="Which batches to show">' + opts.join('') + '</select>' +
       '<button class="ghost btn-sm" data-blgo="newer" data-blat="' + at + '" type="button" aria-label="Newer batches"' + (ordBlPage ? '' : ' disabled') + '><span class="ord-bl-w">Newer </span>\u203a</button>' +
     '</div>';
+  }
+  /* Show 20 / 50 / 100 / All, only once there are more batches than the smallest page */
+  function ordBlPerPicker(at){
+    if (ordBatches.length <= ORD_BL_OPTS[0]) return '';
+    return '<label class="ord-rows"><span>Show</span>' +
+      '<select class="sel-sm" data-blper data-blat="' + at + '" aria-label="Batches per page">' +
+      ORD_BL_OPTS.map(function(n){
+        return '<option value="' + n + '"' + (n === ordBlPer ? ' selected' : '') + '>' + (n === 0 ? 'All' : n) + '</option>';
+      }).join('') + '</select></label>';
   }
   function ordBlGo(p, ctl){
     const had = document.activeElement === ctl;
@@ -15589,7 +15614,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   function ordBlShow(bid){
     const i = ordBatches.findIndex(function(b){ return b.id === bid; });
     if (i < 0) return false;
-    const p = Math.floor((ordBatches.length - 1 - i) / ORD_BL_PER);
+    const p = Math.floor((ordBatches.length - 1 - i) / ordBlSize());
     if (p === ordBlPage) return false;
     ordBlPage = p;
     return true;
