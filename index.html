@@ -572,6 +572,7 @@ window.ntBootSignIn = function(){
     --hue-admin:#696864;
     --hue-rma:oklch(0.595 0.143 249.0);
     --hue-gov:oklch(0.595 0.129 266.0);          /* federal blue */
+    --hue-build:oklch(0.595 0.112 195.0);        /* Build Rate, platform orders */
   }
   @media (pointer:coarse){ :root{ --h-xs:40px; --h-sm:40px; --h-md:44px; --h-lg:44px; } }
   :root[data-demo]{ --dock:calc(76px + var(--demo-bar, 44px) + env(safe-area-inset-bottom)); }
@@ -623,7 +624,7 @@ window.ntBootSignIn = function(){
     --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#ececec;
     --hue-orders:oklch(0.650 0.176 300.9); --hue-inventory:oklch(0.650 0.087 51.0);   /* cardboard */ --hue-timeclock:oklch(0.650 0.193 353.9);
     --hue-margins:oklch(0.650 0.151 55.2); --hue-admin:#a8a8a8; --hue-rma:oklch(0.650 0.127 244.0);
-    --hue-billing:oklch(0.650 0.145 151.2); --hue-gov:oklch(0.650 0.127 266.0);
+    --hue-billing:oklch(0.650 0.145 151.2); --hue-gov:oklch(0.650 0.127 266.0); --hue-build:oklch(0.650 0.110 195.0);
     --ring:0 0 0 2px rgba(35,131,226,.45);
   }
   @media (prefers-color-scheme:dark){
@@ -673,7 +674,7 @@ window.ntBootSignIn = function(){
       --tab-chip:rgba(255,255,255,.16); --tab-chip-ink:#ececec;
       --hue-orders:oklch(0.650 0.176 300.9); --hue-inventory:oklch(0.650 0.087 51.0);   /* cardboard */ --hue-timeclock:oklch(0.650 0.193 353.9);
       --hue-margins:oklch(0.650 0.151 55.2); --hue-admin:#a8a8a8; --hue-rma:oklch(0.650 0.127 244.0);
-      --hue-billing:oklch(0.650 0.145 151.2); --hue-gov:oklch(0.650 0.127 266.0);
+      --hue-billing:oklch(0.650 0.145 151.2); --hue-gov:oklch(0.650 0.127 266.0); --hue-build:oklch(0.650 0.110 195.0);
       --ring:0 0 0 2px rgba(35,131,226,.45);
     }
   }
@@ -1006,6 +1007,7 @@ window.ntBootSignIn = function(){
   #navMargins{ --nav-hue:var(--hue-margins); }
   #navBilling{ --nav-hue:var(--hue-billing); }
   #navAdmin{ --nav-hue:var(--hue-admin); }
+  #navBuildrate{ --nav-hue:var(--hue-build); }
   @supports not (color: color-mix(in srgb, red, blue)){
     .nav-item.active{ background:var(--accent-soft); color:var(--accent-fg); }
   }
@@ -3606,6 +3608,48 @@ window.ntBootSignIn = function(){
   .chart-tip{ position:absolute; top:0; left:0; transform:translate(-50%,-100%); pointer-events:none; background:var(--ink-deep); color:var(--on-ink); font-size:12px; line-height:1.3; padding:4px 8px; border-radius:var(--r-sm); white-space:nowrap; opacity:0; transition:opacity var(--t); z-index:2; }
   .chart-tip b{ font-weight:600; font-variant-numeric:tabular-nums; }
   .chart-empty{ color:var(--muted); font-size:13px; padding:var(--s6) 0; text-align:center; }
+  /* ---- Build Rate ---- */
+  .br-kpis{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--s5); }
+  .br-kpi{ min-width:0; }
+  .br-kpi-l{ font-size:12px; font-weight:500; color:var(--muted); }
+  .br-kpi-v{ font-family:var(--font-num); font-size:30px; font-weight:600; line-height:1.15; font-variant-numeric:tabular-nums; margin-top:var(--s1); }
+  .br-kpi-v small{ font-family:var(--font-ui); font-size:13px; font-weight:500; color:var(--muted); margin-left:4px; }
+  .br-kpi-s{ display:flex; flex-wrap:wrap; align-items:center; gap:4px var(--s2); font-size:12.5px; color:var(--muted); margin-top:var(--s1); }
+  .br-legend{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); font-size:12.5px; color:var(--muted); margin-top:var(--s3); }
+  .br-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .br-legend i{ width:10px; height:10px; border-radius:3px; }
+  .br-legend i.ln{ width:16px; height:0; border-radius:0; border-top:2px solid var(--ink); }
+  .br-plot{ position:relative; margin-top:var(--s4); padding-left:28px; touch-action:pan-y; }
+  .br-cols{ position:relative; display:flex; align-items:stretch; gap:2px; height:220px; }
+  .br-col{ flex:1 1 0; min-width:0; height:100%; display:flex; flex-direction:column; justify-content:flex-end; border-radius:4px; }
+  .br-col.wk{ background:color-mix(in oklch, var(--ink) 4%, transparent); }
+  .br-col.on{ background:color-mix(in oklch, var(--ink) 10%, transparent); }
+  .br-seg{ flex:0 0 auto; }
+  .br-seg.b{ background:var(--hue-orders); }
+  .br-seg.p{ background:var(--hue-build); }
+  .br-col > .br-seg:first-child{ border-radius:3px 3px 0 0; }
+  .br-col.part > .br-seg{ opacity:.5; }
+  .br-grid{ position:absolute; left:0; right:0; border-top:1px dashed var(--line); pointer-events:none; }
+  .br-grid span{ position:absolute; right:calc(100% + 6px); bottom:-6px; font-size:10.5px; line-height:1; color:var(--faint); font-variant-numeric:tabular-nums; }
+  .br-line{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+  .br-x{ display:flex; justify-content:space-between; gap:var(--s2); font-size:11px; color:var(--faint); margin-top:var(--s2); font-variant-numeric:tabular-nums; }
+  .br-tip{ position:absolute; top:0; z-index:3; pointer-events:none; min-width:168px; padding:var(--s2) var(--s3);
+    background:var(--raised, var(--paper)); border:1px solid var(--line); border-radius:var(--r-md); box-shadow:var(--e2, 0 4px 16px rgb(0 0 0 / .12));
+    font-size:12.5px; white-space:nowrap; }
+  .br-tip-h{ font-weight:600; margin-bottom:2px; }
+  .br-tip-r{ display:flex; justify-content:space-between; gap:var(--s4); color:var(--muted); }
+  .br-tip-r b{ color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+  .br-tip-r i{ display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; }
+  .br-note{ margin:var(--s3) 0 0; }
+  .br-note.bad{ color:var(--bad-fg, var(--bad)); }
+  .br-days td.n, .br-days th.n{ text-align:right; font-variant-numeric:tabular-nums; }
+  .br-days td.n b{ font-weight:600; }
+  .br-vs{ font-weight:600; font-variant-numeric:tabular-nums; }
+  .br-vs.down{ color:var(--bad-fg, var(--bad)); } .br-vs.up{ color:var(--ok-fg, var(--ok)); } .br-vs.flat{ color:var(--muted); font-weight:500; }
+  @media (max-width:700px){
+    .br-kpis{ grid-template-columns:1fr; gap:var(--s4); }
+    .br-cols{ height:160px; gap:1px; }
+  }
   .ch-skel{ width:100%; padding:var(--s4) 0; }
   .pipe-bar{ display:flex; height:12px; border-radius:var(--r-pill); overflow:hidden; background:var(--soft); margin-top:var(--s4); gap:2px; }
   .pipe-bar i{ display:block; height:100%; transition:width var(--t-slow); }
@@ -5898,7 +5942,7 @@ window.ntBootSignIn = function(){
       --tab-chip:rgba(255,42,138,.24); --tab-chip-ink:#fff2fb;
 
       --hue-orders:#00e5ff; --hue-inventory:#ffd23f; --hue-timeclock:#ff10f0; --hue-margins:#ff8a3d;
-      --hue-billing:#2bffa8; --hue-admin:#c0c0c0; --hue-rma:#1a8cff; --hue-gov:#7aa7ff;
+      --hue-billing:#2bffa8; --hue-admin:#c0c0c0; --hue-rma:#1a8cff; --hue-gov:#7aa7ff; --hue-build:#3dffe0;
 
       --dk-rim-top:rgba(0,229,255,.42); --dk-rim-bot:rgba(255,16,240,.3); --dk-bg:rgba(20,16,44,.9);
       --dk-solid:#16122e; --dk-line:rgba(0,229,255,.14); --dk-pill:rgba(255,42,138,.28); --dk-pill-drag:rgba(255,42,138,.4);
@@ -6296,6 +6340,7 @@ window.ntBootSignIn = function(){
       <a class="nav-item" href="#" id="navRma"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg><span class="nav-lbl">RMA</span><span class="nav-badge" id="navRmaBadge" style="display:none;"></span></a>
       <a class="nav-item" href="#" id="navInventory"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M15.5777 3.38197L17.5777 4.43152C19.7294 5.56066 20.8052 6.12523 21.4026 7.13974C22 8.15425 22 9.41667 22 11.9415V12.0585C22 14.5833 22 15.8458 21.4026 16.8603C20.8052 17.8748 19.7294 18.4393 17.5777 19.5685L15.5777 20.618C13.8221 21.5393 12.9443 22 12 22C11.0557 22 10.1779 21.5393 8.42229 20.618L6.42229 19.5685C4.27063 18.4393 3.19479 17.8748 2.5974 16.8603C2 15.8458 2 14.5833 2 12.0585V11.9415C2 9.41667 2 8.15425 2.5974 7.13974C3.19479 6.12523 4.27063 5.56066 6.42229 4.43152L8.42229 3.38197C10.1779 2.46066 11.0557 2 12 2C12.9443 2 13.8221 2.46066 15.5777 3.38197Z"/><path d="M21 7.5L17 9.5M12 12L3 7.5M12 12V21.5M12 12C12 12 14.7426 10.6287 16.5 9.75C16.6953 9.65237 17 9.5 17 9.5M17 9.5V13M17 9.5L7.5 4.5"/></g></svg><span class="nav-lbl">Inventory</span></a>
       <a class="nav-item" href="#" id="navTimeclock"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8V12L14.5 14.5"/></g></svg><span class="nav-lbl">Timeclock</span></a>
+      <a class="nav-item" href="#" id="navBuildrate" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 17a8.5 8.5 0 0 1 17 0"/><path d="M12 17l3.5-4.5"/><path d="M6.4 11.4l1.1.9M12 8.5v1.4M17.6 11.4l-1.1.9"/></g></svg><span class="nav-lbl">Build Rate</span></a>
       <a class="nav-item" href="#" id="navMargins" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg><span class="nav-lbl">Margins</span></a>
       <a class="nav-item" href="#" id="navBilling" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg><span class="nav-lbl">Billing</span></a>
       <a class="nav-item" href="#" id="navGov" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 4l9 5.5"/><path d="M5.5 10.5v7M10 10.5v7M14 10.5v7M18.5 10.5v7"/><path d="M3.5 20.5h17"/></g></svg><span class="nav-lbl">Gov Bids</span><span class="nav-badge" id="navGovBadge" style="display:none;"></span></a>
@@ -6399,6 +6444,7 @@ window.ntBootSignIn = function(){
   <button type="button" id="tabMoreBilling" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M12 2.5V21.5"/><path d="M15.8 7.2C15.3 5.8 13.9 5 12 5C9.7 5 8.1 6.2 8.1 8C8.1 9.8 9.5 10.7 12 11.2C14.6 11.7 16.2 12.6 16.2 14.6C16.2 16.5 14.5 17.8 12 17.8C9.8 17.8 8.3 16.9 7.8 15.3"/></g></svg>Billing</button>
   <button type="button" id="tabMoreMargins"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 22H21"/><path d="M3 11C3 10.0572 3 9.58579 3.29289 9.29289C3.58579 9 4.05719 9 5 9C5.94281 9 6.41421 9 6.70711 9.29289C7 9.58579 7 10.0572 7 11V17C7 17.9428 7 18.4142 6.70711 18.7071C6.41421 19 5.94281 19 5 19C4.05719 19 3.58579 19 3.29289 18.7071C3 18.4142 3 17.9428 3 17V11Z"/><path d="M10 7C10 6.05719 10 5.58579 10.2929 5.29289C10.5858 5 11.0572 5 12 5C12.9428 5 13.4142 5 13.7071 5.29289C14 5.58579 14 6.05719 14 7V17C14 17.9428 14 18.4142 13.7071 18.7071C13.4142 19 12.9428 19 12 19C11.0572 19 10.5858 19 10.2929 18.7071C10 18.4142 10 17.9428 10 17V7Z"/><path d="M17 4C17 3.05719 17 2.58579 17.2929 2.29289C17.5858 2 18.0572 2 19 2C19.9428 2 20.4142 2 20.7071 2.29289C21 2.58579 21 3.05719 21 4V17C21 17.9428 21 18.4142 20.7071 18.7071C20.4142 19 19.9428 19 19 19C18.0572 19 17.5858 19 17.2929 18.7071C17 18.4142 17 17.9428 17 17V4Z"/></g></svg>Cost &amp; Margins</button>
   <button type="button" id="tabMoreGov" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 4l9 5.5"/><path d="M5.5 10.5v7M10 10.5v7M14 10.5v7M18.5 10.5v7"/><path d="M3.5 20.5h17"/></g></svg>Gov Bids</button>
+  <button type="button" id="tabMoreBuildrate" style="display:none;"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 17a8.5 8.5 0 0 1 17 0"/><path d="M12 17l3.5-4.5"/><path d="M6.4 11.4l1.1.9M12 8.5v1.4M17.6 11.4l-1.1.9"/></g></svg>Build Rate</button>
   <button type="button" id="tabMoreAdmin"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z"/></g></svg>Admin</button>
 </div>
 
@@ -6911,6 +6957,43 @@ window.ntBootSignIn = function(){
       <div id="obTable"></div>
     </section>
   </div><!-- /toolBilling -->
+
+  <div id="toolBuildrate" style="display:none;">
+    <header class="app-header">
+      <div class="brand page-brand">
+        <div>
+          <h1>Build Rate</h1>
+          <p class="tagline">PCs built each day: dashboard builds plus platform orders shipped through ShipStation</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="card"><div class="br-kpis" id="brKpis"></div></section>
+
+    <section class="card chart-card" style="margin-bottom:var(--s5);">
+      <div class="chart-head">
+        <div class="chart-kpi">
+          <h2 class="card-title" id="brChartTitle">Built per day</h2>
+          <div class="chart-sub" id="brSub"></div>
+        </div>
+        <div class="chart-tabs" id="brTabs">
+          <button type="button" class="chart-tab" data-brr="30" aria-pressed="false">30 days</button>
+          <button type="button" class="chart-tab" data-brr="90" aria-pressed="false">90 days</button>
+          <button type="button" class="chart-tab" data-brr="182" aria-pressed="false">6 months</button>
+          <button type="button" class="chart-tab" data-brr="365" aria-pressed="false">1 year</button>
+        </div>
+      </div>
+      <div class="br-legend" id="brLegend"></div>
+      <div id="brChart"></div>
+      <p class="muted-sm br-note" id="brNote"></p>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Day by day</h2>
+      <p class="muted-sm" style="margin:0 0 var(--s3);">Newest first. Workdays, plus any weekend day with builds. Compared with the average workday in the range above.</p>
+      <div id="brDays"></div>
+    </section>
+  </div><!-- /toolBuildrate -->
 
   <div id="toolGov" style="display:none;">
     <div id="govListPane">
@@ -7733,6 +7816,32 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       };
       db._gov_seen = demoStamp(-1);
     })();
+    /* Build Rate: fictional builds since the dashboard went live (history units,
+       no invoice) and a year of platform shipments, with a slow last week */
+    (function(){
+      let seed = 11;
+      const rnd = function(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+      const key = function(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+      db.ss_platform_shipments = [];
+      for (let back = 365; back >= 0; back--){
+        const d = new Date(); d.setHours(9, 0, 0, 0); d.setDate(d.getDate() - back);
+        const wd = d.getDay(), work = wd > 0 && wd < 6, slow = back <= 6;
+        const nB = back > 105 ? 0 : work ? Math.max(0, Math.round((slow ? 4 : 8) + rnd() * 5 - 2)) : (wd === 6 && rnd() < 0.3 ? 2 : 0);
+        for (let i = 0; i < nB; i++){
+          const t = new Date(d.getTime() + Math.floor(rnd() * 8 * 3600000));
+          db.pc_log.push({ id: demoId('h'), serial: 'DH-' + String(20000 + i + back * 20), order_id: null, batch_id: null, config_id: null,
+                           unit_status: 'built', status: 'building', customer: null, order_no: null,
+                           created_at: t.toISOString(), generated_at: t.toISOString() });
+        }
+        const nP = work ? Math.floor(rnd() * 4) : (rnd() < 0.2 ? 1 : 0);
+        for (let i = 0; i < nP; i++){
+          db.ss_platform_shipments.push({ shipment_id: 900000 + db.ss_platform_shipments.length, ship_date: key(d),
+                                          store_id: null, units: rnd() < 0.1 ? 2 : 1, voided: false });
+        }
+      }
+      db.ss_platform_state = [{ id: 1, last_ok_at: new Date(Date.now() - 6 * 60000).toISOString(),
+                                last_error: null, last_error_at: null, history_to: null }];
+    })();
     db._me = ME; db._cust = CUST;
     return db;
   }
@@ -8307,6 +8416,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       var _ta = document.getElementById('tileAdmin'); if (_ta) _ta.style.display = 'none';
       var _ba = document.getElementById('tabAdmin'); if (_ba) _ba.style.display = 'none';
       ['navGov', 'tileGov', 'tabGov', 'homeGovTile'].forEach(function(id){ var g = document.getElementById(id); if (g) g.style.display = 'none'; });
+      ['navBuildrate', 'tabMoreBuildrate'].forEach(function(id){ var g = document.getElementById(id); if (g) g.style.display = 'none'; });
+      brPlat = null; brState = null;
       govInited = false; govStat = null; govOpps = []; govSeenAt = null; govCurrentId = null; govOnSettings = false;
       ordPerm = { view:false, manage:false, admin:false, catalog:false, rma:false, gov:false };
       ordInited = false; admInited = false; ordCurrentId = null; rmaInited = false; rmaCurrentId = null;
@@ -8377,6 +8488,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   const toolAdmin = document.getElementById('toolAdmin');
   const navGov = document.getElementById('navGov');
   const toolGov = document.getElementById('toolGov');
+  const navBuildrate = document.getElementById('navBuildrate');
+  const toolBuildrate = document.getElementById('toolBuildrate');
   /* declared here, not in the orders module below, so showTool() and
      renderAuth() can touch them no matter when they first run */
   let ordInited = false, admInited = false, ordCurrentId = null;
@@ -8386,7 +8499,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   let ordShipWatch;
   let ordPerm = { view:false, manage:false, admin:false, catalog:false, gov:false };
   function showTool(which){
-    const views = { home: [navHome, toolHome], orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], billing: [navBilling, toolBilling], admin: [navAdmin, toolAdmin], rma: [navRma, toolRma], gov: [navGov, toolGov] };
+    const views = { home: [navHome, toolHome], orders: [navOrders, toolOrders], inventory: [navInventory, toolInventory], timeclock: [navTimeclock, toolTimeclock], margins: [navMargins, toolMargins], billing: [navBilling, toolBilling], admin: [navAdmin, toolAdmin], rma: [navRma, toolRma], gov: [navGov, toolGov], buildrate: [navBuildrate, toolBuildrate] };
     if (!views[which]) which = 'home';
     if (which === 'orders') ordClearLinkParams('order');
     else if (which === 'rma') ordClearLinkParams('rma');
@@ -8407,6 +8520,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     if (which === 'admin' && SB && session){ admOpen(); }
     if (which === 'rma' && SB && session){ rmaOpen(); }
     if (which === 'gov' && SB && session){ govOpen(); }
+    if (which === 'buildrate' && SB && session){ brOpen(); }
     liveSoon(1200);
     try { mgRenderBar(); } catch(e){}
     if (which === 'home'){
@@ -8415,7 +8529,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       if (window.ntCountUp) window.ntCountUp(document.getElementById('statBldVal'));
     }
     /* the top bar and the browser tab both name the tool, in the rail's words */
-    var TT = { home:'Home', orders:'B2B Orders', rma:'RMA', inventory:'Inventory', timeclock:'Timeclock', margins:'Cost & Margins', billing:'Billing', admin:'Admin', gov:'Gov Bids' };
+    var TT = { home:'Home', orders:'B2B Orders', rma:'RMA', inventory:'Inventory', timeclock:'Timeclock', margins:'Cost & Margins', billing:'Billing', admin:'Admin', gov:'Gov Bids', buildrate:'Build Rate' };
     var _tt = document.getElementById('topTitle');
     if (_tt) _tt.textContent = TT[which] || 'Home';
     document.title = (TT[which] || 'Home') + ' \u00b7 Novatech';
@@ -8425,9 +8539,9 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     var moreBtn = document.getElementById('tabMore');
-    if (moreBtn) moreBtn.classList.toggle('active', which === 'margins' || which === 'admin' || which === 'billing' || which === 'gov');
+    if (moreBtn) moreBtn.classList.toggle('active', which === 'margins' || which === 'admin' || which === 'billing' || which === 'gov' || which === 'buildrate');
     /* the More sheet marks the page you are on */
-    ['Billing', 'Margins', 'Admin', 'Gov'].forEach(function(k){
+    ['Billing', 'Margins', 'Admin', 'Gov', 'Buildrate'].forEach(function(k){
       var b = document.getElementById('tabMore' + k);
       if (!b) return;
       var on = which === k.toLowerCase();
@@ -9062,6 +9176,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   navMargins.addEventListener('click', function(e){ e.preventDefault(); showTool('margins'); });
   navBilling.addEventListener('click', function(e){ e.preventDefault(); showTool('billing'); });
   navGov.addEventListener('click', function(e){ e.preventDefault(); showTool('gov'); });
+  navBuildrate.addEventListener('click', function(e){ e.preventDefault(); showTool('buildrate'); });
+  document.getElementById('tabMoreBuildrate').addEventListener('click', function(){ showTool('buildrate'); });
 
   /* ================= INVENTORY ================= */
   /* Solar category marks. Source set: assets/solar-icons.json */
@@ -11239,6 +11355,244 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     return '<div class="ch-skel" role="status" aria-label="Loading"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div>';
   }
 
+  /* ================= BUILD RATE =================
+     The owner's page: PCs built per day. Dashboard builds are units marked built
+     here, the same dates the Home charts count. Platform builds are the units on
+     ShipStation shipments that did not come from the dashboard (Amazon, Walmart,
+     Shopify and the like), counted on the day they shipped; a database job copies
+     those from ShipStation every 10 minutes. Workdays are Monday to Friday. */
+  const BR_RANGES = ['30', '90', '182', '365'];
+  let brRange = '30';
+  try { const v = localStorage.getItem('brRange'); if (BR_RANGES.indexOf(v) >= 0) brRange = v; } catch(e){}
+  let brPlat = null, brState = null, brErr = '', brAt = 0, brItems = [];
+  function brKey(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function brNum(n){ return (Math.round(n * 10) / 10).toLocaleString(undefined, { maximumFractionDigits:1 }); }
+  async function brOpen(){
+    if (!brPlat){ ['brKpis', 'brChart', 'brDays'].forEach(function(id){ const h = document.getElementById(id); if (h) h.innerHTML = chSkel(); }); }
+    if (!brPlat || Date.now() - brAt > 5 * 60000){ await Promise.all([ordOpen(), brLoad()]); }
+    brRender();
+  }
+  async function brLoad(){
+    const from = new Date(); from.setDate(from.getDate() - 400);
+    const res = await Promise.all([
+      sbSoft(sbAll(function(){ return SB.from('ss_platform_shipments').select('ship_date,units').eq('voided', false).gte('ship_date', brKey(from)).order('shipment_id'); })),
+      sbSoft(SB.from('ss_platform_state').select('last_ok_at,last_error,last_error_at,history_to').limit(1))
+    ]);
+    brErr = res[0].error ? (res[0].error.message || String(res[0].error)) : '';
+    brPlat = res[0].data || [];
+    brState = (!res[1].error && res[1].data && res[1].data[0]) || null;
+    brAt = Date.now();
+  }
+  function brAgo(iso){
+    const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return m + ' min ago';
+    if (m < 48 * 60) return Math.round(m / 60) + ' h ago';
+    return 'on ' + new Date(iso).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+  }
+  function brRender(){
+    const kp = document.getElementById('brKpis');
+    if (!kp || !brPlat) return;
+    /* day key -> units built: dashboard (b) and platform (p) */
+    const map = {};
+    const at = function(k){ return map[k] || (map[k] = { b:0, p:0 }); };
+    let firstB = null;
+    allBuildDates().forEach(function(d){ at(brKey(d)).b++; if (!firstB || d < firstB) firstB = d; });
+    brPlat.forEach(function(r){ at(String(r.ship_date).slice(0, 10)).p += (+r.units || 0); });
+    if (firstB){ firstB = new Date(firstB); firstB.setHours(0, 0, 0, 0); }
+
+    /* every day from two ranges back to today, so the range has a range before it
+       to compare with and its first days have days behind them to average */
+    const span = parseInt(brRange, 10), weekly = span > 90;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const days = [];
+    for (let d = new Date(today.getTime()); days.length < span * 2 + 35; d.setDate(d.getDate() - 1)){
+      const v = map[brKey(d)] || { b:0, p:0 }, w = d.getDay();
+      days.unshift({ d:new Date(d.getTime()), b:v.b, p:v.p, t:v.b + v.p, work:w > 0 && w < 6 });
+    }
+    const n = days.length, now = days[n - 1];
+    const cur = days.slice(n - span), prev = days.slice(n - span * 2, n - span);
+    const sum = function(list){ return list.reduce(function(a, x){ return a + x.t; }, 0); };
+    /* an average workday; today is left out because it is not over yet */
+    const avgWork = function(list){
+      const w = list.filter(function(x){ return x.work && x !== now; });
+      return w.length ? sum(w) / w.length : 0;
+    };
+    const avg = avgWork(cur), avgPrev = avgWork(prev);
+    const fmtDay = function(d){ return d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' }); };
+
+    /* ---- the three numbers ---- */
+    const dow = (today.getDay() + 6) % 7;                 /* 0 is Monday */
+    const wk = days.slice(n - 1 - dow), lwk = days.slice(n - 8 - dow, n - 7);
+    const prevOk = span < 365 && (!firstB || prev[0].d >= firstB);
+    kp.innerHTML =
+      '<div class="br-kpi"><div class="br-kpi-l">Today, so far</div>' +
+        '<div class="br-kpi-v">' + CH.nf(now.t) + '</div>' +
+        '<div class="br-kpi-s">' + CH.nf(now.b) + ' dashboard · ' + CH.nf(now.p) + ' platform</div></div>' +
+      '<div class="br-kpi"><div class="br-kpi-l">This week so far</div>' +
+        '<div class="br-kpi-v">' + CH.nf(sum(wk)) + '</div>' +
+        '<div class="br-kpi-s">' + (sum(lwk) ? CH.deltaHtml(sum(wk), sum(lwk), 'week, same days') + ' <span>(' + CH.nf(sum(lwk)) + ')</span>'
+          : sum(wk) ? 'none by this day last week' : 'nothing built yet') + '</div></div>' +
+      '<div class="br-kpi"><div class="br-kpi-l">Average workday, last ' + (span === 182 ? '6 months' : span === 365 ? 'year' : span + ' days') + '</div>' +
+        '<div class="br-kpi-v">' + brNum(avg) + '<small>a day</small></div>' +
+        '<div class="br-kpi-s">' + (prevOk && avgPrev ? CH.deltaHtml(avg, avgPrev, span === 182 ? '6 months' : span + ' days') + ' <span>(' + brNum(avgPrev) + ')</span>' : CH.nf(sum(cur)) + ' built in all') + '</div></div>';
+
+    /* ---- the chart: days, or weeks for the longer ranges ---- */
+    /* the average of the last k finished workdays up to day i, or null without k of them */
+    const trail = function(i, k){
+      let s = 0, c = 0;
+      for (let j = i; j >= 0 && c < k; j--){ const x = days[j]; if (!x.work || x === now) continue; s += x.t; c++; }
+      return c === k ? s / k : null;
+    };
+    let items;
+    if (!weekly){
+      items = cur.map(function(x, k){
+        const i = n - span + k;
+        return { h:fmtDay(x.d) + (x === now ? ', so far' : ''), b:x.b, p:x.p, t:x.t, wk:!x.work, part:x === now,
+                 trend:(x.work && x !== now) ? trail(i, 5) : null, x:x.d.toLocaleDateString(undefined, { month:'short', day:'numeric' }) };
+      });
+    } else {
+      /* Monday-started weeks; the trend is the last four finished weeks */
+      const weeks = [];
+      days.forEach(function(x){
+        const ws = CH.weekStart(x.d), k = brKey(ws);
+        let w = weeks[weeks.length - 1];
+        if (!w || w.k !== k) weeks.push(w = { k:k, d:ws, b:0, p:0, t:0, n:0 });
+        w.b += x.b; w.p += x.p; w.t += x.t; w.n++;
+      });
+      const firstShown = CH.weekStart(cur[0].d).getTime();
+      items = [];
+      weeks.forEach(function(w, i){
+        if (w.d.getTime() < firstShown || w.n < 7 && i === 0) return;
+        const part = w.k === brKey(CH.weekStart(today));
+        let tr = null;
+        if (!part && i >= 3 && weeks.slice(i - 3, i + 1).every(function(z){ return z.n === 7; })){
+          tr = weeks.slice(i - 3, i + 1).reduce(function(a, z){ return a + z.t; }, 0) / 4;
+        }
+        items.push({ h:'Week of ' + w.d.toLocaleDateString(undefined, { month:'short', day:'numeric' }) + (part ? ', so far' : ''),
+                     b:w.b, p:w.p, t:w.t, wk:false, part:part, trend:tr,
+                     x:w.d.toLocaleDateString(undefined, { month:'short', day:'numeric' }) });
+      });
+    }
+    brItems = items;
+    document.getElementById('brChartTitle').textContent = weekly ? 'Built per week' : 'Built per day';
+    document.getElementById('brSub').textContent = CH.nf(sum(cur)) + ' built in the ' +
+      (span === 182 ? 'last 6 months' : span === 365 ? 'last year' : 'last ' + span + ' days') +
+      (firstB && cur[0].d < firstB ? ' · dashboard builds start ' + firstB.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }) : '');
+    document.getElementById('brLegend').innerHTML =
+      '<span><i style="background:var(--hue-orders)"></i>Dashboard (B2B)</span>' +
+      '<span><i style="background:var(--hue-build)"></i>Platform (ShipStation)</span>' +
+      '<span><i class="ln"></i>' + (weekly ? '4-week average' : '5-workday average') + '</span>';
+    document.querySelectorAll('#brTabs .chart-tab').forEach(function(b){
+      const on = b.getAttribute('data-brr') === brRange;
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    brPlot(document.getElementById('brChart'), items, weekly);
+
+    /* ---- where the platform numbers come from, and whether they are fresh ---- */
+    const note = document.getElementById('brNote');
+    let txt = 'Dashboard: units marked built. Platform: Amazon, Walmart, Shopify and other ShipStation orders that did not come from the dashboard, counted on the day they shipped. ';
+    let bad = false;
+    if (brErr){ txt += 'Platform numbers are not connected yet.'; bad = true; }
+    else if (brState && brState.last_error && (!brState.last_ok_at || brState.last_error_at > brState.last_ok_at)){
+      txt += 'The last ShipStation update failed ' + brAgo(brState.last_error_at) + ': ' + brState.last_error; bad = true;
+    }
+    else if (brState && brState.last_ok_at) txt += 'Platform numbers updated ' + brAgo(brState.last_ok_at) + '.';
+    else txt += 'Platform numbers are on their way from ShipStation.';
+    if (!brErr && brState && brState.history_to) txt += ' Older ShipStation history is still being copied in.';
+    note.textContent = txt;
+    note.classList.toggle('bad', bad);
+
+    /* ---- day by day, newest first ---- */
+    const rows = cur.filter(function(x){ return x.work || x.t; }).reverse();
+    const vs = function(x){
+      if (x === now) return '<span class="br-vs flat">so far</span>';
+      if (!x.work) return '';   /* a weekend day is not held to a workday's number */
+      if (!avg) return '';
+      const pct = Math.round((x.t - avg) / avg * 100);
+      const cls = pct <= -20 ? 'down' : pct >= 10 ? 'up' : 'flat';
+      return '<span class="br-vs ' + cls + '">' + (pct > 0 ? '+' : pct < 0 ? '−' : '') + Math.abs(pct) + '%</span>';
+    };
+    document.getElementById('brDays').innerHTML = rows.length
+      ? '<div class="table-wrap stack-wrap"><table class="hist-table stack br-days"><thead><tr>' +
+          '<th>Day</th><th class="n">Dashboard</th><th class="n">Platform</th><th class="n">Total</th><th class="n">vs average</th></tr></thead><tbody>' +
+          rows.map(function(x){
+            return '<tr><td data-l="Day">' + esc(fmtDay(x.d)) + (x.work ? '' : ' <span class="muted-sm">weekend</span>') + '</td>' +
+              '<td class="n" data-l="Dashboard">' + CH.nf(x.b) + '</td><td class="n" data-l="Platform">' + CH.nf(x.p) + '</td>' +
+              '<td class="n" data-l="Total"><b>' + CH.nf(x.t) + '</b></td><td class="n" data-l="vs average">' + vs(x) + '</td></tr>';
+          }).join('') + '</tbody></table></div>'
+      : '<div class="chart-empty">Nothing built in this range</div>';
+  }
+  /* stacked bars (dashboard below, platform on top) with the trend line over them */
+  function brPlot(host, items, weekly){
+    const n = items.length;
+    if (!n || !items.some(function(it){ return it.t; })){ host.innerHTML = '<div class="chart-empty">Nothing built in this range</div>'; return; }
+    let top = 1;
+    items.forEach(function(it){ top = Math.max(top, it.t, it.trend || 0); });
+    /* a round number to top the scale with: 1, 2 or 5 times a power of ten, then halves */
+    const mag = Math.pow(10, Math.floor(Math.log10(top))), steps = [1, 2, 2.5, 5, 10];
+    let max = mag * 10;
+    for (let i = 0; i < steps.length; i++){ if (steps[i] * mag >= top){ max = steps[i] * mag; break; } }
+    const pct = function(v){ return (v / max * 100).toFixed(2) + '%'; };
+    const pts = [];
+    items.forEach(function(it, i){ if (it.trend != null) pts.push(((i + 0.5) / n * 1000).toFixed(1) + ' ' + (100 - it.trend / max * 100).toFixed(2)); });
+    const mid = Math.floor((n - 1) / 2);
+    host.innerHTML =
+      '<div class="br-plot" role="img" aria-label="' + esc((weekly ? 'Units built per week' : 'Units built per day') + ', the table below lists them') + '">' +
+        '<div class="br-cols">' +
+          '<div class="br-grid" style="bottom:100%"><span>' + CH.nf(max) + '</span></div>' +
+          '<div class="br-grid" style="bottom:50%"><span>' + CH.nf(max / 2) + '</span></div>' +
+          items.map(function(it, i){
+            return '<div class="br-col' + (it.wk ? ' wk' : '') + (it.part ? ' part' : '') + '" data-i="' + i + '">' +
+              (it.p ? '<div class="br-seg p" style="height:' + pct(it.p) + '"></div>' : '') +
+              (it.b ? '<div class="br-seg b" style="height:' + pct(it.b) + '"></div>' : '') + '</div>';
+          }).join('') +
+          (pts.length > 1 ? '<svg class="br-line" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true"><path d="M' + pts.join('L') +
+            '" fill="none" style="stroke:var(--ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>' : '') +
+        '</div>' +
+        '<div class="br-x"><span>' + esc(items[0].x) + '</span>' + (n > 2 ? '<span>' + esc(items[mid].x) + '</span>' : '') + '<span>' + esc(items[n - 1].x) + '</span></div>' +
+        '<div class="br-tip" hidden></div>' +
+      '</div>';
+  }
+  /* the tip follows the pointer, mouse or finger, and names the day under it */
+  (function(){
+    const host = document.getElementById('brChart');
+    if (!host) return;
+    const hide = function(){
+      const tip = host.querySelector('.br-tip'); if (tip) tip.hidden = true;
+      host.querySelectorAll('.br-col.on').forEach(function(c){ c.classList.remove('on'); });
+    };
+    const show = function(e){
+      const cols = host.querySelector('.br-cols'), tip = host.querySelector('.br-tip');
+      if (!cols || !tip || !brItems.length) return;
+      const r = cols.getBoundingClientRect(), n = brItems.length;
+      const i = Math.max(0, Math.min(n - 1, Math.floor((e.clientX - r.left) / r.width * n)));
+      const it = brItems[i];
+      host.querySelectorAll('.br-col.on').forEach(function(c){ c.classList.remove('on'); });
+      const col = cols.querySelector('.br-col[data-i="' + i + '"]'); if (col) col.classList.add('on');
+      tip.innerHTML = '<div class="br-tip-h">' + esc(it.h) + '</div>' +
+        '<div class="br-tip-r"><span><i style="background:var(--hue-orders)"></i>Dashboard</span><b>' + CH.nf(it.b) + '</b></div>' +
+        '<div class="br-tip-r"><span><i style="background:var(--hue-build)"></i>Platform</span><b>' + CH.nf(it.p) + '</b></div>' +
+        '<div class="br-tip-r"><span>Total</span><b>' + CH.nf(it.t) + '</b></div>' +
+        (it.trend != null ? '<div class="br-tip-r"><span>' + (brRange > 90 ? '4-week average' : '5-workday average') + '</span><b>' + brNum(it.trend) + '</b></div>' : '');
+      tip.hidden = false;
+      const w = tip.offsetWidth, cx = (i + 0.5) / n * r.width;
+      const plotW = cols.parentNode.clientWidth, off = cols.offsetLeft;
+      tip.style.left = Math.max(0, Math.min(plotW - w, off + cx - w / 2)) + 'px';
+    };
+    host.addEventListener('pointermove', show);
+    host.addEventListener('pointerdown', show);
+    host.addEventListener('pointerleave', function(e){ if (e.pointerType === 'mouse') hide(); });
+    /* a finger's tip stays until a tap lands somewhere else */
+    document.addEventListener('pointerdown', function(e){ if (!host.contains(e.target)) hide(); });
+  })();
+  document.getElementById('brTabs').addEventListener('click', function(e){
+    const b = e.target.closest('[data-brr]'); if (!b) return;
+    brRange = b.getAttribute('data-brr');
+    try { localStorage.setItem('brRange', brRange); } catch(err){}
+    brRender();
+  });
+
   /* ---- Home: builds over time + pipeline by stage ---- */
   let hbRange = localStorage.getItem('hbRange') || '90';
   let ordUnitDates = [];   /* created_at of every order unit; ordLoadAll fills it */
@@ -11721,6 +12075,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   }
   function renderHomeWidgets(){ renderHomeBars(); renderHomeDonut(); renderHomeRecent(); }
   function renderHomeStatus(){
+    if (toolBuildrate.style.display !== 'none') brRender();
     renderHomeCharts();
     renderHomeStats();
     renderHomeWidgets();
@@ -12075,6 +12430,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     ordPerm.view    = !!(r.can_view_orders)   || ordPerm.manage;
     /* its own tick on the People page; order admin does not imply it */
     ordPerm.gov     = !!r.can_view_gov;
+    /* Build Rate is the owner's page: the same is_admin flag the database checks */
+    ['navBuildrate', 'tabMoreBuildrate'].forEach(function(id){ const el = document.getElementById(id); if (el) el.style.display = r.is_admin ? '' : 'none'; });
     const na = document.getElementById('navAdmin');
     const ta = document.getElementById('tileAdmin');
     const nBill = document.getElementById('navBilling');
