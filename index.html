@@ -3622,6 +3622,18 @@ window.ntBootSignIn = function(){
   .br-legend span{ display:inline-flex; align-items:center; gap:6px; }
   .br-legend i{ width:10px; height:10px; border-radius:3px; }
   .br-legend i.ln{ width:16px; height:0; border-radius:0; border-top:2px solid var(--ink); }
+  .br-legend i.ln2{ width:16px; height:0; border-radius:0; border-top:2px dashed var(--hue-timeclock); }
+  .br-kpis.four{ grid-template-columns:repeat(4, minmax(0,1fr)); }
+  .br-plot.rh{ padding-right:34px; }
+  .br-grid em{ position:absolute; left:calc(100% + 6px); bottom:-6px; font-style:normal; font-size:10.5px; line-height:1; color:var(--hue-timeclock); font-variant-numeric:tabular-nums; }
+  .br-dot{ position:absolute; width:7px; height:7px; margin:0 0 -3.5px -3.5px; border-radius:50%; background:var(--hue-timeclock); pointer-events:none; }
+  .br-dot.hollow{ background:var(--paper); box-shadow:inset 0 0 0 1.5px var(--hue-timeclock); }
+  .br-dow{ display:grid; gap:var(--s2); }
+  .br-dow-r{ display:grid; grid-template-columns:44px minmax(0,1fr) 40px 48px; align-items:center; gap:var(--s3); font-size:13px; }
+  .br-dow-t{ height:10px; border-radius:5px; background:color-mix(in oklch, var(--ink) 6%, transparent); overflow:hidden; }
+  .br-dow-t i{ display:block; height:100%; border-radius:5px; background:color-mix(in oklch, var(--ink) 38%, transparent); }
+  .br-dow-v{ text-align:right; font-weight:600; font-variant-numeric:tabular-nums; }
+  .br-dow-p{ text-align:right; font-size:12px; }
   .br-plot{ position:relative; margin-top:var(--s4); padding-left:28px; touch-action:pan-y; }
   .br-cols{ position:relative; display:flex; align-items:stretch; gap:2px; height:220px; }
   .br-col{ flex:1 1 0; min-width:0; height:100%; display:flex; flex-direction:column; justify-content:flex-end; border-radius:4px; }
@@ -3650,7 +3662,7 @@ window.ntBootSignIn = function(){
   .br-vs{ font-weight:600; font-variant-numeric:tabular-nums; }
   .br-vs.down{ color:var(--bad-fg, var(--bad)); } .br-vs.up{ color:var(--ok-fg, var(--ok)); } .br-vs.flat{ color:var(--muted); font-weight:500; }
   @media (max-width:700px){
-    .br-kpis{ grid-template-columns:1fr; gap:var(--s4); }
+    .br-kpis, .br-kpis.four{ grid-template-columns:1fr; gap:var(--s4); }
     .br-cols{ height:160px; gap:1px; }
   }
   .ch-skel{ width:100%; padding:var(--s4) 0; }
@@ -6981,20 +6993,30 @@ window.ntBootSignIn = function(){
         </div>
         <div class="br-ctl">
           <div class="chart-tabs" id="brBy">
-            <button type="button" class="chart-tab" data-brby="day" aria-pressed="false">By day</button>
             <button type="button" class="chart-tab" data-brby="week" aria-pressed="false">By week</button>
+            <button type="button" class="chart-tab" data-brby="day" aria-pressed="false">By day</button>
           </div>
           <div class="chart-tabs" id="brTabs">
-            <button type="button" class="chart-tab" data-brr="30" aria-pressed="false">30 days</button>
-            <button type="button" class="chart-tab" data-brr="90" aria-pressed="false">90 days</button>
-            <button type="button" class="chart-tab" data-brr="182" aria-pressed="false">6 months</button>
-            <button type="button" class="chart-tab" data-brr="365" aria-pressed="false">1 year</button>
+            <button type="button" class="chart-tab" data-brr="14" aria-pressed="false" title="14 days">14D</button>
+            <button type="button" class="chart-tab" data-brr="30" aria-pressed="false" title="30 days">30D</button>
+            <button type="button" class="chart-tab" data-brr="60" aria-pressed="false" title="60 days">60D</button>
+            <button type="button" class="chart-tab" data-brr="90" aria-pressed="false" title="90 days">90D</button>
+            <button type="button" class="chart-tab" data-brr="182" aria-pressed="false" title="6 months">6M</button>
+            <button type="button" class="chart-tab" data-brr="365" aria-pressed="false" title="1 year">1Y</button>
           </div>
         </div>
       </div>
       <div class="br-legend" id="brLegend"></div>
       <div id="brChart"></div>
       <p class="muted-sm br-note" id="brNote"></p>
+    </section>
+
+    <section class="card">
+      <div class="chart-kpi" style="margin-bottom:var(--s3);">
+        <h2 class="card-title">By weekday</h2>
+        <div class="chart-sub" id="brDowSub"></div>
+      </div>
+      <div class="br-dow" id="brDow"></div>
     </section>
 
     <section class="card">
@@ -7848,6 +7870,16 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
                                           store_id: null, units: rnd() < 0.1 ? 2 : 1, voided: false });
         }
       }
+      /* Timeclock: two-week pay periods ending on Fridays, five people; the newest
+         is still waiting on two of them, the way hours come in late */
+      const fri = new Date(); fri.setHours(12, 0, 0, 0); fri.setDate(fri.getDate() - ((fri.getDay() + 2) % 7) - 7);
+      for (let k = 0; k < 9; k++){
+        const end = new Date(fri.getTime()); end.setDate(end.getDate() - 14 * k);
+        for (let j = 1; j <= (k === 0 ? 3 : 5); j++){
+          db.tc_hours.push({ id: demoId('tch'), user_id: 'demo-emp-' + j, hours: Math.round(72 + rnd() * 16),
+                             period_ending: key(end), note: null, created_at: end.toISOString() });
+        }
+      }
       db.ss_platform_state = [{ id: 1, last_ok_at: new Date(Date.now() - 6 * 60000).toISOString(),
                                 last_error: null, last_error_at: null, history_to: null }];
     })();
@@ -8426,7 +8458,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       var _ba = document.getElementById('tabAdmin'); if (_ba) _ba.style.display = 'none';
       ['navGov', 'tileGov', 'tabGov', 'homeGovTile'].forEach(function(id){ var g = document.getElementById(id); if (g) g.style.display = 'none'; });
       ['navBuildrate', 'tabMoreBuildrate'].forEach(function(id){ var g = document.getElementById(id); if (g) g.style.display = 'none'; });
-      brPlat = null; brState = null;
+      brPlat = null; brState = null; brHoursOk = false; brHours = null;
       govInited = false; govStat = null; govOpps = []; govSeenAt = null; govCurrentId = null; govOnSettings = false;
       ordPerm = { view:false, manage:false, admin:false, catalog:false, rma:false, gov:false };
       ordInited = false; admInited = false; ordCurrentId = null; rmaInited = false; rmaCurrentId = null;
@@ -11367,40 +11399,45 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   }
 
   /* ================= BUILD RATE =================
-     PCs built per day, for every employee. Dashboard builds are units marked built
-     here, the same dates the Home charts count. Platform builds are the units on
-     ShipStation marketplace orders (Amazon, Walmart, Shopify), counted on the day
-     they shipped; a database job copies those from ShipStation every 10 minutes.
-     Labels made by hand in ShipStation are left out: those are mostly B2B batches,
-     which the dashboard already counts. Workdays are Monday to Friday. */
-  const BR_RANGES = ['30', '90', '182', '365'];
+     PCs built per week or day, for every employee. Dashboard builds are units
+     marked built here, the same dates the Home charts count. Platform builds are
+     the units on ShipStation marketplace orders (Amazon, Walmart, Shopify), counted
+     on the day they shipped; a database job copies those from ShipStation every 10
+     minutes. Labels made by hand in ShipStation are left out: those are mostly B2B
+     batches, which the dashboard already counts. Workdays are Monday to Friday.
+     Hours come from Timeclock: two-week pay periods ending on a Friday. Only the
+     timeclock admin can read everyone's hours, so only they see that part. */
+  /* every visit opens on the last 30 days, by week; a switch lasts until the page is reloaded */
   let brRange = '30';
-  try { const v = localStorage.getItem('brRange'); if (BR_RANGES.indexOf(v) >= 0) brRange = v; } catch(e){}
   let brPlat = null, brState = null, brErr = '', brAt = 0, brItems = [];
-  let brBy = 'day', brWk = false, brAvg = 0;
-  try { if (localStorage.getItem('brBy') === 'week') brBy = 'week'; } catch(e){}
+  let brBy = 'week', brWk = false, brAvg = 0;
+  let brHoursOk = false, brHours = null;
   function brKey(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function brSpan(span){ return span === 182 ? '6 months' : span === 365 ? 'year' : span + ' days'; }
   /* how far a day's number, or a week's per-workday number, is from the average workday */
   function brPct(v){
     const pct = Math.round((v - brAvg) / brAvg * 100);
     const cls = pct <= -20 ? 'down' : pct >= 10 ? 'up' : 'flat';
-    return '<span class="br-vs ' + cls + '">' + (pct > 0 ? '+' : pct < 0 ? '\u2212' : '') + Math.abs(pct) + '%</span>';
+    return '<span class="br-vs ' + cls + '">' + (pct > 0 ? '+' : pct < 0 ? '−' : '') + Math.abs(pct) + '%</span>';
   }
   function brNum(n){ return (Math.round(n * 10) / 10).toLocaleString(undefined, { maximumFractionDigits:1 }); }
   async function brOpen(){
-    if (!brPlat){ ['brKpis', 'brChart', 'brDays'].forEach(function(id){ const h = document.getElementById(id); if (h) h.innerHTML = chSkel(); }); }
-    if (!brPlat || Date.now() - brAt > 5 * 60000){ await Promise.all([ordOpen(), brLoad()]); }
+    if (!brPlat){ ['brKpis', 'brChart', 'brDow', 'brDays'].forEach(function(id){ const h = document.getElementById(id); if (h) h.innerHTML = chSkel(); }); }
+    if (!brPlat || Date.now() - brAt > 5 * 60000){ await ordOpen(); await brLoad(); }
     brRender();
   }
   async function brLoad(){
     const from = new Date(); from.setDate(from.getDate() - 400);
     const res = await Promise.all([
       sbSoft(sbAll(function(){ return SB.from('ss_platform_shipments').select('ship_date,units').eq('voided', false).gte('ship_date', brKey(from)).order('shipment_id'); })),
-      sbSoft(SB.from('ss_platform_state').select('last_ok_at,last_error,last_error_at,history_to').limit(1))
+      sbSoft(SB.from('ss_platform_state').select('last_ok_at,last_error,last_error_at,history_to').limit(1)),
+      brHoursOk ? sbSoft(sbAll(function(){ return SB.from('tc_hours').select('user_id,hours,period_ending').gte('period_ending', brKey(from)).order('id'); }))
+                : Promise.resolve({ data:null, error:null })
     ]);
     brErr = res[0].error ? (res[0].error.message || String(res[0].error)) : '';
     brPlat = res[0].data || [];
     brState = (!res[1].error && res[1].data && res[1].data[0]) || null;
+    brHours = (brHoursOk && !res[2].error) ? (res[2].data || []) : null;
     brAt = Date.now();
   }
   function brAgo(iso){
@@ -11420,10 +11457,11 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     allBuildDates().forEach(function(d){ at(brKey(d)).b++; if (!firstB || d < firstB) firstB = d; });
     brPlat.forEach(function(r){ at(String(r.ship_date).slice(0, 10)).p += (+r.units || 0); });
     if (firstB){ firstB = new Date(firstB); firstB.setHours(0, 0, 0, 0); }
+    const unitsOn = function(d){ const v = map[brKey(d)]; return v ? v.b + v.p : 0; };
 
     /* every day from two ranges back to today, so the range has a range before it
-       to compare with and its first days have days behind them to average */
-    /* single days only up to 90 days: a year of daily bars is too thin to read */
+       to compare with and its first days have days behind them to average.
+       Single days only up to 90 days: a year of daily bars is too thin to read. */
     const span = parseInt(brRange, 10), weekly = span > 90 || brBy === 'week';
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const days = [];
@@ -11443,23 +11481,65 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     brAvg = avg;
     const fmtDay = function(d){ return d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' }); };
 
-    /* ---- the three numbers ---- */
+    /* ---- pay periods from Timeclock: units built in the two weeks against the hours logged ---- */
+    const periods = {};
+    (brHours || []).forEach(function(h){
+      const k = String(h.period_ending).slice(0, 10);
+      const p = periods[k] || (periods[k] = { k:k, hours:0, who:{} });
+      p.hours += +h.hours || 0; p.who[h.user_id] = 1;
+    });
+    const plist = Object.keys(periods).sort().map(function(k){
+      const p = periods[k], end = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10));
+      const start = new Date(end.getTime()); start.setDate(start.getDate() - 13);
+      let units = 0;
+      for (let d = new Date(start.getTime()); d <= end; d.setDate(d.getDate() + 1)) units += unitsOn(d);
+      p.end = end; p.start = start; p.units = units; p.people = Object.keys(p.who).length;
+      p.rate = p.hours > 0 ? units / (p.hours / 8) : null;
+      p.span = CH.fmtShort(start) + ' – ' + CH.fmtShort(end);
+      return p;
+    });
+    /* hours come in late: a period with fewer people than usually log is marked, not trusted */
+    const usual = Math.max.apply(null, [0].concat(plist.slice(-6).map(function(p){ return p.people; })));
+    plist.forEach(function(p){ p.partial = p.people < usual; });
+    const perFor = function(monday){
+      const a = new Date(monday.getTime()); a.setDate(a.getDate() + 4);
+      const b = new Date(monday.getTime()); b.setDate(b.getDate() + 11);
+      return periods[brKey(a)] || periods[brKey(b)] || null;
+    };
+    const full = plist.filter(function(p){ return !p.partial && p.rate != null; });
+    const lastP = full[full.length - 1], prevP = full[full.length - 2];
+
+    /* ---- the numbers at the top ---- */
     const dow = (today.getDay() + 6) % 7;                 /* 0 is Monday */
     const wk = days.slice(n - 1 - dow), lwk = days.slice(n - 8 - dow, n - 7);
     const prevOk = span < 365 && (!firstB || prev[0].d >= firstB);
+    /* this week if the rest of it goes like an average workday: today counts at
+       least an average day, unless it is already past that */
+    let pace = null;
+    if (now.work && avg){
+      pace = sum(wk.slice(0, -1)) + Math.max(now.t, avg);
+      for (let i = dow + 1; i < 5; i++) pace += avg;
+    }
+    kp.classList.toggle('four', !!lastP);
     kp.innerHTML =
       '<div class="br-kpi"><div class="br-kpi-l">Today, so far</div>' +
         '<div class="br-kpi-v">' + CH.nf(now.t) + '</div>' +
         '<div class="br-kpi-s">' + CH.nf(now.b) + ' dashboard · ' + CH.nf(now.p) + ' platform</div></div>' +
       '<div class="br-kpi"><div class="br-kpi-l">This week so far</div>' +
-        '<div class="br-kpi-v">' + CH.nf(sum(wk)) + '</div>' +
+        '<div class="br-kpi-v">' + CH.nf(sum(wk)) + (pace != null ? '<small>on pace for about ' + CH.nf(Math.round(pace)) + '</small>' : '') + '</div>' +
         '<div class="br-kpi-s">' + (sum(lwk) ? CH.deltaHtml(sum(wk), sum(lwk), 'week, same days') + ' <span>(' + CH.nf(sum(lwk)) + ')</span>'
           : sum(wk) ? 'none by this day last week' : 'nothing built yet') + '</div></div>' +
-      '<div class="br-kpi"><div class="br-kpi-l">Average workday, last ' + (span === 182 ? '6 months' : span === 365 ? 'year' : span + ' days') + '</div>' +
+      '<div class="br-kpi"><div class="br-kpi-l">Average workday, last ' + brSpan(span) + '</div>' +
         '<div class="br-kpi-v">' + brNum(avg) + '<small>a day</small></div>' +
-        '<div class="br-kpi-s">' + (prevOk && avgPrev ? CH.deltaHtml(avg, avgPrev, span === 182 ? '6 months' : span + ' days') + ' <span>(' + brNum(avgPrev) + ')</span>' : CH.nf(sum(cur)) + ' built in all') + '</div></div>';
+        '<div class="br-kpi-s">' + (prevOk && avgPrev ? CH.deltaHtml(avg, avgPrev, brSpan(span)) + ' <span>(' + brNum(avgPrev) + ')</span>' : CH.nf(sum(cur)) + ' built in all') + '</div></div>' +
+      (lastP
+        ? '<div class="br-kpi"><div class="br-kpi-l">PCs per 8 hours worked</div>' +
+            '<div class="br-kpi-v">' + brNum(lastP.rate) + '<small>pay period ending ' + esc(CH.fmtShort(lastP.end)) + '</small></div>' +
+            '<div class="br-kpi-s">' + (prevP ? CH.deltaHtml(lastP.rate, prevP.rate, 'pay period') + ' <span>(' + brNum(prevP.rate) + ')</span>' : '') +
+              '<span>' + CH.nf(lastP.units) + ' built in ' + CH.nf(Math.round(lastP.hours)) + ' h</span></div></div>'
+        : '');
 
-    /* ---- the chart: days, or weeks for the longer ranges ---- */
+    /* ---- the chart: weeks, or single days ---- */
     /* the average of the last k finished workdays up to day i, or null without k of them */
     const trail = function(i, k){
       let s = 0, c = 0;
@@ -11494,21 +11574,24 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
           tr = weeks.slice(i - 3, i + 1).reduce(function(a, z){ return a + z.t; }, 0) / 4;
         }
         const end = new Date(w.d.getTime()); end.setDate(end.getDate() + 6);
+        const per = perFor(w.d);
         items.push({ h:'Week of ' + CH.fmtShort(w.d) + (part ? ', so far' : ''),
                      b:w.b, p:w.p, t:w.t, wk:false, part:part, trend:tr, x:CH.fmtShort(w.d),
-                     span:CH.fmtShort(w.d) + ' \u2013 ' + CH.fmtShort(end),
-                     pace:w.doneW ? w.doneT / w.doneW : null });
+                     span:CH.fmtShort(w.d) + ' – ' + CH.fmtShort(end),
+                     pace:w.doneW ? w.doneT / w.doneW : null,
+                     per:per, rate:per ? per.rate : null });
       });
     }
     brItems = items; brWk = weekly;
+    const hoursLine = weekly && items.some(function(it){ return it.rate != null; });
     document.getElementById('brChartTitle').textContent = weekly ? 'Built per week' : 'Built per day';
-    document.getElementById('brSub').textContent = CH.nf(sum(cur)) + ' built in the ' +
-      (span === 182 ? 'last 6 months' : span === 365 ? 'last year' : 'last ' + span + ' days') +
+    document.getElementById('brSub').textContent = CH.nf(sum(cur)) + ' built in the last ' + brSpan(span) +
       (firstB && cur[0].d < firstB ? ' · dashboard builds start ' + firstB.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }) : '');
     document.getElementById('brLegend').innerHTML =
       '<span><i style="background:var(--hue-orders)"></i>Dashboard (B2B)</span>' +
       '<span><i style="background:var(--hue-build)"></i>Platform (ShipStation)</span>' +
-      '<span><i class="ln"></i>' + (weekly ? '4-week average' : '5-workday average') + '</span>';
+      '<span><i class="ln"></i>' + (weekly ? '4-week average' : '5-workday average') + '</span>' +
+      (hoursLine ? '<span><i class="ln2"></i>PCs per 8 hours worked (right scale)</span>' : '');
     document.querySelectorAll('#brTabs .chart-tab').forEach(function(b){
       const on = b.getAttribute('data-brr') === brRange;
       b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -11517,13 +11600,14 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       const v = b.getAttribute('data-brby'), on = v === (weekly ? 'week' : 'day');
       b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
       b.disabled = v === 'day' && span > 90;
-      b.title = b.disabled ? 'Single days are shown for 30 or 90 days' : '';
+      b.title = b.disabled ? 'Single days are shown for up to 90 days' : '';
     });
-    brPlot(document.getElementById('brChart'), items, weekly);
+    brPlot(document.getElementById('brChart'), items, weekly, hoursLine);
 
-    /* ---- where the platform numbers come from, and whether they are fresh ---- */
+    /* ---- where the numbers come from, and whether they are fresh ---- */
     const note = document.getElementById('brNote');
     let txt = 'Dashboard: units marked built. Platform: Amazon, Walmart and Shopify orders shipped through ShipStation, counted on the day they shipped. Labels made by hand in ShipStation are not counted, since those are mostly B2B batches the dashboard already counts. ';
+    if (hoursLine) txt += 'PCs per 8 hours: everything built in a two-week pay period against the hours logged in Timeclock for it; a hollow dot means some people have not logged their hours yet. ';
     let bad = false;
     if (brErr){ txt += 'Platform numbers are not connected yet.'; bad = true; }
     else if (brState && brState.last_error && (!brState.last_ok_at || brState.last_error_at > brState.last_ok_at)){
@@ -11535,23 +11619,42 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     note.textContent = txt;
     note.classList.toggle('bad', bad);
 
+    /* ---- by weekday: which days run slow ---- */
+    const dowNames = [1, 2, 3, 4, 5].map(function(wd){
+      const ds = cur.filter(function(x){ return x.d.getDay() === wd && x !== now; });
+      const sample = ds.length ? ds[0].d : null;
+      return { name:sample ? sample.toLocaleDateString(undefined, { weekday:'short' }) : '', n:ds.length, a:ds.length ? sum(ds) / ds.length : 0 };
+    }).filter(function(r){ return r.n; });
+    const dowMax = Math.max.apply(null, [0].concat(dowNames.map(function(r){ return r.a; })));
+    document.getElementById('brDowSub').textContent = 'Average built on each weekday, last ' + brSpan(span) + ', compared with the average workday';
+    document.getElementById('brDow').innerHTML = dowMax
+      ? dowNames.map(function(r){
+          return '<div class="br-dow-r"><span>' + esc(r.name) + '</span>' +
+            '<span class="br-dow-t"><i style="width:' + (r.a / dowMax * 100).toFixed(1) + '%"></i></span>' +
+            '<span class="br-dow-v">' + brNum(r.a) + '</span><span class="br-dow-p">' + (avg ? brPct(r.a) : '') + '</span></div>';
+        }).join('')
+      : '<div class="chart-empty">Nothing built in this range</div>';
+
     /* ---- week by week or day by day, newest first ---- */
-    const pctHtml = brPct;
     document.getElementById('brTblTitle').textContent = weekly ? 'Week by week' : 'Day by day';
     document.getElementById('brTblNote').textContent = weekly
-      ? 'Newest first, Monday to Sunday. Per workday is the week\u2019s builds over its workdays, compared with the average workday in the range above. This week counts the days before today.'
+      ? 'Newest first, Monday to Sunday. Per workday is the week’s builds over its workdays, compared with the average workday in the range above. This week counts the days before today.' +
+        (hoursLine ? ' PCs per 8 hours is the pay period’s figure, so two weeks share it.' : '')
       : 'Newest first. Workdays, plus any weekend day with builds. Compared with the average workday in the range above.';
     if (weekly){
       const wrows = items.slice().reverse();
       document.getElementById('brDays').innerHTML = wrows.length
         ? '<div class="table-wrap stack-wrap"><table class="hist-table stack br-days"><thead><tr>' +
-            '<th>Week</th><th class="n">Dashboard</th><th class="n">Platform</th><th class="n">Total</th><th class="n">Per workday</th><th class="n">vs average</th></tr></thead><tbody>' +
+            '<th>Week</th><th class="n">Dashboard</th><th class="n">Platform</th><th class="n">Total</th><th class="n">Per workday</th><th class="n">vs average</th>' +
+            (hoursLine ? '<th class="n">PCs per 8 h</th>' : '') + '</tr></thead><tbody>' +
             wrows.map(function(w){
               return '<tr><td data-l="Week">' + esc(w.span) + (w.part ? ' <span class="muted-sm">this week</span>' : '') + '</td>' +
                 '<td class="n" data-l="Dashboard">' + CH.nf(w.b) + '</td><td class="n" data-l="Platform">' + CH.nf(w.p) + '</td>' +
                 '<td class="n" data-l="Total"><b>' + CH.nf(w.t) + '</b></td>' +
-                '<td class="n" data-l="Per workday">' + (w.pace == null ? '\u2014' : brNum(w.pace)) + '</td>' +
-                '<td class="n" data-l="vs average">' + (w.pace == null ? '<span class="br-vs flat">so far</span>' : avg ? pctHtml(w.pace) : '') + '</td></tr>';
+                '<td class="n" data-l="Per workday">' + (w.pace == null ? '—' : brNum(w.pace)) + '</td>' +
+                '<td class="n" data-l="vs average">' + (w.pace == null ? '<span class="br-vs flat">so far</span>' : avg ? brPct(w.pace) : '') + '</td>' +
+                (hoursLine ? '<td class="n" data-l="PCs per 8 h">' + (w.rate == null ? '<span class="muted-sm">hours not in</span>'
+                  : brNum(w.rate) + (w.per.partial ? ' <span class="muted-sm">some hours missing</span>' : '')) + '</td>' : '') + '</tr>';
             }).join('') + '</tbody></table></div>'
         : '<div class="chart-empty">Nothing built in this range</div>';
       return;
@@ -11560,7 +11663,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     const vs = function(x){
       if (x === now) return '<span class="br-vs flat">so far</span>';
       if (!x.work) return '';   /* a weekend day is not held to a workday's number */
-      return avg ? pctHtml(x.t) : '';
+      return avg ? brPct(x.t) : '';
     };
     document.getElementById('brDays').innerHTML = rows.length
       ? '<div class="table-wrap stack-wrap"><table class="hist-table stack br-days"><thead><tr>' +
@@ -11572,32 +11675,50 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
           }).join('') + '</tbody></table></div>'
       : '<div class="chart-empty">Nothing built in this range</div>';
   }
-  /* stacked bars (dashboard below, platform on top) with the trend line over them */
-  function brPlot(host, items, weekly){
+  /* a round number to top a scale with: 1, 2, 2.5 or 5 times a power of ten */
+  function brNice(top){
+    const mag = Math.pow(10, Math.floor(Math.log10(top))), steps = [1, 2, 2.5, 5, 10];
+    for (let i = 0; i < steps.length; i++){ if (steps[i] * mag >= top) return steps[i] * mag; }
+    return mag * 10;
+  }
+  /* stacked bars (dashboard below, platform on top), the trend line over them, and
+     in week view the PCs-per-8-hours line on its own scale at the right */
+  function brPlot(host, items, weekly, hoursLine){
     const n = items.length;
     if (!n || !items.some(function(it){ return it.t; })){ host.innerHTML = '<div class="chart-empty">Nothing built in this range</div>'; return; }
-    let top = 1;
-    items.forEach(function(it){ top = Math.max(top, it.t, it.trend || 0); });
-    /* a round number to top the scale with: 1, 2 or 5 times a power of ten, then halves */
-    const mag = Math.pow(10, Math.floor(Math.log10(top))), steps = [1, 2, 2.5, 5, 10];
-    let max = mag * 10;
-    for (let i = 0; i < steps.length; i++){ if (steps[i] * mag >= top){ max = steps[i] * mag; break; } }
+    let top = 1, rtop = 0;
+    items.forEach(function(it){ top = Math.max(top, it.t, it.trend || 0); if (it.rate != null) rtop = Math.max(rtop, it.rate); });
+    const max = brNice(top), rmax = hoursLine && rtop ? brNice(rtop * 1.1) : 0;
     const pct = function(v){ return (v / max * 100).toFixed(2) + '%'; };
+    const xAt = function(i){ return ((i + 0.5) / n * 1000).toFixed(1); };
     const pts = [];
-    items.forEach(function(it, i){ if (it.trend != null) pts.push(((i + 0.5) / n * 1000).toFixed(1) + ' ' + (100 - it.trend / max * 100).toFixed(2)); });
+    items.forEach(function(it, i){ if (it.trend != null) pts.push(xAt(i) + ' ' + (100 - it.trend / max * 100).toFixed(2)); });
+    /* the hours line breaks where a pay period's hours are not in */
+    let rpath = '', dots = '', open = false;
+    if (rmax){
+      items.forEach(function(it, i){
+        if (it.rate == null){ open = false; return; }
+        rpath += (open ? 'L' : 'M') + xAt(i) + ' ' + (100 - it.rate / rmax * 100).toFixed(2); open = true;
+        dots += '<span class="br-dot' + (it.per && it.per.partial ? ' hollow' : '') + '" style="left:' + ((i + 0.5) / n * 100).toFixed(2) +
+          '%;bottom:' + (it.rate / rmax * 100).toFixed(2) + '%"></span>';
+      });
+    }
     const mid = Math.floor((n - 1) / 2);
     host.innerHTML =
-      '<div class="br-plot" role="img" aria-label="' + esc((weekly ? 'Units built per week' : 'Units built per day') + ', the table below lists them') + '">' +
+      '<div class="br-plot' + (rmax ? ' rh' : '') + '" role="img" aria-label="' + esc((weekly ? 'Units built per week' : 'Units built per day') + ', the table below lists them') + '">' +
         '<div class="br-cols">' +
-          '<div class="br-grid" style="bottom:100%"><span>' + CH.nf(max) + '</span></div>' +
-          '<div class="br-grid" style="bottom:50%"><span>' + CH.nf(max / 2) + '</span></div>' +
+          '<div class="br-grid" style="bottom:100%"><span>' + CH.nf(max) + '</span>' + (rmax ? '<em>' + brNum(rmax) + '</em>' : '') + '</div>' +
+          '<div class="br-grid" style="bottom:50%"><span>' + CH.nf(max / 2) + '</span>' + (rmax ? '<em>' + brNum(rmax / 2) + '</em>' : '') + '</div>' +
           items.map(function(it, i){
             return '<div class="br-col' + (it.wk ? ' wk' : '') + (it.part ? ' part' : '') + '" data-i="' + i + '">' +
               (it.p ? '<div class="br-seg p" style="height:' + pct(it.p) + '"></div>' : '') +
               (it.b ? '<div class="br-seg b" style="height:' + pct(it.b) + '"></div>' : '') + '</div>';
           }).join('') +
-          (pts.length > 1 ? '<svg class="br-line" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true"><path d="M' + pts.join('L') +
-            '" fill="none" style="stroke:var(--ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>' : '') +
+          (pts.length > 1 || rpath ? '<svg class="br-line" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">' +
+            (pts.length > 1 ? '<path d="M' + pts.join('L') + '" fill="none" style="stroke:var(--ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' : '') +
+            (rpath ? '<path d="' + rpath + '" fill="none" style="stroke:var(--hue-timeclock)" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' : '') +
+            '</svg>' : '') +
+          dots +
         '</div>' +
         '<div class="br-x"><span>' + esc(items[0].x) + '</span>' + (n > 2 ? '<span>' + esc(items[mid].x) + '</span>' : '') + '<span>' + esc(items[n - 1].x) + '</span></div>' +
         '<div class="br-tip" hidden></div>' +
@@ -11619,16 +11740,21 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       const it = brItems[i];
       host.querySelectorAll('.br-col.on').forEach(function(c){ c.classList.remove('on'); });
       const col = cols.querySelector('.br-col[data-i="' + i + '"]'); if (col) col.classList.add('on');
+      const row = function(label, val){ return '<div class="br-tip-r"><span>' + label + '</span>' + val + '</div>'; };
       tip.innerHTML = '<div class="br-tip-h">' + esc(it.h) + '</div>' +
-        '<div class="br-tip-r"><span><i style="background:var(--hue-orders)"></i>Dashboard</span><b>' + CH.nf(it.b) + '</b></div>' +
-        '<div class="br-tip-r"><span><i style="background:var(--hue-build)"></i>Platform</span><b>' + CH.nf(it.p) + '</b></div>' +
-        '<div class="br-tip-r"><span>Total</span><b>' + CH.nf(it.t) + '</b></div>' +
-        (brWk ? '<div class="br-tip-r"><span>Per workday</span><b>' + (it.pace == null ? '\u2014' : brNum(it.pace)) + '</b></div>' : '') +
-        '<div class="br-tip-r"><span>vs average</span>' + (
+        row('<i style="background:var(--hue-orders)"></i>Dashboard', '<b>' + CH.nf(it.b) + '</b>') +
+        row('<i style="background:var(--hue-build)"></i>Platform', '<b>' + CH.nf(it.p) + '</b>') +
+        row('Total', '<b>' + CH.nf(it.t) + '</b>') +
+        (brWk ? row('Per workday', '<b>' + (it.pace == null ? '—' : brNum(it.pace)) + '</b>') : '') +
+        row('vs average',
           (brWk ? it.pace == null : it.part) ? '<span class="br-vs flat">so far</span>'
           : !brWk && it.wk ? '<span class="br-vs flat">weekend</span>'
-          : brAvg ? brPct(brWk ? it.pace : it.t) : '<span class="br-vs flat">\u2014</span>') + '</div>' +
-        (it.trend != null ? '<div class="br-tip-r"><span>' + (brWk ? '4-week average' : '5-workday average') + '</span><b>' + brNum(it.trend) + '</b></div>' : '');
+          : brAvg ? brPct(brWk ? it.pace : it.t) : '<span class="br-vs flat">—</span>') +
+        (it.trend != null ? row(brWk ? '4-week average' : '5-workday average', '<b>' + brNum(it.trend) + '</b>') : '') +
+        (it.per ? row('Pay period', '<b>' + esc(it.per.span) + '</b>') +
+                  row('Hours logged', '<b>' + CH.nf(Math.round(it.per.hours)) + ' h, ' + it.per.people + (it.per.people === 1 ? ' person' : ' people') + '</b>') +
+                  row('PCs per 8 hours', '<b>' + (it.rate == null ? '—' : brNum(it.rate)) + (it.per.partial ? ' (some hours missing)' : '') + '</b>')
+                : (brWk && brHours ? row('Hours', '<span class="br-vs flat">not in yet</span>') : ''));
       tip.hidden = false;
       const w = tip.offsetWidth, cx = (i + 0.5) / n * r.width;
       const plotW = cols.parentNode.clientWidth, off = cols.offsetLeft;
@@ -11643,13 +11769,11 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   document.getElementById('brBy').addEventListener('click', function(e){
     const b = e.target.closest('[data-brby]'); if (!b || b.disabled) return;
     brBy = b.getAttribute('data-brby');
-    try { localStorage.setItem('brBy', brBy); } catch(err){}
     brRender();
   });
   document.getElementById('brTabs').addEventListener('click', function(e){
     const b = e.target.closest('[data-brr]'); if (!b) return;
     brRange = b.getAttribute('data-brr');
-    try { localStorage.setItem('brRange', brRange); } catch(err){}
     brRender();
   });
 
@@ -12492,6 +12616,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     ordPerm.gov     = !!r.can_view_gov;
     /* Build Rate: every active employee, as the database checks it (is_staff) */
     ['navBuildrate', 'tabMoreBuildrate'].forEach(function(id){ const el = document.getElementById(id); if (el) el.style.display = ''; });
+    brHoursOk = !!r.is_admin;   /* everyone's Timeclock hours: the timeclock admin only, as the database allows */
     const na = document.getElementById('navAdmin');
     const ta = document.getElementById('tileAdmin');
     const nBill = document.getElementById('navBilling');
