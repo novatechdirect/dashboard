@@ -9097,12 +9097,13 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   (function(){
     var tm = document.getElementById('tabMargins'), ta = document.getElementById('tabAdmin'),
         tbl = document.getElementById('tabBilling'), more = document.getElementById('tabMore'),
-        tg = document.getElementById('tabGov');
+        tg = document.getElementById('tabGov'), tbr = document.getElementById('tabMoreBuildrate');
     if (!tm || !ta || !more) return;
     function sync(){
       var m = tm.style.display !== 'none', ad = ta.style.display !== 'none',
-          bl = tbl && tbl.style.display !== 'none', gv = tg && tg.style.display !== 'none';
-      more.style.display = (m || ad || bl || gv) ? '' : 'none';
+          bl = tbl && tbl.style.display !== 'none', gv = tg && tg.style.display !== 'none',
+          br = tbr && tbr.style.display !== 'none';
+      more.style.display = (m || ad || bl || gv || br) ? '' : 'none';
       var mgv = document.getElementById('tabMoreGov');
       if (mgv) mgv.style.display = gv ? '' : 'none';
       document.getElementById('tabMoreMargins').style.display = m ? '' : 'none';
@@ -9114,6 +9115,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     new MutationObserver(sync).observe(ta, { attributes:true, attributeFilter:['style'] });
     if (tbl) new MutationObserver(sync).observe(tbl, { attributes:true, attributeFilter:['style'] });
     if (tg) new MutationObserver(sync).observe(tg, { attributes:true, attributeFilter:['style'] });
+    if (tbr) new MutationObserver(sync).observe(tbr, { attributes:true, attributeFilter:['style'] });
     sync();
     more.addEventListener('click', function(){
       var s = document.getElementById('tabMoreSheet'), sc = document.getElementById('tabMoreScrim');
@@ -11365,18 +11367,25 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   }
 
   /* ================= BUILD RATE =================
-     The owner's page: PCs built per day. Dashboard builds are units marked built
+     PCs built per day, for every employee. Dashboard builds are units marked built
      here, the same dates the Home charts count. Platform builds are the units on
-     ShipStation shipments that did not come from the dashboard (Amazon, Walmart,
-     Shopify and the like), counted on the day they shipped; a database job copies
-     those from ShipStation every 10 minutes. Workdays are Monday to Friday. */
+     ShipStation marketplace orders (Amazon, Walmart, Shopify), counted on the day
+     they shipped; a database job copies those from ShipStation every 10 minutes.
+     Labels made by hand in ShipStation are left out: those are mostly B2B batches,
+     which the dashboard already counts. Workdays are Monday to Friday. */
   const BR_RANGES = ['30', '90', '182', '365'];
   let brRange = '30';
   try { const v = localStorage.getItem('brRange'); if (BR_RANGES.indexOf(v) >= 0) brRange = v; } catch(e){}
   let brPlat = null, brState = null, brErr = '', brAt = 0, brItems = [];
-  let brBy = 'day', brWk = false;
+  let brBy = 'day', brWk = false, brAvg = 0;
   try { if (localStorage.getItem('brBy') === 'week') brBy = 'week'; } catch(e){}
   function brKey(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  /* how far a day's number, or a week's per-workday number, is from the average workday */
+  function brPct(v){
+    const pct = Math.round((v - brAvg) / brAvg * 100);
+    const cls = pct <= -20 ? 'down' : pct >= 10 ? 'up' : 'flat';
+    return '<span class="br-vs ' + cls + '">' + (pct > 0 ? '+' : pct < 0 ? '\u2212' : '') + Math.abs(pct) + '%</span>';
+  }
   function brNum(n){ return (Math.round(n * 10) / 10).toLocaleString(undefined, { maximumFractionDigits:1 }); }
   async function brOpen(){
     if (!brPlat){ ['brKpis', 'brChart', 'brDays'].forEach(function(id){ const h = document.getElementById(id); if (h) h.innerHTML = chSkel(); }); }
@@ -11431,6 +11440,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       return w.length ? sum(w) / w.length : 0;
     };
     const avg = avgWork(cur), avgPrev = avgWork(prev);
+    brAvg = avg;
     const fmtDay = function(d){ return d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' }); };
 
     /* ---- the three numbers ---- */
@@ -11513,7 +11523,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
     /* ---- where the platform numbers come from, and whether they are fresh ---- */
     const note = document.getElementById('brNote');
-    let txt = 'Dashboard: units marked built. Platform: Amazon, Walmart, Shopify and other ShipStation orders that did not come from the dashboard, counted on the day they shipped. ';
+    let txt = 'Dashboard: units marked built. Platform: Amazon, Walmart and Shopify orders shipped through ShipStation, counted on the day they shipped. Labels made by hand in ShipStation are not counted, since those are mostly B2B batches the dashboard already counts. ';
     let bad = false;
     if (brErr){ txt += 'Platform numbers are not connected yet.'; bad = true; }
     else if (brState && brState.last_error && (!brState.last_ok_at || brState.last_error_at > brState.last_ok_at)){
@@ -11526,11 +11536,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     note.classList.toggle('bad', bad);
 
     /* ---- week by week or day by day, newest first ---- */
-    const pctHtml = function(v){
-      const pct = Math.round((v - avg) / avg * 100);
-      const cls = pct <= -20 ? 'down' : pct >= 10 ? 'up' : 'flat';
-      return '<span class="br-vs ' + cls + '">' + (pct > 0 ? '+' : pct < 0 ? '\u2212' : '') + Math.abs(pct) + '%</span>';
-    };
+    const pctHtml = brPct;
     document.getElementById('brTblTitle').textContent = weekly ? 'Week by week' : 'Day by day';
     document.getElementById('brTblNote').textContent = weekly
       ? 'Newest first, Monday to Sunday. Per workday is the week\u2019s builds over its workdays, compared with the average workday in the range above. This week counts the days before today.'
@@ -11617,6 +11623,11 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         '<div class="br-tip-r"><span><i style="background:var(--hue-orders)"></i>Dashboard</span><b>' + CH.nf(it.b) + '</b></div>' +
         '<div class="br-tip-r"><span><i style="background:var(--hue-build)"></i>Platform</span><b>' + CH.nf(it.p) + '</b></div>' +
         '<div class="br-tip-r"><span>Total</span><b>' + CH.nf(it.t) + '</b></div>' +
+        (brWk ? '<div class="br-tip-r"><span>Per workday</span><b>' + (it.pace == null ? '\u2014' : brNum(it.pace)) + '</b></div>' : '') +
+        '<div class="br-tip-r"><span>vs average</span>' + (
+          (brWk ? it.pace == null : it.part) ? '<span class="br-vs flat">so far</span>'
+          : !brWk && it.wk ? '<span class="br-vs flat">weekend</span>'
+          : brAvg ? brPct(brWk ? it.pace : it.t) : '<span class="br-vs flat">\u2014</span>') + '</div>' +
         (it.trend != null ? '<div class="br-tip-r"><span>' + (brWk ? '4-week average' : '5-workday average') + '</span><b>' + brNum(it.trend) + '</b></div>' : '');
       tip.hidden = false;
       const w = tip.offsetWidth, cx = (i + 0.5) / n * r.width;
@@ -12479,8 +12490,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     ordPerm.view    = !!(r.can_view_orders)   || ordPerm.manage;
     /* its own tick on the People page; order admin does not imply it */
     ordPerm.gov     = !!r.can_view_gov;
-    /* Build Rate is the owner's page: the same is_admin flag the database checks */
-    ['navBuildrate', 'tabMoreBuildrate'].forEach(function(id){ const el = document.getElementById(id); if (el) el.style.display = r.is_admin ? '' : 'none'; });
+    /* Build Rate: every active employee, as the database checks it (is_staff) */
+    ['navBuildrate', 'tabMoreBuildrate'].forEach(function(id){ const el = document.getElementById(id); if (el) el.style.display = ''; });
     const na = document.getElementById('navAdmin');
     const ta = document.getElementById('tileAdmin');
     const nBill = document.getElementById('navBilling');
