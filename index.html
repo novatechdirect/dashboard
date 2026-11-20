@@ -3615,6 +3615,9 @@ window.ntBootSignIn = function(){
   .br-kpi-v{ font-family:var(--font-num); font-size:30px; font-weight:600; line-height:1.15; font-variant-numeric:tabular-nums; margin-top:var(--s1); }
   .br-kpi-v small{ font-family:var(--font-ui); font-size:13px; font-weight:500; color:var(--muted); margin-left:4px; }
   .br-kpi-s{ display:flex; flex-wrap:wrap; align-items:center; gap:4px var(--s2); font-size:12.5px; color:var(--muted); margin-top:var(--s1); }
+  .br-ctl{ display:flex; flex-wrap:wrap; justify-content:flex-end; gap:var(--s2); }
+  .br-ctl .chart-tab:disabled{ opacity:.45; cursor:default; }
+  .br-ctl .chart-tab:disabled:hover{ color:var(--muted); }
   .br-legend{ display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); font-size:12.5px; color:var(--muted); margin-top:var(--s3); }
   .br-legend span{ display:inline-flex; align-items:center; gap:6px; }
   .br-legend i{ width:10px; height:10px; border-radius:3px; }
@@ -6976,11 +6979,17 @@ window.ntBootSignIn = function(){
           <h2 class="card-title" id="brChartTitle">Built per day</h2>
           <div class="chart-sub" id="brSub"></div>
         </div>
-        <div class="chart-tabs" id="brTabs">
-          <button type="button" class="chart-tab" data-brr="30" aria-pressed="false">30 days</button>
-          <button type="button" class="chart-tab" data-brr="90" aria-pressed="false">90 days</button>
-          <button type="button" class="chart-tab" data-brr="182" aria-pressed="false">6 months</button>
-          <button type="button" class="chart-tab" data-brr="365" aria-pressed="false">1 year</button>
+        <div class="br-ctl">
+          <div class="chart-tabs" id="brBy">
+            <button type="button" class="chart-tab" data-brby="day" aria-pressed="false">By day</button>
+            <button type="button" class="chart-tab" data-brby="week" aria-pressed="false">By week</button>
+          </div>
+          <div class="chart-tabs" id="brTabs">
+            <button type="button" class="chart-tab" data-brr="30" aria-pressed="false">30 days</button>
+            <button type="button" class="chart-tab" data-brr="90" aria-pressed="false">90 days</button>
+            <button type="button" class="chart-tab" data-brr="182" aria-pressed="false">6 months</button>
+            <button type="button" class="chart-tab" data-brr="365" aria-pressed="false">1 year</button>
+          </div>
         </div>
       </div>
       <div class="br-legend" id="brLegend"></div>
@@ -6989,8 +6998,8 @@ window.ntBootSignIn = function(){
     </section>
 
     <section class="card">
-      <h2 class="card-title">Day by day</h2>
-      <p class="muted-sm" style="margin:0 0 var(--s3);">Newest first. Workdays, plus any weekend day with builds. Compared with the average workday in the range above.</p>
+      <h2 class="card-title" id="brTblTitle">Day by day</h2>
+      <p class="muted-sm" style="margin:0 0 var(--s3);" id="brTblNote"></p>
       <div id="brDays"></div>
     </section>
   </div><!-- /toolBuildrate -->
@@ -11365,6 +11374,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
   let brRange = '30';
   try { const v = localStorage.getItem('brRange'); if (BR_RANGES.indexOf(v) >= 0) brRange = v; } catch(e){}
   let brPlat = null, brState = null, brErr = '', brAt = 0, brItems = [];
+  let brBy = 'day', brWk = false;
+  try { if (localStorage.getItem('brBy') === 'week') brBy = 'week'; } catch(e){}
   function brKey(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function brNum(n){ return (Math.round(n * 10) / 10).toLocaleString(undefined, { maximumFractionDigits:1 }); }
   async function brOpen(){
@@ -11403,7 +11414,8 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
 
     /* every day from two ranges back to today, so the range has a range before it
        to compare with and its first days have days behind them to average */
-    const span = parseInt(brRange, 10), weekly = span > 90;
+    /* single days only up to 90 days: a year of daily bars is too thin to read */
+    const span = parseInt(brRange, 10), weekly = span > 90 || brBy === 'week';
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const days = [];
     for (let d = new Date(today.getTime()); days.length < span * 2 + 35; d.setDate(d.getDate() - 1)){
@@ -11453,28 +11465,32 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
       });
     } else {
       /* Monday-started weeks; the trend is the last four finished weeks */
-      const weeks = [];
+      const weeks = [], thisWeek = brKey(CH.weekStart(today));
       days.forEach(function(x){
         const ws = CH.weekStart(x.d), k = brKey(ws);
         let w = weeks[weeks.length - 1];
-        if (!w || w.k !== k) weeks.push(w = { k:k, d:ws, b:0, p:0, t:0, n:0 });
+        if (!w || w.k !== k) weeks.push(w = { k:k, d:ws, b:0, p:0, t:0, n:0, doneT:0, doneW:0 });
         w.b += x.b; w.p += x.p; w.t += x.t; w.n++;
+        /* what was built before today, so a week in progress gets a fair pace */
+        if (x !== now){ w.doneT += x.t; if (x.work) w.doneW++; }
       });
       const firstShown = CH.weekStart(cur[0].d).getTime();
       items = [];
       weeks.forEach(function(w, i){
         if (w.d.getTime() < firstShown || w.n < 7 && i === 0) return;
-        const part = w.k === brKey(CH.weekStart(today));
+        const part = w.k === thisWeek;
         let tr = null;
         if (!part && i >= 3 && weeks.slice(i - 3, i + 1).every(function(z){ return z.n === 7; })){
           tr = weeks.slice(i - 3, i + 1).reduce(function(a, z){ return a + z.t; }, 0) / 4;
         }
-        items.push({ h:'Week of ' + w.d.toLocaleDateString(undefined, { month:'short', day:'numeric' }) + (part ? ', so far' : ''),
-                     b:w.b, p:w.p, t:w.t, wk:false, part:part, trend:tr,
-                     x:w.d.toLocaleDateString(undefined, { month:'short', day:'numeric' }) });
+        const end = new Date(w.d.getTime()); end.setDate(end.getDate() + 6);
+        items.push({ h:'Week of ' + CH.fmtShort(w.d) + (part ? ', so far' : ''),
+                     b:w.b, p:w.p, t:w.t, wk:false, part:part, trend:tr, x:CH.fmtShort(w.d),
+                     span:CH.fmtShort(w.d) + ' \u2013 ' + CH.fmtShort(end),
+                     pace:w.doneW ? w.doneT / w.doneW : null });
       });
     }
-    brItems = items;
+    brItems = items; brWk = weekly;
     document.getElementById('brChartTitle').textContent = weekly ? 'Built per week' : 'Built per day';
     document.getElementById('brSub').textContent = CH.nf(sum(cur)) + ' built in the ' +
       (span === 182 ? 'last 6 months' : span === 365 ? 'last year' : 'last ' + span + ' days') +
@@ -11486,6 +11502,12 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     document.querySelectorAll('#brTabs .chart-tab').forEach(function(b){
       const on = b.getAttribute('data-brr') === brRange;
       b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('#brBy .chart-tab').forEach(function(b){
+      const v = b.getAttribute('data-brby'), on = v === (weekly ? 'week' : 'day');
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.disabled = v === 'day' && span > 90;
+      b.title = b.disabled ? 'Single days are shown for 30 or 90 days' : '';
     });
     brPlot(document.getElementById('brChart'), items, weekly);
 
@@ -11503,15 +11525,36 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     note.textContent = txt;
     note.classList.toggle('bad', bad);
 
-    /* ---- day by day, newest first ---- */
+    /* ---- week by week or day by day, newest first ---- */
+    const pctHtml = function(v){
+      const pct = Math.round((v - avg) / avg * 100);
+      const cls = pct <= -20 ? 'down' : pct >= 10 ? 'up' : 'flat';
+      return '<span class="br-vs ' + cls + '">' + (pct > 0 ? '+' : pct < 0 ? '\u2212' : '') + Math.abs(pct) + '%</span>';
+    };
+    document.getElementById('brTblTitle').textContent = weekly ? 'Week by week' : 'Day by day';
+    document.getElementById('brTblNote').textContent = weekly
+      ? 'Newest first, Monday to Sunday. Per workday is the week\u2019s builds over its workdays, compared with the average workday in the range above. This week counts the days before today.'
+      : 'Newest first. Workdays, plus any weekend day with builds. Compared with the average workday in the range above.';
+    if (weekly){
+      const wrows = items.slice().reverse();
+      document.getElementById('brDays').innerHTML = wrows.length
+        ? '<div class="table-wrap stack-wrap"><table class="hist-table stack br-days"><thead><tr>' +
+            '<th>Week</th><th class="n">Dashboard</th><th class="n">Platform</th><th class="n">Total</th><th class="n">Per workday</th><th class="n">vs average</th></tr></thead><tbody>' +
+            wrows.map(function(w){
+              return '<tr><td data-l="Week">' + esc(w.span) + (w.part ? ' <span class="muted-sm">this week</span>' : '') + '</td>' +
+                '<td class="n" data-l="Dashboard">' + CH.nf(w.b) + '</td><td class="n" data-l="Platform">' + CH.nf(w.p) + '</td>' +
+                '<td class="n" data-l="Total"><b>' + CH.nf(w.t) + '</b></td>' +
+                '<td class="n" data-l="Per workday">' + (w.pace == null ? '\u2014' : brNum(w.pace)) + '</td>' +
+                '<td class="n" data-l="vs average">' + (w.pace == null ? '<span class="br-vs flat">so far</span>' : avg ? pctHtml(w.pace) : '') + '</td></tr>';
+            }).join('') + '</tbody></table></div>'
+        : '<div class="chart-empty">Nothing built in this range</div>';
+      return;
+    }
     const rows = cur.filter(function(x){ return x.work || x.t; }).reverse();
     const vs = function(x){
       if (x === now) return '<span class="br-vs flat">so far</span>';
       if (!x.work) return '';   /* a weekend day is not held to a workday's number */
-      if (!avg) return '';
-      const pct = Math.round((x.t - avg) / avg * 100);
-      const cls = pct <= -20 ? 'down' : pct >= 10 ? 'up' : 'flat';
-      return '<span class="br-vs ' + cls + '">' + (pct > 0 ? '+' : pct < 0 ? '−' : '') + Math.abs(pct) + '%</span>';
+      return avg ? pctHtml(x.t) : '';
     };
     document.getElementById('brDays').innerHTML = rows.length
       ? '<div class="table-wrap stack-wrap"><table class="hist-table stack br-days"><thead><tr>' +
@@ -11574,7 +11617,7 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
         '<div class="br-tip-r"><span><i style="background:var(--hue-orders)"></i>Dashboard</span><b>' + CH.nf(it.b) + '</b></div>' +
         '<div class="br-tip-r"><span><i style="background:var(--hue-build)"></i>Platform</span><b>' + CH.nf(it.p) + '</b></div>' +
         '<div class="br-tip-r"><span>Total</span><b>' + CH.nf(it.t) + '</b></div>' +
-        (it.trend != null ? '<div class="br-tip-r"><span>' + (brRange > 90 ? '4-week average' : '5-workday average') + '</span><b>' + brNum(it.trend) + '</b></div>' : '');
+        (it.trend != null ? '<div class="br-tip-r"><span>' + (brWk ? '4-week average' : '5-workday average') + '</span><b>' + brNum(it.trend) + '</b></div>' : '');
       tip.hidden = false;
       const w = tip.offsetWidth, cx = (i + 0.5) / n * r.width;
       const plotW = cols.parentNode.clientWidth, off = cols.offsetLeft;
@@ -11586,6 +11629,12 @@ window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@su
     /* a finger's tip stays until a tap lands somewhere else */
     document.addEventListener('pointerdown', function(e){ if (!host.contains(e.target)) hide(); });
   })();
+  document.getElementById('brBy').addEventListener('click', function(e){
+    const b = e.target.closest('[data-brby]'); if (!b || b.disabled) return;
+    brBy = b.getAttribute('data-brby');
+    try { localStorage.setItem('brBy', brBy); } catch(err){}
+    brRender();
+  });
   document.getElementById('brTabs').addEventListener('click', function(e){
     const b = e.target.closest('[data-brr]'); if (!b) return;
     brRange = b.getAttribute('data-brr');
